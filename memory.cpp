@@ -1,5 +1,7 @@
 #include "memory.hpp"
 
+//ricordarsi di convertire indirizzi in hex o dec per indici di vettori
+//ricordarsi di convertire valori in hex o dec per scrivere in memoria
 
 //Constructor
 Memory::Memory(size_t size) : size(size) {
