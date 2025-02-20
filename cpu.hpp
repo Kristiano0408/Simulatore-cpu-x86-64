@@ -11,6 +11,7 @@
 #include "ALU.hpp"
 #include "Memory.hpp"
 #include "Decoder.hpp"
+#include "ControlUnit.hpp"
 
 class CPU
 {
@@ -20,10 +21,10 @@ class CPU
         CPU(Memory* memory); 
         ~CPU();
 
-        //cpu cycle (fetch, decode, execute)
-        void fetchInstruction();
-        void decodeInstruction();
-        void executeInstruction();
+        //cpu operations
+        void cpuReset();
+        void cpuStep();
+        void cpuStart();
 
         //getters for the registers and ALU
         RegisterFile& getRegisters();
@@ -35,7 +36,8 @@ class CPU
         RegisterFile registers; 
         ALU alu;                 
         Memory* memory;          
-        Decoder decoder;         
+        Decoder decoder;   
+        CU controlUnit;      
         
 };
 
