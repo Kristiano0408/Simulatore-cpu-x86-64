@@ -9,7 +9,7 @@ class AddressingMode
 {
     public:
         virtual ~AddressingMode() {};
-        virtual uint64_t getEffectiveAddress(CPU &cpu) const = 0;
+        virtual int64_t getEffectiveAddress(CPU &cpu) const = 0;
     
 
 };
@@ -19,99 +19,98 @@ class AddressingMode
 class DirectAddressing : public AddressingMode
 {
     private:
-        uint64_t address;
+        int64_t address;
 
     public:
-        DirectAddressing(uint64_t address) : address(address) {};
-        uint64_t getEffectiveAddress(CPU &cpu) const override;
+        DirectAddressing(int64_t address) : address(address) {};
+        int64_t getEffectiveAddress(CPU &cpu) const override;
 };
 
 //Immediate Addressing ( istruction with immediate value)
 class ImmediateAddressing : public AddressingMode
 {
     private:
-        uint64_t value;
+        int64_t value;
 
     public:
-        ImmediateAddressing(uint64_t value) : value(value) {};
-        uint64_t getEffectiveAddress(CPU &cpu) const override;
+        ImmediateAddressing(int64_t value) : value(value) {};
+        int64_t getEffectiveAddress(CPU &cpu) const override;
 };
 
 //Register Indirect Addressing (instruction and the address is in a register)
 class IndirectAddressing : public AddressingMode
 {
     private:
-        uint64_t address;
+        const std::string& reg_address;
 
     public:
-        IndirectAddressing(uint64_t address) : address(address) {};
-        uint64_t getEffectiveAddress(CPU &cpu) const override;
+        IndirectAddressing(const std::string& reg_address) : reg_address(reg_address) {};
+        int64_t getEffectiveAddress(CPU &cpu) const override;
 };
 
 //Register Addressing (instruction with the value in a register)
 class RegisterAddressing : public AddressingMode
 {
     private:
-        uint64_t reg;
+        const std::string& reg_value;
 
     public:
-        RegisterAddressing(uint64_t reg) : reg(reg) {};
-        uint64_t getEffectiveAddress(CPU &cpu) const override;
+        RegisterAddressing(const std::string& reg_value) : reg_value(reg_value) {};
+        int64_t getEffectiveAddress(CPU &cpu) const override;
 };
 
 //Base Displacement Addressing (instruction with base address and displacement)
 class BaseDisplacementAddressing : public AddressingMode {
     private:
-        uint8_t baseReg;
+        const std::string& baseReg;
         int64_t displacement;
     
     public:
-        BaseDisplacementAddressing(uint8_t baseReg, int64_t displacement) 
+        BaseDisplacementAddressing(const std::string& baseReg, int64_t displacement) 
             : baseReg(baseReg), displacement(displacement) {}
     
-        uint64_t getEffectiveAddress(CPU &cpu) const override;
+        int64_t getEffectiveAddress(CPU &cpu) const override;
     };
 
 //Indexed Addressing** (Es. `[RBX + RCX]`)
 class IndexedAddressing : public AddressingMode {
     private:
-        uint8_t baseReg;
-        uint8_t indexReg;
+        const std::string& baseReg;
+        const std::string& indexReg;
     
     public:
-        IndexedAddressing(uint8_t baseReg, uint8_t indexReg)
+        IndexedAddressing(const std::string& baseReg, const std::string& indexReg)
             : baseReg(baseReg), indexReg(indexReg) {}
     
-        uint64_t getEffectiveAddress(CPU &cpu) const override;
+        int64_t getEffectiveAddress(CPU &cpu) const override;
     };
 
 //Scaled Indexed Addressing** (Es. `[RBX + RCX * 4]`)
 class ScaledIndexedAddressing : public AddressingMode {
     private:
-        uint8_t baseReg;
-        uint8_t indexReg;
-        uint8_t scale;
+        const std::string& baseReg;
+        const std::string& indexReg;
+        int8_t scale;
     
     public:
-        ScaledIndexedAddressing(uint8_t baseReg, uint8_t indexReg, uint8_t scale)
+        ScaledIndexedAddressing(const std::string& baseReg, const std::string& indexReg, int8_t scale)
             : baseReg(baseReg), indexReg(indexReg), scale(scale) {}
-    
-        uint64_t getEffectiveAddress(CPU &cpu) const override;
+        int64_t getEffectiveAddress(CPU &cpu) const override;
     };
 
 //Scaled Indexed Displacement Addressing** (Es. `[RBX + RCX * 4 + 8]`)
 class ScaledIndexedDisplacementAddressing : public AddressingMode {
         private:
-            uint8_t baseReg;
-            uint8_t indexReg;
-            uint8_t scale;
+            const std::string& baseReg;
+            const std::string& indexReg;
+            int8_t scale;
             int64_t displacement;
         
         public:
-            ScaledIndexedDisplacementAddressing(uint8_t baseReg, uint8_t indexReg, uint8_t scale, int64_t displacement)
+            ScaledIndexedDisplacementAddressing(const std::string& baseReg, const std::string& indexReg, int8_t scale, int64_t displacement)
                 : baseReg(baseReg), indexReg(indexReg), scale(scale), displacement(displacement) {}
         
-            uint64_t getEffectiveAddress(CPU &cpu) const override;
+            int64_t getEffectiveAddress(CPU &cpu) const override;
         };
 
 

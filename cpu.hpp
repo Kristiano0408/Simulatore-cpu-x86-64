@@ -28,6 +28,7 @@ class CPU
 
         //getters for the registers and ALU
         RegisterFile& getRegisters();
+        int64_t getRegisterValue(const std::string& name);
         ALU& getALU();
 
     private:
