@@ -72,7 +72,23 @@ void Memory::writeQWord(uint64_t address, uint64_t value)
 };
 
 
+//get the size of the memory
+size_t Memory::getSize() const
+{
+    return size;
+};
 
+//get the data of the memory
+const std::vector<uint8_t>& Memory::getData() const
+{
+    return data;
+};
+
+//set the data of the memory
+void Memory::setData(const std::vector<uint8_t>& data)
+{
+    this->data = data;
+};
 
 //clear the memory
 void Memory::clear()
