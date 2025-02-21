@@ -3,17 +3,123 @@
 
 #include <cstdint>
 #include <string>
+#include "cpu.hpp"
 
-class AdressingMode
+class AddressingMode
 {
     public:
-        virtual ~AdressingMode() = default;
-        virtual uint64_t getsize () = 0;
-        virtual std::string toString() = 0;
-
+        virtual ~AddressingMode() {};
+        virtual uint64_t getEffectiveAddress(CPU &cpu) const = 0;
     
 
 };
+
+
+// Direct Addressing (instruction with direct address)
+class DirectAddressing : public AddressingMode
+{
+    private:
+        uint64_t address;
+
+    public:
+        DirectAddressing(uint64_t address) : address(address) {};
+        uint64_t getEffectiveAddress(CPU &cpu) const override;
+};
+
+//Immediate Addressing ( istruction with immediate value)
+class ImmediateAddressing : public AddressingMode
+{
+    private:
+        uint64_t value;
+
+    public:
+        ImmediateAddressing(uint64_t value) : value(value) {};
+        uint64_t getEffectiveAddress(CPU &cpu) const override;
+};
+
+//Register Indirect Addressing (instruction and the address is in a register)
+class IndirectAddressing : public AddressingMode
+{
+    private:
+        uint64_t address;
+
+    public:
+        IndirectAddressing(uint64_t address) : address(address) {};
+        uint64_t getEffectiveAddress(CPU &cpu) const override;
+};
+
+//Register Addressing (instruction with the value in a register)
+class RegisterAddressing : public AddressingMode
+{
+    private:
+        uint64_t reg;
+
+    public:
+        RegisterAddressing(uint64_t reg) : reg(reg) {};
+        uint64_t getEffectiveAddress(CPU &cpu) const override;
+};
+
+//Base Displacement Addressing (instruction with base address and displacement)
+class BaseDisplacementAddressing : public AddressingMode {
+    private:
+        uint8_t baseReg;
+        int64_t displacement;
+    
+    public:
+        BaseDisplacementAddressing(uint8_t baseReg, int64_t displacement) 
+            : baseReg(baseReg), displacement(displacement) {}
+    
+        uint64_t getEffectiveAddress(CPU &cpu) const override;
+    };
+
+//Indexed Addressing** (Es. `[RBX + RCX]`)
+class IndexedAddressing : public AddressingMode {
+    private:
+        uint8_t baseReg;
+        uint8_t indexReg;
+    
+    public:
+        IndexedAddressing(uint8_t baseReg, uint8_t indexReg)
+            : baseReg(baseReg), indexReg(indexReg) {}
+    
+        uint64_t getEffectiveAddress(CPU &cpu) const override;
+    };
+
+//Scaled Indexed Addressing** (Es. `[RBX + RCX * 4]`)
+class ScaledIndexedAddressing : public AddressingMode {
+    private:
+        uint8_t baseReg;
+        uint8_t indexReg;
+        uint8_t scale;
+    
+    public:
+        ScaledIndexedAddressing(uint8_t baseReg, uint8_t indexReg, uint8_t scale)
+            : baseReg(baseReg), indexReg(indexReg), scale(scale) {}
+    
+        uint64_t getEffectiveAddress(CPU &cpu) const override;
+    };
+
+//Scaled Indexed Displacement Addressing** (Es. `[RBX + RCX * 4 + 8]`)
+class ScaledIndexedDisplacementAddressing : public AddressingMode {
+        private:
+            uint8_t baseReg;
+            uint8_t indexReg;
+            uint8_t scale;
+            int64_t displacement;
+        
+        public:
+            ScaledIndexedDisplacementAddressing(uint8_t baseReg, uint8_t indexReg, uint8_t scale, int64_t displacement)
+                : baseReg(baseReg), indexReg(indexReg), scale(scale), displacement(displacement) {}
+        
+            uint64_t getEffectiveAddress(CPU &cpu) const override;
+        };
+
+
+
+
+
+
+
 
 
 
@@ -21,33 +127,3 @@ class AdressingMode
 #endif // ADRESSING_MODE_HPP
 
 
-/*Registro Diretto (Register Addressing)
-
-L'operando è un registro, senza accesso alla memoria.
-Esempio: MOV RAX, RBX
-Simulazione: Non serve calcolare un indirizzo, basta copiare i valori tra registri.
-Immediato (Immediate Addressing)
-
-Il valore è incluso direttamente nell'istruzione.
-Esempio: MOV RAX, 10
-Simulazione: Il valore immediato è copiato direttamente nel registro.
-Indirizzamento Diretto (Direct Addressing)
-
-L'operando è un indirizzo di memoria fisso.
-Esempio: MOV RAX, [0x1000]
-Simulazione: Il valore all’indirizzo 0x1000 viene copiato nel registro.
-Indirizzamento Indiretto (Indirect Addressing)
-
-L'operando è un registro che contiene un indirizzo.
-Esempio: MOV RAX, [RBX]
-Simulazione: L'indirizzo contenuto in RBX viene usato per leggere la memoria.
-Base + Displacement (Base Displacement Addressing)
-
-Indirizzamento tramite un registro base + un valore costante.
-Esempio: MOV RAX, [RBX + 16]
-Simulazione: L'indirizzo è dato da RBX + 16, e si accede alla memoria a quell'indirizzo.
-Base + Index + Scale + Displacement (SIB - Scale Index Base)
-
-Complesso, ma molto usato per array e strutture.
-Esempio: MOV RAX, [RBX + RCX * 4 + 8]
-Simulazione: L'indirizzo è calcolato come RBX + (RCX * 4) + 8.*/

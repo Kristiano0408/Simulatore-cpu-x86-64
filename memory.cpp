@@ -2,6 +2,7 @@
 #include <cmath>
 //ricordarsi di convertire indirizzi dec per accedere al vettore e in binario per utilizzare l'indirizzo
 
+//ricordasri controllo offset e size per evitare buffer overflow
 
 //Constructor
 Memory::Memory(size_t size) : size(size) {

@@ -11,13 +11,16 @@ class CU
         CU();
         ~CU();
 
-        Instruction* fetchInstruction();
-        void decodeInstruction(Instruction* instruction);
-        //AdressingMode* getAddressingMode(uint8_t mode);
+        int64_t fetchInstruction();
+        Instruction* decodeInstruction(int64_t instruction);
+        void executeInstruction(Instruction* instruction);
+
+        
 
     private:
         Decoder* decoder;
-        AdressingMode* adressingMode;
+        AddressingMode* adressingMode;
+
 };
 
 
