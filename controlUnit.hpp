@@ -2,7 +2,7 @@
 #define CONTROL_UNIT_HPP
 
 #include "decoder.hpp"
-#include "adressingMode.hpp"
+#include "addressingMode.hpp"
 
 
 class CU
@@ -11,15 +11,17 @@ class CU
         CU();
         ~CU();
 
-        Instruction* fetchInstruction();
-        void decodeInstruction(Instruction* instruction);
+        int64_t fetchInstruction();
+        Instruction* decodeInstruction(uint64_t instruction);
         void executeInstruction(Instruction* instruction);
+
 
         
 
     private:
         Decoder* decoder;
         AddressingMode* adressingMode;
+        
 
 };
 

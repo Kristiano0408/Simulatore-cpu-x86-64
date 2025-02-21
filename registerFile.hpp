@@ -13,8 +13,8 @@ class RegisterFile {
         ~RegisterFile();
 
         //getters and setters for the registers
-        void setRegister(size_t index, int64_t value);
-        int64_t getRegister(size_t index);
+        void setRegister(const std::string& name, int64_t value);
+        int64_t getRegister(const std::string& name);
 
         //getters and setters for the special registers
         void setRSP(uint64_t value);
@@ -38,6 +38,9 @@ class RegisterFile {
 
         void setCF(bool value);
         bool getCF();
+
+        //reset the registers
+        void reset();
 
 
     private:
