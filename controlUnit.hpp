@@ -11,8 +11,8 @@ class CU
         CU();
         ~CU();
 
-        int64_t fetchInstruction();
-        Instruction* decodeInstruction(int64_t instruction);
+        Instruction* fetchInstruction();
+        void decodeInstruction(Instruction* instruction);
         void executeInstruction(Instruction* instruction);
 
         
