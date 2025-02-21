@@ -7,7 +7,7 @@ using namespace std;
 
 int main()
 {
-    Memory ram(1024); //create a memory with 1024 bytes
+    /*Memory ram(1024); //create a memory with 1024 bytes
 
     //creo un vettore di dati da scrivere in memoria
 
@@ -50,7 +50,8 @@ int main()
     for (size_t i = 0; i < data.size(); i++)
     {
         cout << "Data[" << i << "]: " << hex << std::setw(2) << std::setfill('0')<< (int)data3[i] << endl;
-    }
+    }*/
+
 
 
 

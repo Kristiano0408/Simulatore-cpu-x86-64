@@ -1,7 +1,7 @@
 #include "memory.hpp"
+#include <cmath>
+//ricordarsi di convertire indirizzi dec per accedere al vettore e in binario per utilizzare l'indirizzo
 
-//ricordarsi di convertire indirizzi in hex o dec per indici di vettori
-//ricordarsi di convertire valori in hex o dec per scrivere in memoria
 
 //Constructor
 Memory::Memory(size_t size) : size(size) {
@@ -13,6 +13,7 @@ Memory::Memory(size_t size) : size(size) {
 //methods for reading and writing bytes
 uint8_t Memory::readByte(uint64_t address) const
 {
+
     return data[address];
 };
 
@@ -96,3 +97,4 @@ void Memory::clear()
     data.clear();
     data.resize(size, 0);
 };
+

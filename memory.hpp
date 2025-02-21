@@ -36,6 +36,9 @@ public:
     //clear the memory
     void clear();
 
+    //for converting the decimal number to hexadecimal
+    
+    uint64_t Memory::decimalToHex(uint64_t n);
 
     
 private:
