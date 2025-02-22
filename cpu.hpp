@@ -37,7 +37,7 @@ class CPU
         // registers, ALU, memory and decoder          
         Memory* memory;          
         Decoder decoder;   
-        CU controlUnit;      
+        CU controlUnit;    
         
 };
 

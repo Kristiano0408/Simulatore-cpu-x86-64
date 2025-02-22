@@ -9,7 +9,7 @@
 class CU
 {
     public:
-        CU();
+        CU(Memory* memory);
         ~CU();
 
         int64_t fetchInstruction();
@@ -25,9 +25,10 @@ class CU
 
     private:
         Decoder* decoder;
-        AddressingMode* adressingMode;
+        AddressingMode* addressingMode;
         RegisterFile registers; 
         ALU alu;
+        Memory* memory;
         
 
 };

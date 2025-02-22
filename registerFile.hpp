@@ -13,8 +13,8 @@ class RegisterFile {
         ~RegisterFile();
 
         //getters and setters for the registers
-        void setRegister(const std::string& name, int64_t value);
-        int64_t getRegister(const std::string& name);
+        void setRegisterValue(const std::string& name, int64_t value);
+        int64_t getRegisterValue(const std::string& name);
 
         //getters and setters for the special registers
         void setRSP(uint64_t value);
@@ -65,10 +65,7 @@ class RegisterFile {
         uint64_t RIP;
 
         //flags
-        bool ZF;
-        bool SF;
-        bool OF;
-        bool CF;
+        bool RFLAGS[64];
 
 };
 #endif // REGISTERFILE_HPP

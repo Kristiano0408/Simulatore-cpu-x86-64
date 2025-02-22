@@ -2,9 +2,10 @@
 #include "memory.hpp"
 
 //constructor that receives a pointer to the memory
-CPU::CPU(Memory* memory) : memory(memory), decoder(), controlUnit()
+CPU::CPU(Memory* memory) : memory(memory), decoder(), controlUnit(memory)
 {
-    //nothing to do here
+
+    
 
 }
 
