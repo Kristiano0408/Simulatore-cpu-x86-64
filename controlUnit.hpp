@@ -3,7 +3,8 @@
 
 #include "decoder.hpp"
 #include "addressingMode.hpp"
-
+#include "registerFile.hpp"
+#include "alu.hpp"
 
 class CU
 {

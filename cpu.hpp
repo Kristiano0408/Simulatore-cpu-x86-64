@@ -29,7 +29,7 @@ class CPU
         //getters for the registers and ALU
         
         ALU& getALU();
-        CU& getControlUnit();
+        //CU& getControlUnit();
         RegisterFile& getRegisters();
 
     private:

@@ -7,3 +7,4 @@ controllare overflow nei modi di indirizzamnto
 capire come aumetare pc dopo aver decodificato istruzione
 aggiungere altri registri
 ##capire quanto fetchare
+getsire flags con vettore(coem nella realta)
