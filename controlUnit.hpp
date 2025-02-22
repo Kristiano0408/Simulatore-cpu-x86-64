@@ -15,12 +15,18 @@ class CU
         Instruction* decodeInstruction(uint64_t instruction);
         void executeInstruction(Instruction* instruction);
 
+        //getters for the registers
+        RegisterFile& getRegisters();
+        ALU& getALU();
+
 
         
 
     private:
         Decoder* decoder;
         AddressingMode* adressingMode;
+        RegisterFile registers; 
+        ALU alu;
         
 
 };

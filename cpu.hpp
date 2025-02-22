@@ -27,25 +27,19 @@ class CPU
         void cpuStart();
 
         //getters for the registers and ALU
-        RegisterFile& getRegisters();
+        
         ALU& getALU();
+        CU& getControlUnit();
+        RegisterFile& getRegisters();
 
     private:
         
-        // registers, ALU, memory and decoder
-        RegisterFile registers; 
-        ALU alu;                 
+        // registers, ALU, memory and decoder          
         Memory* memory;          
         Decoder decoder;   
         CU controlUnit;      
         
 };
-
-
-
-
-
-
 
 
 

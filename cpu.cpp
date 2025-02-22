@@ -1,36 +1,36 @@
 #include "cpu.hpp"
 #include "memory.hpp"
-#include "registerFile.hpp"
 
-CPU::CPU(Memory* memory) : memory(memory)
+//constructor that receives a pointer to the memory
+CPU::CPU(Memory* memory) : memory(memory), decoder(), controlUnit()
 {
-    //initialize the registers
-    registers = RegisterFile();
-    //initialize the ALU
-    alu = ALU();
-    //initialize the decoder
-    decoder = Decoder();
-    //initialize the control unit
-    controlUnit = CU();
+    //nothing to do here
 
 }
 
+//destructor
 CPU::~CPU()
 {
     //nothing to do here
 }
 
-RegisterFile& CPU::getRegisters()
-{
-    return registers;
-}
-
+//getters for the registers and ALU
 ALU& CPU::getALU()
 {
-    return alu;
+    return controlUnit.getALU();
 }
 
+/*CU& CPU::getControlUnit()
+{
+    return controlUnit;
+}*/
 
+RegisterFile& CPU::getRegisters()
+{
+    return controlUnit.getRegisters();
+}
+
+//cpu operations
 void CPU::cpuStart()
 {
     //start the CPU
@@ -43,7 +43,7 @@ void CPU::cpuStart()
 void CPU::cpuReset()
 {
     //reset the CPU
-    registers.reset();
+    getRegisters().reset();
     //memory->reset();
 }
 
