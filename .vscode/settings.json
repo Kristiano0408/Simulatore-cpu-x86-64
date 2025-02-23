@@ -101,6 +101,8 @@
     "stdexcept": "cpp",
     "streambuf": "cpp",
     "typeinfo": "cpp",
-    "iomanip": "cpp"
+    "iomanip": "cpp",
+    "ctime": "cpp",
+    "sstream": "cpp"
   }
 }

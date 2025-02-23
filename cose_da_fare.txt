@@ -8,3 +8,8 @@ capire come aumetare pc dopo aver decodificato istruzione
 aggiungere altri registri
 ##capire quanto fetchare
 getsire flags con vettore(coem nella realta)
+
+
+nella pre decodific trattare meglip prex 66 e rex
+
+e finire fetching

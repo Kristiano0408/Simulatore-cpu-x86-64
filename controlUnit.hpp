@@ -6,6 +6,16 @@
 #include "registerFile.hpp"
 #include "alu.hpp"
 
+
+//struct for simplifign decoding after getting some information out of fetchinstruction
+struct InstructionInfo {
+    size_t totalLength;  // Lunghezza totale dell'istruzione
+    size_t opcodeLength; // Lunghezza dell'opcode (1, 2 o 3 byte)
+    size_t prefixCount;  // Numero di prefissi
+    uint32_t opcode;     // Opcode completo (1, 2 o 3 byte)
+};
+
+
 class CU
 {
     public:

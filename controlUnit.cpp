@@ -2,6 +2,8 @@
 #include "addressingMode.hpp"
 #include "registerFile.hpp"
 #include "alu.hpp"
+#include "controlUnit.hpp"
+
 
 
 CU::CU(Memory* memory): memory(memory), decoder(), addressingMode(), registers(), alu()
@@ -36,6 +38,7 @@ int64_t CU::fetchInstruction()
     std::vector<uint8_t> bytes; //bytes of the instruction()
     uint8_t byte; //byte fetched from the memory
     int byteCounter = 0; //counter of the byte (for IR)
+    bool rex = false; //rex prefix
 
     //take the value of istruction register
     index = registers.getRegisterValue("IR");
@@ -64,6 +67,19 @@ int64_t CU::fetchInstruction()
         }
     }
 
+    if (byte == 0x40 || byte == 0x41 || byte == 0x42 || byte == 0x43 || byte == 0x44 || byte == 0x45 || byte == 0x46 || byte == 0x47 || // Gruppo 5
+        byte == 0x48 || byte == 0x49 || byte == 0x4A || byte == 0x4B || byte == 0x4C || byte == 0x4D || byte == 0x4E || byte == 0x4F)
+    {
+        //the byte is a REX prefix
+        rex = true;
+        bytes.push_back(byte);
+        byteCounter++;
+        byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+    }
+
+
+
+    //fetch the opcode
     if (byte == 0x0F)
     {
                 //the opcode has two bytes
@@ -92,6 +108,8 @@ int64_t CU::fetchInstruction()
                 }
 
     }
+
+    
 
     
 
