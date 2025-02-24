@@ -21,13 +21,10 @@ int main()
 
     vector<uint8_t> data;
     //load the program in the memory
-    data= { 0x48, 0xB8, 0x78, 0x56, 0x34, 0x12};
+    data= { 0x66, 0x67, 0xB8, 0x78, 0x56, 0x34, 0x12};
 
     ram.setData(data);
 
-    uint32_t read = ram.readDWord(2);
-
-    cout << "Read: " << hex << read << endl;
 
 
 

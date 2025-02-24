@@ -14,7 +14,7 @@ class Instruction
         //destructor
         virtual  ~Instruction() = default;
         //execute the instruction
-        virtual void execute(CPU* cpu) = 0; //Polimorfic method that will be implemented in the derived classes
+        virtual void execute(CU* controlUnit, Memory* ram);//Polimorfic method that will be implemented in the derived classes
 };
 
 //define the instruction classes (an iscrutction for each operation)
@@ -28,7 +28,7 @@ class AddInstruction : public Instruction
         //destructor
         ~AddInstruction() override = default;
         //execute the instruction
-        void execute(CPU* cpu) override;
+        void execute(CU* controlUnit, Memory* ram) override;
 
     private:
         uint8_t dest;
@@ -37,6 +37,26 @@ class AddInstruction : public Instruction
 };
 
 
+class MoveInstruction : public Instruction
+{
+    public:
+        //constructor
+        MoveInstruction();
+        //destructor
+        ~MoveInstruction() override = default;
+        //execute the instruction
+        void execute(CU* controlUnit, Memory* ram) override;
 
+        void setS_address(int64_t address);
+        void setD_address(int64_t address);
+        void setValue(int64_t value);
+
+    private:
+        int64_t S_address;
+        int64_t D_address;
+        int64_t value;
+
+       
+};
 
 #endif // ISTRUCTION_HPP    

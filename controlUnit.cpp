@@ -187,6 +187,11 @@ InstructionInfo CU::fetchInstruction()
 
     return info;
 
+
+    registers.setRegisterValue("IR", index + static_cast<int64_t>(info.totalLength));
+
+    cout << "IR: " << hex << registers.getRegisterValue("IR") << endl;
+
    
     
 }
@@ -194,6 +199,13 @@ InstructionInfo CU::fetchInstruction()
 
 Instruction* CU::decodeInstruction(InstructionInfo instruction)
 {
+
+
+   return decoder->decodeInstruction(instruction);
+   
+
+
+
 
 }
 
