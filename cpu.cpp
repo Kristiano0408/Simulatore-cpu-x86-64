@@ -1,5 +1,6 @@
 #include "cpu.hpp"
 #include "memory.hpp"
+#include "controlUnit.hpp"
 
 //constructor that receives a pointer to the memory
 CPU::CPU(Memory* memory) : memory(memory), decoder(), controlUnit(memory)
@@ -21,10 +22,10 @@ ALU& CPU::getALU()
     return controlUnit.getALU();
 }
 
-/*CU& CPU::getControlUnit()
+CU& CPU::getControlUnit()
 {
     return controlUnit;
-}*/
+}
 
 RegisterFile& CPU::getRegisters()
 {

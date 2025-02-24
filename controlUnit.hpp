@@ -7,14 +7,8 @@
 #include "alu.hpp"
 
 
-//struct for simplifign decoding after getting some information out of fetchinstruction
-struct InstructionInfo {
-    size_t totalLength;  // Lunghezza totale dell'istruzione
-    size_t opcodeLength; // Lunghezza dell'opcode (1, 2 o 3 byte)
-    size_t prefixCount;  // Numero di prefissi
-    uint32_t opcode;     // Opcode completo (1, 2 o 3 byte)
-};
 
+class AddressingMode;
 
 class CU
 {
@@ -23,7 +17,7 @@ class CU
         ~CU();
 
         int64_t fetchInstruction();
-        Instruction* decodeInstruction(uint64_t instruction);
+        Instruction* decodeInstruction(int64_t instruction);
         void executeInstruction(Instruction* instruction);
 
         //getters for the registers

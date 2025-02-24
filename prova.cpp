@@ -19,6 +19,17 @@ int main()
     CPU cpu(&ram);
     cpu.cpuReset();
 
+    vector<uint8_t> data;
+    //load the program in the memory
+    data= { 0x48, 0xB8, 0x78, 0x56, 0x34, 0x12};
+
+    ram.setData(data);
+
+
+    cpu.getControlUnit().fetchInstruction();
+
+    
+
 
 
 

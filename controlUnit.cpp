@@ -3,10 +3,12 @@
 #include "registerFile.hpp"
 #include "alu.hpp"
 #include "controlUnit.hpp"
+#include <iostream>
+
+using namespace std;
 
 
-
-CU::CU(Memory* memory): memory(memory), decoder(), addressingMode(), registers(), alu()
+CU::CU(Memory* memory): memory(memory), decoder(), addressingMode(),registers(), alu()
 {
     //nothing to do here
     
@@ -43,10 +45,25 @@ int64_t CU::fetchInstruction()
     //take the value of istruction register
     index = registers.getRegisterValue("IR");
 
+    vector<uint8_t> data = memory->getData();
+
+    //stampa il contenuto della memoria
+    for (int i = 0; i < data.size(); i++)
+    {
+        std::cout << "Address: " << i << " Value: " << hex << static_cast<int>(data[i]) << endl;
+    }
+
+
+
+
     //fetch whit a while loop one byte at time for serching the opcode
     while (numbersOfPrefix < 4)
     {
-        byte=memory->readByte(index + static_cast<int64_t>(byteCounter));
+
+        byte=memory->readByte(index + static_cast<uint64_t>(byteCounter));
+
+        cout << index + static_cast<int64_t>(byteCounter) << endl;
+        cout << "Byte: "<< hex << static_cast<int>(byte) << endl;   
 
         //if the byte is a prefix
         if ((byte == 0xF0) || (byte == 0xF2 || byte == 0xF3) ||  // Gruppo 1
@@ -108,6 +125,26 @@ int64_t CU::fetchInstruction()
                 }
 
     }
+    else
+    {
+        //the opcode has one byte
+        opcode = byte;
+        bytes.push_back(byte);
+        byteCounter++;
+    }
+
+
+    //decode the opcode
+    InstructionInfo info = decoder->LenghtOfInstruction(opcode, prefix, numbersOfPrefix, rex, byte);
+
+    cout << "Opcode: " << hex << info.opcode << endl;
+    cout << "Prefix Count: " << info.prefixCount << endl;
+    cout << "Total Length: " << info.totalLength << endl;
+    cout << "Opcode Length: " << info.opcodeLength << endl;
+    cout << "Additional Bytes: " << info.additionalBytes << endl;
+    cout << "Description: " << info.description << endl;
+    cout << "Number of Operands: " << info.numOperands << endl;
+
 
     
 
@@ -123,6 +160,16 @@ int64_t CU::fetchInstruction()
     
 }
 
+
+Instruction* CU::decodeInstruction(int64_t istruction)
+{
+
+}
+
+void CU::executeInstruction(Instruction* instruction)
+{
+
+}
 
 /*1. Istruzioni di Movimento di Dati
 Istruzione	Opcode	Lunghezza Opcode	Descrizione

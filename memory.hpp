@@ -28,10 +28,10 @@ public:
     size_t getSize() const;
 
     //get the data of the memory
-    const std::vector<int8_t>& getData() const;
+    const std::vector<uint8_t>& getData() const;
 
     //set the data of the memory
-    void setData(const std::vector<int8_t>& data);
+    void setData(const std::vector<uint8_t>& data);
 
     //clear the memory
     void clear();
@@ -39,7 +39,7 @@ public:
 
     
 private:
-    std::vector<int8_t> data;
+    std::vector<uint8_t> data;
     size_t size;
 };
 

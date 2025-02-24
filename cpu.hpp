@@ -10,7 +10,6 @@
 #include "RegisterFile.hpp"
 #include "ALU.hpp"
 #include "Memory.hpp"
-#include "Decoder.hpp"
 #include "ControlUnit.hpp"
 
 class CPU
@@ -31,6 +30,8 @@ class CPU
         ALU& getALU();
         //CU& getControlUnit();
         RegisterFile& getRegisters();
+
+        CU& getControlUnit();
 
     private:
         

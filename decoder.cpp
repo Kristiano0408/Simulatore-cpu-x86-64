@@ -3,10 +3,16 @@
 #include "instruction.hpp"
 #include "opcode_map.cpp"
 #include "decoder.hpp"
-
+#include <iostream>
 
 
 Decoder::Decoder()
+{
+
+    //nothing to do here
+}
+
+Decoder::~Decoder()
 {
     //nothing to do here
 }
@@ -16,7 +22,6 @@ Decoder::Decoder()
 
 InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],int numPrefixes, bool rex, int16_t rexprefix)
 {
-
     InstructionInfo info;
     info.opcode = opcode;
     info.prefixCount = numPrefixes;
@@ -53,17 +58,18 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
             info.additionalBytes -= (2* info.numOperands);
             break;
         }
-
-        if (rex and (rexprefix & 0x08))
-        {
-            //the lenght is increased by 4 bytes 
-            info.totalLength += (4* info.numOperands);
-            info.additionalBytes += (4* info.numOperands);
-            break;
-        }
+        
         
        
        
+    }
+
+    if (rex and (rexprefix & 0x08))
+    {
+        //the lenght is increased by 4 bytes 
+        info.totalLength += (4* info.numOperands);
+        info.additionalBytes += (4* info.numOperands);
+           
     }
 
     return info;

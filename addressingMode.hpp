@@ -1,5 +1,5 @@
-#ifndef ADRESSING_MODE_HPP
-#define ADRESSING_MODE_HPP
+#ifndef ADDRESSING_MODE_HPP
+#define ADDRESSING_MODE_HPP
 
 #include <cstdint>
 #include <string>

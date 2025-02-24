@@ -4,6 +4,7 @@
 #ifndef REGISTERFILE_HPP
 #define REGISTERFILE_HPP
 #include <cstdint>
+#include <string>
 
 class RegisterFile {
     // Implementation of the RegisterFile class

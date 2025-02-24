@@ -81,13 +81,13 @@ size_t Memory::getSize() const
 };
 
 //get the data of the memory
-const std::vector<int8_t>& Memory::getData() const
+const std::vector<uint8_t>& Memory::getData() const
 {
     return data;
 };
 
 //set the data of the memory
-void Memory::setData(const std::vector<int8_t>& data)
+void Memory::setData(const std::vector<uint8_t>& data)
 {
     this->data = data;
 };
