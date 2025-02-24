@@ -1,4 +1,3 @@
-//
 
 #ifndef ISTRUCTION_HPP
 #define ISTRUCTION_HPP
