@@ -33,13 +33,39 @@ class Decoder {
         
         //decode the instruction
         InstructionInfo LenghtOfInstruction(int32_t opcode, uint8_t prefix[4], int numPrefixes, bool rex, int16_t rexprefix);
-        Instruction* decodeInstruction(std::string instruction);
+        Instruction* decodeInstruction(InstructionInfo instruction);
+
+        //setters and getters for the instruction
+        void setOpcode(uint32_t opcode);
+        uint32_t getOpcode();
+        void setPrefix(uint8_t prefix[4]);
+        uint8_t* getPrefix();
+        void setNumPrefixes(int numPrefixes);
+        int getNumPrefixes();
+        void setRex(bool rex);
+        bool getRex();
+        void setRexprefix(int16_t rexprefix);
+        int16_t getRexprefix();
+
+        
+
         
     private:
+
+        //parts of the instruction
+        uint32_t opcode;
+        uint8_t prefix[4];
+        int numPrefixes;
+        bool rex;
+        int16_t rexprefix;
+
         //decode the instruction
-        Instruction* decodeAdd(std::string instruction);
-        Instruction* decodeSub(std::string instruction);
-        Instruction* decodeMul(std::string instruction);
+        Instruction* decodeAdd(InstructionInfo instruction);
+        Instruction* decodeSub(InstructionInfo instruction);
+        Instruction* decodeMul(InstructionInfo instruction);
+        Instruction* decodeMov(InstructionInfo instruction, int position);
+
+    
         //etc
 };
 

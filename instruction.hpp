@@ -4,6 +4,11 @@
 #define ISTRUCTION_HPP
 
 #include <cstdint>
+#include <iostream>
+#include <string>
+#include <vector>
+#include "controlUnit.hpp"
+#include "memory.hpp"
 
 class CPU;
 
@@ -53,7 +58,8 @@ class MoveInstruction : public Instruction
 
     private:
         int64_t S_address;
-        int64_t D_address;
+        char* S_register;
+        char* D_register;
         int64_t value;
 
        
