@@ -52,7 +52,7 @@ void CPU::cpuReset()
 void CPU::cpuStep()
 {
     //fetch the instruction
-    uint64_t instruction = controlUnit.fetchInstruction();
+    InstructionInfo  instruction = controlUnit.fetchInstruction();
     //decode the instruction
     Instruction* decodedInstruction = controlUnit.decodeInstruction(instruction);
     //execute the instruction

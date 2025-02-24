@@ -36,6 +36,7 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
         info.additionalBytes = it->second.additionalBytes; //additional bytes standars for 32 bits
         info.description = it->second.description;
         info.numOperands = it->second.numOperands;
+        info.operandLength = it->second.operandLength;
     }
     else
     {
@@ -44,6 +45,7 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
         info.opcodeLength = 0;
         info.additionalBytes = 0;
         info.numOperands = 0;
+        info.operandLength = 0;
         info.description = "Unknown instruction";
         return info;
     }
@@ -56,6 +58,7 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
             //the lenght is reduced by 4 bytes 
             info.totalLength -= (2* info.numOperands);
             info.additionalBytes -= (2* info.numOperands);
+            info.operandLength -= 2;
             break;
         }
         
@@ -69,6 +72,8 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
         //the lenght is increased by 4 bytes 
         info.totalLength += (4* info.numOperands);
         info.additionalBytes += (4* info.numOperands);
+        info.operandLength += 4;
+        info.rex = true;
            
     }
 

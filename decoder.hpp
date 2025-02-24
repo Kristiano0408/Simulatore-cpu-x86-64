@@ -6,15 +6,21 @@
 
 #include <string>
 #include "instruction.hpp"
+#include <vector>
+
 //struct for simplifign decoding after getting some information out of fetchinstruction
 struct InstructionInfo {
     size_t totalLength;  // Lunghezza totale dell'istruzione
     size_t opcodeLength; // Lunghezza dell'opcode (1, 2 o 3 byte)
     size_t prefixCount;  // Numero di prefissi
+    bool rex;            // Flag REX
     uint32_t opcode;     // Opcode completo (1, 2 o 3 byte)
     size_t additionalBytes; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
     size_t numOperands; // Numero di operandi
+    size_t operandLength; // Lunghezza degli operandi
+    std::vector<uint8_t> istruction;
     const char* description; // Descrizione dell'istruzione (opzionale)
+
 };
 
 

@@ -31,7 +31,7 @@ ALU& CU::getALU()
 }
 
 
-int64_t CU::fetchInstruction()
+InstructionInfo CU::fetchInstruction()
 {
     uint64_t index; //index of the instruction
     uint8_t prefix[4]; //prefix of the instruction
@@ -40,7 +40,8 @@ int64_t CU::fetchInstruction()
     std::vector<uint8_t> bytes; //bytes of the instruction()
     uint8_t byte; //byte fetched from the memory
     int byteCounter = 0; //counter of the byte (for IR)
-    bool rex = false; //rex prefix
+    bool rex = false; //rex prefix flag
+    uint8_t rexprefix; //rex prefix
 
     //take the value of istruction register
     index = registers.getRegisterValue("IR");
@@ -84,15 +85,15 @@ int64_t CU::fetchInstruction()
         }
     }
 
-    if (byte == 0x40 || byte == 0x41 || byte == 0x42 || byte == 0x43 || byte == 0x44 || byte == 0x45 || byte == 0x46 || byte == 0x47 || // Gruppo 5
-        byte == 0x48 || byte == 0x49 || byte == 0x4A || byte == 0x4B || byte == 0x4C || byte == 0x4D || byte == 0x4E || byte == 0x4F)
-    {
-        //the byte is a REX prefix
+    if ((byte & 0xF0) == 0x40) 
+    { 
         rex = true;
         bytes.push_back(byte);
+        rexprefix = byte;
         byteCounter++;
-        byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
     }
+
+    byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
 
 
 
@@ -135,7 +136,35 @@ int64_t CU::fetchInstruction()
 
 
     //decode the opcode
-    InstructionInfo info = decoder->LenghtOfInstruction(opcode, prefix, numbersOfPrefix, rex, byte);
+    InstructionInfo info = decoder->LenghtOfInstruction(opcode, prefix, numbersOfPrefix, rex, rexprefix);
+
+    
+
+
+    //numbers of bytes to be fetched
+    if (rex)
+    {
+        info.totalLength += 1;
+    }
+
+    for (int i = 0; i < numbersOfPrefix; i++)
+    {
+        if (prefix[i] != 0)
+        {
+            info.totalLength += 1;
+        }
+    }
+
+    int bytesToFetch = info.totalLength - byteCounter;
+
+    //fetch the remaining bytes
+    for (int i = 0; i < bytesToFetch; i++)
+    {
+        byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+        bytes.push_back(byte);
+        byteCounter++;
+    }
+
 
     cout << "Opcode: " << hex << info.opcode << endl;
     cout << "Prefix Count: " << info.prefixCount << endl;
@@ -144,24 +173,26 @@ int64_t CU::fetchInstruction()
     cout << "Additional Bytes: " << info.additionalBytes << endl;
     cout << "Description: " << info.description << endl;
     cout << "Number of Operands: " << info.numOperands << endl;
+    cout << "Operand Length: " << info.operandLength << endl;
 
+    cout << bytes.size() << endl;
+    cout << byteCounter << endl;
 
-    
+    for (int i = 0; i < bytes.size(); i++)
+    {
+        cout << "Byte: " << hex << static_cast<int>(bytes[i]) << endl;
+    }
 
-    
+    info.istruction = bytes;
 
-    
+    return info;
 
-
-
-
-    
    
     
 }
 
 
-Instruction* CU::decodeInstruction(int64_t istruction)
+Instruction* CU::decodeInstruction(InstructionInfo instruction)
 {
 
 }

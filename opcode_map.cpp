@@ -8,19 +8,20 @@ struct InstructionDetails {
     size_t opcodeLength; // Lunghezza dell'opcode (1, 2 o 3 byte)
     size_t additionalBytes; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
     size_t numOperands; // Numero di operandi
+    size_t operandLength; // Lunghezza degli operandi
     const char* description; // Descrizione dell'istruzione (opzionale)
 };
 
 std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
     // Istruzioni MOV
-    {0xB8, {5, 1, 4, 1, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xB9, {5, 1, 4, 1, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBA, {5, 1, 4, 1, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBB, {5, 1, 4, 1, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBC, {5, 1, 4, 1, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBD, {5, 1, 4, 1, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBE, {5, 1, 4, 1, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBF, {5, 1, 4, 1, "MOV r16/r32/r64, imm16/imm32/imm64"}},
+    {0xB8, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
+    {0xB9, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
+    {0xBA, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
+    {0xBB, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
+    {0xBC, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
+    {0xBD, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
+    {0xBE, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
+    {0xBF, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
 
     /*
     // Istruzioni ADD

@@ -25,6 +25,12 @@ int main()
 
     ram.setData(data);
 
+    uint32_t read = ram.readDWord(2);
+
+    cout << "Read: " << hex << read << endl;
+
+
+
 
     cpu.getControlUnit().fetchInstruction();
 

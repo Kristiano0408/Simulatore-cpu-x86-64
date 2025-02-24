@@ -16,8 +16,8 @@ class CU
         CU(Memory* memory);
         ~CU();
 
-        int64_t fetchInstruction();
-        Instruction* decodeInstruction(int64_t instruction);
+        InstructionInfo fetchInstruction();
+        Instruction* decodeInstruction(InstructionInfo instruction);
         void executeInstruction(Instruction* instruction);
 
         //getters for the registers
