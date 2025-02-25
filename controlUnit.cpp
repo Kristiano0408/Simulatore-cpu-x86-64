@@ -39,8 +39,12 @@ InstructionInfo CU::fetchInstruction()
     bool rex = false; //rex prefix flag
     uint8_t rexprefix; //rex prefix
 
+    cout << "Hello World2!" << endl;
+
     //take the value of istruction register
-    index = registers.getRegisterValue("IR");
+    index = registers.getRIP();
+
+    cout << "Hello World2!" << endl;
 
     vector<uint8_t> data = memory->getData();
 
@@ -181,9 +185,9 @@ InstructionInfo CU::fetchInstruction()
 
     info.istruction = bytes;
 
-    registers.setRegisterValue("IR", index + static_cast<int64_t>(info.totalLength));
+    registers.setRIP(index + static_cast<int64_t>(info.totalLength));
 
-    cout << "IR: " << hex << registers.getRegisterValue("IR") << endl;
+    cout << "IR: " << hex << registers.getRIP() << endl;
 
 
     return info;

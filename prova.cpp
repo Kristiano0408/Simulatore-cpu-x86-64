@@ -19,26 +19,30 @@ int main()
     CPU cpu(&ram);
     cpu.cpuReset();
 
+
+
     vector<uint8_t> data;
     //load the program in the memory
-    data= { 0xB8, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
+    data= {0xB8, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
 
     ram.setData(data);
+
+    
 
     InstructionInfo info;
 
     Instruction* instruction;
 
 
-
-
-
     info = cpu.getControlUnit().fetchInstruction();
+
+
 
     for (int i = 0; i < info.istruction.size(); i++)
     {
         cout << "Byte: " << hex << static_cast<int>(info.istruction[i]) << endl;
     }
+    
 
     instruction = cpu.getControlUnit().decodeInstruction(info);
 
@@ -46,7 +50,7 @@ int main()
 
     cpu.getControlUnit().executeInstruction(instruction);
 
-    //cpu.getControlUnit().getRegisters().printRegisters();
+    cpu.getControlUnit().getRegisters().printRegisters();
 
     
 
