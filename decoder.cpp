@@ -78,6 +78,11 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
         info.rexprefix = rexprefix;
            
     }
+    else
+    {
+        info.rex = false;
+        info.rexprefix = 0;
+    }
 
 
     return info;
@@ -95,6 +100,8 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
     
     position = instruction.prefixCount;
 
+    std::cout << "Position: " << position << std::endl;
+
 
     //searching the rex prefix
     if (instruction.rex)
@@ -103,6 +110,10 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
     }
 
     position += instruction.opcodeLength;
+
+    std::cout <<instruction.opcodeLength << std::endl;
+
+    std::cout << "Position: " << position << std::endl;
 
     
 
@@ -132,10 +143,15 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
 
     //setting the parameters of instruction
     mov->setOpcode(instruction.opcode);
+    std::cout << "Opcode: " << mov->getOpcode() << std::endl;
     mov->setPrefix(instruction.prefix);
+    std::cout << "Prefix: " << mov->getPrefix() << std::endl;
     mov->setNumPrefixes(instruction.prefixCount);
+    std::cout << "Num Prefixes: " << mov->getNumPrefixes() << std::endl;
     mov->setRex(instruction.rex);
+    std::cout << "Rex: " << mov->getRex() << std::endl;
     mov->setRexprefix(instruction.rexprefix);
+    std::cout << "Rex Prefix: " << mov->getRexprefix() << std::endl;
 
 
 
@@ -144,17 +160,23 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
     {
         //getting the dimension of operands
         dimOperands = instruction.operandLength;
+        std::cout << "Dim Operands: " << dimOperands << std::endl;
+
+        std::cout << "Position: " << position << std::endl;
+    
 
         //setting the value of the operands
         for (int i = 0; i < dimOperands; i++)
         {
-            value += instruction.istruction[position + i] << (8 * i);
+            value |= (static_cast<int64_t> (instruction.istruction[position + i]))<< (8 * i);
+            std::cout <<  std::hex <<"Value: " << value << std::endl;
         }
 
         //casting the value
         if (!instruction.rex)
         {
             value= static_cast<int32_t>(value);
+            std::cout <<  std::hex <<"Value: " << value << std::endl;
 
             
             for (int i = 0; i < instruction.prefixCount; i++)
@@ -162,12 +184,14 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
                 if (instruction.prefix[i] == 0x66)
                 {
                     value = static_cast<int16_t>(value);
+                    std::cout <<  std::hex <<"Value: " << value << std::endl;
                     break;
                 }
             }
         }
 
         mov->setValue(value);
+        std::cout << "Value: " << mov->getValue() << std::endl;
     
     }
 
