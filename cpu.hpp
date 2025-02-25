@@ -7,8 +7,6 @@
 #include <cstdint>
 #include <array>
 #include <string>
-#include "RegisterFile.hpp"
-#include "ALU.hpp"
 #include "Memory.hpp"
 #include "ControlUnit.hpp"
 

@@ -6,7 +6,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "controlUnit.hpp"
 #include "memory.hpp"
 
 class CU;
@@ -16,10 +15,13 @@ class Instruction
 {
     public:
 
+
         //destructor
-        virtual  ~Instruction() = default;
+        virtual  ~Instruction();
         //execute the instruction
         virtual void execute(CU* controlUnit, Memory* ram);//Polimorfic method that will be implemented in the derived classes
+
+        virtual int64_t getValue() const = 0;
 
         //setters and getters for the instruction
         void setOpcode(uint32_t opcode);
@@ -78,7 +80,7 @@ class MoveInstruction : public Instruction
         void setD_register(char* registerName);
         void setS_register(char* registerName);
         void setValue(int64_t value);
-        int64_t getValue();
+        int64_t getValue() const  override;
 
     private:
         int64_t S_address;

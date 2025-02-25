@@ -2,8 +2,6 @@
 #include "controlUnit.hpp"
 
 
-class CU;
-
 //RICORDARSI controllo overflow
 
 int64_t DirectAddressing::getEffectiveAddress(CU &cu) const

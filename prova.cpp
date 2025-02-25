@@ -37,7 +37,7 @@ int main()
 
     instruction = cpu.getControlUnit().decodeInstruction(info);
 
-    cout << "Instruction: " << instruction->getOpcode() << endl;
+    cout << "Instruction: " <<hex<< instruction->getValue() << endl;
 
     
 

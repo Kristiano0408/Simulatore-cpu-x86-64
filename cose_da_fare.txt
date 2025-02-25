@@ -4,9 +4,12 @@ tutto
 ##testare modi di indirizzamnto
 controllare ofset quando si leggono/scrivono cose dalla memoria
 controllare overflow nei modi di indirizzamnto
-capire come aumetare pc dopo aver decodificato istruzione
 aggiungere altri registri
 getsire flags con vettore(coem nella realta)
 
 
-//fixare adressingmode(non passare cpu ma cu)
+//implemenatre adresing mode
+
+//fixare decodifica e 
+
+//fixare valore ir dopo fetching

@@ -2,13 +2,13 @@
 #define CONTROL_UNIT_HPP
 
 #include "decoder.hpp"
-#include "addressingMode.hpp"
 #include "registerFile.hpp"
 #include "alu.hpp"
+//#include "addressingMode.hpp"
+#include "memory.hpp"
 
 
-
-class AddressingMode;
+//class AddressingMode;
 
 class CU
 {
@@ -29,7 +29,7 @@ class CU
 
     private:
         Decoder* decoder;
-        AddressingMode* addressingMode;
+        //AddressingMode* addressingMode;
         RegisterFile registers; 
         ALU alu;
         Memory* memory;

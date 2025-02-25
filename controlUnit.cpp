@@ -1,14 +1,10 @@
-#include "decoder.hpp"
-#include "addressingMode.hpp"
-#include "registerFile.hpp"
-#include "alu.hpp"
 #include "controlUnit.hpp"
 #include <iostream>
 
 using namespace std;
 
 
-CU::CU(Memory* memory): memory(memory), decoder(), addressingMode(),registers(), alu()
+CU::CU(Memory* memory): memory(memory), decoder(), /*addressingMode(),*/registers(), alu()
 {
     //nothing to do here
     
@@ -17,7 +13,7 @@ CU::CU(Memory* memory): memory(memory), decoder(), addressingMode(),registers(),
 CU::~CU()
 {
     delete decoder;
-    delete addressingMode;
+    //delete addressingMode;
 }
 
 RegisterFile& CU::getRegisters()
@@ -185,13 +181,15 @@ InstructionInfo CU::fetchInstruction()
 
     info.istruction = bytes;
 
-    return info;
-
-
     registers.setRegisterValue("IR", index + static_cast<int64_t>(info.totalLength));
 
     cout << "IR: " << hex << registers.getRegisterValue("IR") << endl;
 
+
+    return info;
+
+
+    
    
     
 }

@@ -4,7 +4,7 @@
 #include "opcode_map.cpp"
 #include "decoder.hpp"
 #include <iostream>
-#include "addressingMode.hpp"
+//#include "addressingMode.hpp"
 
 
 Decoder::Decoder()

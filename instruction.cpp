@@ -1,15 +1,12 @@
 #include "instruction.hpp"
 #include <cstdint>
 
-Instruction::Instruction() {
-    opcode = 0;
-    prefix[4] = {0};
-    numPrefixes = 0;
-    rex = false;
-    rexprefix = 0;
+Instruction::~Instruction() {
+    //nothing to do here
 }
 
-Instruction::~Instruction() {
+void Instruction::execute(CU* cu, Memory* memory) {
+    // Definizione vuota o base
 }
 
 void Instruction::setOpcode(uint32_t opcode) {
@@ -84,6 +81,6 @@ void MoveInstruction::setValue(int64_t value) {
     this->value = value;
 }
 
-int64_t MoveInstruction::getValue() {
+int64_t MoveInstruction::getValue() const {
     return value;
 }
