@@ -209,6 +209,13 @@ Instruction* CU::decodeInstruction(InstructionInfo instruction)
 
 void CU::executeInstruction(Instruction* instruction)
 {
+    std::cout << "executeInstruction" << std::endl;
+    instruction->execute(this, memory);
+
+    //delete the instruction
+    delete instruction;
+
+
 
 }
 

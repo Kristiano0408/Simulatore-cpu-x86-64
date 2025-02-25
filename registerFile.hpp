@@ -43,6 +43,8 @@ class RegisterFile {
         //reset the registers
         void reset();
 
+        void printRegisters();
+
 
     private:
 

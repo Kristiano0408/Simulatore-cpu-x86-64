@@ -158,6 +158,36 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
     //if there is immediate operand
     if(instruction.opcode >= 0xB8 && instruction.opcode <= 0xBF)
     {
+
+        switch (instruction.opcode)
+        {
+            case 0xB8:
+                mov->setD_register("RAX");
+                break;
+            case 0xB9:
+                mov->setD_register("RCX");
+                break;
+            case 0xBA:
+                mov->setD_register("RDX");
+                break;
+            case 0xBB:
+                mov->setD_register("RBX");
+                break;
+            case 0xBC:
+                mov->setD_register("RSP");
+                break;
+            case 0xBD:
+                mov->setD_register("RBP");
+                break;
+            case 0xBE:
+                mov->setD_register("RSI");
+                break;
+            case 0xBF:
+                mov->setD_register("RDI");
+                break;
+            default:
+                break;
+        }
         //getting the dimension of operands
         dimOperands = instruction.operandLength;
         std::cout << "Dim Operands: " << dimOperands << std::endl;

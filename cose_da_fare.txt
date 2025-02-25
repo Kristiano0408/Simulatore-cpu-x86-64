@@ -7,9 +7,9 @@ controllare overflow nei modi di indirizzamnto
 aggiungere altri registri
 getsire flags con vettore(coem nella realta)
 
+//sisteamre uso rex 49 ( per r8-r15)
 
 //implemenatre adresing mode
 
-//fixare decodifica e 
 
 //fixare valore ir dopo fetching

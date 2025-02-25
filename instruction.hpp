@@ -44,6 +44,7 @@ class Instruction
         int numPrefixes;
         bool rex;
         int16_t rexprefix;
+
 };
 
 //define the instruction classes (an iscrutction for each operation)
@@ -76,16 +77,20 @@ class MoveInstruction : public Instruction
         //execute the instruction
         void execute(CU* controlUnit, Memory* ram) override;
 
+        //methods to set the values/addresses
         void setS_address(int64_t address);
-        void setD_register(char* registerName);
-        void setS_register(char* registerName);
+        void setD_register(const std::string& registerName);
+        void setS_register(const std::string& registerName);
         void setValue(int64_t value);
         int64_t getValue() const  override;
 
+        //reset the values/addresses
+        void reset();
+
     private:
         int64_t S_address;
-        char* S_register;
-        char* D_register;
+        std::string S_register;
+        std::string D_register;
         int64_t value;
 
        

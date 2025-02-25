@@ -44,6 +44,10 @@ int main()
 
     cout << "Instruction: " <<hex<< instruction->getValue() << endl;
 
+    cpu.getControlUnit().executeInstruction(instruction);
+
+    //cpu.getControlUnit().getRegisters().printRegisters();
+
     
 
 
