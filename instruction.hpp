@@ -9,7 +9,8 @@
 #include "controlUnit.hpp"
 #include "memory.hpp"
 
-class CPU;
+class CU;
+class Memory;
 
 class Instruction
 {
@@ -19,6 +20,28 @@ class Instruction
         virtual  ~Instruction() = default;
         //execute the instruction
         virtual void execute(CU* controlUnit, Memory* ram);//Polimorfic method that will be implemented in the derived classes
+
+        //setters and getters for the instruction
+        void setOpcode(uint32_t opcode);
+        uint32_t getOpcode();
+        void setPrefix(uint8_t prefix[4]);
+        uint8_t* getPrefix();
+        void setNumPrefixes(int numPrefixes);
+        int getNumPrefixes();
+        void setRex(bool rex);
+        bool getRex();
+        void setRexprefix(int16_t rexprefix);
+        int16_t getRexprefix();
+
+
+
+    private:
+    //parts of the instruction
+        uint32_t opcode;
+        uint8_t prefix[4];
+        int numPrefixes;
+        bool rex;
+        int16_t rexprefix;
 };
 
 //define the instruction classes (an iscrutction for each operation)
@@ -52,8 +75,10 @@ class MoveInstruction : public Instruction
         void execute(CU* controlUnit, Memory* ram) override;
 
         void setS_address(int64_t address);
-        void setD_address(int64_t address);
+        void setD_register(char* registerName);
+        void setS_register(char* registerName);
         void setValue(int64_t value);
+        int64_t getValue();
 
     private:
         int64_t S_address;

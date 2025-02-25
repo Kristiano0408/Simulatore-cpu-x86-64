@@ -25,11 +25,19 @@ int main()
 
     ram.setData(data);
 
+    InstructionInfo info;
+
+    Instruction* instruction;
 
 
 
 
-    cpu.getControlUnit().fetchInstruction();
+
+    info = cpu.getControlUnit().fetchInstruction();
+
+    instruction = cpu.getControlUnit().decodeInstruction(info);
+
+    cout << "Instruction: " << instruction->getOpcode() << endl;
 
     
 

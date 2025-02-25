@@ -60,12 +60,12 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
             info.totalLength -= (2* info.numOperands);
             info.additionalBytes -= (2* info.numOperands);
             info.operandLength -= 2;
+            
             break;
         }
+
+        info.prefix[i] = prefix[i];
         
-        
-       
-       
     }
 
     if (rex and (rexprefix & 0x08))
@@ -75,8 +75,10 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
         info.additionalBytes += (4* info.numOperands);
         info.operandLength += 4;
         info.rex = true;
+        info.rexprefix = rexprefix;
            
     }
+
 
     return info;
     
@@ -90,36 +92,21 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
     uint8_t prefix[4];
     int position = 0;
 
-    //searching the prefix
-    if (instruction.prefixCount > 0)
-    {
-        for (int i = 0; i < instruction.prefixCount; i++)
-        {
-            prefix[i] = instruction.istruction[i];
-        }
-    }
-
-    //method b
-    //memcpy(prefix, instruction.istruction, instruction.prefixCount);
-
-    setPrefix(prefix);
-    setNumPrefixes(instruction.prefixCount);
-
+    
     position = instruction.prefixCount;
 
 
     //searching the rex prefix
     if (instruction.rex)
     {
-        rex = true;
-        setRexprefix(instruction.istruction[position]);
         position++;
     }
 
-    //searching the opcode
-    setOpcode(instruction.opcode);
+    position += instruction.opcodeLength;
 
-    if (getOpcode() >= 0xB8 && getOpcode() <= 0xBF)
+    
+
+    if (instruction.opcode >= 0xB8 && instruction.opcode <= 0xBF)
     {
         return decodeMov(instruction, position);
     }
@@ -143,10 +130,17 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
     int dimOperands = 0;
     int64_t value = 0;
 
+    //setting the parameters of instruction
+    mov->setOpcode(instruction.opcode);
+    mov->setPrefix(instruction.prefix);
+    mov->setNumPrefixes(instruction.prefixCount);
+    mov->setRex(instruction.rex);
+    mov->setRexprefix(instruction.rexprefix);
+
 
 
     //if there is immediate operand
-    if(getOpcode() >= 0xB8 && getOpcode() <= 0xBF)
+    if(instruction.opcode >= 0xB8 && instruction.opcode <= 0xBF)
     {
         //getting the dimension of operands
         dimOperands = instruction.operandLength;
@@ -158,14 +152,14 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
         }
 
         //casting the value
-        if (!rex)
+        if (!instruction.rex)
         {
             value= static_cast<int32_t>(value);
 
             
-            for (int i = 0; i < numPrefixes; i++)
+            for (int i = 0; i < instruction.prefixCount; i++)
             {
-                if (prefix[i] == 0x66)
+                if (instruction.prefix[i] == 0x66)
                 {
                     value = static_cast<int16_t>(value);
                     break;

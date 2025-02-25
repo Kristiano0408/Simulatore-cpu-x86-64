@@ -14,6 +14,14 @@
 
 class CPU
 {
+
+    private:
+        
+        // registers, ALU, memory and decoder          
+        Memory* memory;          
+        Decoder decoder;   
+        CU controlUnit;    
+
     public:
         
         //constructor that receives a pointer to the memory
@@ -28,17 +36,12 @@ class CPU
         //getters for the registers and ALU
         
         ALU& getALU();
-        //CU& getControlUnit();
-        RegisterFile& getRegisters();
 
+        RegisterFile& getRegisters();
+        
         CU& getControlUnit();
 
-    private:
-        
-        // registers, ALU, memory and decoder          
-        Memory* memory;          
-        Decoder decoder;   
-        CU controlUnit;    
+    
         
 };
 
