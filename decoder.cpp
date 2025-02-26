@@ -4,7 +4,7 @@
 #include "opcode_map.cpp"
 #include "decoder.hpp"
 #include <iostream>
-//#include "addressingMode.hpp"
+#include "addressingMode.hpp"
 
 
 Decoder::Decoder()
@@ -205,6 +205,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
             value |= (static_cast<int64_t> (instruction.istruction[position + i]))<< (8 * i);
             std::cout <<  std::hex <<"Value: " << value << std::endl;
         }
+
 
         //casting the value
         if (!instruction.rex)

@@ -9,7 +9,5 @@ getsire flags con vettore(coem nella realta)
 
 //sisteamre uso rex 49 ( per r8-r15)
 
-//implemenatre adresing mode
+//implemenatre addresing mode
 
-
-//fixare valore ir dopo fetching
