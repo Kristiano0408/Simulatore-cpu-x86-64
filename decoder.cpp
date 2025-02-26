@@ -4,7 +4,7 @@
 #include "opcode_map.cpp"
 #include "decoder.hpp"
 #include <iostream>
-#include "addressingMode.hpp"
+//#include "addressingMode.hpp"
 
 
 Decoder::Decoder()
@@ -51,19 +51,25 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
         info.additionalBytes = 0;
         info.numOperands = 0;
         info.operandLength = 0;
+        info.hasModRM = false;
+        info.hasDisplacement = false;
+        info.hasImmediate = false;
         info.description = "Unknown instruction";
+
         return info;
     }
 
+    //setting the prefix and changing the lenght of the instruction if there is IO
     for (int i = 0; i < numPrefixes; i++)
     {
         //if there is the prefix for 16bits opernads
-        if(prefix[i] == 0x66)
+        if(prefix[i] == 0x66 and info.hasImmediate)
         {
             //the lenght is reduced by 4 bytes 
             info.totalLength -= (2* info.numOperands);
             info.additionalBytes -= (2* info.numOperands);
             info.operandLength -= 2;
+            info.prefix[i] = prefix[i];
             
             break;
         }
@@ -72,7 +78,7 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
         
     }
 
-    if (rex and (rexprefix & 0x08))
+    if (rex and (rexprefix & 0x08) and info.hasImmediate)
     {
         //the lenght is increased by 4 bytes 
         info.totalLength += (4* info.numOperands);
@@ -82,6 +88,12 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
         info.rexprefix = rexprefix;
            
     }
+    else if (rex and !info.hasImmediate)
+    {
+        info.rex = true;
+        info.rexprefix = rexprefix;
+    }
+
     else
     {
         info.rex = false;
@@ -102,9 +114,9 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* control
     int position = 0;
 
     
+    
     position = instruction.prefixCount;
 
-    std::cout << "Position: " << position << std::endl;
 
 
     //searching the rex prefix
@@ -115,13 +127,11 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* control
 
     position += instruction.opcodeLength;
 
-    std::cout <<instruction.opcodeLength << std::endl;
-
     std::cout << "Position: " << position << std::endl;
 
     
-
-    if (instruction.opcode >= 0xB8 && instruction.opcode <= 0xBF)
+    //move (in future will be implemented a function for controlloing the opcode)
+    if (instruction.opcode >= 0xB8 && instruction.opcode <= 0xBF || instruction.opcode == 0x88 || instruction.opcode == 0x89 || instruction.opcode == 0x8A || instruction.opcode == 0x8B)
     {
         return decodeMov(instruction, position, controlUnit);
     }
@@ -144,15 +154,28 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     MoveInstruction* mov = new MoveInstruction();
 
     //create the addressing mode
-    AddressingMode* addressingMode = new AddressingMode(controlUnit);
+    //AddressingMode* addressingMode = new AddressingMode(controlUnit);
+
+    // creating the struct for the r/m operand
+    r_m rm;
+
     int dimOperands = 0;
     int64_t value = 0;
+    int8_t displacement = 0;
+    int8_t R_M = 0;
+    uint8_t prefix[4];
 
     //setting the parameters of instruction
     mov->setOpcode(instruction.opcode);
     std::cout << "Opcode: " << mov->getOpcode() << std::endl;
+
+    
     mov->setPrefix(instruction.prefix);
-    std::cout << "Prefix: " << mov->getPrefix() << std::endl;
+
+    for (int i = 0; i < instruction.prefixCount; i++)
+    {
+        std::cout << "Prefix: " << std::hex<< static_cast<int>(mov->getPrefix()[i]) << std::endl;
+    }
     mov->setNumPrefixes(instruction.prefixCount);
     std::cout << "Num Prefixes: " << mov->getNumPrefixes() << std::endl;
     mov->setRex(instruction.rex);
@@ -162,12 +185,10 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
 
 
-    //if there is immediate operand
+    //if there is only an immediate operand
+    //if(instruction.hasImmediate and !instruction.hasModRM)
     if(instruction.opcode >= 0xB8 && instruction.opcode <= 0xBF)
     {
-
-        //craeting the object of addressing mode
-
 
         switch (instruction.opcode)
         {
@@ -214,7 +235,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         }
 
         //setting the value with the addressing mode (for immediate operand it actually does nothing, but is for using the sme methodology for all the adressing mode)
-        value = addressingMode->immediateAddressing(value);
+        //value = addressingMode->immediateAddressing(value);
 
         
         //casting the value
@@ -241,6 +262,25 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         std::cout << "Value: " << mov->getValue() << std::endl;
     
     }
+
+
+    //if there is r/m operand
+    if (instruction.hasModRM && !instruction.hasImmediate)
+    {
+        R_M = instruction.istruction[position];
+        std::cout << "r/m: " << std::hex<<static_cast<int>(R_M)<< std::endl;
+        
+        //adressing mode
+
+
+
+
+
+    }
+
+
+
+
 
     return mov;
 

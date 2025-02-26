@@ -19,7 +19,7 @@ std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
 
     // Istruzioni MOV
 
-    // Istruzioni MOV tra registro e immediato
+    // Istruzioni MOV tra registro e immediato (manca imm8)
     {0xB8, {5, 1, 4, 1, 4, false, false, true, "MOV AX/EAX/RAX, imm16/imm32/imm64"}},
     {0xB9, {5, 1, 4, 1, 4, false, false, true, "MOV CX/ECX/RCX, imm16/imm32/imm64"}},
     {0xBA, {5, 1, 4, 1, 4, false, false, true, "MOV DX/EDX/RDX, imm16/imm32/imm64"}},
@@ -28,6 +28,12 @@ std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
     {0xBD, {5, 1, 4, 1, 4, false, false, true, "MOV BP/EBP/RBP, imm16/imm32/imm64"}},
     {0xBE, {5, 1, 4, 1, 4, false, false, true, "MOV SI/ESI/RSI, imm16/imm32/imm64"}},
     {0xBF, {5, 1, 4, 1, 4, false, false, true, "MOV DI/EDI/RDI, imm16/imm32/imm64"}},
+
+    // Istruzioni MOV tra registro e registro/memoria
+    {0x88, {2, 1, 1, 2, 1, true, false, false, "MOV r/m8, r8"}},
+    {0x89, {2, 1, 1, 2, 1, true, false, false, "MOV r/m16/32/64, r16/32/64"}},
+    {0x8A, {2, 1, 1, 2, 1, true, false, false, "MOV r8, r/m8"}},
+    {0x8B, {2, 1, 1, 2, 1, true, false, false, "MOV r16/32/64, r/m16/32/64"}},
 
     /*
     // Istruzioni ADD

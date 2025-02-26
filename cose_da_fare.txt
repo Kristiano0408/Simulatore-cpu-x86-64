@@ -9,5 +9,6 @@ getsire flags con vettore(coem nella realta)
 
 //sisteamre uso rex 49 ( per r8-r15)
 
-//implemenatre addresing mode
+//implemenatre addresing mode (tipo passo r/m e lei mi dice cosa fare)
 
+//ricostruire fethcing e decoding per dispacemnet (leggo l'opcode da tabella, vedo se ha r/m, lo leggo,decodifico rm con adressing mode o con classe operand(new) e capsico se ce altro , oppure  infine leggo l'immediato, )

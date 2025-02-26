@@ -39,12 +39,8 @@ InstructionInfo CU::fetchInstruction()
     bool rex = false; //rex prefix flag
     uint8_t rexprefix; //rex prefix
 
-    cout << "Hello World2!" << endl;
-
     //take the value of istruction register
     index = registers.getRIP();
-
-    cout << "Hello World2!" << endl;
 
     vector<uint8_t> data = memory->getData();
 
@@ -78,6 +74,7 @@ InstructionInfo CU::fetchInstruction()
             numbersOfPrefix++;
             byteCounter++;
             bytes.push_back(byte);
+
         }
         else
         {
@@ -175,8 +172,7 @@ InstructionInfo CU::fetchInstruction()
     cout << "Number of Operands: " << info.numOperands << endl;
     cout << "Operand Length: " << info.operandLength << endl;
 
-    cout << bytes.size() << endl;
-    cout << byteCounter << endl;
+
 
     for (int i = 0; i < bytes.size(); i++)
     {

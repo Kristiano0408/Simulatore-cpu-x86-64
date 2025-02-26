@@ -23,7 +23,7 @@ int main()
 
     vector<uint8_t> data;
     //load the program in the memory
-    data= {0xB8, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
+    data= {0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
 
     ram.setData(data);
 
@@ -35,7 +35,6 @@ int main()
 
 
     info = cpu.getControlUnit().fetchInstruction();
-
 
 
     for (int i = 0; i < info.istruction.size(); i++)
