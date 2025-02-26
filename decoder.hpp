@@ -38,7 +38,7 @@ class Decoder {
         
         //decode the instruction
         InstructionInfo LenghtOfInstruction(int32_t opcode, uint8_t prefix[4], int numPrefixes, bool rex, int16_t rexprefix);
-        Instruction* decodeInstruction(InstructionInfo instruction);
+        Instruction* decodeInstruction(InstructionInfo instruction, CU* controlUnit);
 
         
         
@@ -52,7 +52,7 @@ class Decoder {
         Instruction* decodeAdd(InstructionInfo instruction);
         Instruction* decodeSub(InstructionInfo instruction);
         Instruction* decodeMul(InstructionInfo instruction);
-        Instruction* decodeMov(InstructionInfo instruction, int position);
+        Instruction* decodeMov(InstructionInfo instruction, int position, CU* controlUnit);
 
 
     

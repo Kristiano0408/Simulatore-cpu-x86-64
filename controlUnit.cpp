@@ -203,7 +203,7 @@ Instruction* CU::decodeInstruction(InstructionInfo instruction)
 {
 
 
-   return decoder->decodeInstruction(instruction);
+   return decoder->decodeInstruction(instruction, this);
    
 
 

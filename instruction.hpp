@@ -84,6 +84,7 @@ class MoveInstruction : public Instruction
         void setValue(int64_t value);
         int64_t getValue() const  override;
 
+
         //reset the values/addresses
         void reset();
 
@@ -92,6 +93,8 @@ class MoveInstruction : public Instruction
         std::string S_register;
         std::string D_register;
         int64_t value;
+
+
 
        
 };

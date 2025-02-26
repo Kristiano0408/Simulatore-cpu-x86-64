@@ -96,7 +96,7 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
 }
 
 
-Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
+Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* controlUnit)
 {
     uint8_t prefix[4];
     int position = 0;
@@ -123,7 +123,7 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
 
     if (instruction.opcode >= 0xB8 && instruction.opcode <= 0xBF)
     {
-        return decodeMov(instruction, position);
+        return decodeMov(instruction, position, controlUnit);
     }
 
 
@@ -138,10 +138,13 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
 
 }
        
-Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
+Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* controlUnit)
 {
     //create the instruction
     MoveInstruction* mov = new MoveInstruction();
+
+    //create the addressing mode
+    AddressingMode* addressingMode = new AddressingMode(controlUnit);
     int dimOperands = 0;
     int64_t value = 0;
 
@@ -162,6 +165,9 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
     //if there is immediate operand
     if(instruction.opcode >= 0xB8 && instruction.opcode <= 0xBF)
     {
+
+        //craeting the object of addressing mode
+
 
         switch (instruction.opcode)
         {
@@ -204,9 +210,13 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
         {
             value |= (static_cast<int64_t> (instruction.istruction[position + i]))<< (8 * i);
             std::cout <<  std::hex <<"Value: " << value << std::endl;
+         
         }
 
+        //setting the value with the addressing mode (for immediate operand it actually does nothing, but is for using the sme methodology for all the adressing mode)
+        value = addressingMode->immediateAddressing(value);
 
+        
         //casting the value
         if (!instruction.rex)
         {
@@ -224,6 +234,8 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position)
                 }
             }
         }
+
+        
 
         mov->setValue(value);
         std::cout << "Value: " << mov->getValue() << std::endl;

@@ -1,48 +1,44 @@
 #include "addressingMode.hpp"
-#include "controlUnit.hpp"
+
 
 
 //RICORDARSI controllo overflow
 
-int64_t DirectAddressing::getEffectiveAddress(CU &cu) const
-{
+AddressingMode::AddressingMode(CU* controlUnit) {
+    this->controlUnit = controlUnit;
+}
+
+AddressingMode::~AddressingMode() {
+}
+
+int64_t AddressingMode::directAddressing(int64_t address) const {
     return address;
 }
 
-int64_t ImmediateAddressing::getEffectiveAddress(CU &cu) const
-{
+int64_t AddressingMode::immediateAddressing(int64_t value) const {
     return value;
 }
 
-int64_t IndirectAddressing::getEffectiveAddress(CU &cu) const
-{
-    return cu.getRegisters().getRegisterValue(reg_address);
+int64_t AddressingMode::indirectAddressing(const std::string& reg_address) const {
+    return controlUnit->getRegisters().getRegisterValue(reg_address);
 }
 
-int64_t RegisterAddressing::getEffectiveAddress(CU &cu) const
-{
-    return cu.getRegisters().getRegisterValue(reg_value);
+int64_t AddressingMode::registerAddressing(const std::string& reg_value) const {
+    return controlUnit->getRegisters().getRegisterValue(reg_value);
 }
 
-int64_t BaseDisplacementAddressing::getEffectiveAddress(CU &cu) const
-{
-    return cu.getRegisters().getRegisterValue(baseReg) + displacement;
+int64_t AddressingMode::baseDisplacementAddressing(const std::string& baseReg, int64_t displacement) const {
+    return controlUnit->getRegisters().getRegisterValue(baseReg) + displacement;
 }
 
-
-int64_t IndexedAddressing::getEffectiveAddress(CU &cu) const
-{
-    return cu.getRegisters().getRegisterValue(baseReg) + cu.getRegisters().getRegisterValue(indexReg);
+int64_t AddressingMode::indexedAddressing(const std::string& baseReg, const std::string& indexReg) const {
+    return controlUnit->getRegisters().getRegisterValue(baseReg) + controlUnit->getRegisters().getRegisterValue(indexReg);
 }
 
-
-int64_t ScaledIndexedAddressing::getEffectiveAddress(CU &cu) const
-{
-    return cu.getRegisters().getRegisterValue(baseReg) + cu.getRegisters().getRegisterValue(indexReg) * scale;
+int64_t AddressingMode::scaledIndexedAddressing(const std::string& baseReg, const std::string& indexReg, int8_t scale) const {
+    return controlUnit->getRegisters().getRegisterValue(baseReg) + controlUnit->getRegisters().getRegisterValue(indexReg) * scale;
 }
 
-int64_t ScaledIndexedDisplacementAddressing::getEffectiveAddress(CU &cu) const
-{
-    return cu.getRegisters().getRegisterValue(baseReg) + cu.getRegisters().getRegisterValue(indexReg) * scale + displacement;
+int64_t AddressingMode::scaledIndexedDisplacementAddressing(const std::string& baseReg, const std::string& indexReg, int8_t scale, int64_t displacement) const {
+    return controlUnit->getRegisters().getRegisterValue(baseReg) + controlUnit->getRegisters().getRegisterValue(indexReg) * scale + displacement;
 }
-
