@@ -158,6 +158,8 @@ int64_t RegisterFile::getRegisterValue(const std::string& name)
     {
         return R15;
     }
+
+    return 0;
   
         
     

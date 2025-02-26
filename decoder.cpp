@@ -38,6 +38,10 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
         info.description = it->second.description;
         info.numOperands = it->second.numOperands;
         info.operandLength = it->second.operandLength;
+        info.hasModRM = it->second.hasModRM;
+        info.hasDisplacement = it->second.hasDisplacement;
+        info.hasImmediate = it->second.hasImmediate;
+        
     }
     else
     {

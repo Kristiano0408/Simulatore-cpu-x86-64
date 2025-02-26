@@ -20,6 +20,9 @@ struct InstructionInfo {
     size_t additionalBytes; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
     size_t numOperands; // Numero di operandi
     size_t operandLength; // Lunghezza degli operandi
+    bool hasModRM;            // Presenza del byte ModR/M
+    bool hasDisplacement;     // Presenza di un displacement
+    bool hasImmediate;        // Presenza di un valore immediato
     std::vector<uint8_t> istruction;
     const char* description; // Descrizione dell'istruzione (opzionale)
 

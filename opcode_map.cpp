@@ -9,19 +9,25 @@ struct InstructionDetails {
     size_t additionalBytes; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
     size_t numOperands; // Numero di operandi
     size_t operandLength; // Lunghezza degli operandi
+    bool hasModRM;            // Presenza del byte ModR/M
+    bool hasDisplacement;     // Presenza di un displacement
+    bool hasImmediate;        // Presenza di un valore immediato
     const char* description; // Descrizione dell'istruzione (opzionale)
 };
 
 std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
+
     // Istruzioni MOV
-    {0xB8, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xB9, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBA, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBB, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBC, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBD, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBE, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
-    {0xBF, {5, 1, 4, 1,4, "MOV r16/r32/r64, imm16/imm32/imm64"}},
+
+    // Istruzioni MOV tra registro e immediato
+    {0xB8, {5, 1, 4, 1, 4, false, false, true, "MOV AX/EAX/RAX, imm16/imm32/imm64"}},
+    {0xB9, {5, 1, 4, 1, 4, false, false, true, "MOV CX/ECX/RCX, imm16/imm32/imm64"}},
+    {0xBA, {5, 1, 4, 1, 4, false, false, true, "MOV DX/EDX/RDX, imm16/imm32/imm64"}},
+    {0xBB, {5, 1, 4, 1, 4, false, false, true, "MOV BX/EBX/RBX, imm16/imm32/imm64"}},
+    {0xBC, {5, 1, 4, 1, 4, false, false, true, "MOV SP/ESP/RSP, imm16/imm32/imm64"}},
+    {0xBD, {5, 1, 4, 1, 4, false, false, true, "MOV BP/EBP/RBP, imm16/imm32/imm64"}},
+    {0xBE, {5, 1, 4, 1, 4, false, false, true, "MOV SI/ESI/RSI, imm16/imm32/imm64"}},
+    {0xBF, {5, 1, 4, 1, 4, false, false, true, "MOV DI/EDI/RDI, imm16/imm32/imm64"}},
 
     /*
     // Istruzioni ADD
