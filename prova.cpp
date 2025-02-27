@@ -23,7 +23,7 @@ int main()
 
     vector<uint8_t> data;
     //load the program in the memory
-    data= {0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
+    data= {0x8B, 0x83, 0x34, 0x12, 0x11, 0x11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
 
     ram.setData(data);
 
@@ -37,9 +37,9 @@ int main()
     info = cpu.getControlUnit().fetchInstruction();
 
 
-    for (int i = 0; i < info.istruction.size(); i++)
+    for (int i = 0; i < info.instruction.size(); i++)
     {
-        cout << "Byte: " << hex << static_cast<int>(info.istruction[i]) << endl;
+        cout << "Byte: " << hex << static_cast<int>(info.instruction[i]) << endl;
     }
     
 

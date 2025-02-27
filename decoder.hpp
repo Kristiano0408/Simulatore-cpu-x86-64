@@ -24,7 +24,7 @@ struct InstructionInfo {
     bool hasSIB;              // Presenza del byte SIB
     bool hasDisplacement;     // Presenza di un displacement
     bool hasImmediate;        // Presenza di un valore immediato
-    std::vector<uint8_t> istruction;
+    std::vector<uint8_t> instruction;
     const char* description; // Descrizione dell'istruzione (opzionale)
 
 };

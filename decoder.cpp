@@ -1,6 +1,4 @@
 
-#include <string>
-#include "instruction.hpp"
 #include "opcode_map.cpp"
 #include "decoder.hpp"
 #include <iostream>
@@ -239,7 +237,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         //setting the value of the operands
         for (int i = 0; i < dimOperands; i++)
         {
-            value |= (static_cast<int64_t> (instruction.istruction[position + i]))<< (8 * i);
+            value |= (static_cast<int64_t> (instruction.instruction[position + i]))<< (8 * i);
             std::cout <<  std::hex <<"Value: " << value << std::endl;
          
         }
@@ -277,7 +275,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     //if there is r/m operand
     if (instruction.hasModRM && !instruction.hasImmediate)
     {
-        R_M = instruction.istruction[position];
+        R_M = instruction.instruction[position];
         std::cout << "r/m: " << std::hex<<static_cast<int>(R_M)<< std::endl;
         
         //adressing mode

@@ -6,7 +6,6 @@
 #include "alu.hpp"
 //#include "addressingMode.hpp"
 #include "memory.hpp"
-#include "helpers.cpp"
 
 
 //class AddressingMode;
@@ -27,8 +26,8 @@ class CU
 
         //helpers function for making the code more readable
         void fixTotalLengthPrefix(InstructionInfo* info);
-
-
+        void searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo* info, int* byteCounter, r_m* rm, uint64_t index);
+        void fetchOpcode(std::vector<uint8_t>& bytes, int* byteCounter, uint64_t index, uint32_t* opcode);
         
 
     private:

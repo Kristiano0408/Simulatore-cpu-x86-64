@@ -1,5 +1,5 @@
 #include <cstdint>
-
+#include "helpers.hpp"
 
 bool isPrefix(uint8_t byte)
 {
