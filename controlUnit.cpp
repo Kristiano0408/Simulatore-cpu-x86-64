@@ -1,7 +1,6 @@
 #include "controlUnit.hpp"
 #include <iostream>
 
-using namespace std;
 
 
 CU::CU(Memory* memory): memory(memory), decoder(), /*addressingMode(),*/registers(), alu()
@@ -42,12 +41,12 @@ InstructionInfo CU::fetchInstruction()
     //take the value of istruction register
     index = registers.getRIP();
 
-    vector<uint8_t> data = memory->getData();
+    std::vector<uint8_t> data = memory->getData();
 
     //stampa il contenuto della memoria
     for (int i = 0; i < data.size(); i++)
     {
-        std::cout << "Address: " << i << " Value: " << hex << static_cast<int>(data[i]) << endl;
+        std::cout << "Address: " << i << " Value: " << std::hex << static_cast<int>(data[i]) << std::endl;
     }
 
 
@@ -57,17 +56,10 @@ InstructionInfo CU::fetchInstruction()
     while (numbersOfPrefix < 4)
     {
 
-        byte=memory->readByte(index + static_cast<uint64_t>(byteCounter));
-
-        cout << index + static_cast<int64_t>(byteCounter) << endl;
-        cout << "Byte: "<< hex << static_cast<int>(byte) << endl;   
+        byte=memory->readByte(index + static_cast<uint64_t>(byteCounter));   
 
         //if the byte is a prefix
-        if ((byte == 0xF0) || (byte == 0xF2 || byte == 0xF3) ||  // Gruppo 1
-            (byte == 0x2E || byte == 0x36 || byte == 0x3E ||     // Gruppo 2
-            byte == 0x26 || byte == 0x64 || byte == 0x65) ||
-            (byte == 0x66) ||  // Gruppo 3
-            (byte == 0x67))   // Gruppo 4
+        if (isPrefix(byte))
         {
             //the byte is a prefix
             prefix[numbersOfPrefix] = byte;
@@ -76,10 +68,8 @@ InstructionInfo CU::fetchInstruction()
             bytes.push_back(byte);
 
         }
-        else
-        {
-            break;
-        }
+        else {break;}
+
     }
 
 
@@ -138,29 +128,22 @@ InstructionInfo CU::fetchInstruction()
     InstructionInfo info = decoder->LenghtOfInstruction(opcode, prefix, numbersOfPrefix, rex, rexprefix);
 
 
+    //fixing the total length due to the prefix
+    fixTotalLengthPrefix(&info);
 
     
-
-
-    //numbers of bytes to be fetched
-    if (rex)
-    {
-        info.totalLength += 1;
-    }
-
-    for (int i = 0; i < numbersOfPrefix; i++)
-    {
-        if (prefix[i] != 0)
-        {
-            info.totalLength += 1;
-        }
-    }
+  
 
     //searching for the sib and displacement
     if (info.hasModRM)
     {
         byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
         r_m rm = decoder->decodeRM(byte);
+
+        std::cout << "Mod: " << std::hex << static_cast<int>(rm.mod) << std::endl;
+        std::cout << "Reg: " << std::hex << static_cast<int>(rm.reg) << std::endl;
+        std::cout << "R/M: " << std::hex << static_cast<int>(rm.r_m) << std::endl;
+
         bytes.push_back(byte);
 
         if (rm.mod == 0b11)
@@ -176,8 +159,11 @@ InstructionInfo CU::fetchInstruction()
                 byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
                 bytes.push_back(byte);
                 byteCounter++;
+                std::cout << "SIB: " << std::hex << static_cast<int>(byte) << std::endl;
 
                 info.hasSIB = true;
+                info.totalLength += 1;
+                info.additionalBytes += 1;
             }
             if (rm.mod == 0b01)
             {
@@ -186,6 +172,9 @@ InstructionInfo CU::fetchInstruction()
                 bytes.push_back(byte);
                 byteCounter++;
                 info.hasDisplacement = true;
+                info.totalLength += 1;
+                info.additionalBytes += 1;
+                std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
             }
 
             if (rm.mod == 0b10)
@@ -194,9 +183,12 @@ InstructionInfo CU::fetchInstruction()
                 for (int i = 0; i < 4; i++)
                 {
                     byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+                    std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                     bytes.push_back(byte);
                     byteCounter++;
                 }
+                info.totalLength += 4;
+                info.additionalBytes += 4;
                 info.hasDisplacement = true;
             }
 
@@ -207,12 +199,17 @@ InstructionInfo CU::fetchInstruction()
                 for (int i = 0; i < 4; i++)
                 {
                     byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+                    std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                     bytes.push_back(byte);
                     byteCounter++;
+                    
                 }
+                info.totalLength += 4;
+                info.additionalBytes += 4;
                 info.hasDisplacement = true;
             }
 
+        }
     }
 
 
@@ -227,27 +224,27 @@ InstructionInfo CU::fetchInstruction()
     }
 
 
-    cout << "Opcode: " << hex << info.opcode << endl;
-    cout << "Prefix Count: " << info.prefixCount << endl;
-    cout << "Total Length: " << info.totalLength << endl;
-    cout << "Opcode Length: " << info.opcodeLength << endl;
-    cout << "Additional Bytes: " << info.additionalBytes << endl;
-    cout << "Description: " << info.description << endl;
-    cout << "Number of Operands: " << info.numOperands << endl;
-    cout << "Operand Length: " << info.operandLength << endl;
+    std::cout << "Opcode: " << std::hex << info.opcode << std::endl;
+    std::cout << "Prefix Count: " << info.prefixCount << std::endl;
+    std::cout << "Total Length: " << info.totalLength << std::endl;
+    std::cout << "Opcode Length: " << info.opcodeLength << std::endl;
+    std::cout << "Additional Bytes: " << info.additionalBytes << std::endl;
+    std::cout << "Description: " << info.description << std::endl;
+    std::cout << "Number of Operands: " << info.numOperands << std::endl;
+    std::cout << "Operand Length: " << info.operandLength << std::endl;
 
 
 
     for (int i = 0; i < bytes.size(); i++)
     {
-        cout << "Byte: " << hex << static_cast<int>(bytes[i]) << endl;
+        std::cout << "Byte: " << std::hex << static_cast<int>(bytes[i]) << std::endl;
     }
 
     info.istruction = bytes;
 
     registers.setRIP(index + static_cast<int64_t>(info.totalLength));
 
-    cout << "IR: " << hex << registers.getRIP() << endl;
+    std::cout << "IR: " << std::hex << registers.getRIP() << std::endl;
 
 
     return info;
@@ -282,6 +279,42 @@ void CU::executeInstruction(Instruction* instruction)
 
 
 }
+
+
+//helpers function for making the code more readable
+void CU::fixTotalLengthPrefix(InstructionInfo* info)
+{
+    if (info->rex)
+    {
+        info->totalLength += 1;
+    }
+
+    for (int i = 0; i < info->prefixCount; i++)
+    {
+        if (info->prefix[i] != 0)
+        {
+            info->totalLength += 1;
+        }
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*1. Istruzioni di Movimento di Dati
 Istruzione	Opcode	Lunghezza Opcode	Descrizione

@@ -115,12 +115,6 @@ r_m Decoder::decodeRM(int8_t R_M)
     rm.reg = (R_M >> 3) & 0b111;
     rm.r_m = (R_M & 0b111);
 
-    std::cout << "Mod: " << std::hex << static_cast<int>(rm.mod) << std::endl;
-    std::cout << "Reg: " << std::hex << static_cast<int>(rm.reg) << std::endl;
-    std::cout << "r/m: " << std::hex << static_cast<int>(rm.r_m) << std::endl;
-    
-
-
     return rm;
 }
 

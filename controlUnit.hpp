@@ -6,6 +6,7 @@
 #include "alu.hpp"
 //#include "addressingMode.hpp"
 #include "memory.hpp"
+#include "helpers.cpp"
 
 
 //class AddressingMode;
@@ -24,6 +25,9 @@ class CU
         RegisterFile& getRegisters();
         ALU& getALU();
 
+        //helpers function for making the code more readable
+        void fixTotalLengthPrefix(InstructionInfo* info);
+
 
         
 
@@ -33,6 +37,8 @@ class CU
         RegisterFile registers; 
         ALU alu;
         Memory* memory;
+
+        
         
 
 };
