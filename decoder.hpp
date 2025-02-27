@@ -21,6 +21,7 @@ struct InstructionInfo {
     size_t numOperands; // Numero di operandi
     size_t operandLength; // Lunghezza degli operandi
     bool hasModRM;            // Presenza del byte ModR/M
+    bool hasSIB;              // Presenza del byte SIB
     bool hasDisplacement;     // Presenza di un displacement
     bool hasImmediate;        // Presenza di un valore immediato
     std::vector<uint8_t> istruction;
@@ -29,9 +30,10 @@ struct InstructionInfo {
 };
 
 struct r_m {
-    uint8_t r_m;
-    uint8_t mod;
-    uint8_t reg;
+    uint8_t r_m : 3;
+    uint8_t mod : 2;
+    uint8_t reg : 3;
+    uint8_t byte_r_m;
 };
 
 
@@ -45,7 +47,8 @@ class Decoder {
         //decode the instruction
         InstructionInfo LenghtOfInstruction(int32_t opcode, uint8_t prefix[4], int numPrefixes, bool rex, int16_t rexprefix);
         Instruction* decodeInstruction(InstructionInfo instruction, CU* controlUnit);
-
+         //decode the  r/m operand
+         r_m decodeRM(int8_t r_m);
 
         
         
@@ -65,8 +68,7 @@ class Decoder {
         Instruction* decodeMul(InstructionInfo instruction);
         Instruction* decodeMov(InstructionInfo instruction, int position, CU* controlUnit);
 
-        //decode the  r/m operand
-        r_m decodeRM(int8_t r_m);
+       
 
 
     

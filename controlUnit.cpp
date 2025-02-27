@@ -53,7 +53,7 @@ InstructionInfo CU::fetchInstruction()
 
 
 
-    //fetch whit a while loop one byte at time for serching the opcode
+    //fetch whit a while loop one byte at time for serching the prefix
     while (numbersOfPrefix < 4)
     {
 
@@ -82,6 +82,8 @@ InstructionInfo CU::fetchInstruction()
         }
     }
 
+
+    //searcing the rex prefix
     if ((byte & 0xF0) == 0x40) 
     { 
         rex = true;
@@ -135,6 +137,8 @@ InstructionInfo CU::fetchInstruction()
     //decode the opcode
     InstructionInfo info = decoder->LenghtOfInstruction(opcode, prefix, numbersOfPrefix, rex, rexprefix);
 
+
+
     
 
 
@@ -151,6 +155,66 @@ InstructionInfo CU::fetchInstruction()
             info.totalLength += 1;
         }
     }
+
+    //searching for the sib and displacement
+    if (info.hasModRM)
+    {
+        byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+        r_m rm = decoder->decodeRM(byte);
+        bytes.push_back(byte);
+
+        if (rm.mod == 0b11)
+        {
+            //nothing to do because is a reg-reg instruction
+        }
+        else
+        {
+            //if mod=00,01,10,
+            if(rm.r_m == 0b100)
+            {
+                    //if the r/m is 100, there is the SIB byte
+                byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+                bytes.push_back(byte);
+                byteCounter++;
+
+                info.hasSIB = true;
+            }
+            if (rm.mod == 0b01)
+            {
+                //there is a displacement of 8 bit
+                byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+                bytes.push_back(byte);
+                byteCounter++;
+                info.hasDisplacement = true;
+            }
+
+            if (rm.mod == 0b10)
+            {
+                //there is a displacement of 32 bit
+                for (int i = 0; i < 4; i++)
+                {
+                    byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+                    bytes.push_back(byte);
+                    byteCounter++;
+                }
+                info.hasDisplacement = true;
+            }
+
+
+            if (rm.mod == 0b00 and rm.r_m == 0b101)
+            {
+                //there is a displacement of 32 bit
+                for (int i = 0; i < 4; i++)
+                {
+                    byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+                    bytes.push_back(byte);
+                    byteCounter++;
+                }
+                info.hasDisplacement = true;
+            }
+
+    }
+
 
     int bytesToFetch = info.totalLength - byteCounter;
 

@@ -107,6 +107,22 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
    
 }
 
+r_m Decoder::decodeRM(int8_t R_M)
+{
+    r_m rm;
+    rm.byte_r_m = R_M;
+    rm.mod = (R_M >> 6) & 0b11;
+    rm.reg = (R_M >> 3) & 0b111;
+    rm.r_m = (R_M & 0b111);
+
+    std::cout << "Mod: " << std::hex << static_cast<int>(rm.mod) << std::endl;
+    std::cout << "Reg: " << std::hex << static_cast<int>(rm.reg) << std::endl;
+    std::cout << "r/m: " << std::hex << static_cast<int>(rm.r_m) << std::endl;
+    
+
+
+    return rm;
+}
 
 Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* controlUnit)
 {
