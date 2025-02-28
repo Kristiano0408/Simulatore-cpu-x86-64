@@ -2,6 +2,7 @@
 #include "opcode_map.cpp"
 #include "decoder.hpp"
 #include <iostream>
+#include "helpers.hpp"
 //#include "addressingMode.hpp"
 
 
@@ -118,14 +119,9 @@ r_m Decoder::decodeRM(int8_t R_M)
 
 Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* controlUnit)
 {
-    uint8_t prefix[4];
     int position = 0;
 
-    
-    
     position = instruction.prefixCount;
-
-
 
     //searching the rex prefix
     if (instruction.rex)
@@ -139,7 +135,7 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* control
 
     
     //move (in future will be implemented a function for controlloing the opcode)
-    if (instruction.opcode >= 0xB8 && instruction.opcode <= 0xBF || instruction.opcode == 0x88 || instruction.opcode == 0x89 || instruction.opcode == 0x8A || instruction.opcode == 0x8B)
+    if (isMoveInstruction(instruction.opcode))
     {
         return decodeMov(instruction, position, controlUnit);
     }

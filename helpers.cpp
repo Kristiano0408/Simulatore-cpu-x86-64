@@ -12,3 +12,39 @@ bool isPrefix(uint8_t byte)
         return false;
     }
 }
+
+bool isMoveInstruction(uint32_t opcode)
+{
+    if(isMoveInstructionIO(opcode))
+    {
+        return true;
+    }
+    else if (isMoveInstructionR_M(opcode))
+    {
+        return true;
+    }
+
+    return false;
+    
+
+}
+
+bool isMoveInstructionIO(uint32_t opcode)
+{
+    if(opcode >= 0xB8 && opcode <= 0xBF)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool isMoveInstructionR_M(uint32_t opcode)
+{
+    if(opcode == 0x88 || opcode == 0x89 || opcode == 0x8A || opcode == 0x8B)
+    {
+        return true;
+    }
+
+    return false;
+}

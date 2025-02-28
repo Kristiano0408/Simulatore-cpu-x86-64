@@ -26,6 +26,7 @@ ALU& CU::getALU()
 }
 
 
+//method for fethcing the instruction from the ram
 InstructionInfo CU::fetchInstruction()
 {
     uint64_t index; //index of the instruction
@@ -103,9 +104,9 @@ InstructionInfo CU::fetchInstruction()
 
 
     int bytesToFetch = info.totalLength - byteCounter;
+    std::cout << "Bytes to fetch: " << bytesToFetch << std::endl;
 
     //fetch the remaining bytes (teoricallly the immediate value)
-    std::cout << "Bytes to fetch: " << bytesToFetch << std::endl;
     for (int i = 0; i < bytesToFetch; i++)
     {
         byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
@@ -141,7 +142,7 @@ InstructionInfo CU::fetchInstruction()
 
 }
 
-
+//method for decoding the instruction
 Instruction* CU::decodeInstruction(InstructionInfo instruction)
 {
 
@@ -154,6 +155,8 @@ Instruction* CU::decodeInstruction(InstructionInfo instruction)
 
 }
 
+
+//method for executing the instruction
 void CU::executeInstruction(Instruction* instruction)
 {
     std::cout << "executeInstruction" << std::endl;
@@ -185,8 +188,7 @@ void CU::fixTotalLengthPrefix(InstructionInfo* info)
 
 }
 
-void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo* info, int* byteCounter, r_m* rm, uint64_t index) 
-{
+void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo* info, int* byteCounter, r_m* rm, uint64_t index) {
     uint8_t byte;
 
     if (rm->mod == 0b11)
