@@ -32,8 +32,11 @@ class Instruction
         int getNumPrefixes();
         void setRex(bool rex);
         bool getRex();
-        void setRexprefix(int16_t rexprefix);
-        int16_t getRexprefix();
+        void setRexprefix(int8_t rexprefix);
+        int8_t getRexprefix();
+        void setNbit(int nbit);
+        int getNbit();
+        void decodeNbit(); //method to decode the number of bits of the value/operand with rex prefix or 0x66 prefix
 
 
 
@@ -43,7 +46,8 @@ class Instruction
         uint8_t prefix[4];
         int numPrefixes;
         bool rex;
-        int16_t rexprefix;
+        int8_t rexprefix;
+        int nbit; //number of bits of the value/operand
 
 };
 
@@ -83,8 +87,7 @@ class MoveInstruction : public Instruction
         void setS_register(const std::string& registerName);
         void setValue(int64_t value);
         int64_t getValue() const  override;
-
-
+        
         //reset the values/addresses
         void reset();
 
@@ -93,6 +96,7 @@ class MoveInstruction : public Instruction
         std::string S_register;
         std::string D_register;
         int64_t value;
+        
 
 
 

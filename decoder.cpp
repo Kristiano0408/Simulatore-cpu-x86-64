@@ -171,21 +171,17 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
     //setting the parameters of instruction
     mov->setOpcode(instruction.opcode);
-    std::cout << "Opcode: " << mov->getOpcode() << std::endl;
-
     
     mov->setPrefix(instruction.prefix);
 
-    for (int i = 0; i < instruction.prefixCount; i++)
-    {
-        std::cout << "Prefix: " << std::hex<< static_cast<int>(mov->getPrefix()[i]) << std::endl;
-    }
     mov->setNumPrefixes(instruction.prefixCount);
-    std::cout << "Num Prefixes: " << mov->getNumPrefixes() << std::endl;
+
     mov->setRex(instruction.rex);
-    std::cout << "Rex: " << mov->getRex() << std::endl;
+
     mov->setRexprefix(instruction.rexprefix);
-    std::cout << "Rex Prefix: " << mov->getRexprefix() << std::endl;
+
+
+
 
 
 
@@ -264,10 +260,35 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     if (instruction.hasModRM && !instruction.hasImmediate)
     {
         R_M = instruction.instruction[position];
+        position++;
         
         rm = decodeRM(R_M);
+
+        if (rm.mod == 0b11)
+        {
+            //register to register
+            mov->setS_register(decodeRegisterReg(rm.reg, instruction));
+            mov->setD_register(decodeRegisterRM(rm.r_m, instruction));
+        }
+
+        else if (rm.mod == 0b00 || isMoveR_M_reg_mem(instruction.opcode))
+        {
+            if (rm.r_m == 0b100)
+            {
+                //there is SIB
+                SIB sib = decodeSIB(instruction.instruction[position]);
+               
+            }
+           
         
-        //adressing mode
+            
+        }
+        
+        
+
+        
+        
+    
 
 
 
@@ -284,4 +305,130 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
     
 
+}
+
+const std::string& Decoder::decodeRegisterReg(uint8_t reg, InstructionInfo info)
+{
+    if (info.rexprefix & 0x04)
+    {
+        reg += 8;
+    }
+    
+    switch (reg)
+    {
+        case 0:
+            return "RAX";
+            break;
+        case 1:
+            return "RCX";
+            break;
+        case 2:
+            return "RDX";
+            break;
+        case 3:
+            return "RBX";
+            break;
+        case 4:
+            return "RSP";
+            break;
+        case 5:
+            return "RBP";
+            break;
+        case 6:
+            return "RSI";
+            break;
+        case 7:
+            return "RDI";
+            break;
+        case 8:
+            return "R8";
+            break;
+        case 9:
+            return "R9";
+            break;
+        case 10:
+            return "R10";
+            break;
+        case 11:
+            return "R11";
+            break;
+        case 12:
+            return "R12";
+            break;
+        case 13:
+            return "R13";
+            break;
+        case 14:
+            return "R14";
+            break;
+        case 15:
+            return "R15";
+            break;
+        default:
+            return "Unknown register";
+            break;
+    }
+}
+
+const std::string& Decoder::decodeRegisterRM(uint8_t reg, InstructionInfo info)
+{
+    if (info.rexprefix & 0x01 && !info.hasSIB)
+    {
+        reg += 8;
+    }
+    
+    switch (reg)
+    {
+        case 0:
+            return "RAX";
+            break;
+        case 1:
+            return "RCX";
+            break;
+        case 2:
+            return "RDX";
+            break;
+        case 3:
+            return "RBX";
+            break;
+        case 4:
+            return "RSP";
+            break;
+        case 5:
+            return "RBP";
+            break;
+        case 6:
+            return "RSI";
+            break;
+        case 7:
+            return "RDI";
+            break;
+        case 8:
+            return "R8";
+            break;
+        case 9:
+            return "R9";
+            break;
+        case 10:
+            return "R10";
+            break;
+        case 11:
+            return "R11";
+            break;
+        case 12:
+            return "R12";
+            break;
+        case 13:
+            return "R13";
+            break;
+        case 14:
+            return "R14";
+            break;
+        case 15:
+            return "R15";
+            break;
+        default:
+            return "Unknown register";
+            break;
+    }
 }

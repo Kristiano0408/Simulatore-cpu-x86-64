@@ -36,6 +36,13 @@ struct r_m {
     uint8_t byte_r_m;
 };
 
+struct SIB {
+    uint8_t base : 3;
+    uint8_t index : 3;
+    uint8_t scale : 2;
+    uint8_t byte_sib;
+};
+
 
 
 class Decoder {
@@ -48,7 +55,13 @@ class Decoder {
         InstructionInfo LenghtOfInstruction(int32_t opcode, uint8_t prefix[4], int numPrefixes, bool rex, int16_t rexprefix);
         Instruction* decodeInstruction(InstructionInfo instruction, CU* controlUnit);
          //decode the  r/m operand
-         r_m decodeRM(int8_t r_m);
+        r_m decodeRM(int8_t r_m);
+        //decode the SIB operand
+        SIB decodeSIB(int8_t sib);
+        //decode the register
+        const std::string& decodeRegisterReg(uint8_t reg, InstructionInfo info);
+        const std::string& decodeRegisterRM(uint8_t reg, InstructionInfo info);
+
 
         
         

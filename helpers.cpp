@@ -41,7 +41,32 @@ bool isMoveInstructionIO(uint32_t opcode)
 
 bool isMoveInstructionR_M(uint32_t opcode)
 {
-    if(opcode == 0x88 || opcode == 0x89 || opcode == 0x8A || opcode == 0x8B)
+    if(isMoveR_M_reg_mem(opcode))
+    {
+        return true;
+    }
+    else if(isMoveR_M_mem_reg(opcode))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
+bool isMoveR_M_reg_mem(uint32_t opcode)
+{
+    if(opcode == 0x88 || opcode == 0x89)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool isMoveR_M_mem_reg(uint32_t opcode)
+{
+    if(opcode == 0x8A || opcode == 0x8B)
     {
         return true;
     }

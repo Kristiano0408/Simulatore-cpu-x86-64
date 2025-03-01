@@ -43,13 +43,35 @@ bool Instruction::getRex() {
     return rex;
 }
 
-void Instruction::setRexprefix(int16_t rexprefix) {
+void Instruction::setRexprefix(int8_t rexprefix) {
     this->rexprefix = rexprefix;
 }
 
-int16_t Instruction::getRexprefix() {
+int8_t Instruction::getRexprefix() {
     return rexprefix;
 }
+
+void Instruction::decodeNbit() {
+    
+    if (rexprefix && 0x08)
+    {
+        nbit = 64;
+    } else {
+        nbit = 32;
+    }
+
+    for (int i = 0; i < numPrefixes; i++)
+    {
+        if (prefix[i] == 0x66)
+        {
+            nbit = 16;
+            break;
+        }
+    }
+
+
+}
+
 
 
 //Move instruction
@@ -115,6 +137,14 @@ void MoveInstruction::setValue(int64_t value) {
 
 int64_t MoveInstruction::getValue() const {
     return value;
+}
+
+void Instruction::setNbit(int nbit) {
+    this->nbit = nbit;
+}
+
+int Instruction::getNbit() {
+    return nbit;
 }
 
 void MoveInstruction::reset() {
