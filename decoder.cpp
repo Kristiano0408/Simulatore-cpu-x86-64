@@ -191,7 +191,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
     //if there is only an immediate operand
     //if(instruction.hasImmediate and !instruction.hasModRM)
-    if(instruction.opcode >= 0xB8 && instruction.opcode <= 0xBF)
+    if(isMoveInstructionIO(instruction.opcode))
     {
 
         switch (instruction.opcode)
@@ -224,23 +224,15 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
                 break;
         }
         //getting the dimension of operands
-        dimOperands = instruction.operandLength;
-        std::cout << "Dim Operands: " << dimOperands << std::endl;
-
-        std::cout << "Position: " << position << std::endl;
-    
+        
 
         //setting the value of the operands
-        for (int i = 0; i < dimOperands; i++)
+        for (int i = 0; i < instruction.operandLength; i++)
         {
             value |= (static_cast<int64_t> (instruction.instruction[position + i]))<< (8 * i);
             std::cout <<  std::hex <<"Value: " << value << std::endl;
          
         }
-
-        //setting the value with the addressing mode (for immediate operand it actually does nothing, but is for using the sme methodology for all the adressing mode)
-        //value = addressingMode->immediateAddressing(value);
-
         
         //casting the value
         if (!instruction.rex)
@@ -272,7 +264,8 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     if (instruction.hasModRM && !instruction.hasImmediate)
     {
         R_M = instruction.instruction[position];
-        std::cout << "r/m: " << std::hex<<static_cast<int>(R_M)<< std::endl;
+        
+        rm = decodeRM(R_M);
         
         //adressing mode
 
