@@ -62,6 +62,8 @@ class Decoder {
         //decode the register
         const std::string& decodeRegisterReg(uint8_t reg, InstructionInfo info);
         const std::string& decodeRegisterRM(uint8_t reg, InstructionInfo info);
+        const std::string& decodeRegisterSIB_base(uint8_t reg, InstructionInfo info);
+        const std::string& decodeRegisterSIB_index(uint8_t reg, InstructionInfo info);
 
 
         

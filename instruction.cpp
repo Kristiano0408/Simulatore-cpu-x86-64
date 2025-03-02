@@ -123,6 +123,10 @@ void MoveInstruction::setS_address(int64_t address) {
     S_address = address;
 }
 
+void MoveInstruction::setD_address(int64_t address) {
+    D_address = address;
+}
+
 void MoveInstruction::setD_register(const std::string& registerName) {
     D_register = registerName;
 }

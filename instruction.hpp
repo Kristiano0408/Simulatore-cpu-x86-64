@@ -83,6 +83,7 @@ class MoveInstruction : public Instruction
 
         //methods to set the values/addresses
         void setS_address(int64_t address);
+        void setD_address(int64_t address);
         void setD_register(const std::string& registerName);
         void setS_register(const std::string& registerName);
         void setValue(int64_t value);
@@ -93,6 +94,7 @@ class MoveInstruction : public Instruction
 
     private:
         int64_t S_address;
+        int64_t D_address;
         std::string S_register;
         std::string D_register;
         int64_t value;

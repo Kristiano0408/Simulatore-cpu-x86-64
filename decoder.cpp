@@ -167,7 +167,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
     int dimOperands = 0;
     int64_t value = 0;
-    int8_t displacement = 0;
+    int32_t displacement = 0;
     int8_t R_M = 0;
     uint8_t prefix[4];
 
@@ -181,11 +181,6 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     mov->setRex(instruction.rex);
 
     mov->setRexprefix(instruction.rexprefix);
-
-
-
-
-
 
     //if there is only an immediate operand
     //if(instruction.hasImmediate and !instruction.hasModRM)
@@ -266,6 +261,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         
         rm = decodeRM(R_M);
 
+        //register to register
         if (rm.mod == 0b11)
         {
             //register to register
@@ -273,9 +269,16 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
             mov->setD_register(decodeRegisterRM(rm.r_m, instruction));
         }
 
-        else if (rm.mod == 0b00 || isMoveR_M_reg_mem(instruction.opcode))
+        //adress no displacement
+        else if (rm.mod == 0b00)
         {
-            mov->setS_register(decodeRegisterReg(rm.reg, instruction));
+            if (isMoveR_M_reg_mem(instruction.opcode))
+                //register to memory
+                mov->setS_register(decodeRegisterReg(rm.reg, instruction));
+            else
+                //memory to register
+                mov->setD_register(decodeRegisterReg(rm.reg, instruction));
+
 
             if (rm.r_m == 0b100)
             {
@@ -289,17 +292,148 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
                 std::string index = decodeRegisterSIB_index(sib.index, instruction);
 
                 //calcuating the adress of the memory
-                int64_t address = addressingMode->scaledIndexedAddressing(base, index, sib.scale);
-                mov->setD_register(std::to_string(address));
+                if (isMoveR_M_reg_mem(instruction.opcode))
+                    mov->setD_address(addressingMode->scaledIndexedAddressing(base, index, sib.scale));
+                
+                else mov->setS_address(addressingMode->scaledIndexedAddressing(base, index, sib.scale));
                
             }
+            
+            else if (rm.r_m == 0b101)
+            {
+                //there is displacement
+                for (int i = 0; i < 4; i++)
+                {
+                    displacement |= (static_cast<int32_t> (instruction.instruction[position + i]))<< (8 * i);
+                }
+                position += 4;
 
+                //calcuating the adress of the memory
+                if (isMoveR_M_reg_mem(instruction.opcode))
+                    mov->setD_address(addressingMode->directAddressing(displacement));
+
+                else mov->setS_address(addressingMode->directAddressing(displacement));
+            }
+            
+            else
+            {
+                //destination register
+                if (isMoveR_M_reg_mem(instruction.opcode))
+                    mov->setD_address(addressingMode->indirectAddressing(decodeRegisterRM(rm.r_m, instruction)));
+                else
+                    mov->setS_address(addressingMode->indirectAddressing(decodeRegisterRM(rm.r_m, instruction)));
+            }
+           
+        }
+
+        //address  + 8 bit displacement
+        else if (rm.mod == 0b01)
+        {
+            if (isMoveR_M_reg_mem(instruction.opcode))
+                //register to memory
+                mov->setS_register(decodeRegisterReg(rm.reg, instruction));
+            else
+                //memory to register
+                mov->setD_register(decodeRegisterReg(rm.reg, instruction));
+
+            if (rm.r_m == 0b100)
+            {
+                
+
+                //there is SIB
+                SIB sib = decodeSIB(instruction.instruction[position]);
+                position++;
+
+                //convertin the register to string
+                std::string base = decodeRegisterSIB_base(sib.base, instruction);
+                std::string index = decodeRegisterSIB_index(sib.index, instruction);
+
+                //getting the displacement
+                displacement = instruction.instruction[position];
+                position++;
+
+                //calcuating the adress of the memory
+                if (isMoveR_M_reg_mem(instruction.opcode))
+                    mov->setD_address(addressingMode->scaledIndexedDisplacementAddressing(base, index, sib.scale, displacement));
+                
+                else mov->setS_address(addressingMode->scaledIndexedDisplacementAddressing(base, index, sib.scale, displacement));
+                
+            }
+            
+            else
+            {
+                displacement = instruction.instruction[position];
+                position++;
+                //destination register
+                if (isMoveR_M_reg_mem(instruction.opcode))
+                    mov->setD_address(addressingMode->baseDisplacementAddressing(decodeRegisterRM(rm.r_m, instruction), displacement));
+                else
+                    mov->setS_address(addressingMode->baseDisplacementAddressing(decodeRegisterRM(rm.r_m, instruction), displacement));
+                
+                position++;
+            }
+        }
+
+        //adress + 32 bit displacement
+        else if (rm.mod == 0b10)
+        {
+            if (isMoveR_M_reg_mem(instruction.opcode))
+                //register to memory
+                mov->setS_register(decodeRegisterReg(rm.reg, instruction));
+            else
+                //memory to register
+                mov->setD_register(decodeRegisterReg(rm.reg, instruction));
+
+            if (rm.r_m == 0b100)
+            {
+                //there is SIB
+                SIB sib = decodeSIB(instruction.instruction[position]);
+                position++;
+
+                //convertin the register to string
+                std::string base = decodeRegisterSIB_base(sib.base, instruction);
+                std::string index = decodeRegisterSIB_index(sib.index, instruction);
+
+                //getting the displacement
+                for (int i = 0; i < 4; i++)
+                {
+                    displacement |= (static_cast<int32_t> (instruction.instruction[position + i]))<< (8 * i);
+
+                }
+
+                position += 4;
+
+                //calcuating the adress of the memory
+                if (isMoveR_M_reg_mem(instruction.opcode))
+                    mov->setD_address(addressingMode->scaledIndexedDisplacementAddressing(base, index, sib.scale, displacement));
+                
+                else mov->setS_address(addressingMode->scaledIndexedDisplacementAddressing(base, index, sib.scale, displacement));
+            }
+            else
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    displacement |= (static_cast<int32_t> (instruction.instruction[position + i]))<< (8 * i);
+                }
+
+                position += 4;
+
+                //destination 
+
+                if (isMoveR_M_reg_mem(instruction.opcode))
+                    mov->setD_address(addressingMode->baseDisplacementAddressing(decodeRegisterRM(rm.r_m, instruction), displacement));
+                else
+                    mov->setS_address(addressingMode->baseDisplacementAddressing(decodeRegisterRM(rm.r_m, instruction), displacement));
+
+
+            }
             
 
-           
-        
             
         }
+
+
+        
         
         
 
@@ -313,15 +447,9 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
     }
 
-
     delete addressingMode;
 
-
     return mov;
-
-
-    
-
 }
 
 const std::string& Decoder::decodeRegisterReg(uint8_t reg, InstructionInfo info)
