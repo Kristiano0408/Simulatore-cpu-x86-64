@@ -3,6 +3,7 @@
 #include "decoder.hpp"
 #include <iostream>
 #include "helpers.hpp"
+#include <memory>
 //#include "addressingMode.hpp"
 
 
@@ -158,7 +159,8 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     MoveInstruction* mov = new MoveInstruction();
 
     //create the addressing mode
-    //AddressingMode* addressingMode = new AddressingMode(controlUnit);
+    AddressingMode* addressingMode = new AddressingMode(controlUnit);
+
 
     // creating the struct for the r/m operand
     r_m rm;
@@ -273,12 +275,27 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
         else if (rm.mod == 0b00 || isMoveR_M_reg_mem(instruction.opcode))
         {
+            mov->setS_register(decodeRegisterReg(rm.reg, instruction));
+
             if (rm.r_m == 0b100)
             {
+                
                 //there is SIB
                 SIB sib = decodeSIB(instruction.instruction[position]);
+                position++;
+
+                //convertin the register to string
+                std::string base = decodeRegisterSIB_base(sib.base, instruction);
+                std::string index = decodeRegisterSIB_index(sib.index, instruction);
+
+                //calcuating the adress of the memory
+                int64_t address = addressingMode->scaledIndexedAddressing(base, index, sib.scale);
+                mov->setD_register(std::to_string(address));
                
             }
+
+            
+
            
         
             
@@ -297,7 +314,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     }
 
 
-
+    delete addressingMode;
 
 
     return mov;
@@ -431,4 +448,142 @@ const std::string& Decoder::decodeRegisterRM(uint8_t reg, InstructionInfo info)
             return "Unknown register";
             break;
     }
+}
+
+const std::string& Decoder::decodeRegisterSIB_base(uint8_t reg, InstructionInfo info)
+{
+    if (info.rexprefix & 0x01 && info.hasSIB)
+    {
+        reg += 8;
+    }
+
+    switch (reg)
+    {
+        case 0:
+            return "RAX";
+            break;
+        case 1:
+            return "RCX";
+            break;
+        case 2:
+            return "RDX";
+            break;
+        case 3:
+            return "RBX";
+            break;
+        case 4:
+            return "RSP";
+            break;
+        case 5:
+            return "RBP";
+            break;
+        case 6:
+            return "RSI";
+            break;
+        case 7:
+            return "RDI";
+            break;
+        case 8:
+            return "R8";
+            break;
+        case 9:
+            return "R9";
+            break;
+        case 10:
+            return "R10";
+            break;
+        case 11:
+            return "R11";
+            break;
+        case 12:
+            return "R12";
+            break;
+        case 13:
+            return "R13";
+            break;
+        case 14:
+            return "R14";
+            break;
+        case 15:
+            return "R15";
+            break;
+        default:
+            return "Unknown register";
+            break;
+    }
+
+}
+
+const std::string& Decoder::decodeRegisterSIB_index(uint8_t reg, InstructionInfo info)
+{
+    if (info.rexprefix & 0x02 && info.hasSIB)
+    {
+        reg += 8;
+    }
+
+    switch (reg)
+    {
+        case 0:
+            return "RAX";
+            break;
+        case 1:
+            return "RCX";
+            break;
+        case 2:
+            return "RDX";
+            break;
+        case 3:
+            return "RBX";
+            break;
+        case 4:
+            return "RSP";
+            break;
+        case 5:
+            return "RBP";
+            break;
+        case 6:
+            return "RSI";
+            break;
+        case 7:
+            return "RDI";
+            break;
+        case 8:
+            return "R8";
+            break;
+        case 9:
+            return "R9";
+            break;
+        case 10:
+            return "R10";
+            break;
+        case 11:
+            return "R11";
+            break;
+        case 12:
+            return "R12";
+            break;
+        case 13:
+            return "R13";
+            break;
+        case 14:
+            return "R14";
+            break;
+        case 15:
+            return "R15";
+            break;
+        default:
+            return "Unknown register";
+            break;
+    }
+}
+
+SIB Decoder::decodeSIB(int8_t sib)
+{
+    SIB sibStruct;
+    sibStruct.byte_sib = sib;
+    sibStruct.base = sib & 0b111;
+    sibStruct.index = (sib >> 3) & 0b111;
+    sibStruct.scale = (sib >> 6) & 0b11;
+
+    return sibStruct;
 }

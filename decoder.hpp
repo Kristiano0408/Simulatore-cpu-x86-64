@@ -7,6 +7,7 @@
 #include <string>
 #include "instruction.hpp"
 #include <vector>
+#include "addressingMode.hpp"
 
 //struct for simplifign decoding after getting some information out of fetchinstruction
 struct InstructionInfo {
