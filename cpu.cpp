@@ -1,6 +1,4 @@
 #include "cpu.hpp"
-#include "memory.hpp"
-#include "controlUnit.hpp"
 
 //constructor that receives a pointer to the memory
 CPU::CPU(Memory* memory) : memory(memory), decoder(), controlUnit(memory)

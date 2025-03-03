@@ -7,7 +7,11 @@ controllare overflow nei modi di indirizzamnto
 aggiungere altri registri
 getsire flags con vettore(coem nella realta)
 
-//sisteamre uso rex 49 ( per r8-r15)(solo immediate) e poi controllare funzioanmento move instruction
+//sisteamre uso rex 49 ( per r8-r15)(solo immediate) 
+
+//ricostruire decode, spostare la magior parte delle cose in execute
+
+
 
 
 

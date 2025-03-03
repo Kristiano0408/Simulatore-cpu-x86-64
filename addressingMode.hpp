@@ -3,7 +3,9 @@
 
 #include <cstdint>
 #include <string>
-#include "controlUnit.hpp"
+
+
+class CU;
 
 
 

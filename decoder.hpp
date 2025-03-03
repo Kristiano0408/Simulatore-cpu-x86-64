@@ -8,8 +8,8 @@
 #include "instruction.hpp"
 #include <vector>
 #include "addressingMode.hpp"
+#include "opcode_map.cpp"
 
-//struct for simplifign decoding after getting some information out of fetchinstruction
 struct InstructionInfo {
     size_t totalLength;  // Lunghezza totale dell'istruzione
     size_t opcodeLength; // Lunghezza dell'opcode (1, 2 o 3 byte)
@@ -30,19 +30,6 @@ struct InstructionInfo {
 
 };
 
-struct r_m {
-    uint8_t r_m : 3;
-    uint8_t mod : 2;
-    uint8_t reg : 3;
-    uint8_t byte_r_m;
-};
-
-struct SIB {
-    uint8_t base : 3;
-    uint8_t index : 3;
-    uint8_t scale : 2;
-    uint8_t byte_sib;
-};
 
 
 

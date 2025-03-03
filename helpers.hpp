@@ -15,4 +15,6 @@ bool isMoveR_M_reg_mem(uint32_t opcode);
 
 bool isMoveR_M_mem_reg(uint32_t opcode);
 
+
+
 #endif // HELPERS_HPP

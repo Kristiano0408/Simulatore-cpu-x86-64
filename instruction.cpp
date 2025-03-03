@@ -72,77 +72,6 @@ void Instruction::decodeNbit() {
 
 }
 
-
-
-//Move instruction
-
-//constructor
-MoveInstruction::MoveInstruction() {
-    value = 0;
-    S_address = 0;
-    D_register = "";
-    S_register = "";
-    
-}
-
-void MoveInstruction::execute(CU* controlUnit, Memory* ram) {
-
-    //reg to reg 
-    if (D_register != "" && S_register != "") {
-        controlUnit->getRegisters().setRegisterValue(D_register, controlUnit->getRegisters().getRegisterValue(S_register));
-
-    }
-
-    std::cout<<"prova"<<std::endl;
-
-    //value to reg
-    if (D_register != "" && S_register == "" && S_address == 0 && value != 0) {
-        controlUnit->getRegisters().setRegisterValue(D_register, value);
-        std::cout << "Value: " << value << " Register: " << D_register << std::endl;
-    }
-
-    //address to reg
-    if (D_register != "" && S_register == "" && S_address != 0) {
-        
-        //to be implemented
-    }
-
-    //reg to address
-    if (D_register == "" && S_register != "" && S_address != 0) {
-        
-        //to be implemented
-    }
-
-
-
-
-    
-}
-
-void MoveInstruction::setS_address(int64_t address) {
-    S_address = address;
-}
-
-void MoveInstruction::setD_address(int64_t address) {
-    D_address = address;
-}
-
-void MoveInstruction::setD_register(const std::string& registerName) {
-    D_register = registerName;
-}
-
-void MoveInstruction::setS_register(const std::string& registerName) {
-    S_register = registerName;
-}
-
-void MoveInstruction::setValue(int64_t value) {
-    this->value = value;
-}
-
-int64_t MoveInstruction::getValue() const {
-    return value;
-}
-
 void Instruction::setNbit(int nbit) {
     this->nbit = nbit;
 }
@@ -151,9 +80,122 @@ int Instruction::getNbit() {
     return nbit;
 }
 
-void MoveInstruction::reset() {
-    value = 0;
-    S_address = 0;
-    D_register = nullptr;
-    S_register = nullptr;
+
+void Instruction::setHasImmediate(bool hasImmediate) {
+    this->hasImmediate = hasImmediate;
 }
+
+bool Instruction::getHasImmediate() {
+    return hasImmediate;
+}
+
+
+void Instruction::setHasDisplacement(bool hasDisplacement) {
+    this->hasDisplacement = hasDisplacement;
+}
+
+bool Instruction::getHasDisplacement() {
+    return hasDisplacement;
+}
+
+
+void Instruction::setHasModRM(bool hasModRM) {
+    this->hasModRM = hasModRM;
+}
+
+bool Instruction::getHasModRM() {
+    return hasModRM;
+}
+
+
+void Instruction::setHasSIB(bool hasSIB) {
+    this->hasSIB = hasSIB;
+}
+
+bool Instruction::getHasSIB() {
+    return hasSIB;
+}
+
+
+void Instruction::setRM(r_m rm) {
+    this->rm = rm;
+}
+
+r_m Instruction::getRM() {
+    return rm;
+}
+
+
+void Instruction::setSIB(SIB sib) {
+    this->sib = sib;
+}
+
+SIB Instruction::getSIB() {
+    return sib;
+}
+
+
+void Instruction::setValue(int64_t value) {
+    this->value = value;
+}
+
+int64_t Instruction::getValue() {
+    return value;
+}
+
+void Instruction::setDisplacement(int32_t displacement) {
+    this->displacement = displacement;
+}
+
+int32_t Instruction::getDisplacement() {
+    return displacement;
+}
+
+
+void Instruction::setRegToReg(bool regToReg) {
+    this->regToReg = regToReg;
+}
+
+bool Instruction::getRegToReg() {
+    return regToReg;
+}
+
+
+void Instruction::setRegToMem(bool regToMem) {
+    this->regToMem = regToMem;
+}
+
+bool Instruction::getRegToMem() {
+    return regToMem;
+}
+
+
+void Instruction::setMemToReg(bool memToReg) {
+    this->memToReg = memToReg;
+}
+
+bool Instruction::getMemToReg() {
+    return memToReg;
+}
+
+
+
+//Move instruction
+
+//constructor
+MoveInstruction::MoveInstruction() {
+    //nothing to do here
+    
+    
+}
+
+void MoveInstruction::execute(CU* controlUnit, Memory* ram) 
+{
+
+
+    
+}
+
+
+
+
