@@ -23,7 +23,7 @@ int main()
 
     vector<uint8_t> data;
     //load the program in the memory
-    data= {0x8B, 0x83, 0x34, 0x12, 0x11, 0x11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
+    data= {0x48, 0x89, 0xD8, 0x8B, 0x83, 0x34, 0x12, 0x11, 0x11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
 
     ram.setData(data);
 
@@ -45,11 +45,30 @@ int main()
 
     instruction = cpu.getControlUnit().decodeInstruction(info);
 
-    cout << "Instruction: " <<hex<< instruction->getValue() << endl;
+    cout << "Instruction: " <<hex << static_cast<int>(instruction->getOpcode()) << endl;
+    cout << "prefix: " << hex << static_cast<int>(instruction->getPrefix()[0]) << endl;
+    cout << "prefix: " << hex << static_cast<int>(instruction->getPrefix()[1]) << endl;
+    cout << "prefix: " << hex << static_cast<int>(instruction->getPrefix()[2]) << endl;
+    cout << "prefix: " << hex << static_cast<int>(instruction->getPrefix()[3]) << endl;
+    cout << "numPrefixes: " << dec << instruction->getNumPrefixes() << endl;
+    cout << "rex: " << instruction->getRex() << endl;
+    cout << "rexprefix: " << hex << static_cast<int>(instruction->getRexprefix()) << endl;
+    cout << "nbit: " << dec << instruction->getNbit() << endl;
+    cout << "hasImmediate: " << instruction->getHasImmediate() << endl;
+    cout << "hasDisplacement: " << instruction->getHasDisplacement() << endl;
+    cout << "hasModRM: " << instruction->getHasModRM() << endl;
+    cout << "hasSIB: " << instruction->getHasSIB() << endl;
+    cout << "value: " << dec << instruction->getValue() << endl;
+    cout << "displacement: " << dec << instruction->getDisplacement() << endl;
+    cout << "regToReg: " << instruction->getRegToReg() << endl;
+    cout << "regToMem: " << instruction->getRegToMem() << endl;
+    cout << "memToReg: " << instruction->getMemToReg() << endl;
 
-    cpu.getControlUnit().executeInstruction(instruction);
+    cout << "RM: " << static_cast<int>(instruction->getRM().mod) << " " << static_cast<int>(instruction->getRM().reg)<< " " << static_cast<int>(instruction->getRM().r_m) << endl;
+    cout << "SIB: " << instruction->getSIB().scale << " " << instruction->getSIB().index << " " << instruction->getSIB().base << endl;
 
-    cpu.getControlUnit().getRegisters().printRegisters();
+
+   
 
     
 

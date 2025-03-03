@@ -2,7 +2,7 @@
 #include <iostream>
 #include <memory>
 //#include "addressingMode.hpp"
-
+#include "opcode_map.cpp"
 
 Decoder::Decoder()
 {

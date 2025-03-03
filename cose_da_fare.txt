@@ -9,7 +9,7 @@ getsire flags con vettore(coem nella realta)
 
 //sisteamre uso rex 49 ( per r8-r15)(solo immediate) 
 
-//ricostruire decode, spostare la magior parte delle cose in execute
+//finire decode (bool per capire direzione reg reg, reg mem, mem reg ) e controllare funzioanmenro del deocding
 
 
 

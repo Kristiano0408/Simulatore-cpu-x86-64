@@ -8,7 +8,6 @@
 #include "instruction.hpp"
 #include <vector>
 #include "addressingMode.hpp"
-#include "opcode_map.cpp"
 
 struct InstructionInfo {
     size_t totalLength;  // Lunghezza totale dell'istruzione
