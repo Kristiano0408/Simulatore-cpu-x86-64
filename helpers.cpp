@@ -25,11 +25,22 @@ bool isMoveInstruction(uint32_t opcode)
     {
         return true;
     }
+    else if (isMoveInstructionIO_mem(opcode))
+    {
+        return true;
+    }
+    else if(isMoveInstructionOffset(opcode))
+    {
+        return true;
+    }
+  
 
     return false;
     
 
 }
+
+
 
 bool isMoveInstructionIO(uint32_t opcode)
 {
@@ -37,9 +48,72 @@ bool isMoveInstructionIO(uint32_t opcode)
     {
         return true;
     }
+    else if(isMoveInstructionIO_8bit(opcode))
+    {
+        return true;
+    }
 
     return false;
 }
+
+bool isMoveInstructionIO_8bit(uint32_t opcode)
+{
+    if(opcode >= 0xB0 && opcode <= 0xB7)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
+bool isMoveInstructionIO_mem(uint32_t opcode)
+{
+    if(opcode == 0xC6 || opcode == 0xC7)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
+bool isMoveInstructionOffset(uint32_t opcode)
+{
+    if(isMoveInstructionOffsetRAX_mem(opcode))
+    {
+        return true;
+    }
+    else if(isMoveInstructionOffsetMem_RAx(opcode))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool isMoveInstructionOffsetRAX_mem(uint32_t opcode)
+{
+    if(opcode == 0xA2 || opcode == 0xA3)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool isMoveInstructionOffsetMem_RAx(uint32_t opcode)
+{
+    if(opcode == 0xA0 || opcode == 0xA1)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
+
 
 bool isMoveInstructionR_M(uint32_t opcode)
 {
@@ -54,7 +128,6 @@ bool isMoveInstructionR_M(uint32_t opcode)
 
     return false;
 }
-
 
 bool isMoveR_M_reg_mem(uint32_t opcode)
 {

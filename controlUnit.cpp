@@ -102,7 +102,7 @@ InstructionInfo CU::fetchInstruction()
     }
 
 
-    int bytesToFetch = info.totalLength - byteCounter;
+    int bytesToFetch = static_cast<int>(info.totalLength) - byteCounter;
     std::cout << "Bytes to fetch: " << bytesToFetch << std::endl;
 
     //fetch the remaining bytes (teoricallly the immediate value)
@@ -204,10 +204,30 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo*
             bytes.push_back(byte);
             (*byteCounter)++;
             std::cout << "SIB: " << std::hex << static_cast<int>(byte) << std::endl;
-
             info->hasSIB = true;
             info->totalLength += 1;
             info->additionalBytes += 1;
+
+
+            if ((byte & 0b111) == 0b101 && rm->mod == 0b00)
+            {
+                //the base of th SIB indicates a displacement of 32 bit
+
+
+                for (int i = 0; i < 4; i++)
+                {
+                    byte = memory->readByte(index + static_cast<int64_t>(*byteCounter));
+                    std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
+                    bytes.push_back(byte);
+                    (*byteCounter)++;
+                    
+                }
+
+                info->totalLength += 4;
+                info->additionalBytes += 4;
+            }
+
+           
         }
         if (rm->mod == 0b01)
         {
@@ -252,6 +272,7 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo*
             info->additionalBytes += 4;
             info->hasDisplacement = true;
         }
+
 
     }
 

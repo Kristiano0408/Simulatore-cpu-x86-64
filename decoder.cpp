@@ -168,9 +168,10 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     mov->setRexprefix(instruction.rexprefix);
 
 
-    //if there is immediate value
-    if (instruction.hasImmediate)
+    //if there is immediate value and no ModRM
+    if (instruction.hasImmediate && !instruction.hasModRM)
     {
+        value = 0;
         //decode the immediate value
         for (int i = 0; i < instruction.operandLength; i++)
         {
@@ -182,6 +183,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         mov->setValue(value);
         
     }
+    
     else if (instruction.hasModRM)
     {
         //decode the ModRM
@@ -189,13 +191,32 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         position++;
         mov->setRM(rm);
         mov->setHasModRM(true);
+ 
+        if(isMoveR_M_mem_reg(instruction.opcode)) mov->setMemToReg(true);
+       
+        else if(isMoveR_M_reg_mem(instruction.opcode)) mov->setRegToMem(true);
+
 
         //control of the varius cases of addressing mode
         if(rm.mod == 0b11)
-        {
-            //nothing to do here, the operands are registers and they will be decoded in the execute function
+        {   
+            //the operands are registers
+
+            if (!isMoveInstructionIO_mem(instruction.opcode))
+            {
+                mov->setRegToReg(true);
+                mov->setRegToMem(false);
+                mov->setMemToReg(false);
+
+            }
+            else 
+            {
+                //nothing to do because is immmediate operand with destination register
+            }
+        
 
         }
+        
         else if (rm.mod == 0b00)
         {
             if(rm.r_m == 0b100)
@@ -205,6 +226,17 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
                 SIB sib = decodeSIB(instruction.instruction[position]);
                 position++;
                 mov->setSIB(sib);
+                if(sib.base == 0b101)
+                {
+                    //the operand is a displacement
+                    mov->setHasDisplacement(true);
+                    for (int i = 0; i < 4; i++)
+                    {
+                        displacement += instruction.instruction[position + i] << (i * 8);
+                        position++;
+                    }
+                }
+        
 
             }
             else if (rm.r_m == 0b101)
@@ -223,6 +255,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
             }
             
         }
+        
         else if (rm.mod == 0b01)
         {
             //the operand is a register/mem with 8 bit displacement
@@ -244,7 +277,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
         }
 
-        else if (rm.r_m == 0b10)
+        else if (rm.mod == 0b10)
         {
             //the operand is a register/mem with 32 bit displacement
             mov->setHasDisplacement(true);
@@ -264,6 +297,20 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
                 position++;
             }
         }
+
+        if(instruction.hasImmediate)
+        {
+            value = 0;
+            //decode the immediate value
+            for (int i = 0; i < instruction.operandLength; i++)
+            {
+                value += instruction.instruction[position + i] << (i * 8);
+                position++;
+            }
+
+            mov->setHasImmediate(true);
+            mov->setValue(value);
+        }
         
 
     }
@@ -271,6 +318,8 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
     return mov;
 }
+
+
 
 const std::string& Decoder::decodeRegisterReg(uint8_t reg, InstructionInfo info)
 {

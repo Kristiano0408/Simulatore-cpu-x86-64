@@ -184,7 +184,23 @@ bool Instruction::getMemToReg() {
 
 //constructor
 MoveInstruction::MoveInstruction() {
-    //nothing to do here
+    //resets the values
+    setHasDisplacement(false);
+    setHasImmediate(false);
+    setHasModRM(false);
+    setHasSIB(false);
+    setMemToReg(false);
+    setRegToMem(false);
+    setRegToReg(false);
+    setNumPrefixes(0);
+    setRex(false);
+    setRexprefix(0);
+    setNbit(0);
+    setOpcode(0);
+    setValue(0);
+    setDisplacement(0);
+
+
     
     
 }

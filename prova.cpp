@@ -23,7 +23,7 @@ int main()
 
     vector<uint8_t> data;
     //load the program in the memory
-    data= {0x48, 0x89, 0xD8, 0x8B, 0x83, 0x34, 0x12, 0x11, 0x11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
+    data= {0x8B, 0x04, 0x75, 0x78, 0x56, 0x34, 0x12, 0x48, 0x89, 0x03, 0x34, 0x12, 0x11, 0x11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
 
     ram.setData(data);
 
@@ -65,7 +65,7 @@ int main()
     cout << "memToReg: " << instruction->getMemToReg() << endl;
 
     cout << "RM: " << static_cast<int>(instruction->getRM().mod) << " " << static_cast<int>(instruction->getRM().reg)<< " " << static_cast<int>(instruction->getRM().r_m) << endl;
-    cout << "SIB: " << instruction->getSIB().scale << " " << instruction->getSIB().index << " " << instruction->getSIB().base << endl;
+    cout << "SIB: " << static_cast<int>(instruction->getSIB().scale) << " " << static_cast<int>(instruction->getSIB().index) << " " << static_cast<int>(instruction->getSIB().base) << endl;
 
 
    
