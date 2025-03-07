@@ -62,9 +62,9 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
         //if there is the prefix for 16bits opernads
         if(prefix[i] == 0x66 and info.hasImmediate)
         {
-            //the lenght is reduced by 4 bytes 
-            info.totalLength -= (2* info.numOperands);
-            info.additionalBytes -= (2* info.numOperands);
+            //the lenght is reduced by 2 bytes
+            info.totalLength -= 2;
+            info.additionalBytes -= 2;
             info.operandLength -= 2;
             info.prefix[i] = prefix[i];
             
@@ -78,8 +78,8 @@ InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],i
     if (rex and (rexprefix & 0x08) and info.hasImmediate)
     {
         //the lenght is increased by 4 bytes 
-        info.totalLength += (4* info.numOperands);
-        info.additionalBytes += (4* info.numOperands);
+        info.totalLength += 4;
+        info.additionalBytes += 4;
         info.operandLength += 4;
         info.rex = true;
         info.rexprefix = rexprefix;
@@ -146,10 +146,6 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     //create the instruction
     MoveInstruction* mov = new MoveInstruction();
 
-    //create the addressing mode
-    AddressingMode* addressingMode = new AddressingMode(controlUnit);
-
-
 
     int64_t value = 0;
     int32_t displacement = 0;
@@ -165,7 +161,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
     mov->setRex(instruction.rex);
 
-    mov->setRexprefix(instruction.rexprefix);
+    
 
 
     //if there is immediate value and no ModRM
@@ -175,9 +171,13 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         //decode the immediate value
         for (int i = 0; i < instruction.operandLength; i++)
         {
+            std::cout << "Byte: " << std::hex << static_cast<int>(instruction.instruction[position + i]) << std::endl;
             value += instruction.instruction[position + i] << (i * 8);
-            position++;
         }
+
+        std::cout << "Value: " << std::dec << value << std::endl;
+
+        position += instruction.operandLength;
 
         mov->setHasImmediate(true);
         mov->setValue(value);
