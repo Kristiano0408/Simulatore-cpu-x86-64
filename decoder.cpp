@@ -172,10 +172,14 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         for (int i = 0; i < instruction.operandLength; i++)
         {
             std::cout << "Byte: " << std::hex << static_cast<int>(instruction.instruction[position + i]) << std::endl;
-            value += instruction.instruction[position + i] << (i * 8);
+            value |= static_cast<int64_t>(instruction.instruction[position + i]) << (i * 8);
+            std::cout << std::hex <<"Value: " << std::dec << value << std::endl;
+
+
+            
         }
 
-        std::cout << "Value: " << std::dec << value << std::endl;
+        std::cout << std::hex <<"Value: " << std::dec << value << std::endl;
 
         position += instruction.operandLength;
 

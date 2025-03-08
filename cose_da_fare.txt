@@ -11,6 +11,9 @@ getsire flags con vettore(coem nella realta)
 
 //finire decode (bool per capire direzione reg reg, reg mem, mem reg ) e controllare funzioanmenro del deocding
 
+//verificare perche il caricamento dell'immediato non funziona 
+
+//capire come gestire int64_t e uint64_t
 
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
