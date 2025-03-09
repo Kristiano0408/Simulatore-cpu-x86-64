@@ -9,11 +9,9 @@ getsire flags con vettore(coem nella realta)
 
 //sisteamre uso rex 49 ( per r8-r15)(solo immediate) 
 
-//finire decode (bool per capire direzione reg reg, reg mem, mem reg ) e controllare funzioanmenro del deocding
+//capire se il decoding fuznina (chat su chatgpt per codici tetsing)
 
-//verificare perche il caricamento dell'immediato non funziona 
-
-//capire come gestire int64_t e uint64_t
+//implemenatre decodifica move a0-a3
 
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore

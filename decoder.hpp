@@ -15,7 +15,7 @@ struct InstructionInfo {
     size_t prefixCount;  // Numero di prefissi
     uint8_t prefix[4];   // Prefissi
     bool rex;            // Flag REX
-    int16_t rexprefix;   // Prefisso REX
+    uint16_t rexprefix;   // Prefisso REX
     uint32_t opcode;     // Opcode completo (1, 2 o 3 byte)
     size_t additionalBytes; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
     size_t numOperands; // Numero di operandi
@@ -39,12 +39,12 @@ class Decoder {
         ~Decoder();
         
         //decode the instruction
-        InstructionInfo LenghtOfInstruction(int32_t opcode, uint8_t prefix[4], int numPrefixes, bool rex, int16_t rexprefix);
+        InstructionInfo LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4], int numPrefixes, bool rex, uint16_t rexprefix);
         Instruction* decodeInstruction(InstructionInfo instruction, CU* controlUnit);
          //decode the  r/m operand
-        r_m decodeRM(int8_t r_m);
+        r_m decodeRM(uint8_t r_m);
         //decode the SIB operand
-        SIB decodeSIB(int8_t sib);
+        SIB decodeSIB(uint8_t sib);
         //decode the register
         const std::string& decodeRegisterReg(uint8_t reg, InstructionInfo info);
         const std::string& decodeRegisterRM(uint8_t reg, InstructionInfo info);

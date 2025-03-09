@@ -30,11 +30,11 @@ InstructionInfo CU::fetchInstruction()
 {
     uint64_t index; //index of the instruction
     uint8_t prefix[4]; //prefix of the instruction
-    int numbersOfPrefix = 0; //number of prefix
+    int numbersOfPrefix {0}; //number of prefix
     uint32_t opcode; //opcode of the instruction
     std::vector<uint8_t> bytes; //bytes of the instruction()
     uint8_t byte; //byte fetched from the memory
-    int byteCounter = 0; //counter of the byte (for IR)
+    int byteCounter {0}; //counter of the byte (for IR)
     bool rex = false; //rex prefix flag
     uint8_t rexprefix; //rex prefix
 

@@ -135,19 +135,19 @@ SIB Instruction::getSIB() {
 }
 
 
-void Instruction::setValue(int64_t value) {
+void Instruction::setValue(uint64_t value) {
     this->value = value;
 }
 
-int64_t Instruction::getValue() {
+uint64_t Instruction::getValue() {
     return value;
 }
 
-void Instruction::setDisplacement(int32_t displacement) {
+void Instruction::setDisplacement(uint32_t displacement) {
     this->displacement = displacement;
 }
 
-int32_t Instruction::getDisplacement() {
+uint32_t Instruction::getDisplacement() {
     return displacement;
 }
 

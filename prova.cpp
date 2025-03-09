@@ -23,7 +23,7 @@ int main()
 
     vector<uint8_t> data;
     //load the program in the memory
-    data= { 0x48, 0XB8, 0X78, 0X56, 0X34, 0X12, 0X11, 0X11, 0X11, 0X11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
+    data= { 0x88, 0x85, 0x12, 0X34, 0X56, 0X78, 0X34, 0X12, 0X11, 0X11, 0X11, 0X11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
 
     ram.setData(data);
 
@@ -58,8 +58,8 @@ int main()
     cout << "hasDisplacement: " << instruction->getHasDisplacement() << endl;
     cout << "hasModRM: " << instruction->getHasModRM() << endl;
     cout << "hasSIB: " << instruction->getHasSIB() << endl;
-    cout << "value: " << dec << instruction->getValue() << endl;
-    cout << "displacement: " << dec << instruction->getDisplacement() << endl;
+    cout << "value: " << hex << instruction->getValue() << endl;
+    cout << "displacement: " << hex << instruction->getDisplacement() << endl;
     cout << "regToReg: " << instruction->getRegToReg() << endl;
     cout << "regToMem: " << instruction->getRegToMem() << endl;
     cout << "memToReg: " << instruction->getMemToReg() << endl;

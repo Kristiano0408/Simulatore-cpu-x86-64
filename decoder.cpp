@@ -18,7 +18,7 @@ Decoder::~Decoder()
 
 
 
-InstructionInfo Decoder::LenghtOfInstruction(int32_t opcode, uint8_t prefix[4],int numPrefixes, bool rex, int16_t rexprefix)
+InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],int numPrefixes, bool rex, uint16_t rexprefix)
 {
     InstructionInfo info;
     info.opcode = opcode;
@@ -147,8 +147,8 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     MoveInstruction* mov = new MoveInstruction();
 
 
-    int64_t value = 0;
-    int32_t displacement = 0;
+    uint64_t value = 0;
+    uint32_t displacement = 0;
 
 
 
@@ -169,17 +169,8 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     {
         value = 0;
         //decode the immediate value
-        for (int i = 0; i < instruction.operandLength; i++)
-        {
-            std::cout << "Byte: " << std::hex << static_cast<int>(instruction.instruction[position + i]) << std::endl;
-            value |= static_cast<int64_t>(instruction.instruction[position + i]) << (i * 8);
-            std::cout << std::hex <<"Value: " << std::dec << value << std::endl;
-
-
-            
-        }
-
-        std::cout << std::hex <<"Value: " << std::dec << value << std::endl;
+        for (int i = 0; i < instruction.operandLength; i++) 
+            value |= static_cast<uint64_t>(instruction.instruction[position + i]) << (i * 8);
 
         position += instruction.operandLength;
 
@@ -237,8 +228,11 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
                     for (int i = 0; i < 4; i++)
                     {
                         displacement += instruction.instruction[position + i] << (i * 8);
-                        position++;
+                    
                     }
+                    position += 4;
+
+                    mov->setDisplacement(displacement);
                 }
         
 
@@ -252,6 +246,8 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
                     displacement += instruction.instruction[position + i] << (i * 8);
                     position++;
                 }
+
+                mov->setDisplacement(displacement);
             }
             else 
             {
@@ -275,8 +271,9 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
             }
 
-            
+            displacement = 0;
             displacement += instruction.instruction[position];
+            mov->setDisplacement(displacement);
             position++;
 
         }
@@ -297,9 +294,14 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
             for (int i = 0; i < 4; i++)
             {
-                displacement += instruction.instruction[position + i] << (i * 8);
-                position++;
+                std::cout << "Byte: " << std::hex<<static_cast<int>(instruction.instruction[position + i]) << std::endl;
+                displacement |= static_cast<uint32_t>(instruction.instruction[position + i]) << (i * 8);
             }
+
+            position += 4;
+
+            mov->setDisplacement(displacement);
+            std::cout <<std::hex<< "Displacement: " << displacement << std::endl;
         }
 
         if(instruction.hasImmediate)
@@ -309,8 +311,9 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
             for (int i = 0; i < instruction.operandLength; i++)
             {
                 value += instruction.instruction[position + i] << (i * 8);
-                position++;
             }
+
+            position += instruction.operandLength;
 
             mov->setHasImmediate(true);
             mov->setValue(value);
@@ -578,7 +581,7 @@ const std::string& Decoder::decodeRegisterSIB_index(uint8_t reg, InstructionInfo
     }
 }
 
-SIB Decoder::decodeSIB(int8_t sib)
+SIB Decoder::decodeSIB(uint8_t sib)
 {
     SIB sibStruct;
     sibStruct.byte_sib = sib;
@@ -589,7 +592,7 @@ SIB Decoder::decodeSIB(int8_t sib)
     return sibStruct;
 }
 
-r_m Decoder::decodeRM(int8_t R_M)
+r_m Decoder::decodeRM(uint8_t R_M)
 {
     r_m rm;
     rm.byte_r_m = R_M;

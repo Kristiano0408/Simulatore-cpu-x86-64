@@ -77,11 +77,11 @@ class Instruction
         void setSIB(SIB sib);
         SIB getSIB();
 
-        void setValue(int64_t value);
-        int64_t getValue();
+        void setValue(uint64_t value);
+        uint64_t getValue();
 
-        void setDisplacement(int32_t displacement);
-        int32_t getDisplacement();
+        void setDisplacement(uint32_t displacement);
+        uint32_t getDisplacement();
 
         void setRegToReg(bool regToReg);
         bool getRegToReg();
@@ -107,8 +107,8 @@ class Instruction
         bool hasSIB;
         r_m rm;
         SIB sib;
-        int64_t value;
-        int32_t displacement;
+        uint64_t value;
+        uint32_t displacement;
         bool regToReg;
         bool regToMem;
         bool memToReg;
