@@ -143,11 +143,11 @@ uint64_t Instruction::getValue() {
     return value;
 }
 
-void Instruction::setDisplacement(uint32_t displacement) {
+void Instruction::setDisplacement(uint64_t displacement) {
     this->displacement = displacement;
 }
 
-uint32_t Instruction::getDisplacement() {
+uint64_t Instruction::getDisplacement() {
     return displacement;
 }
 

@@ -80,8 +80,8 @@ class Instruction
         void setValue(uint64_t value);
         uint64_t getValue();
 
-        void setDisplacement(uint32_t displacement);
-        uint32_t getDisplacement();
+        void setDisplacement(uint64_t displacement);
+        uint64_t getDisplacement();
 
         void setRegToReg(bool regToReg);
         bool getRegToReg();
@@ -108,7 +108,7 @@ class Instruction
         r_m rm;
         SIB sib;
         uint64_t value;
-        uint32_t displacement;
+        uint64_t displacement;
         bool regToReg;
         bool regToMem;
         bool memToReg;

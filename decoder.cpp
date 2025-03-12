@@ -56,11 +56,11 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
         return info;
     }
 
-    //setting the prefix and changing the lenght of the instruction if there is IO
+    //setting the prefix and changing the lenght of the instruction if there is IO or offset
     for (int i = 0; i < numPrefixes; i++)
     {
         //if there is the prefix for 16bits opernads
-        if(prefix[i] == 0x66 and info.hasImmediate)
+        if(prefix[i] == 0x66 and (info.hasImmediate))
         {
             //the lenght is reduced by 2 bytes
             info.totalLength -= 2;
@@ -75,7 +75,7 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
         
     }
 
-    if (rex and (rexprefix & 0x08) and info.hasImmediate)
+    if (rex and (rexprefix & 0x08) and (info.hasImmediate or info.hasDisplacement))
     {
         //the lenght is increased by 4 bytes 
         info.totalLength += 4;
@@ -148,7 +148,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
 
     uint64_t value = 0;
-    uint32_t displacement = 0;
+    uint64_t displacement = 0;
 
 
 
@@ -162,6 +162,37 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     mov->setRex(instruction.rex);
 
     
+    //if there is a a0-a3 opcode
+    if (instruction.hasDisplacement)
+    {
+        mov->setHasDisplacement(true);
+
+        if(isMoveInstructionOffsetRAX_mem(instruction.opcode))
+        {
+            mov->setRegToMem(true);
+        }
+        else if(isMoveInstructionOffsetMem_RAx(instruction.opcode))
+        {
+            mov->setMemToReg(true);
+        }
+
+        displacement = 0;
+
+
+        for (int i = 0; i < instruction.operandLength; i++)
+        {   
+            std::cout << "Byte: " << std::hex << static_cast<int>(instruction.instruction[position + i]) << std::endl;
+            displacement |= static_cast<uint64_t>(instruction.instruction[position + i]) << (i * 8);
+        }
+
+        std::cout << "Displacement: " << displacement << std::endl;
+
+        position += instruction.operandLength;
+
+        mov->setDisplacement(displacement);
+    }
+
+
 
 
     //if there is immediate value and no ModRM
@@ -225,9 +256,12 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
                 {
                     //the operand is a displacement
                     mov->setHasDisplacement(true);
+
+                    displacement = 0;
+
                     for (int i = 0; i < 4; i++)
                     {
-                        displacement += instruction.instruction[position + i] << (i * 8);
+                        displacement |= instruction.instruction[position + i] << (i * 8);
                     
                     }
                     position += 4;
@@ -292,6 +326,8 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
             }
 
+            displacement = 0;
+
             for (int i = 0; i < 4; i++)
             {
                 std::cout << "Byte: " << std::hex<<static_cast<int>(instruction.instruction[position + i]) << std::endl;
@@ -310,7 +346,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
             //decode the immediate value
             for (int i = 0; i < instruction.operandLength; i++)
             {
-                value += instruction.instruction[position + i] << (i * 8);
+                value |= instruction.instruction[position + i] << (i * 8);
             }
 
             position += instruction.operandLength;
@@ -321,7 +357,6 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         
 
     }
-
 
     return mov;
 }

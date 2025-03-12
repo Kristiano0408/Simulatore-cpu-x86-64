@@ -49,9 +49,9 @@ std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
     {0xC7, {6, 1, 5, 2, 4, true, false, true, "MOV r/m16/32/64, imm16/32/64"}},
 
     //itruzioni tra rax e memoria
-    {0xA0, {2, 1, 1, 1, 1, false, true, false, "MOV AL, moffs8"}},
+    {0xA0, {5, 1, 4, 1, 4, false, true, false, "MOV AL, moffs8"}},
     {0xA1, {5, 1, 4, 1, 4, false, true, false, "MOV EAX/RAX, moffs32/64"}},
-    {0xA2, {2, 1, 1, 1, 1, false, true, false, "MOV moffs8, AL"}},
+    {0xA2, {5, 1, 4, 1, 4, false, true, false, "MOV moffs8, AL"}},
     {0xA3, {5, 1, 4, 1, 4, false, true, false, "MOV moffs32/64, EAX/RAX"}},
 
 
