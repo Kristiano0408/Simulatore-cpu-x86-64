@@ -9,7 +9,7 @@ getsire flags con vettore(coem nella realta)
 
 //sisteamre uso rex 49 ( per r8-r15)(solo immediate) 
 
-//capire se il decoding fuznina (chat su chatgpt per codici tetsing)
+//capire se il decoding fuznina (chat su chatgpt per codici tetsing) in teoria va
 
 
 //sposatre modifiche alla lunghezzza in fething e non in instruction lebght
@@ -18,6 +18,6 @@ getsire flags con vettore(coem nella realta)
 
 //fixare tipo registri (tutti uint64_t)
 
-//capire dove fare operand fetch
+//finire operand fetching per move
 
 

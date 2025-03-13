@@ -246,6 +246,44 @@ std::string MoveInstruction::getD_register() const {
     return D_register;
 }
 
+//fetch the operands
+void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
+
+    //fetch the operands
+    if (getRegToReg())
+    {
+        std::string source_register = decodeRegisterReg(getRM().reg, getRexprefix());
+        std::string destination_register = decodeRegisterReg(getRM().r_m, getRexprefix());
+        //fetch the operands
+        setD_register(destination_register);
+        setS_register(source_register);
+    }
+
+    else if (getRegToMem())
+    {
+        
+    }
+
+    else if (getMemToReg())
+    {
+        
+    }
+
+    else if (getHasImmediate())
+    {
+        
+    }
+
+   
+   
+    
+
+
+
+}
+
+
+
 
 // Move instruction
 void MoveInstruction::execute(CU* controlUnit, Memory* ram) 

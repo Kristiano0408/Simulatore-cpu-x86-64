@@ -1,6 +1,7 @@
 #ifndef HELPERS_HPP
 #define HELPERS_HPP
 #include<cstdint> 
+#include<string>
 
 
 bool isPrefix(unsigned char byte); // Dichiarazione della funzione
