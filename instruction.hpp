@@ -145,6 +145,31 @@ class MoveInstruction : public Instruction
         //execute the instruction
         void execute(CU* controlUnit, Memory* ram) override;
 
+        //setters and getters for the operands
+        void setS_address(uint64_t S_address);
+        uint64_t getS_address();
+
+        void setD_address(uint64_t D_address);
+        uint64_t getD_address();
+
+        void setValue(uint64_t value);
+        uint64_t getValue();
+
+        void setS_register(const std::string& S_register);
+        std::string getS_register() const;
+
+        void setD_register(const std::string& D_register);
+        std::string getD_register() const;
+
+
+    private:
+        uint64_t S_address;
+        uint64_t D_address;
+        uint64_t value;
+
+        std::string S_register;
+        std::string D_register;
+
     
         
 

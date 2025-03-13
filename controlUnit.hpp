@@ -18,6 +18,7 @@ class CU
 
         InstructionInfo fetchInstruction();
         Instruction* decodeInstruction(InstructionInfo instruction);
+        void OperandFetch(Instruction* instruction);
         void executeInstruction(Instruction* instruction);
 
         //getters for the registers

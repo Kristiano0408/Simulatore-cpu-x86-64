@@ -143,6 +143,7 @@ uint64_t Instruction::getValue() {
     return value;
 }
 
+
 void Instruction::setDisplacement(uint64_t displacement) {
     this->displacement = displacement;
 }
@@ -199,12 +200,62 @@ MoveInstruction::MoveInstruction() {
     setOpcode(0);
     setValue(0);
     setDisplacement(0);
+    setD_address(0);
+    setS_address(0);
+    setS_register("");
+    setD_register("");
+
 
 
     
     
 }
 
+
+
+//getters and setters for the operands
+void MoveInstruction::setS_address(uint64_t S_address) {
+    this->S_address = S_address;
+}
+
+uint64_t MoveInstruction::getS_address() {
+    return S_address;
+}
+
+void MoveInstruction::setD_address(uint64_t D_address) {
+    this->D_address = D_address;
+}
+
+uint64_t MoveInstruction::getD_address() {
+    return D_address;
+}
+
+void MoveInstruction::setValue(uint64_t value) {
+    this->value = value;
+}
+
+uint64_t MoveInstruction::getValue() {
+    return value;
+}
+
+void MoveInstruction::setS_register(const std::string& S_register) {
+    this->S_register = S_register;
+}
+
+std::string MoveInstruction::getS_register() const {
+    return S_register;
+}
+
+void MoveInstruction::setD_register(const std::string& D_register) {
+    this->D_register = D_register;
+}
+
+std::string MoveInstruction::getD_register() const {
+    return D_register;
+}
+
+
+// Move instruction
 void MoveInstruction::execute(CU* controlUnit, Memory* ram) 
 {
 

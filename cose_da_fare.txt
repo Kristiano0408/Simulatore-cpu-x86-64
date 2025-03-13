@@ -16,6 +16,8 @@ getsire flags con vettore(coem nella realta)
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
 
+//fixare tipo registri (tutti uint64_t)
 
+//capire dove fare operand fetch
 
 
