@@ -155,9 +155,20 @@ Instruction* CU::decodeInstruction(InstructionInfo instruction)
 }
 
 
+void CU::OperandFetch(Instruction* instruction)
+{   
+    instruction->fetchOperands(this, memory);
+    
+
+}
+
 //method for executing the instruction
 void CU::executeInstruction(Instruction* instruction)
 {
+
+    //fetching the operands
+    OperandFetch(instruction);
+
     std::cout << "executeInstruction" << std::endl;
     instruction->execute(this, memory);
 

@@ -230,14 +230,6 @@ uint64_t MoveInstruction::getD_address() {
     return D_address;
 }
 
-void MoveInstruction::setValue(uint64_t value) {
-    this->value = value;
-}
-
-uint64_t MoveInstruction::getValue() {
-    return value;
-}
-
 void MoveInstruction::setS_register(const std::string& S_register) {
     this->S_register = S_register;
 }

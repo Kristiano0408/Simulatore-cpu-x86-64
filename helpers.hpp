@@ -26,5 +26,13 @@ bool isMoveR_M_reg_mem(uint32_t opcode);
 bool isMoveR_M_mem_reg(uint32_t opcode);
 
 
+const std::string& decodeRegisterReg(uint8_t reg, uint8_t rexprefix);
+
+const std::string& decodeRegisterRM(uint8_t reg, uint8_t rexprefix, bool hasSIB);
+
+const std::string& decodeRegisterSIB_base(uint8_t reg, uint8_t rexprefix, bool hasSIB);
+
+const std::string& decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool hasSIB);
+
 
 #endif // HELPERS_HPP

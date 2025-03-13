@@ -37,6 +37,7 @@ class Instruction
         //execute the instruction
         virtual void execute(CU* controlUnit, Memory* ram);//Polimorfic method that will be implemented in the derived classes
 
+        virtual void fetchOperands(CU* controlUnit, Memory* ram);
 
         void decodeNbit(); //method to decode the number of bits of the value/operand with rex prefix or 0x66 prefix
 
@@ -145,15 +146,14 @@ class MoveInstruction : public Instruction
         //execute the instruction
         void execute(CU* controlUnit, Memory* ram) override;
 
+        void fetchOperands(CU* controlUnit, Memory* ram) override;
+
         //setters and getters for the operands
         void setS_address(uint64_t S_address);
         uint64_t getS_address();
 
         void setD_address(uint64_t D_address);
         uint64_t getD_address();
-
-        void setValue(uint64_t value);
-        uint64_t getValue();
 
         void setS_register(const std::string& S_register);
         std::string getS_register() const;
@@ -165,7 +165,6 @@ class MoveInstruction : public Instruction
     private:
         uint64_t S_address;
         uint64_t D_address;
-        uint64_t value;
 
         std::string S_register;
         std::string D_register;
