@@ -118,22 +118,7 @@ class Instruction
 
 //define the instruction classes (an iscrutction for each operation)
 
-//add instruction
-class AddInstruction : public Instruction
-{
-    public:
-        //constructor
-        AddInstruction(uint8_t dest, uint8_t src1, uint8_t src2);
-        //destructor
-        ~AddInstruction() override = default;
-        //execute the instruction
-        void execute(CU* controlUnit, Memory* ram) override;
 
-    private:
-        uint8_t dest;
-        uint8_t src1;
-        uint8_t src2;
-};
 
 
 class MoveInstruction : public Instruction

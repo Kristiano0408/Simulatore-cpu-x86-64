@@ -22,5 +22,3 @@ getsire flags con vettore(coem nella realta)
 
 //settare il numeor di bit che l'istruzione elabora in decodifica
 
-
-//capire come strutturare operand fetch ed execute
