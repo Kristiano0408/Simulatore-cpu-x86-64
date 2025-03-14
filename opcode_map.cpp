@@ -19,7 +19,7 @@ std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
 
     // Istruzioni MOV
 
-    // Istruzioni MOV tra registro e immediato (manca imm8)
+    // Istruzioni MOV tra registro e immediato
     {0xB0, {2, 1, 1, 1, 1, false, false, true, "MOV AL, imm8"}},
     {0xB1, {2, 1, 1, 1, 1, false, false, true, "MOV CL, imm8"}},
     {0xB2, {2, 1, 1, 1, 1, false, false, true, "MOV DL, imm8"}},
