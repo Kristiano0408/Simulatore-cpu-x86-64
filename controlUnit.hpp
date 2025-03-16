@@ -24,6 +24,7 @@ class CU
         //getters for the registers
         RegisterFile& getRegisters();
         ALU& getALU();
+        AddressingMode& getAddressingMode();
 
         //helpers function for making the code more readable
         void fixTotalLengthPrefix(InstructionInfo* info);
@@ -33,7 +34,7 @@ class CU
 
     private:
         Decoder* decoder;
-        //AddressingMode* addressingMode;
+        AddressingMode addressingMode;
         RegisterFile registers; 
         ALU alu;
         Memory* memory;

@@ -266,7 +266,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
                     }
                     position += 4;
 
-                    mov->setDisplacement(displacement);
+                    mov->setSIBdisplacement(static_cast<uint32_t>(displacement));
                 }
         
 

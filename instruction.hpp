@@ -8,7 +8,7 @@
 #include <vector>
 #include "memory.hpp"
 #include "helpers.hpp"  
-
+#include "addressingMode.hpp"
 
 struct r_m {
     uint8_t r_m : 3;
@@ -37,7 +37,7 @@ class Instruction
         //execute the instruction
         virtual void execute(CU* controlUnit, Memory* ram);//Polimorfic method that will be implemented in the derived classes
 
-        virtual void fetchOperands(CU* controlUnit, Memory* ram);
+        virtual void fetchOperands(CU* controlUnit, Memory* ram) = 0; //Polimorfic method that will be implemented in the derived classes
 
         void decodeNbit(); //method to decode the number of bits of the value/operand with rex prefix or 0x66 prefix
 
@@ -84,6 +84,9 @@ class Instruction
         void setDisplacement(uint64_t displacement);
         uint64_t getDisplacement();
 
+        void setSIBdisplacement(uint32_t SIBdisplacement);
+        uint32_t getSIBdisplacement();
+
         void setRegToReg(bool regToReg);
         bool getRegToReg();
 
@@ -110,6 +113,7 @@ class Instruction
         SIB sib;
         uint64_t value;
         uint64_t displacement;
+        uint32_t SIBdisplacement;
         bool regToReg;
         bool regToMem;
         bool memToReg;

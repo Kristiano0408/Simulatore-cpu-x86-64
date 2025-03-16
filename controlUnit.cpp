@@ -2,7 +2,7 @@
 #include <iostream>
 
 
-CU::CU(Memory* memory): memory(memory), decoder(), /*addressingMode(),*/registers(), alu()
+CU::CU(Memory* memory): memory(memory), decoder(), addressingMode(this),registers(), alu()
 {
     //nothing to do here
     
@@ -24,6 +24,10 @@ ALU& CU::getALU()
     return alu;
 }
 
+AddressingMode& CU::getAddressingMode()
+{
+    return addressingMode;
+}
 
 //method for fethcing the instruction from the ram
 InstructionInfo CU::fetchInstruction()

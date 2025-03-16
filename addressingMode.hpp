@@ -18,14 +18,21 @@ class AddressingMode
         int64_t immediateAddressing(int64_t value) const;
         int64_t indirectAddressing(const std::string& reg_address) const;
         int64_t registerAddressing(const std::string& reg_value) const;
-        int64_t baseDisplacementAddressing(const std::string& baseReg, int64_t displacement) const;
-        int64_t indexedAddressing(const std::string& baseReg, const std::string& indexReg) const;
-        int64_t scaledIndexedAddressing(const std::string& baseReg, const std::string& indexReg, int8_t scale) const;
-        int64_t scaledIndexedDisplacementAddressing(const std::string& baseReg, const std::string& indexReg, int8_t scale, int64_t displacement) const;
 
+        int64_t BaseAddressing(const std::string& base) const;
+        int64_t BaseIndexAddressing(const std::string& base, const std::string& index) const;
+        int64_t BaseIndexScaleAddressing(const std::string& base, const std::string& index, int64_t scale) const;
+        int64_t BaseIndexScaleDisplacementAddressing(const std::string& base, const std::string& index, int64_t scale, int64_t displacement) const;
+
+        int64_t BaseIndexDIsplacementAddressing(const std::string& base, const std::string& index, int64_t displacement) const;
+        int64_t BaseScaleDisplacementAddressing(const std::string& base, int64_t scale, int64_t displacement) const;
+        int64_t BaseScaleAddressing(const std::string& base, int64_t scale) const;
+        int64_t BaseDisplacementAddressing(const std::string& base, int64_t displacement) const;
 
     private:
         CU* controlUnit;
+
+
 };
 
 

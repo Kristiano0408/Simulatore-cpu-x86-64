@@ -12,6 +12,9 @@ getsire flags con vettore(coem nella realta)
 //capire se il decoding fuznina (chat su chatgpt per codici tetsing) in teoria va
 
 
+
+//capire meglio dispcemnet sib e r/m e vedere se li leggo correttmanete (gestire piu diplcemenet separatai)
+
 //sposatre modifiche alla lunghezzza in fething e non in instruction lebght
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore

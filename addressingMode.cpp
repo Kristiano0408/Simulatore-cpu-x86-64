@@ -1,14 +1,14 @@
 #include "addressingMode.hpp"
 #include "controlUnit.hpp"
 
-
-//RICORDARSI controllo overflow
+//modificare e ritornare tutto unint64_t
 
 AddressingMode::AddressingMode(CU* controlUnit) {
     this->controlUnit = controlUnit;
 }
 
 AddressingMode::~AddressingMode() {
+    //nothing to do here
 }
 
 int64_t AddressingMode::directAddressing(int64_t address) const {
@@ -23,24 +23,39 @@ int64_t AddressingMode::indirectAddressing(const std::string& reg_address) const
     return controlUnit->getRegisters().getRegisterValue(reg_address);
 }
 
-/* in theory it doesn't make sense to have this function cause the value will be taken during execution, in decoding is stored the name of the register
-    Maybe it could be useful for other instructions(not move, cause the execution will take the value from the register)
 int64_t AddressingMode::registerAddressing(const std::string& reg_value) const {
     return controlUnit->getRegisters().getRegisterValue(reg_value);
-}*/
-
-int64_t AddressingMode::baseDisplacementAddressing(const std::string& baseReg, int64_t displacement) const {
-    return controlUnit->getRegisters().getRegisterValue(baseReg) + displacement;
 }
 
-int64_t AddressingMode::indexedAddressing(const std::string& baseReg, const std::string& indexReg) const {
-    return controlUnit->getRegisters().getRegisterValue(baseReg) + controlUnit->getRegisters().getRegisterValue(indexReg);
+
+int64_t AddressingMode::BaseAddressing(const std::string& base) const {
+    return controlUnit->getRegisters().getRegisterValue(base);
 }
 
-int64_t AddressingMode::scaledIndexedAddressing(const std::string& baseReg, const std::string& indexReg, int8_t scale) const {
-    return controlUnit->getRegisters().getRegisterValue(baseReg) + controlUnit->getRegisters().getRegisterValue(indexReg) * scale;
+int64_t AddressingMode::BaseScaleAddressing(const std::string& base, int64_t scale) const {
+    return controlUnit->getRegisters().getRegisterValue(base) * scale;
 }
 
-int64_t AddressingMode::scaledIndexedDisplacementAddressing(const std::string& baseReg, const std::string& indexReg, int8_t scale, int64_t displacement) const {
-    return controlUnit->getRegisters().getRegisterValue(baseReg) + controlUnit->getRegisters().getRegisterValue(indexReg) * scale + displacement;
+int64_t AddressingMode::BaseIndexAddressing(const std::string& base, const std::string& index) const {
+    return controlUnit->getRegisters().getRegisterValue(base) + controlUnit->getRegisters().getRegisterValue(index);
+}
+
+int64_t AddressingMode::BaseIndexScaleAddressing(const std::string& base, const std::string& index, int64_t scale) const {
+    return controlUnit->getRegisters().getRegisterValue(base) + controlUnit->getRegisters().getRegisterValue(index) * scale;
+}
+
+int64_t AddressingMode::BaseIndexScaleDisplacementAddressing(const std::string& base, const std::string& index, int64_t scale, int64_t displacement) const {
+    return controlUnit->getRegisters().getRegisterValue(base) + controlUnit->getRegisters().getRegisterValue(index) * scale + displacement;
+}
+
+int64_t AddressingMode::BaseIndexDIsplacementAddressing(const std::string& base, const std::string& index, int64_t displacement) const {
+    return controlUnit->getRegisters().getRegisterValue(base) + controlUnit->getRegisters().getRegisterValue(index) + displacement;
+}
+
+int64_t AddressingMode::BaseScaleDisplacementAddressing(const std::string& base, int64_t scale, int64_t displacement) const {
+    return controlUnit->getRegisters().getRegisterValue(base) * scale + displacement;
+}
+
+int64_t AddressingMode::BaseDisplacementAddressing(const std::string& base, int64_t displacement) const {
+    return controlUnit->getRegisters().getRegisterValue(base) + displacement;
 }
