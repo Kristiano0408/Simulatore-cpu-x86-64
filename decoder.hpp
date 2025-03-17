@@ -7,6 +7,7 @@
 #include <string>
 #include "instruction.hpp"
 #include <vector>
+#include "helpers.hpp"
 
 struct InstructionInfo {
     size_t totalLength;  // Lunghezza totale dell'istruzione

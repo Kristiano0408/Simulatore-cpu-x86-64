@@ -149,7 +149,7 @@ bool isMoveR_M_mem_reg(uint32_t opcode)
     return false;
 }
 
-const std::string& decodeRegisterReg(uint8_t reg, uint8_t rexprefix)
+const std::string decodeRegisterReg(uint8_t reg, uint8_t rexprefix)
 {
     if (rexprefix & 0x04)
     {
@@ -212,7 +212,7 @@ const std::string& decodeRegisterReg(uint8_t reg, uint8_t rexprefix)
     }
 }
 
-const std::string& decodeRegisterRM(uint8_t reg, uint8_t rexprefix, bool hasSIB)
+const std::string decodeRegisterRM(uint8_t reg, uint8_t rexprefix, bool hasSIB)
 {
     if (rexprefix & 0x01 && !hasSIB)
     {
@@ -275,7 +275,7 @@ const std::string& decodeRegisterRM(uint8_t reg, uint8_t rexprefix, bool hasSIB)
     }
 }
 
-const std::string& decodeRegisterSIB_base(uint8_t reg, uint8_t rexprefix, bool hasSIB)
+const std::string decodeRegisterSIB_base(uint8_t reg, uint8_t rexprefix, bool hasSIB)
 {
     if (rexprefix & 0x01 && hasSIB)
     {
@@ -339,7 +339,7 @@ const std::string& decodeRegisterSIB_base(uint8_t reg, uint8_t rexprefix, bool h
 
 }
 
-const std::string& decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool hasSIB)
+const std::string decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool hasSIB)
 {
     if (rexprefix & 0x02 && hasSIB)
     {

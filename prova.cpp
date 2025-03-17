@@ -68,6 +68,12 @@ int main()
     cout << "RM: " << static_cast<int>(instruction->getRM().mod) << " " << static_cast<int>(instruction->getRM().reg)<< " " << static_cast<int>(instruction->getRM().r_m) << endl;
     cout << "SIB: " << static_cast<int>(instruction->getSIB().scale) << " " << static_cast<int>(instruction->getSIB().index) << " " << static_cast<int>(instruction->getSIB().base) << endl;
 
+    cpu.getControlUnit().executeInstruction(instruction);
+
+    cout << instruction->getS_register() << " " << instruction->getD_register() << endl;
+    cout << instruction->getS_address() << " " << instruction->getD_address() << endl;
+
+
 
    
 

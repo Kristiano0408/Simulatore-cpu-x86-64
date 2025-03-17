@@ -190,6 +190,41 @@ bool Instruction::getMemToReg() {
 
 
 
+
+//getters and setters for the operands
+void Instruction::setS_address(uint64_t S_address) {
+    this->S_address = S_address;
+}
+
+uint64_t Instruction::getS_address() {
+    return S_address;
+}
+
+void Instruction::setD_address(uint64_t D_address) {
+    this->D_address = D_address;
+}
+
+uint64_t Instruction::getD_address() {
+    return D_address;
+}
+
+void Instruction::setS_register(const std::string& S_register) {
+    this->S_register = S_register;
+}
+
+std::string Instruction::getS_register() const {
+    return S_register;
+}
+
+void Instruction::setD_register(const std::string& D_register) {
+    this->D_register = D_register;
+}
+
+std::string Instruction::getD_register() const {
+    return D_register;
+}
+
+
 //Move instruction
 
 //constructor
@@ -221,40 +256,6 @@ MoveInstruction::MoveInstruction() {
     
 }
 
-
-
-//getters and setters for the operands
-void MoveInstruction::setS_address(uint64_t S_address) {
-    this->S_address = S_address;
-}
-
-uint64_t MoveInstruction::getS_address() {
-    return S_address;
-}
-
-void MoveInstruction::setD_address(uint64_t D_address) {
-    this->D_address = D_address;
-}
-
-uint64_t MoveInstruction::getD_address() {
-    return D_address;
-}
-
-void MoveInstruction::setS_register(const std::string& S_register) {
-    this->S_register = S_register;
-}
-
-std::string MoveInstruction::getS_register() const {
-    return S_register;
-}
-
-void MoveInstruction::setD_register(const std::string& D_register) {
-    this->D_register = D_register;
-}
-
-std::string MoveInstruction::getD_register() const {
-    return D_register;
-}
 
 //fetch the operands
 void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
