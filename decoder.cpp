@@ -144,7 +144,7 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* control
 Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* controlUnit)
 {
     //create the instruction
-    MoveInstruction* mov = new MoveInstruction();
+    Instruction* mov = new MoveInstruction();
 
 
     uint64_t value = 0;
