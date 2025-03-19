@@ -13,8 +13,6 @@ getsire flags con vettore(coem nella realta)
 
 
 
-//capire meglio dispcemnet sib e r/m e vedere se li leggo correttmanete (gestire piu diplcemenet separatai)
-
 //sposatre modifiche alla lunghezzza in fething e non in instruction lebght
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
@@ -24,4 +22,17 @@ getsire flags con vettore(coem nella realta)
 //finire operand fetching per move
 
 //settare il numeor di bit che l'istruzione elabora in decodifica
+
+
+
+
+///NOTE//
+
+non esisto i registri alti per 8 bit AH, CH, DH, BH vengono sempre utilizzati SPL, BPL, SIL, DIL (gli ultimi 8 bit finali di RSP, RBP, RSI, RDI), come se ci fosse sempre il prefisso rex
+
+solo long mode 64 bit
+
+i nomi dei egistri non cambiano in base alla grandezza, pero posso scrivere 8/16/32 nei registri a 64 bit
+
+solo alu, no fpu, no vector unit, solo gpr e siene cs e ss e rimasugli da 32 bit
 

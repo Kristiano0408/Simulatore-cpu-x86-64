@@ -54,12 +54,6 @@ class Decoder {
         
     private:
 
-
-
-
-
-        
-
         //decode the instruction
         Instruction* decodeAdd(InstructionInfo instruction);
         Instruction* decodeSub(InstructionInfo instruction);

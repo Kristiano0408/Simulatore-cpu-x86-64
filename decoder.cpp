@@ -23,6 +23,8 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
     InstructionInfo info;
     info.opcode = opcode;
     info.prefixCount = numPrefixes;
+    info.rex = rex;
+    info.rexprefix = rexprefix;
 
     //search the opcode in the map
 
@@ -81,22 +83,9 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
         info.totalLength += 4;
         info.additionalBytes += 4;
         info.operandLength += 4;
-        info.rex = true;
-        info.rexprefix = rexprefix;
            
     }
-    else if (rex and !info.hasImmediate)
-    {
-        info.rex = true;
-        info.rexprefix = rexprefix;
-    }
-
-    else
-    {
-        info.rex = false;
-        info.rexprefix = 0;
-    }
-
+   
 
     return info;
     
@@ -111,6 +100,7 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* control
     int position = 0;
 
     position = instruction.prefixCount;
+
 
     //searching the rex prefix
     if (instruction.rex)
@@ -161,6 +151,8 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
     mov->setRex(instruction.rex);
 
+    mov->setRexprefix(instruction.rexprefix);
+
     
     //if there is a a0-a3 opcode
     if (instruction.hasDisplacement)
@@ -200,8 +192,13 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     {
         value = 0;
         //decode the immediate value
-        for (int i = 0; i < instruction.operandLength; i++) 
+        std::cout << "Immediate value: " << std::endl;
+        std::cout << instruction.operandLength << std::endl;
+        for (int i = 0; i < instruction.operandLength; i++)
+        {
+            std::cout << "Byte: " << std::hex << static_cast<int>(instruction.instruction[position + i]) << std::endl;
             value |= static_cast<uint64_t>(instruction.instruction[position + i]) << (i * 8);
+        }
 
         position += instruction.operandLength;
 

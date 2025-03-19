@@ -247,8 +247,8 @@ MoveInstruction::MoveInstruction() {
     setSIBdisplacement(0);
     setD_address(0);
     setS_address(0);
-    setS_register("");
-    setD_register("");
+    setS_register("NULL");
+    setD_register("NULL");
 
 
 
@@ -260,10 +260,13 @@ MoveInstruction::MoveInstruction() {
 //fetch the operands
 void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 
+    //getting the opcode
+    uint32_t opcode = getOpcode();
     //fetch the operands
 
+
     //istruction 88 and 89 and 8A and 8B (move with R/M)
-    if (isMoveInstructionR_M(getOpcode()))
+    if (isMoveInstructionR_M(opcode))
     {   
         //operation between register and register
         if(getRM().mod == 0b11)
@@ -561,6 +564,33 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
    
 
     }
+
+    //istruction B0- BF (move io without R/M)
+    else if(isMoveInstructionIO(opcode) or isMoveInstructionIO_8bit(opcode))
+    {
+        const std::string reg_names[16] = {"RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI", // fisrt 8 registri
+                                             "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"};// last 8 registri
+
+        int reg_index = opcode & 0x07;
+
+
+        if(getRexprefix() & 0x01)  // if Rex.b = 1
+        {
+            reg_index += 8;
+        }
+        
+
+        //setting the destination register
+        setD_register(reg_names[reg_index]);
+            
+       
+    }
+
+    //
+
+
+
+
 }
 
 
