@@ -23,7 +23,7 @@ int main()
 
     vector<uint8_t> data;
     //load the program in the memory
-    data= {0x41, 0xB8, 0X34, 0X12, 0X11, 0X11, 0X11, 0X11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
+    data= {0x48, 0x89, 0x04, 0xB7, 0x48, 0xBF, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x48, 0x8B, 0x07, 0x41, 0xB8, 0X34, 0X12, 0X11, 0X11, 0X11, 0X11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
 
     ram.setData(data);
 
@@ -33,6 +33,9 @@ int main()
 
     Instruction* instruction;
 
+    for (int i = 0; i < 1 ;i++)
+    {
+        
 
     info = cpu.getControlUnit().fetchInstruction();
 
@@ -68,10 +71,17 @@ int main()
     cout << "RM: " << static_cast<int>(instruction->getRM().mod) << " " << static_cast<int>(instruction->getRM().reg)<< " " << static_cast<int>(instruction->getRM().r_m) << endl;
     cout << "SIB: " << static_cast<int>(instruction->getSIB().scale) << " " << static_cast<int>(instruction->getSIB().index) << " " << static_cast<int>(instruction->getSIB().base) << endl;
 
+
+    cpu.getRegisters().setRegisterValue("RDI", 0x1100000000000000);
+    cpu.getRegisters().setRegisterValue("RSI", 0x0000000000000001);
+
     cpu.getControlUnit().executeInstruction(instruction);
 
     cout << instruction->getS_register() << " " << instruction->getD_register() << endl;
     cout << instruction->getS_address() << " " << instruction->getD_address() << endl;
+
+
+}
 
 
 

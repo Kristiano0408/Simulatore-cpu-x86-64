@@ -262,6 +262,8 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 
     //getting the opcode
     uint32_t opcode = getOpcode();
+
+    std::cout << "opcode: " << opcode << std::endl;
     //fetch the operands
 
 
@@ -282,8 +284,9 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
         {
             
 
-            if (isMoveR_M_reg_mem)
+            if (isMoveR_M_reg_mem(opcode))
             {
+                std::cout <<"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
                 //from register to memory
                 
 
@@ -340,8 +343,9 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
       
         
             }
-            else if (isMoveR_M_mem_reg)
+            else if (isMoveR_M_mem_reg(opcode))
             {   
+                std::cout <<"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
                 //from memory to register
 
                 //destination register
@@ -586,9 +590,152 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
        
     }
 
-    //
+    //istruction C6-C7 (move io with R/M)
+    if (isMoveInstructionIO_mem(opcode))
+    {
+        //the destination is a register
+        if(getRM().mod == 0b11)
+        {
+            std::string destination_register = decodeRegisterRM(getRM().r_m, getRexprefix(), false);
+            setD_register(destination_register);
+
+        }
+        else if (getRM().mod == 0b00)    //operation between register and memory without displacemnet
+        {
+
+            if(!getHasSIB())
+                {
+                    if (getRM().r_m == 0b101)
+                    {
+                        //calculation of the address with displacement
+                        setD_address(controlUnit->getAddressingMode().BaseDisplacementAddressing("RIP", getDisplacement()));
+                    }
+                    else
+                    {
+                        //destination adress is in the register
+                        setD_address(controlUnit->getAddressingMode().indirectAddressing(decodeRegisterRM(getRM().r_m, getRexprefix(), getHasSIB())));
+                    }
+                }
+            else
+                {
+                    //calculation of the address with SIB
+                    std::string base = decodeRegisterSIB_base(getSIB().base, getRexprefix(), getHasSIB());
+                    std::string index = decodeRegisterSIB_index(getSIB().index, getRexprefix(), getHasSIB());
+                    uint64_t address = 0;
 
 
+                    
+                    if (getSIB().base == 0b101 && getSIB().index == 0b100)
+                    {
+                        //calculation of the address with displacement
+                        address = getSIBdisplacement();
+
+
+                    }
+                    else if (getSIB().base == 0b101 && getSIB().index != 0b100)
+                    {
+
+                        address = getSIBdisplacement() + controlUnit->getAddressingMode().BaseScaleAddressing(index, getSIB().scale);
+                    }
+                    else if (getSIB().base != 0b101 && getSIB().index == 0b100)
+                    {
+                        address = controlUnit->getAddressingMode().BaseAddressing(base);
+                    }
+                    else
+                    {
+                        address = controlUnit->getAddressingMode().BaseIndexScaleAddressing(base, index, getSIB().scale);
+                    }
+
+                    //destination address
+                    setD_address(address);
+
+                }
+      
+            
+
+    }
+        else if (getRM().mod == 0b01)   //operation between register and memory with 8 bit dispalcemnet
+        {
+            if(!getHasSIB())
+            {
+                //destination adress is in the register
+                setD_address(controlUnit->getAddressingMode().indirectAddressing(decodeRegisterRM(getRM().r_m, getRexprefix(), getHasSIB())) + getDisplacement());
+            }
+            else
+            {
+                //calculation of the address with SIB
+                std::string base = decodeRegisterSIB_base(getSIB().base, getRexprefix(), getHasSIB());
+                std::string index = decodeRegisterSIB_index(getSIB().index, getRexprefix(), getHasSIB());
+                uint64_t address = 0;
+
+                //if the index is 0b100, there is no index
+                if (getSIB().index == 0b100)
+                {
+                    //only base
+                    address = controlUnit->getAddressingMode().BaseDisplacementAddressing(base, getDisplacement());
+
+                }
+                else
+                {
+                    //base, index and scale and displacement
+                    address = controlUnit->getAddressingMode().BaseIndexScaleDisplacementAddressing(base, index, getSIB().scale, getDisplacement());
+                    
+                }
+                
+                //destination address
+                setD_address(address);
+            }
+
+        }
+        else if (getRM().mod == 0b10)   //operation between register and memory wit 32 bit dispalcemnet
+        {
+            if(!getHasSIB())
+            {
+                //destination adress is in the register
+                setD_address(controlUnit->getAddressingMode().indirectAddressing(decodeRegisterRM(getRM().r_m, getRexprefix(), getHasSIB())) + getDisplacement());
+            }
+            else
+            {
+                //calculation of the address with SIB
+                std::string base = decodeRegisterSIB_base(getSIB().base, getRexprefix(), getHasSIB());
+                std::string index = decodeRegisterSIB_index(getSIB().index, getRexprefix(), getHasSIB());
+                uint64_t address = 0;
+
+                //if the index is 0b100, there is no index
+                if (getSIB().index == 0b100)
+                {
+                    //only base
+                    address = controlUnit->getAddressingMode().BaseDisplacementAddressing(base, getDisplacement());
+                    
+                }
+                else
+                {
+                    //base, index and scale and displacement
+                    address = controlUnit->getAddressingMode().BaseIndexScaleDisplacementAddressing(base, index, getSIB().scale, getDisplacement());
+                    
+                }
+                
+                //destination address
+                setD_address(address);
+            }
+
+        }
+    }
+
+    //istruction A0-A3 (move between RAX and memory)
+    if (isMoveInstructionOffset(opcode))
+    {
+        if (isMoveInstructionOffsetMem_RAx)
+        {
+            S_address = getDisplacement();
+            D_register = "RAX";
+        }
+        else
+        {
+            S_register = "RAX";
+            D_address = getDisplacement();
+        }
+    }
 
 
 }

@@ -171,7 +171,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         displacement = 0;
 
 
-        for (int i = 0; i < instruction.operandLength; i++)
+        for (int i = 0; i < 4; i++)
         {   
             std::cout << "Byte: " << std::hex << static_cast<int>(instruction.instruction[position + i]) << std::endl;
             displacement |= static_cast<uint64_t>(instruction.instruction[position + i]) << (i * 8);
@@ -179,7 +179,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
         std::cout << "Displacement: " << displacement << std::endl;
 
-        position += instruction.operandLength;
+        position += 4;
 
         mov->setDisplacement(displacement);
     }
