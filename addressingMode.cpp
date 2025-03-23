@@ -11,51 +11,66 @@ AddressingMode::~AddressingMode() {
     //nothing to do here
 }
 
-int64_t AddressingMode::directAddressing(int64_t address) const {
+uint64_t AddressingMode::directAddressing(uint64_t address) const {
     return address;
 }
 
-int64_t AddressingMode::immediateAddressing(int64_t value) const {
+uint64_t AddressingMode::immediateAddressing(uint64_t value) const {
     return value;
 }
 
-int64_t AddressingMode::indirectAddressing(const std::string& reg_address) const {
+uint64_t AddressingMode::indirectAddressing(const std::string& reg_address) const {
     return controlUnit->getRegisters().getRegisterValue(reg_address);
 }
 
-int64_t AddressingMode::registerAddressing(const std::string& reg_value) const {
+uint64_t AddressingMode::registerAddressing(const std::string& reg_value) const {
     return controlUnit->getRegisters().getRegisterValue(reg_value);
 }
 
 
-int64_t AddressingMode::BaseAddressing(const std::string& base) const {
+uint64_t AddressingMode::BaseAddressing(const std::string& base) const {
     return controlUnit->getRegisters().getRegisterValue(base);
 }
 
-int64_t AddressingMode::BaseScaleAddressing(const std::string& base, int64_t scale) const {
-    return controlUnit->getRegisters().getRegisterValue(base) * scale;
+uint64_t AddressingMode::BaseScaleAddressing(const std::string& base, uint8_t scale) const {
+    return controlUnit->getRegisters().getRegisterValue(base) * ScaleConversion(scale);
 }
 
-int64_t AddressingMode::BaseIndexAddressing(const std::string& base, const std::string& index) const {
+uint64_t AddressingMode::BaseIndexAddressing(const std::string& base, const std::string& index) const {
     return controlUnit->getRegisters().getRegisterValue(base) + controlUnit->getRegisters().getRegisterValue(index);
 }
 
-int64_t AddressingMode::BaseIndexScaleAddressing(const std::string& base, const std::string& index, int64_t scale) const {
-    return controlUnit->getRegisters().getRegisterValue(base) + controlUnit->getRegisters().getRegisterValue(index) * scale;
+uint64_t AddressingMode::BaseIndexScaleAddressing(const std::string& base, const std::string& index, uint8_t scale) const {
+    return controlUnit->getRegisters().getRegisterValue(base) + controlUnit->getRegisters().getRegisterValue(index) * ScaleConversion(scale);
 }
 
-int64_t AddressingMode::BaseIndexScaleDisplacementAddressing(const std::string& base, const std::string& index, int64_t scale, int64_t displacement) const {
-    return controlUnit->getRegisters().getRegisterValue(base) + controlUnit->getRegisters().getRegisterValue(index) * scale + displacement;
+uint64_t AddressingMode::BaseIndexScaleDisplacementAddressing(const std::string& base, const std::string& index, uint8_t scale, uint64_t displacement) const {
+    return controlUnit->getRegisters().getRegisterValue(base) + controlUnit->getRegisters().getRegisterValue(index) * ScaleConversion(scale) + displacement;
 }
 
-int64_t AddressingMode::BaseIndexDIsplacementAddressing(const std::string& base, const std::string& index, int64_t displacement) const {
+uint64_t AddressingMode::BaseIndexDIsplacementAddressing(const std::string& base, const std::string& index, uint64_t displacement) const {
     return controlUnit->getRegisters().getRegisterValue(base) + controlUnit->getRegisters().getRegisterValue(index) + displacement;
 }
 
-int64_t AddressingMode::BaseScaleDisplacementAddressing(const std::string& base, int64_t scale, int64_t displacement) const {
-    return controlUnit->getRegisters().getRegisterValue(base) * scale + displacement;
+uint64_t AddressingMode::BaseScaleDisplacementAddressing(const std::string& base, uint8_t scale, uint64_t displacement) const {
+    return controlUnit->getRegisters().getRegisterValue(base) * ScaleConversion(scale) + displacement;
 }
 
-int64_t AddressingMode::BaseDisplacementAddressing(const std::string& base, int64_t displacement) const {
+uint64_t AddressingMode::BaseDisplacementAddressing(const std::string& base, uint64_t displacement) const {
     return controlUnit->getRegisters().getRegisterValue(base) + displacement;
+}
+
+int AddressingMode::ScaleConversion(uint8_t scale) const {
+    switch (scale) {
+        case 0b00:
+            return 1;
+        case 0b01:
+            return 2;
+        case 0b10:
+            return 4;
+        case 0b11:
+            return 8;
+        default:
+            return 0;
+    }
 }

@@ -14,8 +14,8 @@ class RegisterFile {
         ~RegisterFile();
 
         //getters and setters for the registers
-        void setRegisterValue(const std::string& name, int64_t value);
-        int64_t getRegisterValue(const std::string& name);
+        void setRegisterValue(const std::string& name, uint64_t value);
+        uint64_t getRegisterValue(const std::string& name);
 
         //getters and setters for the special registers
         void setRSP(uint64_t value);
@@ -49,22 +49,22 @@ class RegisterFile {
     private:
 
         //registers(olnly 64 bit version)
-        int64_t RAX; 
-        int64_t RBX;
-        int64_t RCX;
-        int64_t RDX;
-        int64_t RSI;
-        int64_t RDI;
+        uint64_t RAX; 
+        uint64_t RBX;
+        uint64_t RCX;
+        uint64_t RDX;
+        uint64_t RSI;
+        uint64_t RDI;
         uint64_t RSP;
         uint64_t RBP;
-        int64_t R8;
-        int64_t R9;
-        int64_t R10;
-        int64_t R11;
-        int64_t R12;
-        int64_t R13;
-        int64_t R14;
-        int64_t R15;
+        uint64_t R8;
+        uint64_t R9;
+        uint64_t R10;
+        uint64_t R11;
+        uint64_t R12;
+        uint64_t R13;
+        uint64_t R14;
+        uint64_t R15;
         uint64_t RIP;
 
         //flags

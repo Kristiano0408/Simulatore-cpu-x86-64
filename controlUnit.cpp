@@ -90,7 +90,7 @@ InstructionInfo CU::fetchInstruction()
     //searching for the sib and displacement
     if (info.hasModRM)
     {
-        byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+        byte = memory->readByte(index + static_cast<uint64_t>(byteCounter));
         byteCounter++;
         r_m rm = decoder->decodeRM(byte);
 
@@ -112,7 +112,7 @@ InstructionInfo CU::fetchInstruction()
     //fetch the remaining bytes (teoricallly the immediate value)
     for (int i = 0; i < bytesToFetch; i++)
     {
-        byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+        byte = memory->readByte(index + static_cast<uint64_t>(byteCounter));
         bytes.push_back(byte);
         byteCounter++;
     }
@@ -137,7 +137,7 @@ InstructionInfo CU::fetchInstruction()
     }
 
     //set the value of the IR
-    registers.setRIP(index + static_cast<int64_t>(info.totalLength));
+    registers.setRIP(index + static_cast<uint64_t>(info.totalLength));
 
     std::cout << "IR: " << std::hex << registers.getRIP() << std::endl;
 
@@ -311,7 +311,7 @@ void CU::fetchOpcode(std::vector<uint8_t>& bytes, int* byteCounter, uint64_t ind
                     *opcode = ((*opcode) << 8) | static_cast<uint32_t>(byte);
                     bytes.push_back(byte);
                     byteCounter++;
-                    byte = memory->readByte(index + static_cast<int64_t>(*byteCounter));
+                    byte = memory->readByte(index + static_cast<uint64_t>(*byteCounter));
                     *opcode = (*opcode << 8) | byte;
                     bytes.push_back(byte);
                     (*byteCounter)++;

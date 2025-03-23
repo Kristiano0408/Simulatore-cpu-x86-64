@@ -35,7 +35,7 @@ RegisterFile::~RegisterFile()
 }
 
 
-void RegisterFile::setRegisterValue(const std::string& name, int64_t value)
+void RegisterFile::setRegisterValue(const std::string& name, uint64_t value)
 {
     if(name == "RAX")
     {
@@ -100,7 +100,7 @@ void RegisterFile::setRegisterValue(const std::string& name, int64_t value)
     
 }
 
-int64_t RegisterFile::getRegisterValue(const std::string& name)
+uint64_t RegisterFile::getRegisterValue(const std::string& name)
 {
     if(name == "RAX")
     {

@@ -1,15 +1,10 @@
 tutto
 
 
-##testare modi di indirizzamnto
 controllare ofset quando si leggono/scrivono cose dalla memoria
 controllare overflow nei modi di indirizzamnto
 aggiungere altri registri
 getsire flags con vettore(coem nella realta)
-
-//sisteamre uso rex 49 ( per r8-r15)(solo immediate) 
-
-//capire se il decoding fuznina (chat su chatgpt per codici tetsing) in teoria va
 
 
 
@@ -17,9 +12,7 @@ getsire flags con vettore(coem nella realta)
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
 
-//fixare tipo registri (tutti uint64_t)
 
-//finire operand fetching per move
 
 //settare il numeor di bit che l'istruzione elabora in decodifica
 

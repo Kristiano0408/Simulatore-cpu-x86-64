@@ -155,7 +155,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
 
     
     //if there is a a0-a3 opcode
-    if (instruction.hasDisplacement)
+    if (instruction.hasDisplacement && !instruction.hasModRM)
     {
         mov->setHasDisplacement(true);
 
@@ -209,6 +209,7 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     
     else if (instruction.hasModRM)
     {
+        std::cout<< "dddddddddddddddddddddd";
         //decode the ModRM
         r_m rm = decodeRM(instruction.instruction[position]);
         position++;
@@ -291,6 +292,8 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
         {
             //the operand is a register/mem with 8 bit displacement
             mov->setHasDisplacement(true);
+
+            std::cout <<"ccccccccccccccccccccccc"   << std::endl;
             
             if (rm.r_m == 0b100)
             {
