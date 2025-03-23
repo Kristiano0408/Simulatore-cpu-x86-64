@@ -1,6 +1,7 @@
 #include "instruction.hpp"
 #include <cstdint>
 #include "controlUnit.hpp"
+#include "instruction_code_map.cpp"
 
 Instruction::~Instruction() {
     //nothing to do here
@@ -265,6 +266,45 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 
     std::cout << "opcode: " << opcode << std::endl;
     //fetch the operands
+
+
+    //get the type of the move instruction
+    auto MOVType = move_instruction.find(opcode)->second;
+
+    
+    //using switch case to get the operands
+
+    switch (MOVType)
+    {
+    case MOVType::MOV_MR:
+        std::cout << "MOV_MR" << std::endl;
+        break;
+    
+    case MOVType::MOV_RM:
+        std::cout << "MOV_RM" << std::endl;
+        break;
+    
+    case MOVType::MOV_MI:
+        std::cout << "MOV_MI" << std::endl;
+        break;
+    
+    case MOVType::MOV_OI:
+        std::cout << "MOV_OI" << std::endl;
+        break;
+    
+    case MOVType::MOV_FD:
+        std::cout << "MOV_FD" << std::endl;
+        break;
+    
+    case MOVType::MOV_TD:
+        std::cout << "MOV_TD" << std::endl;
+        break;
+    
+    default:
+        break;
+    }
+
+
 
 
     //istruction 88 and 89 and 8A and 8B (move with R/M)
