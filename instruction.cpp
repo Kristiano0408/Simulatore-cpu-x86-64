@@ -286,7 +286,6 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 
             if (isMoveR_M_reg_mem(opcode))
             {
-                std::cout <<"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
                 //from register to memory
                 
 
@@ -345,7 +344,6 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
             }
             else if (isMoveR_M_mem_reg(opcode))
             {   
-                std::cout <<"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
                 //from memory to register
 
                 //destination register
