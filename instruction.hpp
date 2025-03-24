@@ -9,6 +9,7 @@
 #include "memory.hpp"
 #include "helpers.hpp"  
 #include "addressingMode.hpp"
+#include "instruction_code_map.cpp"
 
 struct r_m {
     uint8_t r_m : 3;
@@ -155,6 +156,12 @@ class MoveInstruction : public Instruction
         void execute(CU* controlUnit, Memory* ram) override;
 
         void fetchOperands(CU* controlUnit, Memory* ram) override;
+
+        void fetchOperandsR_M(CU* controlUnit, Memory* ram, MOVType type);  //move register to R/M or move R/M to register (88, 89, 8A, 8B)
+        void fetchOperandsMI(CU* controlUnit, Memory* ram);  //move immediate to memory/register
+        void fetchOperandsOI(CU* controlUnit, Memory* ram, uint32_t opcode);  //move immediate to reg
+        void fetchOperandsFD_TD(CU* controlUnit, Memory* ram, MOVType type);  //move from offset to Rax or move from Rax to offset (A0, A1, A2, A3)      
+        uint64_t calculatingAddressR_M(CU* controlUnit, Memory* ram); //calculate the address for the operation R/M   
 
        
 
