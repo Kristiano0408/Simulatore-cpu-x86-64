@@ -344,6 +344,8 @@ void MoveInstruction::fetchOperandsR_M(CU* controlUnit, Memory* ram, MOVType typ
    
     uint64_t address {calculatingAddressR_M(controlUnit, ram)};
 
+    std::cout << "Address: " << address << std::endl;
+
     //switch case to set the source and destination operands based on the direction of the operation
     switch(type)
     {
@@ -380,7 +382,7 @@ uint64_t MoveInstruction::calculatingAddressR_M(CU* controlUnit, Memory* ram)
         else
         {
             //destination adress is in the register
-            return controlUnit->getAddressingMode().indirectAddressing(decodeRegisterRM(getRM().r_m, getRexprefix(), getHasSIB()));
+            return (controlUnit->getAddressingMode().indirectAddressing(decodeRegisterRM(getRM().r_m, getRexprefix(), getHasSIB())) + getDisplacement());
 
         }
     }

@@ -9,7 +9,9 @@
 #include "memory.hpp"
 #include "helpers.hpp"  
 #include "addressingMode.hpp"
-#include "instruction_code_map.cpp"
+#include "instruction_code_map.hpp"
+
+
 
 struct r_m {
     uint8_t r_m : 3;
