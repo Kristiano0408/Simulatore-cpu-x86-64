@@ -40,7 +40,7 @@ InstructionInfo CU::fetchInstruction()
     uint8_t byte; //byte fetched from the memory
     int byteCounter {0}; //counter of the byte (for IR)
     bool rex = false; //rex prefix flag
-    uint8_t rexprefix; //rex prefix
+    uint8_t rexprefix{0}; //rex prefix
 
     //take the value of istruction register
     index = registers.getRIP();
@@ -162,7 +162,7 @@ Instruction* CU::decodeInstruction(InstructionInfo instruction)
 void CU::OperandFetch(Instruction* instruction)
 {   
     instruction->fetchOperands(this, memory);
-    
+ 
 
 }
 
@@ -177,7 +177,7 @@ void CU::executeInstruction(Instruction* instruction)
     instruction->execute(this, memory);
 
     //delete the instruction
-    delete instruction;
+    //delete instruction;
 
 
 

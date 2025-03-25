@@ -2,7 +2,7 @@
 #include <vector>
 #include "helpers.hpp"
 #include <string>
-
+#include <iostream>
 bool isPrefix(uint8_t byte)
 {
     if (byte == 0x66 || byte == 0x67 || byte == 0xF0 || byte == 0xF2 || byte == 0xF3 || byte == 0x2E || byte == 0x3E || byte == 0x26 || byte == 0x64 || byte == 0x65 || byte == 0x36)
@@ -153,8 +153,11 @@ const std::string decodeRegisterReg(uint8_t reg, uint8_t rexprefix)
 {
     if (rexprefix & 0x04)
     {
+        std::cout <<"BBBBBBBBBBB" << std::endl;
         reg += 8;
     }
+
+    std::cout << "aaaaaaaaaaaaaaaa" << std::endl;
     
     switch (reg)
     {
