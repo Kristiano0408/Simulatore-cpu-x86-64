@@ -490,27 +490,32 @@ void MoveInstruction::execute(CU* controlUnit, Memory* ram)
     {
     case MOVType::MOV_MR:                     //move register to R/M
         std::cout << "MOV_MR" << std::endl;
-        
+        executeR_M(controlUnit, ram, MOVType::MOV_MR);
         break;
     
     case MOVType::MOV_RM:                     //move R/M to register
         std::cout << "MOV_RM" << std::endl;
+        executeR_M(controlUnit, ram, MOVType::MOV_RM);
         break;
 
     case MOVType::MOV_MI:                     //move immediate to memory/register
         std::cout << "MOV_MI" << std::endl;
+        executeMI(controlUnit, ram);
         break;
     
     case MOVType::MOV_OI:                     //move immediate to reg
         std::cout << "MOV_OI" << std::endl;
+        executeOI(controlUnit, ram);
         break;
 
     case MOVType::MOV_FD:                     //move from offset to Rax
         std::cout << "MOV_FD" << std::endl;
+        executeFD_TD(controlUnit, ram, MOVType::MOV_FD);
         break;
 
     case MOVType::MOV_TD:                    //move from Rax to offset
         std::cout << "MOV_TD" << std::endl;
+        executeFD_TD(controlUnit, ram, MOVType::MOV_TD);
         break;
 
     default:
