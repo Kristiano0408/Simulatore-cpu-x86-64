@@ -10,7 +10,7 @@
 #include "helpers.hpp"  
 #include "addressingMode.hpp"
 #include "instruction_code_map.hpp"
-
+#include <unordered_set>
 
 
 struct r_m {
@@ -26,7 +26,6 @@ struct SIB {
     uint8_t scale : 2;
     uint8_t byte_sib;
 };
-
 
 
 class CU;
@@ -144,9 +143,6 @@ class Instruction
 
 //define the instruction classes (an iscrutction for each operation)
 
-
-
-
 class MoveInstruction : public Instruction
 {
     public:
@@ -154,8 +150,9 @@ class MoveInstruction : public Instruction
         MoveInstruction();
         //destructor
         ~MoveInstruction() override = default;
-        //execute the instruction
-        void execute(CU* controlUnit, Memory* ram) override;
+
+
+        
 
         void fetchOperands(CU* controlUnit, Memory* ram) override;
 
@@ -166,7 +163,9 @@ class MoveInstruction : public Instruction
         uint64_t calculatingAddressR_M(CU* controlUnit, Memory* ram); //calculate the address for the operation R/M   
 
        
-
+        //execute the instruction
+        void execute(CU* controlUnit, Memory* ram) override;
+        int calcualting_number_of_bits(CU* controlUnit); //calculate the number of bits of the value/operand
 
     
 

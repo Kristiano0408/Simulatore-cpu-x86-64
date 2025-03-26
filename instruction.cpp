@@ -313,17 +313,6 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 }
 
 
-
-
-// Move instruction
-void MoveInstruction::execute(CU* controlUnit, Memory* ram) 
-{
-
-
-    
-}
-
-
 void MoveInstruction::fetchOperandsR_M(CU* controlUnit, Memory* ram, MOVType type)
 {   
     
@@ -482,6 +471,90 @@ void MoveInstruction::fetchOperandsFD_TD(CU* controlUnit, Memory* ram, MOVType t
 }
       
         
+
+
+// Move instruction
+void MoveInstruction::execute(CU* controlUnit, Memory* ram) 
+{
+
+    //setting the number of bytes to operate with
+    int bit = calcualting_number_of_bits(controlUnit);
+
+    setNbit(bit);
+
+    //getting the type of the move instruction
+    auto MOVType = move_instruction.find(getOpcode())->second;
+
+    //using switch case to execute the instruction
+    switch (MOVType)
+    {
+    case MOVType::MOV_MR:                     //move register to R/M
+        std::cout << "MOV_MR" << std::endl;
+        
+        break;
+    
+    case MOVType::MOV_RM:                     //move R/M to register
+        std::cout << "MOV_RM" << std::endl;
+        break;
+
+    case MOVType::MOV_MI:                     //move immediate to memory/register
+        std::cout << "MOV_MI" << std::endl;
+        break;
+    
+    case MOVType::MOV_OI:                     //move immediate to reg
+        std::cout << "MOV_OI" << std::endl;
+        break;
+
+    case MOVType::MOV_FD:                     //move from offset to Rax
+        std::cout << "MOV_FD" << std::endl;
+        break;
+
+    case MOVType::MOV_TD:                    //move from Rax to offset
+        std::cout << "MOV_TD" << std::endl;
+        break;
+
+    default:
+        break;
+    }
+
+
+
+
+    
+}
+
+int MoveInstruction::calcualting_number_of_bits(CU* controlUnit) 
+{
+    uint32_t opcode = getOpcode();
+
+    if (getRexprefix() & 0x08)
+    {
+        return 64;
+    }
+
+    for (int i = 0; i < getNumPrefixes(); i++)
+    {
+        if (getPrefix()[i] == 0x66)
+        {
+            return 16;
+        }
+    }
+
+    static const std::unordered_set<uint32_t> opcode_8bit = {0xA0, 0xA2, 0xC6, 0x88, 0x8A, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7};
+
+    if(opcode_8bit.count(opcode))
+    {
+        return 8;
+    }
+   
+
+    return 32;
+}
+
+
+
+
+
           
 
 
