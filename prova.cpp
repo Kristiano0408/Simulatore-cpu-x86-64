@@ -23,7 +23,7 @@ int main()
 
     vector<uint8_t> data;
     //load the program in the memory
-    data= {0x8b, 0x08, 0x24, 0x10, 0x48, 0xBF, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x48, 0x8B, 0x07, 0x41, 0xB8, 0X34, 0X12, 0X11, 0X11, 0X11, 0X11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
+    data= {0x44,0x8b, 0x08, 0x24, 0x10, 0x48, 0xBF, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x48, 0x8B, 0x07, 0x41, 0xB8, 0X34, 0X12, 0X11, 0X11, 0X11, 0X11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
 
     ram.setData(data);
 
@@ -73,8 +73,8 @@ int main()
 
 
     cpu.getRegisters().setRegisterValue("RAX", 0x0000000000000003);
-    cpu.getRegisters().setRegisterValue("RSI", 0x0000000000000001);
-    cpu.getRegisters().setRegisterValue("RDX", 0x1000000000000002);
+    cpu.getRegisters().setRegisterValue("R8", 0x0000000000000003);
+    
 
     cpu.getControlUnit().executeInstruction(instruction);
 
@@ -84,6 +84,26 @@ int main()
 
     //delete the instruction
     delete instruction;
+
+    std::cout << "----------------------------------------" << std::endl;
+    std::cout << "RAX: " << hex << cpu.getRegisters().getRegisterValue("RAX") << std::endl;
+    std::cout << "RBX: " << hex << cpu.getRegisters().getRegisterValue("RBX") << std::endl;
+    std::cout << "RCX: " << hex << cpu.getRegisters().getRegisterValue("RCX") << std::endl;
+    std::cout << "RDX: " << hex << cpu.getRegisters().getRegisterValue("RDX") << std::endl;
+    std::cout << "RSI: " << hex << cpu.getRegisters().getRegisterValue("RSI") << std::endl;
+    std::cout << "RDI: " << hex << cpu.getRegisters().getRegisterValue("RDI") << std::endl;
+    std::cout << "RSP: " << hex << cpu.getRegisters().getRegisterValue("RSP") << std::endl;
+    std::cout << "RBP: " << hex << cpu.getRegisters().getRegisterValue("RBP") << std::endl;
+    std::cout << "R8: " << hex << cpu.getRegisters().getRegisterValue("R8") << std::endl;
+    std::cout << "R9: " << hex << cpu.getRegisters().getRegisterValue("R9") << std::endl;
+    std::cout << "R10: " << hex << cpu.getRegisters().getRegisterValue("R10") << std::endl;
+    std::cout << "R11: " << hex << cpu.getRegisters().getRegisterValue("R11") << std::endl;
+    std::cout << "R12: " << hex << cpu.getRegisters().getRegisterValue("R12") << std::endl;
+    std::cout << "R13: " << hex << cpu.getRegisters().getRegisterValue("R13") << std::endl;
+    std::cout << "R14: " << hex << cpu.getRegisters().getRegisterValue("R14") << std::endl;
+    std::cout << "R15: " << hex << cpu.getRegisters().getRegisterValue("R15") << std::endl;
+    std::cout << "RIP: " << hex << cpu.getRegisters().getRegisterValue("RIP") << std::endl;
+    std::cout << "----------------------------------------" << std::endl;
 
 
 }

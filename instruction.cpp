@@ -257,7 +257,6 @@ MoveInstruction::MoveInstruction() {
     
 }
 
-
 //fetch the operands
 void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 
@@ -277,32 +276,33 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
     {
         case MOVType::MOV_MR:                     //move register to R/M
             std::cout << "MOV_MR" << std::endl;
-            fetchOperandsR_M(controlUnit, ram, MOVType::MOV_MR);
+            operandFetch::fetchMR(this, controlUnit, ram);
             break;
         
         case MOVType::MOV_RM:                     //move R/M to register
             std::cout << "MOV_RM" << std::endl;
-            fetchOperandsR_M(controlUnit, ram, MOVType::MOV_RM);
+            operandFetch::fetchRM(this, controlUnit, ram);
             break;
         
         
         case MOVType::MOV_MI:                     //move immediate to memory/register
             std::cout << "MOV_MI" << std::endl;
-            fetchOperandsMI(controlUnit, ram);
+            operandFetch::fetchMI(this, controlUnit, ram);
             break;
         
         case MOVType::MOV_OI:                     //move immediate to reg
             std::cout << "MOV_OI" << std::endl;
-            fetchOperandsOI(controlUnit, ram, opcode);
+            operandFetch::fetchOI(this, controlUnit, ram, opcode);
             break;
         
         case MOVType::MOV_FD:                     //move from offset to Rax
             std::cout << "MOV_FD" << std::endl;
-            fetchOperandsFD_TD(controlUnit, ram, MOVType::MOV_FD);
+            operandFetch::fetchFD(this, controlUnit, ram);
             break;
         
         case MOVType::MOV_TD:                    //move from Rax to offset
-            fetchOperandsFD_TD(controlUnit, ram, MOVType::MOV_TD);
+            std::cout << "MOV_TD" << std::endl;
+            operandFetch::fetchTD(this, controlUnit, ram);
             break;
         
         default:
@@ -311,167 +311,6 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 
 
 }
-
-
-void MoveInstruction::fetchOperandsR_M(CU* controlUnit, Memory* ram, MOVType type)
-{   
-    
-    //Case 1: operation between register and register
-    if(getRM().mod == 0b11)   
-    {
-        std::string source_register = decodeRegisterReg(getRM().reg, getRexprefix());
-        std::string destination_register = decodeRegisterRM(getRM().r_m, getRexprefix(), false);
-
-        setS_register(source_register);
-        setD_register(destination_register);
-
-        return;
-
-    }
-
-    //Case 2: operation between register and memory
-   
-    uint64_t address {calculatingAddressR_M(controlUnit, ram)};
-
-    //switch case to set the source and destination operands based on the direction of the operation
-    switch(type)
-    {
-        case MOVType::MOV_MR:  //move register to R/M
-            setS_register(decodeRegisterReg(getRM().reg, getRexprefix()));
-            setD_address(address);
-            break;
-            
-        case MOVType::MOV_RM:  //move R/M to register
-            setD_register(decodeRegisterReg(getRM().reg, getRexprefix()));
-            setS_address(address);
-            
-            break;
-            
-        default:
-            break;
-    }
-    
-
-
-
-
-}
-
-uint64_t MoveInstruction::calculatingAddressR_M(CU* controlUnit, Memory* ram)
-{
-     //if there is no SIB
-    if(!getHasSIB())
-    {
-        if (getRM().r_m == 0b101 && getRM().mod == 0b00)
-        {
-            //calculation of the address with  RIP displacement
-            return controlUnit->getAddressingMode().BaseDisplacementAddressing("RIP", getDisplacement());
-        }
-        else
-        {
-            //destination adress is in the register
-            return (controlUnit->getAddressingMode().indirectAddressing(decodeRegisterRM(getRM().r_m, getRexprefix(), getHasSIB())) + getDisplacement());
-
-        }
-    }
-    else
-    {
-        //calculation of the address with SIB
-        std::string base = decodeRegisterSIB_base(getSIB().base, getRexprefix(), getHasSIB());
-        std::string index = decodeRegisterSIB_index(getSIB().index, getRexprefix(), getHasSIB());
-        uint64_t address = 0;
-
-        //if the base is 0b101 and the index is 0b100, there is no index and base is 32 bit displacement
-        if (getSIB().base == 0b101 && getSIB().index == 0b100 && getRM().mod == 0b00)
-        {
-            address = getSIBdisplacement();
-        }
-        //if the base is 0b101 and the index is not 0b100, base(displacement), index and scale addressing
-        else if (getSIB().base == 0b101 && getSIB().index != 0b100 && getRM().mod == 0b00)
-        {
-            address = getSIBdisplacement() + controlUnit->getAddressingMode().BaseScaleAddressing(index, getSIB().scale);
-        }
-        //if the base is not 0b101 and the index is 0b100, normal base addressing
-        else if (getSIB().base != 0b101 && getSIB().index == 0b100)
-        {
-            address = controlUnit->getAddressingMode().BaseAddressing(base);
-        }
-        //if the base is not 0b101 and the index is not 0b100, base, index and scale addressing
-        else
-        {
-            address = controlUnit->getAddressingMode().BaseIndexScaleAddressing(base, index, getSIB().scale);
-        }
-
-        //if the mod is 0b01 or 0b10, there is a displacement to add
-        if (getRM().mod == 0b01 || getRM().mod == 0b10)
-        {
-            address += getDisplacement();
-        }
-
-        return address;
-
-
-    }
-
-}
-
-void MoveInstruction::fetchOperandsOI(CU* controlUnit, Memory* ram, uint32_t opcode)
-{
-    const std::string reg_names[16] = {"RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI", // fisrt 8 registri
-        "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"};// last 8 registri
-
-    int reg_index = opcode & 0x07;
-
-
-    if(getRexprefix() & 0x01)  // if Rex.b = 1
-    {
-    reg_index += 8;
-    }
-
-
-    //setting the destination register
-    setD_register(reg_names[reg_index]);
-
-}
-
-void MoveInstruction::fetchOperandsMI(CU* controlUnit, Memory* ram)
-{
-    if(getRM().mod == 0b11)
-    {
-            std::string destination_register = decodeRegisterRM(getRM().r_m, getRexprefix(), false);
-            setD_register(destination_register);
-
-        return;
-
-    }
-
-    uint64_t address {calculatingAddressR_M(controlUnit, ram)};
-
-    setD_address(address);
-
-}
-   
-void MoveInstruction::fetchOperandsFD_TD(CU* controlUnit, Memory* ram, MOVType type)
-{
-    switch (type)
-    {
-        case MOVType::MOV_FD:  //move from offset to Rax
-            setD_register("RAX");
-            setS_address(getDisplacement());
-            break;
-            
-        case MOVType::MOV_TD:  //move from Rax to offset
-            setS_register("RAX");
-            setD_address(getDisplacement());
-            break;
-            
-        default:
-            break;
-    }
-}
-      
-        
-
 
 // Move instruction
 void MoveInstruction::execute(CU* controlUnit, Memory* ram) 
@@ -556,6 +395,196 @@ int MoveInstruction::calcualting_number_of_bits(CU* controlUnit)
     return 32;
 }
 
+
+void MoveInstruction::executeR_M(CU* controlUnit, Memory* ram, MOVType type)
+{
+    //gettting the reg, address and value to operate with
+    std::string S_reg = getS_register();
+    std::string D_reg = getD_register();
+    uint64_t S_addr= getS_address();
+    uint64_t D_addr = getD_address();
+
+    uint64_t S_value = 0;
+    uint64_t S_value_casted = 0;
+
+    switch(type)
+    {
+        case MOVType::MOV_MR: //move register to R/M
+            std::cout << "MOV_MR" << std::endl;
+
+            //getting the value of the source register
+            S_value = controlUnit->getRegisters().getRegisterValue(S_reg);
+
+            //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
+            S_value_casted = castingValue(S_value, getNbit());
+
+            if(D_addr != 0)
+            {
+                //if the destination address is not 0, we are moving to memory
+                switch (getNbit())
+                {
+                    case 8:
+                        ram->writeByte(D_addr,(uint8_t)S_value_casted);
+                        break;
+                    case 16:
+                        ram->writeWord(D_addr, (uint16_t)S_value_casted);
+                        break;
+                    case 32:
+                        ram->writeDWord(D_addr, (uint32_t)S_value_casted);
+                        break;
+                    case 64:
+                        ram->writeQWord(D_addr, (uint64_t)S_value_casted);
+                        break;
+                    default:
+                        break;  
+                
+                    
+                }
+            }
+            else
+            {
+                //if the destination address is 0, we are moving to register
+                controlUnit->getRegisters().setRegisterValue(D_reg, S_value_casted);
+                
+            }
+           
+            break;
+        
+        case MOVType::MOV_RM: //move R/M to register
+            std::cout << "MOV_RM" << std::endl;
+
+            S_value = 0;
+
+            //getting the value of the source register
+            if (S_addr != 0)
+            {
+                //if the source address is not 0, we are moving from memory
+                switch (getNbit())
+                {
+                    case 8:
+                        S_value = ram->readByte(S_addr);
+                        break;
+                    case 16:
+                        S_value = ram->readWord(S_addr);
+                        break;
+                    case 32:
+                        S_value = ram->readDWord(S_addr);
+                        break;
+                    case 64:
+                        S_value = ram->readQWord(S_addr);
+                        break;
+                    default:
+                        break;  
+                
+                    
+                }
+            }
+            else
+            {
+                //if the source address is 0, we are moving from register
+                S_value = controlUnit->getRegisters().getRegisterValue(S_reg);
+                
+            }
+
+            //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
+            S_value_casted = castingValue(S_value, getNbit());
+
+            //setting the value to the destination register
+            controlUnit->getRegisters().setRegisterValue(D_reg, S_value_casted);
+
+            break;
+        
+        default:
+            break;
+    }
+
+
+}
+
+void MoveInstruction::executeMI(CU* controlUnit, Memory* ram)
+{
+
+    //gettting the reg, address and value to operate with
+    std::string S_reg = getS_register();
+    std::string D_reg = getD_register();
+    uint64_t value = getValue();
+
+
+    //casting not necessary, we are moving immediate value to memory/register and the value is already in the correct format
+
+    if (getD_address() != 0)
+    {
+        //if the destination address is not 0, we are moving to memory
+        switch (getNbit())
+        {
+            case 8:
+                ram->writeByte(getD_address(),(uint8_t)value);
+                break;
+            case 16:
+                ram->writeWord(getD_address(), (uint16_t)value);
+                break;
+            case 32:
+                ram->writeDWord(getD_address(), (uint32_t)value);
+                break;
+            case 64:
+                ram->writeQWord(getD_address(), (uint64_t)value);
+                break;
+            default:
+                break;  
+            
+                
+        }
+    }
+    else
+    {
+        //if the destination address is 0, we are moving to register
+        controlUnit->getRegisters().setRegisterValue(D_reg, value);
+        
+    }
+
+
+   
+   
+
+}
+
+void MoveInstruction::executeOI(CU* controlUnit, Memory* ram) 
+{
+    //gettting the reg, address and value to operate with
+    std::string D_reg = getD_register();
+    uint64_t value = getValue();
+
+
+    //casting not necessary, we are moving immediate value to memory/register and the value is already in the correct format
+    controlUnit->getRegisters().setRegisterValue(D_reg, value);
+
+
+
+}
+
+void MoveInstruction::executeFD_TD(CU* controlUnit, Memory* ram, MOVType type) 
+{
+
+}
+
+uint64_t MoveInstruction::castingValue(uint64_t value, int nbit) 
+{
+    switch (nbit)
+    {
+        case 8:
+            return castTo<uint8_t>(value);
+        case 16:
+            return castTo<uint16_t>(value);
+        case 32:
+            return castTo<uint32_t>(value);
+        case 64:
+            return castTo<uint64_t>(value);
+        default:
+            std::cerr << "Invalid number of bits" << std::endl;
+            return 0; // or throw an exception 
+
+    }
+}
 
 
 

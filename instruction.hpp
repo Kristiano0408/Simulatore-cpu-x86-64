@@ -7,25 +7,12 @@
 #include <string>
 #include <vector>
 #include "memory.hpp"
-#include "helpers.hpp"  
 #include "addressingMode.hpp"
 #include "instruction_code_map.hpp"
 #include <unordered_set>
+#include "operands.hpp"
 
 
-struct r_m {
-    uint8_t r_m : 3;
-    uint8_t mod : 2;
-    uint8_t reg : 3;
-    uint8_t byte_r_m;
-};
-
-struct SIB {
-    uint8_t base : 3;
-    uint8_t index : 3;
-    uint8_t scale : 2;
-    uint8_t byte_sib;
-};
 
 
 class CU;
@@ -156,16 +143,17 @@ class MoveInstruction : public Instruction
 
         void fetchOperands(CU* controlUnit, Memory* ram) override;
 
-        void fetchOperandsR_M(CU* controlUnit, Memory* ram, MOVType type);  //move register to R/M or move R/M to register (88, 89, 8A, 8B)
-        void fetchOperandsMI(CU* controlUnit, Memory* ram);  //move immediate to memory/register
-        void fetchOperandsOI(CU* controlUnit, Memory* ram, uint32_t opcode);  //move immediate to reg
-        void fetchOperandsFD_TD(CU* controlUnit, Memory* ram, MOVType type);  //move from offset to Rax or move from Rax to offset (A0, A1, A2, A3)      
         uint64_t calculatingAddressR_M(CU* controlUnit, Memory* ram); //calculate the address for the operation R/M   
 
        
         //execute the instruction
         void execute(CU* controlUnit, Memory* ram) override;
         int calcualting_number_of_bits(CU* controlUnit); //calculate the number of bits of the value/operand
+        void executeR_M(CU* controlUnit, Memory* ram, MOVType type); //execute the instruction move register to R/M or move R/M to register (88, 89, 8A, 8B)
+        void executeMI(CU* controlUnit, Memory* ram); //execute the instruction move immediate to memory/register
+        void executeOI(CU* controlUnit, Memory* ram); //execute the instruction move immediate to reg
+        void executeFD_TD(CU* controlUnit, Memory* ram, MOVType type); //execute the instruction move from offset to Rax or move from Rax to offset
+        uint64_t castingValue(uint64_t value, int nbit); //cast the value to the number of bits of the operand (8, 16, 32, 64)
 
     
 

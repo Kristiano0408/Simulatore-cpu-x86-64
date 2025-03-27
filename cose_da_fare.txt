@@ -12,9 +12,10 @@ getsire flags con vettore(coem nella realta)
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
 
+//fare una fuznione tempalte per scrittura e lettura unica da memoria
 
 
-//settare il numeor di bit che l'istruzione elabora in decodifica
+
 
 
 
