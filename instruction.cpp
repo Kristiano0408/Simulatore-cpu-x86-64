@@ -564,8 +564,77 @@ void MoveInstruction::executeOI(CU* controlUnit, Memory* ram)
 
 void MoveInstruction::executeFD_TD(CU* controlUnit, Memory* ram, MOVType type) 
 {
+    uint64_t value = 0;
+    uint64_t reg_address;
+    switch (type)
+    {
+        case MOVType::MOV_FD: //move from offset to Rax
+            
+        //getting the value from the offset
+            reg_address = getS_address();
+            switch(getNbit())
+            {
+                case 8:
+                    value = ram->readByte(reg_address);
+                    break;
+                case 16:
+                    value = ram->readWord(reg_address);
+                    break;
+                case 32:
+                    value = ram->readDWord(reg_address);
+                    break;
+                case 64:
+                    value = ram->readQWord(reg_address);
+                    break;
+                default:
+                    break;  
+                
+                    
+            }
+
+            //setting the value to the destination register
+            controlUnit->getRegisters().setRegisterValue("RAX", value);
+            
+            break;
+            
+        case MOVType::MOV_TD: //move from Rax to offset
+            
+            //getting the value from the register
+            value = controlUnit->getRegisters().getRegisterValue("RAX");
+
+            //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
+            value = castingValue(value, getNbit());
+
+            //getting the address to move the value to
+            reg_address = getD_address();
+
+            //writing the value to the address
+            switch(getNbit())
+            {
+                case 8:
+                    ram->writeByte(reg_address, (uint8_t)value);
+                    break;
+                case 16:
+                    ram->writeWord(reg_address, (uint16_t)value);
+                    break;
+                case 32:
+                    ram->writeDWord(reg_address, (uint32_t)value);
+                    break;
+                case 64:
+                    ram->writeQWord(reg_address, (uint64_t)value);
+                    break;
+                default:
+                    break;        
+            }
+            
+            break;
+
+        default:
+            break;
+    }
 
 }
+
 
 uint64_t MoveInstruction::castingValue(uint64_t value, int nbit) 
 {
