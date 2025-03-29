@@ -17,7 +17,7 @@ class CPU
         
         // registers, ALU, memory and decoder          
         Memory* memory;          
-        Decoder decoder;   
+        //Decoder decoder;   
         CU controlUnit;    
 
     public:
@@ -39,6 +39,7 @@ class CPU
         
         CU& getControlUnit();
 
+        
     
         
 };

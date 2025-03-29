@@ -9,6 +9,8 @@ getsire flags con vettore(coem nella realta)
 
 //testare esecuzuoone move instruction
 
+//rebdere piu generica la decodifica per riutilizzare funzioni
+
 
 //sposatre modifiche alla lunghezzza in fething e non in instruction lebght
 
