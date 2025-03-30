@@ -45,7 +45,10 @@ class Decoder {
         r_m decodeRM(uint8_t r_m);
         //decode the SIB operand
         SIB decodeSIB(uint8_t sib);
-       
+        //decode immediate value
+        void decodeImmediateValue(InstructionInfo instructionInfo, Instruction* instruction, int position);
+        void settingInstructionParameters(Instruction* instruction, InstructionInfo instructionInfo);
+        uint64_t decodeDisplacement(InstructionInfo instruction, int& position, int size);
 
 
         

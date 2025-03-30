@@ -9,7 +9,7 @@ getsire flags con vettore(coem nella realta)
 
 //testare esecuzuoone move instruction
 
-//rebdere piu generica la decodifica per riutilizzare funzioni
+//vedere cosa fare di adressingmode (forse trasformarla in namespace adresscalculator)
 
 
 //sposatre modifiche alla lunghezzza in fething e non in instruction lebght
