@@ -33,7 +33,7 @@ AddressingMode& CU::getAddressingMode()
 InstructionInfo CU::fetchInstruction()
 {
     uint64_t index; //index of the instruction
-    uint8_t prefix[4]; //prefix of the instruction
+    uint8_t prefix[4] {0}; //prefix of the instruction
     int numbersOfPrefix {0}; //number of prefix
     uint32_t opcode; //opcode of the instruction
     std::vector<uint8_t> bytes; //bytes of the instruction()
@@ -49,7 +49,7 @@ InstructionInfo CU::fetchInstruction()
     while (numbersOfPrefix < 4)
     {
 
-        byte=memory->readByte(index + static_cast<uint64_t>(byteCounter));   
+        byte=fetchByte(index, byteCounter);
 
         //if the byte is a prefix
         if (isPrefix(byte))
@@ -57,14 +57,19 @@ InstructionInfo CU::fetchInstruction()
             //the byte is a prefix
             prefix[numbersOfPrefix] = byte;
             numbersOfPrefix++;
-            byteCounter++;
             bytes.push_back(byte);
+            
 
         }
-        else {break;}
+        else 
+        {
+            byteCounter--; //the byte is not a prefix, so we need to decrement the counter
+            break;
+        }
 
     }
 
+    byte = fetchByte(index, byteCounter); //fetch the next byte(or the same byte if it was not a prefix)
 
     //searcing the rex prefix
     if ((byte & 0xF0) == 0x40) 
@@ -72,15 +77,20 @@ InstructionInfo CU::fetchInstruction()
         rex = true;
         bytes.push_back(byte);
         rexprefix = byte;
-        byteCounter++;
     }
+    else 
+    {
+        //the byte is not a rex prefix, so we need to decrement the counter
+        byteCounter--;
+    }
+
 
     
     //fetch the opcode
-    fetchOpcode(bytes, &byteCounter, index, &opcode);
+    fetchOpcode(bytes, byteCounter, index, opcode);
 
 
-    //decode the opcode
+    //decode the opcode and get the STANDARD length of the instruction
     InstructionInfo info = decoder->LenghtOfInstruction(opcode, prefix, numbersOfPrefix, rex, rexprefix);
 
     //fixing the total length due to the prefix
@@ -170,9 +180,6 @@ void CU::OperandFetch(Instruction* instruction)
 void CU::executeInstruction(Instruction* instruction)
 {
 
-    //fetching the operands
-    OperandFetch(instruction);
-
     std::cout << "executeInstruction" << std::endl;
     instruction->execute(this, memory);
 
@@ -185,6 +192,8 @@ void CU::executeInstruction(Instruction* instruction)
 
 
 //helpers function for making the code more readable
+
+//function for checking if the byte is a prefix
 void CU::fixTotalLengthPrefix(InstructionInfo* info)
 {
     if (info->rex)
@@ -202,6 +211,7 @@ void CU::fixTotalLengthPrefix(InstructionInfo* info)
 
 }
 
+//function for searching the SIB and displacement
 void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo* info, int* byteCounter, r_m* rm, uint64_t index) {
     uint8_t byte;
 
@@ -294,34 +304,35 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo*
 
 }
 
-void CU::fetchOpcode(std::vector<uint8_t>& bytes, int* byteCounter, uint64_t index, uint32_t* opcode)
+//function for fetching the opcode
+void CU::fetchOpcode(std::vector<uint8_t>& bytes, int& byteCounter, uint64_t index, uint32_t& opcode)
 {
-    uint8_t byte = memory->readByte(index + static_cast<int64_t>(*byteCounter));
+    uint8_t byte = fetchByte(index, byteCounter); //fetch the byte from the memory
 
     if (byte == 0x0F)
     {
                 //the opcode has two bytes
                 bytes.push_back(byte);
-                (*byteCounter)++;
-                byte = memory->readByte(index + static_cast<int64_t>(*byteCounter));
+                byteCounter++;
+                byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
 
                 if (byte == 0x38 || byte == 0x3A)
                 {
                     //the opcode has three bytes
-                    *opcode = ((*opcode) << 8) | static_cast<uint32_t>(byte);
+                    opcode = (opcode << 8) | static_cast<uint32_t>(byte);
                     bytes.push_back(byte);
                     byteCounter++;
-                    byte = memory->readByte(index + static_cast<uint64_t>(*byteCounter));
-                    *opcode = (*opcode << 8) | byte;
+                    byte = memory->readByte(index + static_cast<uint64_t>(byteCounter));
+                    opcode = (opcode << 8) | byte;
                     bytes.push_back(byte);
-                    (*byteCounter)++;
+                    byteCounter++;
                 }
                 else
                 {
                     //the opcode has two bytes
-                    *opcode = ((*opcode) << 8) | static_cast<uint32_t>(byte);
+                    opcode = (opcode << 8) | static_cast<uint32_t>(byte);
                     bytes.push_back(byte);
-                    (*byteCounter)++;
+                    byteCounter++;
                 }
 
     }
@@ -329,9 +340,9 @@ void CU::fetchOpcode(std::vector<uint8_t>& bytes, int* byteCounter, uint64_t ind
     else
     {
         //the opcode has one byte
-        *opcode = static_cast<uint32_t>(byte);
+        opcode = static_cast<uint32_t>(byte);
         bytes.push_back(byte);
-        (*byteCounter)++;
+        byteCounter;
     }
 
 
@@ -339,7 +350,17 @@ void CU::fetchOpcode(std::vector<uint8_t>& bytes, int* byteCounter, uint64_t ind
 
 }
 
+//function for fetching the byte from the memory
+uint8_t CU::fetchByte(uint64_t index, int& bytecounter)
+{
+    //fethcing the byte from the memory using base + offset style
+    uint8_t byte {memory->readByte(index + static_cast<uint64_t>(bytecounter))};
+    
+    //increment the byte counter
+    bytecounter++;
 
+    return byte;
+}
 
 
 

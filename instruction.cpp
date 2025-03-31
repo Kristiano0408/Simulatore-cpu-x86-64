@@ -263,7 +263,6 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
     //getting the opcode
     uint32_t opcode = getOpcode();
 
-    std::cout << "opcode: " << opcode << std::endl;
     //fetch the operands
 
 
@@ -281,6 +280,7 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
         
         case MOVType::MOV_RM:                     //move R/M to register
             std::cout << "MOV_RM" << std::endl;
+            std::cout << "opcode: " << opcode << std::endl;
             operandFetch::fetchRM(this, controlUnit, ram);
             break;
         

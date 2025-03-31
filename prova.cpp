@@ -75,7 +75,7 @@ int main()
     cpu.getRegisters().setRegisterValue("RAX", 0x0000000000000003);
     cpu.getRegisters().setRegisterValue("R8", 0x0000000000000003);
     
-
+    cpu.getControlUnit().OperandFetch(instruction);
     cpu.getControlUnit().executeInstruction(instruction);
 
     cout << instruction->getS_register() << " " << instruction->getD_register() << endl;

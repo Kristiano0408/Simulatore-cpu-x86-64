@@ -10,6 +10,7 @@ namespace operandFetch {
     //fetching RM operands 
     void fetchRM(Instruction* i, CU* controlUnit, Memory* ram)
     {
+        std::cout << "fetchRM" << std::endl;
         //getting the r/m byte
         r_m rm = i->getRM();
 

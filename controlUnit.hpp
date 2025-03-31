@@ -26,10 +26,7 @@ class CU
         ALU& getALU();
         AddressingMode& getAddressingMode();
 
-        //helpers function for making the code more readable
-        void fixTotalLengthPrefix(InstructionInfo* info);
-        void searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo* info, int* byteCounter, r_m* rm, uint64_t index);
-        void fetchOpcode(std::vector<uint8_t>& bytes, int* byteCounter, uint64_t index, uint32_t* opcode);
+        
         
 
     private:
@@ -39,6 +36,11 @@ class CU
         ALU alu;
         Memory* memory;
 
+        //helpers function for making the code more readable
+        void fixTotalLengthPrefix(InstructionInfo* info);
+        void searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo* info, int* byteCounter, r_m* rm, uint64_t index);
+        void fetchOpcode(std::vector<uint8_t>& bytes, int& byteCounter, uint64_t index, uint32_t& opcode);
+        uint8_t fetchByte(uint64_t index, int& bytecounter);
         
         
 

@@ -54,6 +54,8 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
         info.hasImmediate = false;
         info.description = "Unknown instruction";
 
+        std::cerr << "Unknown instruction: " << std::hex << opcode << std::endl;
+
         return info;
     }
 
@@ -140,20 +142,11 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
     uint64_t displacement = 0;
 
 
-
-    //setting the parameters of instruction
-    mov->setOpcode(instruction.opcode);
-    
-    mov->setPrefix(instruction.prefix);
-
-    mov->setNumPrefixes(instruction.prefixCount);
-
-    mov->setRex(instruction.rex);
-
-    mov->setRexprefix(instruction.rexprefix);
+    //setting the parameters of instruction(like the opcode, the prefix, the rex, etc)
+    settingInstructionParameters(mov, instruction);
 
     
-    //if there is a a0-a3 opcode
+    //if there is a a0-a3 opcode( FD,TD instructions)
     if (instruction.hasDisplacement && !instruction.hasModRM)
     {
         mov->setHasDisplacement(true);
@@ -167,194 +160,30 @@ Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* c
             mov->setMemToReg(true);
         }
 
-        displacement = 0;
-
-
-        for (int i = 0; i < 4; i++)
-        {   
-            std::cout << "Byte: " << std::hex << static_cast<int>(instruction.instruction[position + i]) << std::endl;
-            displacement |= static_cast<uint64_t>(instruction.instruction[position + i]) << (i * 8);
-        }
-
-        std::cout << "Displacement: " << displacement << std::endl;
-
-        position += 4;
+        displacement = decodeDisplacement(instruction, position, 4);
 
         mov->setDisplacement(displacement);
     }
 
 
-
-
     //if there is immediate value and no ModRM
     if (instruction.hasImmediate && !instruction.hasModRM)
     {
-        value = 0;
-        //decode the immediate value
-        std::cout << "Immediate value: " << std::endl;
-        std::cout << instruction.operandLength << std::endl;
-        for (int i = 0; i < instruction.operandLength; i++)
-        {
-            std::cout << "Byte: " << std::hex << static_cast<int>(instruction.instruction[position + i]) << std::endl;
-            value |= static_cast<uint64_t>(instruction.instruction[position + i]) << (i * 8);
-        }
-
-        position += instruction.operandLength;
-
-        mov->setHasImmediate(true);
-        mov->setValue(value);
+        decodeImmediateValue(instruction, mov, position);
         
     }
     
     else if (instruction.hasModRM)
     {
-        std::cout<< "dddddddddddddddddddddd";
-        //decode the ModRM
-        r_m rm = decodeRM(instruction.instruction[position]);
-        position++;
-        mov->setRM(rm);
-        mov->setHasModRM(true);
  
         if(isMoveR_M_mem_reg(instruction.opcode)) mov->setMemToReg(true);
        
         else if(isMoveR_M_reg_mem(instruction.opcode)) mov->setRegToMem(true);
 
 
-        //control of the varius cases of addressing mode
-        if(rm.mod == 0b11)
-        {   
-            //the operands are registers
+        decode_RM_instruction(mov,instruction, position);
 
-            if (!isMoveInstructionIO_mem(instruction.opcode))
-            {
-                mov->setRegToReg(true);
-                mov->setRegToMem(false);
-                mov->setMemToReg(false);
-
-            }
-            else 
-            {
-                //nothing to do because is immmediate operand with destination register
-            }
-        
-
-        }
-        
-        else if (rm.mod == 0b00)
-        {
-            if(rm.r_m == 0b100)
-            {
-                //there is SIB
-                mov->setHasSIB(true);
-                SIB sib = decodeSIB(instruction.instruction[position]);
-                position++;
-                mov->setSIB(sib);
-                if(sib.base == 0b101)
-                {
-                    //the operand is a displacement
-                    mov->setHasDisplacement(true);
-
-                    displacement = 0;
-
-                    for (int i = 0; i < 4; i++)
-                    {
-                        displacement |= instruction.instruction[position + i] << (i * 8);
-                    
-                    }
-                    position += 4;
-
-                    mov->setSIBdisplacement(static_cast<uint32_t>(displacement));
-                }
-        
-
-            }
-            else if (rm.r_m == 0b101)
-            {
-                //the operand is a displacement
-                mov->setHasDisplacement(true);
-                for (int i = 0; i < 4; i++)
-                {
-                    displacement += instruction.instruction[position + i] << (i * 8);
-                    position++;
-                }
-
-                mov->setDisplacement(displacement);
-            }
-            else 
-            {
-                //the operand is a register/mem without displacement
-            }
-            
-        }
-        
-        else if (rm.mod == 0b01)
-        {
-            //the operand is a register/mem with 8 bit displacement
-            mov->setHasDisplacement(true);
-
-            std::cout <<"ccccccccccccccccccccccc"   << std::endl;
-            
-            if (rm.r_m == 0b100)
-            {
-                //there is SIB
-                mov->setHasSIB(true);
-                SIB sib = decodeSIB(instruction.instruction[position]);
-                position++;
-                mov->setSIB(sib);
-
-            }
-
-            displacement = 0;
-            displacement += instruction.instruction[position];
-            mov->setDisplacement(displacement);
-            position++;
-
-        }
-
-        else if (rm.mod == 0b10)
-        {
-            //the operand is a register/mem with 32 bit displacement
-            mov->setHasDisplacement(true);
-            if (rm.r_m == 0b100)
-            {
-                //there is SIB
-                mov->setHasSIB(true);
-                SIB sib = decodeSIB(instruction.instruction[position]);
-                position++;
-                mov->setSIB(sib);
-
-            }
-
-            displacement = 0;
-
-            for (int i = 0; i < 4; i++)
-            {
-                std::cout << "Byte: " << std::hex<<static_cast<int>(instruction.instruction[position + i]) << std::endl;
-                displacement |= static_cast<uint32_t>(instruction.instruction[position + i]) << (i * 8);
-            }
-
-            position += 4;
-
-            mov->setDisplacement(displacement);
-            std::cout <<std::hex<< "Displacement: " << displacement << std::endl;
-        }
-
-        if(instruction.hasImmediate)
-        {
-            value = 0;
-            //decode the immediate value
-            for (int i = 0; i < instruction.operandLength; i++)
-            {
-                value |= instruction.instruction[position + i] << (i * 8);
-            }
-
-            position += instruction.operandLength;
-
-            mov->setHasImmediate(true);
-            mov->setValue(value);
-        }
-        
-
+    
     }
 
     return mov;
@@ -382,4 +211,168 @@ r_m Decoder::decodeRM(uint8_t R_M)
     rm.r_m = (R_M & 0b111);
 
     return rm;
+}
+
+void Decoder::decodeImmediateValue(InstructionInfo instructionInfo, Instruction* instruction, int position)
+{
+    uint64_t value = 0;
+    //decode the immediate value
+    for (int i = 0; i < instructionInfo.operandLength; i++)
+    {
+        value |= static_cast<uint64_t>(instructionInfo.instruction[position + i]) << (i * 8);
+    }
+
+    position += instructionInfo.operandLength;
+
+    instruction->setHasImmediate(true);
+    instruction->setValue(value);
+
+
+    
+}
+
+void Decoder::settingInstructionParameters(Instruction* instruction, InstructionInfo instructionInfo)
+{
+    //setting the parameters of instruction
+    instruction->setOpcode(instructionInfo.opcode);
+    
+    instruction->setPrefix(instructionInfo.prefix);
+
+    instruction->setNumPrefixes(instructionInfo.prefixCount);
+
+    instruction->setRex(instructionInfo.rex);
+
+    instruction->setRexprefix(instructionInfo.rexprefix);
+    
+}
+
+uint64_t Decoder::decodeDisplacement(InstructionInfo instruction, int& position, int size)
+{
+    uint64_t displacement = 0;
+    for (int i = 0; i < size; i++)
+    {
+        displacement |= static_cast<uint64_t>(instruction.instruction[position + i]) << (i * 8);
+    }
+
+    position += size;
+
+    return displacement;
+}
+
+void Decoder::decode_RM_instruction(Instruction* instruction, InstructionInfo instructionInfo, int& position)
+{
+    uint64_t displacement = 0;
+    uint64_t value = 0;
+
+
+
+    //decode the ModRM
+    r_m rm = decodeRM(instructionInfo.instruction[position]);
+
+
+    position++;
+    instruction->setRM(rm);
+    instruction->setHasModRM(true);
+
+   //control of the varius cases of addressing mode
+   if(rm.mod == 0b11)
+    {   
+        //the operand is a register
+        instruction->setHasDisplacement(false);
+        instruction->setHasSIB(false);
+        instruction->setRegToReg(true);
+        instruction->setMemToReg(false);
+        instruction->setRegToMem(false);
+
+    }
+   
+    else if (rm.mod == 0b00)
+    {
+
+        if(rm.r_m == 0b100)
+        {
+            //there is SIB
+            instruction->setHasSIB(true);
+            SIB sib = decodeSIB(instructionInfo.instruction[position]);
+            position++;
+            instruction->setSIB(sib);
+            if(sib.base == 0b101)
+            {
+                //the operand is a displacement
+                instruction->setHasDisplacement(true);
+                //the displacement is 32 bit
+                displacement = decodeDisplacement(instructionInfo, position, 4);
+                //set the displacement
+                instruction->setSIBdisplacement(static_cast<uint32_t>(displacement));
+            }
+   
+
+        }
+        else if (rm.r_m == 0b101)
+        {
+            //the operand is a displacement
+            instruction->setHasDisplacement(true);
+            //the displacement is 32 bit
+            displacement = decodeDisplacement(instructionInfo, position, 4);
+            //set the displacement
+            instruction->setDisplacement(displacement);
+        }
+        else 
+        {
+           //the operand is a register/mem without displacement
+        }
+       
+    }
+   
+    else if (rm.mod == 0b01)
+    {
+        //the operand is a register/mem with 8 bit displacement
+        instruction->setHasDisplacement(true);
+       
+        if (rm.r_m == 0b100)
+        {
+           //there is SIB
+           instruction->setHasSIB(true);
+           SIB sib = decodeSIB(instructionInfo.instruction[position]);
+           position++;
+           instruction->setSIB(sib);
+
+        }
+
+        displacement = 0;
+        displacement += instructionInfo.instruction[position];
+        position++;
+        instruction->setDisplacement(displacement);
+       
+    }
+
+    else if (rm.mod == 0b10)
+    {
+        //the operand is a register/mem with 32 bit displacement
+        instruction->setHasDisplacement(true);
+        if (rm.r_m == 0b100)
+        {
+           //there is SIB
+           instruction->setHasSIB(true);
+           SIB sib = decodeSIB(instructionInfo.instruction[position]);
+           position++;
+           instruction->setSIB(sib);
+
+        }
+
+        displacement = 0;
+
+        displacement = decodeDisplacement(instructionInfo, position, 4);
+
+        instruction->setDisplacement(displacement);
+    }
+
+    if(instructionInfo.hasImmediate)
+    {
+        decodeImmediateValue(instructionInfo, instruction, position);
+    }
+
+    std::cout <<"DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"<< std::endl;
+   
+
 }

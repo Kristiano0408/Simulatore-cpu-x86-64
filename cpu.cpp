@@ -53,6 +53,10 @@ void CPU::cpuStep()
     InstructionInfo  instruction = controlUnit.fetchInstruction();
     //decode the instruction
     Instruction* decodedInstruction = controlUnit.decodeInstruction(instruction);
+
+    //operand fetch
+    controlUnit.OperandFetch(decodedInstruction);
+
     //execute the instruction
     controlUnit.executeInstruction(decodedInstruction);
     
