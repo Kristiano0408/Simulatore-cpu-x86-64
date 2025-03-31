@@ -13,7 +13,7 @@ struct InstructionInfo {
     size_t totalLength;  // Lunghezza totale dell'istruzione
     size_t opcodeLength; // Lunghezza dell'opcode (1, 2 o 3 byte)
     size_t prefixCount;  // Numero di prefissi
-    uint8_t prefix[4];   // Prefissi
+    uint8_t prefix[4] {0};   // Prefissi
     bool rex;            // Flag REX
     uint16_t rexprefix;   // Prefisso REX
     uint32_t opcode;     // Opcode completo (1, 2 o 3 byte)
@@ -40,6 +40,7 @@ class Decoder {
         
         //decode the instruction
         InstructionInfo LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4], int numPrefixes, bool rex, uint16_t rexprefix);
+        void fixTotalLengthPrefix(InstructionInfo& info);
         Instruction* decodeInstruction(InstructionInfo instruction, CU* controlUnit);
          //decode the  r/m operand
         r_m decodeRM(uint8_t r_m);

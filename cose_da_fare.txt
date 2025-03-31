@@ -6,22 +6,24 @@ controllare overflow nei modi di indirizzamnto
 aggiungere altri registri
 getsire flags con vettore(coem nella realta)
 
+//creare costruttore instruction per inizializzazione (sposatre da classe derivata move)
 
 //testare esecuzuoone move instruction
 
 //vedere cosa fare di adressingmode (forse trasformarla in namespace adresscalculator)
 
 
-//sposatre modifiche alla lunghezzza in fething e non in instruction lebght
-
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
 
 //fare una fuznione tempalte per scrittura e lettura unica da memoria
 
+//sempificare ulterioremnet decodifica rm
 
+//miglioarre fetching 
 
+//gestire errori
 
-
+//capire come gestire stack
 
 
 ///NOTE//

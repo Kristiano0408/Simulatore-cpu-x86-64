@@ -88,10 +88,30 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
     }
    
 
+    //chaning the lenght of the instruction due to the prefix(only presence without considering the type of prefix)
+    fixTotalLengthPrefix(info);
+
     return info;
     
 
    
+}
+
+void Decoder::fixTotalLengthPrefix(InstructionInfo& info)
+{
+    if (info.rex)
+    {
+        info.totalLength += 1;
+    }
+
+    for (int i = 0; i < info.prefixCount; i++)
+    {
+        if (info.prefix[i] != 0)
+        {
+            info.totalLength += 1;
+        }
+    }
+
 }
 
 

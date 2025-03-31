@@ -231,6 +231,8 @@ std::string Instruction::getD_register() const {
 //constructor
 MoveInstruction::MoveInstruction() {
     //resets the values
+    setRM({0, 0, 0});
+    setSIB({0, 0, 0});
     setHasDisplacement(false);
     setHasImmediate(false);
     setHasModRM(false);

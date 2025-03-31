@@ -46,62 +46,25 @@ InstructionInfo CU::fetchInstruction()
     index = registers.getRIP();
 
     //fetch whit a while loop one byte at time for serching the prefix
-    while (numbersOfPrefix < 4)
-    {
-
-        byte=fetchByte(index, byteCounter);
-
-        //if the byte is a prefix
-        if (isPrefix(byte))
-        {
-            //the byte is a prefix
-            prefix[numbersOfPrefix] = byte;
-            numbersOfPrefix++;
-            bytes.push_back(byte);
-            
-
-        }
-        else 
-        {
-            byteCounter--; //the byte is not a prefix, so we need to decrement the counter
-            break;
-        }
-
-    }
+    fetchPrefix(index, byteCounter, prefix, numbersOfPrefix, bytes);
 
     byte = fetchByte(index, byteCounter); //fetch the next byte(or the same byte if it was not a prefix)
 
-    //searcing the rex prefix
-    if ((byte & 0xF0) == 0x40) 
-    { 
-        rex = true;
-        bytes.push_back(byte);
-        rexprefix = byte;
-    }
-    else 
-    {
-        //the byte is not a rex prefix, so we need to decrement the counter
-        byteCounter--;
-    }
+    //fetch the REX prefix
+    fetchREX(byte, rex, rexprefix, byteCounter, bytes); 
 
-
-    
     //fetch the opcode
     fetchOpcode(bytes, byteCounter, index, opcode);
 
 
-    //decode the opcode and get the STANDARD length of the instruction
+    //decode the opcode and get the length of the instruction
     InstructionInfo info = decoder->LenghtOfInstruction(opcode, prefix, numbersOfPrefix, rex, rexprefix);
-
-    //fixing the total length due to the prefix
-    fixTotalLengthPrefix(&info);
 
 
     //searching for the sib and displacement
     if (info.hasModRM)
     {
-        byte = memory->readByte(index + static_cast<uint64_t>(byteCounter));
-        byteCounter++;
+        byte = fetchByte(index, byteCounter); //fetch the byte from the memory
         r_m rm = decoder->decodeRM(byte);
 
         std::cout << "Mod: " << std::hex << static_cast<int>(rm.mod) << std::endl;
@@ -110,21 +73,22 @@ InstructionInfo CU::fetchInstruction()
 
         bytes.push_back(byte);
 
-        searchingSIB_Displacement(bytes, &info, &byteCounter, &rm, index);
+        searchingSIB_Displacement(bytes, info, byteCounter, rm, index);
 
        
     }
 
 
+    //calculate the number of bytes to be fetched
     int bytesToFetch = static_cast<int>(info.totalLength) - byteCounter;
     std::cout << "Bytes to fetch: " << bytesToFetch << std::endl;
 
     //fetch the remaining bytes (teoricallly the immediate value)
     for (int i = 0; i < bytesToFetch; i++)
     {
-        byte = memory->readByte(index + static_cast<uint64_t>(byteCounter));
+        byte = fetchByte(index, byteCounter); //fetch the byte from the memory
+        std::cout << "Byte: " << std::hex << static_cast<int>(byte) << std::endl;
         bytes.push_back(byte);
-        byteCounter++;
     }
 
     std::cout << "Opcode: " << std::hex << info.opcode << std::endl;
@@ -193,109 +157,92 @@ void CU::executeInstruction(Instruction* instruction)
 
 //helpers function for making the code more readable
 
-//function for checking if the byte is a prefix
-void CU::fixTotalLengthPrefix(InstructionInfo* info)
-{
-    if (info->rex)
-    {
-        info->totalLength += 1;
-    }
-
-    for (int i = 0; i < info->prefixCount; i++)
-    {
-        if (info->prefix[i] != 0)
-        {
-            info->totalLength += 1;
-        }
-    }
-
-}
 
 //function for searching the SIB and displacement
-void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo* info, int* byteCounter, r_m* rm, uint64_t index) {
+void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm, uint64_t index) {
     uint8_t byte;
 
-    if (rm->mod == 0b11)
+    if (rm.mod == 0b11)
     {
         //nothing to do because is a reg-reg instruction
     }
     else
     {
         //if mod=00,01,10,
-        if(rm->r_m == 0b100)
+        if(rm.r_m == 0b100)
         {
                 //if the r/m is 100, there is the SIB byte
-            byte = memory->readByte(index + static_cast<int64_t>(*byteCounter));
+            byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
             bytes.push_back(byte);
-            (*byteCounter)++;
+            byteCounter++;
             std::cout << "SIB: " << std::hex << static_cast<int>(byte) << std::endl;
-            info->hasSIB = true;
-            info->totalLength += 1;
-            info->additionalBytes += 1;
+            info.hasSIB = true;
+            info.totalLength += 1;
+            info.additionalBytes += 1;
 
 
-            if ((byte & 0b111) == 0b101 && rm->mod == 0b00)
+            if ((byte & 0b111) == 0b101 && rm.mod == 0b00)
             {
                 //the base of th SIB indicates a displacement of 32 bit
 
 
                 for (int i = 0; i < 4; i++)
                 {
-                    byte = memory->readByte(index + static_cast<int64_t>(*byteCounter));
+                    byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
                     std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                     bytes.push_back(byte);
-                    (*byteCounter)++;
+                    byteCounter++;
                     
                 }
 
-                info->totalLength += 4;
-                info->additionalBytes += 4;
+                info.totalLength += 4;
+                info.additionalBytes += 4;
             }
 
            
         }
-        if (rm->mod == 0b01)
+        if (rm.mod == 0b01)
         {
             //there is a displacement of 8 bit
-            byte = memory->readByte(index + static_cast<int64_t>(*byteCounter));
+            byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
             bytes.push_back(byte);
-            (*byteCounter)++;
-            info->hasDisplacement = true;
-            info->totalLength += 1;
-            info->additionalBytes += 1;
+            byteCounter++;
+            info.hasDisplacement = true;
+            info.totalLength += 1;
+            info.additionalBytes += 1;
             std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
         }
 
-        if (rm->mod == 0b10)
+        if (rm.mod == 0b10)
         {
             //there is a displacement of 32 bit
             for (int i = 0; i < 4; i++)
             {
-                byte = memory->readByte(index + static_cast<int64_t>(*byteCounter));
+                byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
                 std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                 bytes.push_back(byte);
-                (*byteCounter)++;
+                byteCounter++;
             }
-            info->totalLength += 4;
-            info->additionalBytes += 4;
-            info->hasDisplacement = true;
+            info.totalLength += 4;
+            info.additionalBytes += 4;
+            info.hasDisplacement = true;
         }
 
 
-        if (rm->mod == 0b00 and rm->r_m == 0b101)
+        if (rm.mod == 0b00 and rm.r_m == 0b101)
         {
             //there is a displacement of 32 bit
             for (int i = 0; i < 4; i++)
             {
-                byte = memory->readByte(index + static_cast<int64_t>(*byteCounter));
+                byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
                 std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                 bytes.push_back(byte);
-                (*byteCounter)++;
+                byteCounter++;
                 
             }
-            info->totalLength += 4;
-            info->additionalBytes += 4;
-            info->hasDisplacement = true;
+            info.totalLength += 4;
+            info.additionalBytes += 4;
+            info.hasDisplacement = true;
         }
 
 
@@ -362,8 +309,53 @@ uint8_t CU::fetchByte(uint64_t index, int& bytecounter)
     return byte;
 }
 
+//function for fetching the prefix
+void CU::fetchPrefix(uint64_t index, int& byteCounter, uint8_t (&prefix)[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes)
+{
+    uint8_t byte; //byte fetched from the memory
 
+    //fetch the prefix from the memory
+    while (numbersOfPrefix < 4)
+    {
 
+        byte=fetchByte(index, byteCounter);
+
+        //if the byte is a prefix
+        if (isPrefix(byte))
+        {
+            //the byte is a prefix
+            prefix[numbersOfPrefix] = byte;
+            numbersOfPrefix++;
+            bytes.push_back(byte);
+            
+
+        }
+        else 
+        {
+            byteCounter--; //the byte is not a prefix, so we need to decrement the counter
+            break;
+        }
+
+    }
+}
+
+void CU::fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter, std::vector<uint8_t>& bytes)
+{
+    //fetch the REX prefix
+    
+    //searcing the rex prefix
+    if ((byte & 0xF0) == 0x40) 
+    { 
+        rex = true;
+        bytes.push_back(byte);
+        rexprefix = byte;
+    }
+    else 
+    {
+        //the byte is not a rex prefix, so we need to decrement the counter
+        byteCounter--;
+    }
+}
 
 
 
