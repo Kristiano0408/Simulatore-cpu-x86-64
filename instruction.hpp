@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 #include "memory.hpp"
-#include "addressingMode.hpp"
+#include "addressCalculator.hpp"
 #include "instruction_code_map.hpp"
 #include <unordered_set>
 #include "operands.hpp"

@@ -21,4 +21,49 @@ namespace operandFetch {
     uint64_t calculatingAddressR_M(Instruction* i, CU* controlUnit, Memory* ram);
 }
 
+class Operand 
+{
+    public:
+        void setSize(int s);
+        int getSize() const;
+        virtual void setValue(uint64_t v) = 0; // Pure virtual function
+        virtual uint64_t getValue() = 0; // Pure virtual function
+
+
+
+
+    private:
+        int size; // Size of the operand in bytes
+     
+    
+
+
+
+
+};
+
+class RegOperand : public Operand 
+{
+    public:
+        RegOperand(uint64_t& reg) : reg(reg) {} // Constructor to initialize register reference
+        void setValue(uint64_t v) override ;
+        uint64_t getValue() override ;
+
+    private:
+        uint64_t& reg; // Reference to the register value
+};
+
+
+class MemOperand : public Operand 
+{
+    public:
+        MemOperand(Memory* mem, uint64_t address) : mem(mem), address(address) {} // Constructor to initialize memory and address
+        void setValue(uint64_t v) override ;
+        uint64_t getValue() override ;
+
+    private:
+        Memory* mem; // Pointer to the memory object
+        uint64_t address; // Address in memory
+};
+
 #endif

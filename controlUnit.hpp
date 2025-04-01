@@ -41,7 +41,7 @@ class CU
         void fetchOpcode(std::vector<uint8_t>& bytes, int& byteCounter, uint64_t index, uint32_t& opcode);
         uint8_t fetchByte(uint64_t index, int& bytecounter);
         void fetchPrefix(uint64_t index, int& byteCounter, uint8_t (&prefix)[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes);
-        void fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter, std::vector<uint8_t>& bytes)
+        void fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter, std::vector<uint8_t>& bytes);
         
 
 };

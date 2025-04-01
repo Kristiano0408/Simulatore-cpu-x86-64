@@ -1,5 +1,5 @@
-#ifndef ADDRESSING_MODE_HPP
-#define ADDRESSING_MODE_HPP
+#ifndef ADDRESSCALCULATOR_HPP
+#define ADDRESSCALCULATOR_HPP
 
 #include <cstdint>
 #include <string>
@@ -38,6 +38,7 @@ class AddressingMode
 
 
 };
+
 
 
 

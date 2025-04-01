@@ -2,8 +2,9 @@ tutto
 
 
 controllare ofset quando si leggono/scrivono cose dalla memoria
-controllare overflow nei modi di indirizzamnto
-aggiungere altri registri
+controllare overflow neL CALCOLO DEGLI INDIRIZZI
+
+
 getsire flags con vettore(coem nella realta)
 
 //creare costruttore instruction per inizializzazione (sposatre da classe derivata move)
@@ -12,6 +13,7 @@ getsire flags con vettore(coem nella realta)
 
 //vedere cosa fare di adressingmode (forse trasformarla in namespace adresscalculator)
 
+//creazone classe virtuale operand per sostitutie source reg, dest reg, ect
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
 
@@ -19,7 +21,6 @@ getsire flags con vettore(coem nella realta)
 
 //sempificare ulterioremnet decodifica rm
 
-//miglioarre fetching 
 
 //gestire errori
 
