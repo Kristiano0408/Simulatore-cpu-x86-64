@@ -24,6 +24,7 @@ namespace operandFetch {
 class Operand 
 {
     public:
+        Operand() : size(0) {} // Default constructor initializing size to 0
         void setSize(int s);
         int getSize() const;
         virtual void setValue(uint64_t v) = 0; // Pure virtual function
@@ -32,7 +33,7 @@ class Operand
 
 
 
-    private:
+    protected:
         int size; // Size of the operand in bytes
      
     
