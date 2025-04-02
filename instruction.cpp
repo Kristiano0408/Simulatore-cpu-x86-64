@@ -3,8 +3,34 @@
 #include "controlUnit.hpp"
 
 
+
+Instruction::Instruction()
+{
+    setRM({0, 0, 0});
+    setSIB({0, 0, 0});
+    setHasDisplacement(false);
+    setHasImmediate(false);
+    setHasModRM(false);
+    setHasSIB(false);
+    setMemToReg(false);
+    setRegToMem(false);
+    setRegToReg(false);
+    setNumPrefixes(0);
+    setRex(false);
+    setRexprefix(0);
+    setNbit(0);
+    setOpcode(0);
+    setValue(0);
+    setDisplacement(0);
+    setSIBdisplacement(0);
+    setSourceOperand(nullptr);
+    setDestinationOperand(nullptr);
+
+}
+
 Instruction::~Instruction() {
-    //nothing to do here
+    delete sourceOperand;
+    delete destinationOperand;
 }
 
 void Instruction::execute(CU* cu, Memory* memory) {
@@ -193,65 +219,30 @@ bool Instruction::getMemToReg() {
 
 
 //getters and setters for the operands
-void Instruction::setS_address(uint64_t S_address) {
-    this->S_address = S_address;
+void Instruction::setSourceOperand(Operand* sourceOperand) {
+    delete this->sourceOperand; // delete the old source operand
+    this->sourceOperand = sourceOperand;
 }
 
-uint64_t Instruction::getS_address() {
-    return S_address;
+Operand* Instruction::getSourceOperand() {
+    return sourceOperand;
 }
 
-void Instruction::setD_address(uint64_t D_address) {
-    this->D_address = D_address;
+void Instruction::setDestinationOperand(Operand* destinationOperand) {
+    delete this->destinationOperand; // delete the old destination operand
+    this->destinationOperand = destinationOperand;
 }
 
-uint64_t Instruction::getD_address() {
-    return D_address;
+Operand* Instruction::getDestinationOperand() {
+    return destinationOperand;
 }
-
-void Instruction::setS_register(const std::string& S_register) {
-    this->S_register = S_register;
-}
-
-std::string Instruction::getS_register() const {
-    return S_register;
-}
-
-void Instruction::setD_register(const std::string& D_register) {
-    this->D_register = D_register;
-}
-
-std::string Instruction::getD_register() const {
-    return D_register;
-}
-
 
 //Move instruction
 
 //constructor
 MoveInstruction::MoveInstruction() {
     //resets the values
-    setRM({0, 0, 0});
-    setSIB({0, 0, 0});
-    setHasDisplacement(false);
-    setHasImmediate(false);
-    setHasModRM(false);
-    setHasSIB(false);
-    setMemToReg(false);
-    setRegToMem(false);
-    setRegToReg(false);
-    setNumPrefixes(0);
-    setRex(false);
-    setRexprefix(0);
-    setNbit(0);
-    setOpcode(0);
-    setValue(0);
-    setDisplacement(0);
-    setSIBdisplacement(0);
-    setD_address(0);
-    setS_address(0);
-    setS_register("NULL");
-    setD_register("NULL");
+    
 
 
 

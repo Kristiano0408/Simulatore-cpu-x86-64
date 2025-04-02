@@ -21,6 +21,9 @@ class Memory;
 class Instruction
 {
     public:
+
+        //constructor
+        virtual Instruction();
         //destructor
         virtual  ~Instruction();
         //execute the instruction
@@ -86,24 +89,15 @@ class Instruction
         bool getMemToReg();
 
          //setters and getters for the operands
-         void setS_address(uint64_t S_address);
-         uint64_t getS_address();
- 
-         void setD_address(uint64_t D_address);
-         uint64_t getD_address();
- 
-         void setS_register(const std::string& S_register);
-         std::string getS_register() const;
- 
-         void setD_register(const std::string& D_register);
-         std::string getD_register() const;
+        void setSourceOperand(Operand* sourceOperand);
+        Operand* getSourceOperand();
+        void setDestinationOperand(Operand* destinationOperand);
+        Operand* getDestinationOperand();
 
     protected:
-        uint64_t S_address;
-        uint64_t D_address;
-
-        std::string S_register;
-        std::string D_register;
+        // operands for the instruction
+        Operand* sourceOperand; //source operand (register or memory)
+        Operand* destinationOperand; //destination operand (register or memory)
 
     private:
     //parts of the instruction
@@ -134,7 +128,7 @@ class MoveInstruction : public Instruction
 {
     public:
         //constructor
-        MoveInstruction();
+        MoveInstruction() override = default; //constructor to initialize the instruction
         //destructor
         ~MoveInstruction() override = default;
 

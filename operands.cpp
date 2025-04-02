@@ -23,8 +23,11 @@ namespace operandFetch {
             std::string source_register = decodeRegisterReg(rm.reg, rex);
             std::string destination_register = decodeRegisterRM(rm.r_m, rex, false);
 
-            i->setS_register(source_register);
-            i->setD_register(destination_register);
+            //costructor of the operand
+            RegOperand* source = new RegOperand(controlUnit->getRegisters().getRegisterValue(source_register));
+            RegOperand* destination = new RegOperand(destination_register);
+            //i->setS_register(source_register);
+            //i->setD_register(destination_register);
 
             return;
 
@@ -200,3 +203,99 @@ namespace operandFetch {
 
 }
 
+
+
+void Operand::setSize(int s) {
+    if (s == 8 || s == 16 || s == 32 || s == 64) {
+        this->size = s;
+    } else {
+        throw std::invalid_argument("Invalid size. Size must be 1, 2, 4, or 8 bytes.");
+    }
+}
+
+int Operand::getSize() const {
+    return this->size;
+}
+
+
+
+void RegOperand::setValue(uint64_t v) {
+    this->reg = v;
+}
+
+uint64_t RegOperand::getValue() {
+    return this->reg;
+}
+
+void MemOperand::setValue(uint64_t v) {
+    
+    if(this->mem == nullptr)
+    {
+        throw std::runtime_error("Memory pointer is null. Cannot set value.");
+    }
+    else if (this->address == 0)
+    {
+        throw std::invalid_argument("Address is null. Cannot set value.");
+    }
+    else if (this->size == 0)
+    {
+        throw std::invalid_argument("Size is null. Cannot set value.");
+    }
+    else
+    {
+        switch (size)
+        {
+            case 8:
+                this->mem->writeByte(this->address, static_cast<uint8_t>(v));
+                break;
+            
+            case 16:
+                this->mem->writeWord(this->address, static_cast<uint16_t>(v));
+                break;
+            
+            case 32:
+                this->mem->writeDWord(this->address, static_cast<uint32_t>(v));
+                break;
+            
+            case 64:
+                this->mem->writeQWord(this->address, static_cast<uint64_t>(v));
+                break;
+
+        }
+    }
+}
+
+uint64_t MemOperand::getValue() {
+    if(this->mem == nullptr)
+    {
+        throw std::runtime_error("Memory pointer is null. Cannot get value.");
+    }
+    else if (this->address == 0)
+    {
+        throw std::invalid_argument("Address is null. Cannot get value.");
+    }
+    else if (this->size == 0)
+    {
+        throw std::invalid_argument("Size is null. Cannot get value.");
+    }
+    else
+    {
+        switch (size)
+        {
+            case 8:
+                return this->mem->readByte(this->address);
+            
+            case 16:
+                return this->mem->readWord(this->address);
+            
+            case 32:
+                return this->mem->readDWord(this->address);
+            
+            case 64:
+                return this->mem->readQWord(this->address);
+            
+            default:
+                return 0; // or throw an exception
+        }
+    }
+}

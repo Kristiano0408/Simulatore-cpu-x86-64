@@ -1,5 +1,11 @@
 tutto
 
+//finire modifica operna fetch per operandi e craezione metodi per ottenre registri(ho solo valori per ora, ma mi servono i riferiemnti per lavorare con regoperand)
+
+
+
+
+
 
 controllare ofset quando si leggono/scrivono cose dalla memoria
 controllare overflow neL CALCOLO DEGLI INDIRIZZI
