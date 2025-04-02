@@ -23,7 +23,7 @@ class Instruction
     public:
 
         //constructor
-        virtual Instruction();
+        Instruction();
         //destructor
         virtual  ~Instruction();
         //execute the instruction
@@ -31,7 +31,7 @@ class Instruction
 
         virtual void fetchOperands(CU* controlUnit, Memory* ram) = 0; //Polimorfic method that will be implemented in the derived classes
 
-        void decodeNbit(); //method to decode the number of bits of the value/operand with rex prefix or 0x66 prefix
+        uint64_t castingValue(uint64_t value, int nbit); //cast the value to the number of bits of the operand (8, 16, 32, 64)
 
         //setters and getters for the instruction
         void setOpcode(uint32_t opcode);
@@ -127,13 +127,10 @@ class Instruction
 class MoveInstruction : public Instruction
 {
     public:
-        //constructor
-        MoveInstruction() override = default; //constructor to initialize the instruction
         //destructor
         ~MoveInstruction() override = default;
 
 
-        
 
         void fetchOperands(CU* controlUnit, Memory* ram) override;
 
@@ -142,12 +139,8 @@ class MoveInstruction : public Instruction
        
         //execute the instruction
         void execute(CU* controlUnit, Memory* ram) override;
-        int calcualting_number_of_bits(CU* controlUnit); //calculate the number of bits of the value/operand
-        void executeR_M(CU* controlUnit, Memory* ram, MOVType type); //execute the instruction move register to R/M or move R/M to register (88, 89, 8A, 8B)
-        void executeMI(CU* controlUnit, Memory* ram); //execute the instruction move immediate to memory/register
-        void executeOI(CU* controlUnit, Memory* ram); //execute the instruction move immediate to reg
-        void executeFD_TD(CU* controlUnit, Memory* ram, MOVType type); //execute the instruction move from offset to Rax or move from Rax to offset
-        uint64_t castingValue(uint64_t value, int nbit); //cast the value to the number of bits of the operand (8, 16, 32, 64)
+        int calculating_number_of_bits(CU* controlUnit); //calculate the number of bits of the value/operand
+        
 
     
 

@@ -16,6 +16,7 @@ class RegisterFile {
         //getters and setters for the registers
         void setRegisterValue(const std::string& name, uint64_t value);
         uint64_t getRegisterValue(const std::string& name);
+        uint64_t& getRegister(const std::string& name);
 
         //getters and setters for the special registers
         void setRSP(uint64_t value);

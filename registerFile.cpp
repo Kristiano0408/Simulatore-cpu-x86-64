@@ -165,6 +165,76 @@ uint64_t RegisterFile::getRegisterValue(const std::string& name)
     
 }
 
+uint64_t& RegisterFile::getRegister(const std::string& name) 
+{
+    uint64_t invalidRegister = 0; //default value for invalid register
+
+    if(name == "RAX")
+    {
+        return RAX;
+    }
+    else if(name == "RBX")
+    {
+        return RBX;
+    }
+    else if(name == "RCX")
+    {
+        return RCX;
+    }
+    else if(name == "RDX")
+    {
+        return RDX;
+    }
+    else if(name == "RSI")
+    {
+        return RSI;
+    }
+    else if(name == "RDI")
+    {
+        return RDI;
+    }
+    else if(name == "R8")
+    {
+        return R8;
+    }
+    else if(name == "R9")
+    {
+        return R9;
+    }
+    else if(name == "R10")
+    {
+        return R10;
+    }
+    else if(name == "R11")
+    {
+        return R11;
+    }
+    else if(name == "R12")
+    {
+        return R12;
+    }
+    else if(name == "R13")
+    {
+        return R13;
+    }
+    else if(name == "R14")
+    {
+        return R14;
+    }
+    else if(name == "R15")
+    {
+        return R15;
+    }
+
+    return invalidRegister; //return invalid register if not found
+  
+        
+    
+}
+
+
+
+
 void RegisterFile::setRSP(uint64_t value)
 {
     RSP = value;

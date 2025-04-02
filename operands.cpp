@@ -10,6 +10,9 @@ namespace operandFetch {
     //fetching RM operands 
     void fetchRM(Instruction* i, CU* controlUnit, Memory* ram)
     {
+        std::string source_register;
+        std::string destination_register;
+
         std::cout << "fetchRM" << std::endl;
         //getting the r/m byte
         r_m rm = i->getRM();
@@ -20,14 +23,15 @@ namespace operandFetch {
         //Case 1: operation between register and register
         if(rm.mod == 0b11)   
         {
-            std::string source_register = decodeRegisterReg(rm.reg, rex);
-            std::string destination_register = decodeRegisterRM(rm.r_m, rex, false);
+            source_register = decodeRegisterReg(rm.reg, rex);
+            destination_register = decodeRegisterRM(rm.r_m, rex, false);
 
-            //costructor of the operand
-            RegOperand* source = new RegOperand(controlUnit->getRegisters().getRegisterValue(source_register));
-            RegOperand* destination = new RegOperand(destination_register);
-            //i->setS_register(source_register);
-            //i->setD_register(destination_register);
+            Operand* sourceOperand = new RegOperand(controlUnit->getRegisters().getRegister(source_register));
+            Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getRegister(destination_register));
+
+
+            i->setSourceOperand(sourceOperand);
+            i->setDestinationOperand(destinationOperand);
 
             return;
 
@@ -37,16 +41,23 @@ namespace operandFetch {
     
         uint64_t address {calculatingAddressR_M(i,controlUnit, ram)};
 
+        destination_register = decodeRegisterReg(rm.reg, rex);
+
         
-         
-        i->setD_register(decodeRegisterReg(rm.reg, rex));
-        i->setS_address(address);
+        //Source operand is an address and destination is a register
+        Operand* sourceOperand = new MemOperand(ram, address);
+        Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getRegister(destination_register));
+
+        i->setSourceOperand(sourceOperand);
+        i->setDestinationOperand(destinationOperand);
                 
 
     }
 
     void fetchMR(Instruction* i, CU* controlUnit, Memory* ram)
     {
+        std::string source_register;
+        std::string destination_register;
         //getting the r/m byte
         r_m rm = i->getRM();
 
@@ -56,39 +67,65 @@ namespace operandFetch {
         //Case 1: operation between register and register
         if(rm.mod == 0b11)   
         {
-            std::string source_register = decodeRegisterReg(rm.reg, rex);
-            std::string destination_register = decodeRegisterRM(rm.r_m, rex, false);
+            source_register = decodeRegisterReg(rm.reg, rex);
+            destination_register = decodeRegisterRM(rm.r_m, rex, false);
 
-            i->setS_register(source_register);
-            i->setD_register(destination_register);
+            //operand constructors for source and destination operands
+            Operand* sourceOperand = new RegOperand(controlUnit->getRegisters().getRegister(source_register));
+            Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getRegister(destination_register));
+
+
+            //setting the source and destination operands
+            i->setSourceOperand(sourceOperand);
+            i->setDestinationOperand(destinationOperand);
 
             return;
 
         }
 
         //Case 2: operation between register and memory
-    
+
+        //the address is calculated with the calculatingAddressR_M function 
+        //and the address is set to the destination operand
         uint64_t address {calculatingAddressR_M(i,controlUnit, ram)};
 
-        
-         
-        i->setS_register(decodeRegisterReg(rm.reg, rex));
-        i->setD_address(address);
+        //the source is a register
+        source_register = decodeRegisterReg(rm.reg, rex);
+
+        //operand constructors for source and destination operands
+        Operand* sourceOperand = new RegOperand(controlUnit->getRegisters().getRegister(source_register));
+        Operand* destinationOperand = new MemOperand(ram, address);
+
+        i->setSourceOperand(sourceOperand);
+        i->setDestinationOperand(destinationOperand);
                 
 
     }
 
     void fetchFD(Instruction* i, CU* controlUnit, Memory* ram)
     {
-        i->setD_register("RAX");
-        i->setS_address(i->getDisplacement());
+        //operand constructors for source and destination operands
+
+        //the destination is a register aand the source is a memory address(displacement)
+        Operand* sourceOperand = new MemOperand(ram, i->getDisplacement());
+        Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getRegister("RAX"));
+
+
+        i->setSourceOperand(sourceOperand);
+        i->setDestinationOperand(destinationOperand);
     
     }
 
     void fetchTD(Instruction* i, CU* controlUnit, Memory* ram)
     {
-        i->setS_register("RAX");
-        i->setD_address(i->getDisplacement());
+        //operand constructors for source and destination operands
+
+        //the source is a register and the destination is a memory address(displacement)
+        Operand* sourceOperand = new RegOperand(controlUnit->getRegisters().getRegister("RAX"));
+        Operand* destinationOperand = new MemOperand(ram, i->getDisplacement());
+
+        i->setSourceOperand(sourceOperand);
+        i->setDestinationOperand(destinationOperand);
 
     }
 
@@ -104,10 +141,14 @@ namespace operandFetch {
         {
         reg_index += 8;
         }
-    
-    
-        //setting the destination register
-        i->setD_register(reg_names[reg_index]);
+        
+        //operand constructors for destination operand (source is null because we are moving immediate value)
+        Operand* sourceOperand = new ImmediateOperand(i->getValue());
+        Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getRegister(reg_names[reg_index]));
+        
+        i->setSourceOperand(sourceOperand); // no source operand for immediate move
+        i->setDestinationOperand(destinationOperand); // set destination operand to the register
+
 
     }
 
@@ -119,7 +160,11 @@ namespace operandFetch {
         if(rm.mod == 0b11)
         {
                 std::string destination_register = decodeRegisterRM(rm.r_m, i->getRexprefix(), false);
-                i->setD_register(destination_register);
+                
+                Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getRegister(destination_register));
+
+                i->setSourceOperand(nullptr); // no source operand for immediate move
+                i->setDestinationOperand(destinationOperand); // set destination operand to the register
 
             return;
 
@@ -127,7 +172,14 @@ namespace operandFetch {
 
         uint64_t address {calculatingAddressR_M(i,controlUnit, ram)};
 
-        i->setD_address(address);
+        //the source is an immediate value and the destination is a memory address
+        Operand* sourceOperand = new ImmediateOperand(i->getValue());
+        Operand* destinationOperand = new MemOperand(ram, address);
+
+
+        i->setSourceOperand(sourceOperand); // no source operand for immediate move
+        i->setDestinationOperand(destinationOperand); // set destination operand to the register
+
 
     }
 
@@ -298,4 +350,12 @@ uint64_t MemOperand::getValue() {
                 return 0; // or throw an exception
         }
     }
+}
+
+void ImmediateOperand::setValue(uint64_t v) {
+    this->value = v;
+}
+
+uint64_t ImmediateOperand::getValue() {
+    return this->value;
 }

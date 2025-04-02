@@ -78,26 +78,6 @@ int8_t Instruction::getRexprefix() {
     return rexprefix;
 }
 
-void Instruction::decodeNbit() {
-    
-    if (rexprefix && 0x08)
-    {
-        nbit = 64;
-    } else {
-        nbit = 32;
-    }
-
-    for (int i = 0; i < numPrefixes; i++)
-    {
-        if (prefix[i] == 0x66)
-        {
-            nbit = 16;
-            break;
-        }
-    }
-
-
-}
 
 void Instruction::setNbit(int nbit) {
     this->nbit = nbit;
@@ -215,7 +195,24 @@ bool Instruction::getMemToReg() {
     return memToReg;
 }
 
+uint64_t Instruction::castingValue(uint64_t value, int nbit) 
+{
+    switch (nbit)
+    {
+        case 8:
+            return castTo<uint8_t>(value);
+        case 16:
+            return castTo<uint16_t>(value);
+        case 32:
+            return castTo<uint32_t>(value);
+        case 64:
+            return castTo<uint64_t>(value);
+        default:
+            std::cerr << "Invalid number of bits" << std::endl;
+            return 0; // or throw an exception 
 
+    }
+}
 
 
 //getters and setters for the operands
@@ -239,22 +236,15 @@ Operand* Instruction::getDestinationOperand() {
 
 //Move instruction
 
-//constructor
-MoveInstruction::MoveInstruction() {
-    //resets the values
-    
 
-
-
-    
-    
-}
 
 //fetch the operands
 void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 
+    std::cout << "Fetching operands for Move Instruction" << std::endl;
     //getting the opcode
     uint32_t opcode = getOpcode();
+
 
     //fetch the operands
 
@@ -308,59 +298,56 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 // Move instruction
 void MoveInstruction::execute(CU* controlUnit, Memory* ram) 
 {
+    std::cout << "Executing Move Instruction" << std::endl;
 
-    //setting the number of bytes to operate with
-    int bit = calcualting_number_of_bits(controlUnit);
+    //setting the size of the operands
+    int bit = calculating_number_of_bits(controlUnit);
+
+    std::cout << "Number of bits: " << bit << std::endl;
+    std::cout << "Hex: 0x" << std::hex << bit << std::dec << std::endl;
 
     setNbit(bit);
 
-    //getting the type of the move instruction
-    auto MOVType = move_instruction.find(getOpcode())->second;
+    //setting the size of the operands(it might not be necessary but for know we dont have a geeneic function for fethcing 
+    //from memory so we have to set the size of the operands to know what to fetch from memory)
+    getSourceOperand()->setSize(bit);
+    getDestinationOperand()->setSize(bit);
 
-    //using switch case to execute the instruction
-    switch (MOVType)
+    std::cout << "Source operand size: " << getSourceOperand()->getSize() << std::endl;
+    std::cout << "Destination operand size: " << getDestinationOperand()->getSize() << std::endl;
+
+
+
+
+    if(getDestinationOperand() && getSourceOperand())
     {
-    case MOVType::MOV_MR:                     //move register to R/M
-        std::cout << "MOV_MR" << std::endl;
-        executeR_M(controlUnit, ram, MOVType::MOV_MR);
-        break;
-    
-    case MOVType::MOV_RM:                     //move R/M to register
-        std::cout << "MOV_RM" << std::endl;
-        executeR_M(controlUnit, ram, MOVType::MOV_RM);
-        break;
+        //getting the value from the source operand
+        uint64_t value = getSourceOperand()->getValue();
 
-    case MOVType::MOV_MI:                     //move immediate to memory/register
-        std::cout << "MOV_MI" << std::endl;
-        executeMI(controlUnit, ram);
-        break;
-    
-    case MOVType::MOV_OI:                     //move immediate to reg
-        std::cout << "MOV_OI" << std::endl;
-        executeOI(controlUnit, ram);
-        break;
+        //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
+        value = castingValue(value, getNbit());
 
-    case MOVType::MOV_FD:                     //move from offset to Rax
-        std::cout << "MOV_FD" << std::endl;
-        executeFD_TD(controlUnit, ram, MOVType::MOV_FD);
-        break;
+        //setting the value to the destination operand
+        getDestinationOperand()->setValue(value);
 
-    case MOVType::MOV_TD:                    //move from Rax to offset
-        std::cout << "MOV_TD" << std::endl;
-        executeFD_TD(controlUnit, ram, MOVType::MOV_TD);
-        break;
-
-    default:
-        break;
+    }
+    else
+    {
+        std::cerr << "Error: Source or destination operand is null" << std::endl;
     }
 
+    std::cout<< "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ"<< std::endl;
+
+    //delete sourceOperand; // delete the source operand after use
+    //delete destinationOperand; // delete the destination operand after use
+
+    //sourceOperand = nullptr; // set the pointer to null after deletion
+    //destinationOperand = nullptr; // set the pointer to null after deletion
 
 
-
-    
 }
 
-int MoveInstruction::calcualting_number_of_bits(CU* controlUnit) 
+int MoveInstruction::calculating_number_of_bits(CU* controlUnit) 
 {
     uint32_t opcode = getOpcode();
 
@@ -373,6 +360,7 @@ int MoveInstruction::calcualting_number_of_bits(CU* controlUnit)
     {
         if (getPrefix()[i] == 0x66)
         {
+            std::cout << "66 prefix" << std::endl;
             return 16;
         }
     }
@@ -389,264 +377,7 @@ int MoveInstruction::calcualting_number_of_bits(CU* controlUnit)
 }
 
 
-void MoveInstruction::executeR_M(CU* controlUnit, Memory* ram, MOVType type)
-{
-    //gettting the reg, address and value to operate with
-    std::string S_reg = getS_register();
-    std::string D_reg = getD_register();
-    uint64_t S_addr= getS_address();
-    uint64_t D_addr = getD_address();
 
-    uint64_t S_value = 0;
-    uint64_t S_value_casted = 0;
-
-    switch(type)
-    {
-        case MOVType::MOV_MR: //move register to R/M
-            std::cout << "MOV_MR" << std::endl;
-
-            //getting the value of the source register
-            S_value = controlUnit->getRegisters().getRegisterValue(S_reg);
-
-            //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
-            S_value_casted = castingValue(S_value, getNbit());
-
-            if(D_addr != 0)
-            {
-                //if the destination address is not 0, we are moving to memory
-                switch (getNbit())
-                {
-                    case 8:
-                        ram->writeByte(D_addr,(uint8_t)S_value_casted);
-                        break;
-                    case 16:
-                        ram->writeWord(D_addr, (uint16_t)S_value_casted);
-                        break;
-                    case 32:
-                        ram->writeDWord(D_addr, (uint32_t)S_value_casted);
-                        break;
-                    case 64:
-                        ram->writeQWord(D_addr, (uint64_t)S_value_casted);
-                        break;
-                    default:
-                        break;  
-                
-                    
-                }
-            }
-            else
-            {
-                //if the destination address is 0, we are moving to register
-                controlUnit->getRegisters().setRegisterValue(D_reg, S_value_casted);
-                
-            }
-           
-            break;
-        
-        case MOVType::MOV_RM: //move R/M to register
-            std::cout << "MOV_RM" << std::endl;
-
-            S_value = 0;
-
-            //getting the value of the source register
-            if (S_addr != 0)
-            {
-                //if the source address is not 0, we are moving from memory
-                switch (getNbit())
-                {
-                    case 8:
-                        S_value = ram->readByte(S_addr);
-                        break;
-                    case 16:
-                        S_value = ram->readWord(S_addr);
-                        break;
-                    case 32:
-                        S_value = ram->readDWord(S_addr);
-                        break;
-                    case 64:
-                        S_value = ram->readQWord(S_addr);
-                        break;
-                    default:
-                        break;  
-                
-                    
-                }
-            }
-            else
-            {
-                //if the source address is 0, we are moving from register
-                S_value = controlUnit->getRegisters().getRegisterValue(S_reg);
-                
-            }
-
-            //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
-            S_value_casted = castingValue(S_value, getNbit());
-
-            //setting the value to the destination register
-            controlUnit->getRegisters().setRegisterValue(D_reg, S_value_casted);
-
-            break;
-        
-        default:
-            break;
-    }
-
-
-}
-
-void MoveInstruction::executeMI(CU* controlUnit, Memory* ram)
-{
-
-    //gettting the reg, address and value to operate with
-    std::string S_reg = getS_register();
-    std::string D_reg = getD_register();
-    uint64_t value = getValue();
-
-
-    //casting not necessary, we are moving immediate value to memory/register and the value is already in the correct format
-
-    if (getD_address() != 0)
-    {
-        //if the destination address is not 0, we are moving to memory
-        switch (getNbit())
-        {
-            case 8:
-                ram->writeByte(getD_address(),(uint8_t)value);
-                break;
-            case 16:
-                ram->writeWord(getD_address(), (uint16_t)value);
-                break;
-            case 32:
-                ram->writeDWord(getD_address(), (uint32_t)value);
-                break;
-            case 64:
-                ram->writeQWord(getD_address(), (uint64_t)value);
-                break;
-            default:
-                break;  
-            
-                
-        }
-    }
-    else
-    {
-        //if the destination address is 0, we are moving to register
-        controlUnit->getRegisters().setRegisterValue(D_reg, value);
-        
-    }
-
-
-   
-   
-
-}
-
-void MoveInstruction::executeOI(CU* controlUnit, Memory* ram) 
-{
-    //gettting the reg, address and value to operate with
-    std::string D_reg = getD_register();
-    uint64_t value = getValue();
-
-
-    //casting not necessary, we are moving immediate value to memory/register and the value is already in the correct format
-    controlUnit->getRegisters().setRegisterValue(D_reg, value);
-
-
-
-}
-
-void MoveInstruction::executeFD_TD(CU* controlUnit, Memory* ram, MOVType type) 
-{
-    uint64_t value = 0;
-    uint64_t reg_address;
-    switch (type)
-    {
-        case MOVType::MOV_FD: //move from offset to Rax
-            
-        //getting the value from the offset
-            reg_address = getS_address();
-            switch(getNbit())
-            {
-                case 8:
-                    value = ram->readByte(reg_address);
-                    break;
-                case 16:
-                    value = ram->readWord(reg_address);
-                    break;
-                case 32:
-                    value = ram->readDWord(reg_address);
-                    break;
-                case 64:
-                    value = ram->readQWord(reg_address);
-                    break;
-                default:
-                    break;  
-                
-                    
-            }
-
-            //setting the value to the destination register
-            controlUnit->getRegisters().setRegisterValue("RAX", value);
-            
-            break;
-            
-        case MOVType::MOV_TD: //move from Rax to offset
-            
-            //getting the value from the register
-            value = controlUnit->getRegisters().getRegisterValue("RAX");
-
-            //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
-            value = castingValue(value, getNbit());
-
-            //getting the address to move the value to
-            reg_address = getD_address();
-
-            //writing the value to the address
-            switch(getNbit())
-            {
-                case 8:
-                    ram->writeByte(reg_address, (uint8_t)value);
-                    break;
-                case 16:
-                    ram->writeWord(reg_address, (uint16_t)value);
-                    break;
-                case 32:
-                    ram->writeDWord(reg_address, (uint32_t)value);
-                    break;
-                case 64:
-                    ram->writeQWord(reg_address, (uint64_t)value);
-                    break;
-                default:
-                    break;        
-            }
-            
-            break;
-
-        default:
-            break;
-    }
-
-}
-
-
-uint64_t MoveInstruction::castingValue(uint64_t value, int nbit) 
-{
-    switch (nbit)
-    {
-        case 8:
-            return castTo<uint8_t>(value);
-        case 16:
-            return castTo<uint16_t>(value);
-        case 32:
-            return castTo<uint32_t>(value);
-        case 64:
-            return castTo<uint64_t>(value);
-        default:
-            std::cerr << "Invalid number of bits" << std::endl;
-            return 0; // or throw an exception 
-
-    }
-}
 
 
 

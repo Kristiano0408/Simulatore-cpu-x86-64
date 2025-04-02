@@ -153,11 +153,9 @@ const std::string decodeRegisterReg(uint8_t reg, uint8_t rexprefix)
 {
     if (rexprefix & 0x04)
     {
-        std::cout <<"BBBBBBBBBBB" << std::endl;
         reg += 8;
     }
 
-    std::cout << "aaaaaaaaaaaaaaaa" << std::endl;
     
     switch (reg)
     {

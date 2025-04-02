@@ -67,4 +67,16 @@ class MemOperand : public Operand
         uint64_t address; // Address in memory
 };
 
+class ImmediateOperand : public Operand 
+{
+    public:
+        ImmediateOperand(uint64_t value) : value(value) {} // Constructor to initialize immediate value
+        void setValue(uint64_t v) override ;
+        uint64_t getValue() override ;
+
+    private:
+        uint64_t value; // Immediate value
+};
+
+
 #endif

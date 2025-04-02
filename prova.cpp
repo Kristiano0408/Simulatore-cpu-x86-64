@@ -3,7 +3,7 @@
 #include "cpu.hpp"
 #include "instruction.hpp"
 #include "decoder.hpp"
-#include "addressingMode.hpp"
+#include "addressCalculator.hpp"
 #include "controlUnit.hpp"
 #include <string>
 #include <vector>
@@ -23,7 +23,7 @@ int main()
 
     vector<uint8_t> data;
     //load the program in the memory
-    data= {0x66,0x8b, 0x08, 0x24, 0x10, 0x48, 0xBF, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x48, 0x8B, 0x07, 0x41, 0xB8, 0X34, 0X12, 0X11, 0X11, 0X11, 0X11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
+    data= {0x48, 0x8b, 0x08, 0x24, 0x10, 0x48, 0xBF, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x48, 0x8B, 0x07, 0x41, 0xB8, 0X34, 0X12, 0X11, 0X11, 0X11, 0X11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
 
     ram.setData(data);
 
@@ -78,12 +78,26 @@ int main()
     cpu.getControlUnit().OperandFetch(instruction);
     cpu.getControlUnit().executeInstruction(instruction);
 
-    cout << instruction->getS_register() << " " << instruction->getD_register() << endl;
-    cout << static_cast<int>(instruction->getS_address()) << " " << instruction->getD_address() << endl;
+    cout << hex << instruction->getSourceOperand()->getValue() << endl;
+    cout << hex << instruction->getDestinationOperand()->getValue() << endl;
+
+    std::cout << "----------------------------------------" << std::endl;
+
+
+    //delete the operands
+    delete instruction->getSourceOperand(); // delete the source operand after use
+    delete instruction->getDestinationOperand(); // delete the destination operand after use
+
+    std::cout << "----------------------------------------" << std::endl;
+
+
+
 
 
     //delete the instruction
-    delete instruction;
+    //delete instruction;
+
+    std::cout << "----------------------------------------" << std::endl;
 
     std::cout << "----------------------------------------" << std::endl;
     std::cout << "RAX: " << hex << cpu.getRegisters().getRegisterValue("RAX") << std::endl;
