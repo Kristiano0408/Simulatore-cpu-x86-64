@@ -1,6 +1,5 @@
 tutto
 
-//finire modifica operna fetch per operandi e craezione metodi per ottenre registri(ho solo valori per ora, ma mi servono i riferiemnti per lavorare con regoperand)
 
 
 
@@ -13,13 +12,11 @@ controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
 getsire flags con vettore(coem nella realta)
 
-//creare costruttore instruction per inizializzazione (sposatre da classe derivata move)
 
 //testare esecuzuoone move instruction
 
 //vedere cosa fare di adressingmode (forse trasformarla in namespace adresscalculator)
 
-//creazone classe virtuale operand per sostitutie source reg, dest reg, ect
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
 
