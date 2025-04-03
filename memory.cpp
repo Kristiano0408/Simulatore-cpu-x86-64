@@ -8,6 +8,12 @@
 Memory::Memory(size_t size) : size(size) {
 
     data.resize(size, 0); //initialize the memory with 0
+
+    size_stack = size / 4; //initialize the stack size to 1/4 of the memory size
+
+    RBP = size - 1; //initialize the stack base pointer to the end of the memory
+    
+    RSP = size - 1; //initialize the stack pointer to the end of the memory
 };
 
 

@@ -6,7 +6,7 @@ tutto
 
 
 
-controllare ofset quando si leggono/scrivono cose dalla memoria
+controllare ofset quando si leggono/scrivono cose dalla memoria (e controllo stack)
 controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
 
@@ -14,8 +14,6 @@ getsire flags con vettore(coem nella realta)
 
 
 //testare esecuzuoone move instruction
-
-//vedere cosa fare di adressingmode (forse trasformarla in namespace adresscalculator)
 
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
@@ -39,4 +37,3 @@ solo long mode 64 bit
 i nomi dei egistri non cambiano in base alla grandezza, pero posso scrivere 8/16/32 nei registri a 64 bit
 
 solo alu, no fpu, no vector unit, solo gpr e siene cs e ss e rimasugli da 32 bit
-

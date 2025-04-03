@@ -203,12 +203,12 @@ namespace operandFetch {
             if (rm.r_m == 0b101 && rm.mod == 0b00)
             {
                 //calculation of the address with  RIP displacement
-                return controlUnit->getAddressingMode().BaseDisplacementAddressing("RIP", displacement);
+                return AddressCalculator::BaseDisplacementAddressing(controlUnit, "RIP", displacement);
             }
             else
             {
                 //destination adress is in the register
-                return (controlUnit->getAddressingMode().indirectAddressing(decodeRegisterRM(rm.r_m, rex, i->getHasSIB())) + displacement);
+                return AddressCalculator::indirectAddressing(controlUnit, decodeRegisterRM(rm.r_m, rex, i->getHasSIB())) + displacement;
 
             }
         }
@@ -227,17 +227,17 @@ namespace operandFetch {
             //if the base is 0b101 and the index is not 0b100, base(displacement), index and scale addressing
             else if (sib.base == 0b101 && sib.index != 0b100 && rm.mod == 0b00)
             {
-                address = i->getSIBdisplacement() + controlUnit->getAddressingMode().BaseScaleAddressing(index, sib.scale);
+                address = i->getSIBdisplacement() + AddressCalculator::BaseScaleAddressing(controlUnit, index, sib.scale);
             }
             //if the base is not 0b101 and the index is 0b100, normal base addressing
             else if (sib.base != 0b101 && sib.index == 0b100)
             {
-                address = controlUnit->getAddressingMode().BaseAddressing(base);
+                address = AddressCalculator::BaseAddressing(controlUnit, base);
             }
             //if the base is not 0b101 and the index is not 0b100, base, index and scale addressing
             else
             {
-                address = controlUnit->getAddressingMode().BaseIndexScaleAddressing(base, index, sib.scale);
+                address += AddressCalculator::BaseIndexScaleAddressing(controlUnit, base, index, sib.scale);
             }
 
             //if the mod is 0b01 or 0b10, there is a displacement to add

@@ -4,11 +4,8 @@
 #include "decoder.hpp"
 #include "registerFile.hpp"
 #include "alu.hpp"
-//#include "addressingMode.hpp"
 #include "memory.hpp"
 
-
-//class AddressingMode;
 
 class CU
 {
@@ -24,14 +21,12 @@ class CU
         //getters for the registers
         RegisterFile& getRegisters();
         ALU& getALU();
-        AddressingMode& getAddressingMode();
 
         
         
 
     private:
         Decoder* decoder;
-        AddressingMode addressingMode;
         RegisterFile registers; 
         ALU alu;
         Memory* memory;
