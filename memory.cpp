@@ -1,19 +1,20 @@
 #include "memory.hpp"
+#include "cpu.hpp"
 #include <cmath>
 //ricordarsi di convertire indirizzi dec per accedere al vettore e in binario per utilizzare l'indirizzo
 
 //ricordasri controllo offset e size per evitare buffer overflow
 
 //Constructor
-Memory::Memory(size_t size) : size(size) {
+Memory::Memory(size_t size, CPU& cpu) : size(size) {
 
     data.resize(size, 0); //initialize the memory with 0
 
     size_stack = size / 4; //initialize the stack size to 1/4 of the memory size
 
-    RBP = size - 1; //initialize the stack base pointer to the end of the memory
+    RBP = cpu.getRegisters().getRBPPointer(); //get the base pointer from the CPU
     
-    RSP = size - 1; //initialize the stack pointer to the end of the memory
+    RSP = cpu.getRegisters().getRSPPointer(); //get the stack pointer from the CPU
 };
 
 

@@ -265,6 +265,16 @@ uint64_t RegisterFile::getRBP()
     return RBP;
 }
 
+uint64_t* RegisterFile::getRSPPointer()
+{
+    return &RSP;
+}
+
+uint64_t* RegisterFile::getRBPPointer()
+{
+    return &RBP;
+}
+
 
 void RegisterFile::setZF(bool value)
 {

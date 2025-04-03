@@ -15,9 +15,17 @@ using namespace std;
 
 int main()
 {
-    Memory ram(1024);
-    CPU cpu(&ram);
+    CPU cpu;
+
+    std::cout << "----------------------------------------" << std::endl;
+    Memory ram(1024, cpu); //create the memory with 1024 bytes
+    std::cout << "----------------------------------------" << std::endl;
+
+    cpu.connectMemory(&ram); //connect the memory to the CPU
+    std::cout << "----------------------------------------" << std::endl;
+    
     cpu.cpuReset();
+    std::cout << "----------------------------------------" << std::endl;
 
 
 
@@ -35,9 +43,13 @@ int main()
 
     for (int i = 0; i < 1 ;i++)
     {
+
+        std::cout << "aaa" << std::endl;
         
 
     info = cpu.getControlUnit().fetchInstruction();
+
+    cout << "Instruction size: " << info.instruction.size() << endl;
 
 
     for (int i = 0; i < info.instruction.size(); i++)

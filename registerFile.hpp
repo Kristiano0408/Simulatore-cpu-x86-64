@@ -28,6 +28,11 @@ class RegisterFile {
         void setRBP(uint64_t value);
         uint64_t getRBP();
 
+        uint64_t* getRSPPointer();
+        
+        uint64_t* getRBPPointer();
+
+
         //getters and setters for the flags
         void setZF(bool value);
         bool getZF();

@@ -23,13 +23,15 @@ class CPU
     public:
         
         //constructor that receives a pointer to the memory
-        CPU(Memory* memory); 
+        CPU(); 
         ~CPU();
 
         //cpu operations
         void cpuReset();
         void cpuStep();
         void cpuStart();
+
+        void connectMemory(Memory* mem) { memory = mem; } //connect the memory to the CPU
 
         //getters for the registers and ALU
         

@@ -1,7 +1,7 @@
 #include "cpu.hpp"
 
 //constructor that receives a pointer to the memory
-CPU::CPU(Memory* memory) : memory(memory), /*decoder(),*/ controlUnit(memory)
+CPU::CPU() : memory(nullptr), /*decoder(),*/ controlUnit(memory)
 {
 
     

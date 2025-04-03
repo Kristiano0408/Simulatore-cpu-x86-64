@@ -1,7 +1,7 @@
 tutto
 
 
-
+//capire i danni che ho fatto con i punatore a memory
 
 
 
