@@ -15,6 +15,10 @@ Memory::Memory(size_t size, CPU& cpu) : size(size) {
     RBP = cpu.getRegisters().getRBPPointer(); //get the base pointer from the CPU
     
     RSP = cpu.getRegisters().getRSPPointer(); //get the stack pointer from the CPU
+
+    *RSP = size - 1; //initialize the stack pointer to the end of the memory
+    *RBP = size - 1; //initialize the base pointer to the end of the memory
+
 };
 
 
@@ -106,3 +110,52 @@ void Memory::clear()
     data.resize(size, 0);
 };
 
+void Memory::setStackPointer(uint64_t value)
+{
+    *RSP = value;
+};
+
+uint64_t Memory::getStackPointer() const
+{
+    return *RSP;
+};
+
+void Memory::setBasePointer(uint64_t value)
+{
+    *RBP = value;
+};
+
+uint64_t Memory::getBasePointer() const
+{
+    return *RBP;
+};
+
+void Memory::push(uint64_t value)
+{
+    //controllo overflow
+    if (*RSP - 8 < size - size_stack) //check if the stack pointer is out of bounds
+    {
+        std::cerr << "Stack overflow!" << std::endl; //print error message
+        return; //return from the function
+    }
+
+
+    *RSP -= 8; //decrement the stack pointer
+    writeQWord(*RSP, value); //write the value in the stack
+};
+
+
+uint64_t Memory::pop()
+{
+    //controllo underflow
+    if (*RSP > size - 8) //check if the stack pointer is out of bounds
+    {
+        std::cerr << "Stack underflow!" << std::endl; //print error message
+        return 0; //return 0 from the function
+    }
+
+
+    uint64_t value = readQWord(*RSP); //read the value from the stack
+    *RSP += 8; //increment the stack pointer
+    return value; //return the value
+};

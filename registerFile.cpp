@@ -167,7 +167,6 @@ uint64_t RegisterFile::getRegisterValue(const std::string& name)
 
 uint64_t& RegisterFile::getRegister(const std::string& name) 
 {
-    uint64_t invalidRegister = 0; //default value for invalid register
 
     if(name == "RAX")
     {
@@ -226,7 +225,7 @@ uint64_t& RegisterFile::getRegister(const std::string& name)
         return R15;
     }
 
-    return invalidRegister; //return invalid register if not found
+    return dummyRegister; // Return a reference to a dummy register if the name is not found
   
         
     

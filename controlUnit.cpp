@@ -36,6 +36,7 @@ InstructionInfo CU::fetchInstruction()
     bool rex = false; //rex prefix flag
     uint8_t rexprefix{0}; //rex prefix
 
+
     //take the value of istruction register
     index = registers.getRIP();
 
@@ -49,6 +50,8 @@ InstructionInfo CU::fetchInstruction()
 
     //fetch the opcode
     fetchOpcode(bytes, byteCounter, index, opcode);
+
+
 
 
     //decode the opcode and get the length of the instruction
@@ -294,6 +297,11 @@ void CU::fetchOpcode(std::vector<uint8_t>& bytes, int& byteCounter, uint64_t ind
 //function for fetching the byte from the memory
 uint8_t CU::fetchByte(uint64_t index, int& bytecounter)
 {
+    if (memory == nullptr)
+    {
+        std::cerr << "Memory not connected!" << std::endl;
+        return 0;
+    }
     //fethcing the byte from the memory using base + offset style
     uint8_t byte {memory->readByte(index + static_cast<uint64_t>(bytecounter))};
     
@@ -311,7 +319,6 @@ void CU::fetchPrefix(uint64_t index, int& byteCounter, uint8_t (&prefix)[4], int
     //fetch the prefix from the memory
     while (numbersOfPrefix < 4)
     {
-
         byte=fetchByte(index, byteCounter);
 
         //if the byte is a prefix

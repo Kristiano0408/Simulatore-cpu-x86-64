@@ -72,6 +72,7 @@ class RegisterFile {
         uint64_t R14;
         uint64_t R15;
         uint64_t RIP;
+        uint64_t dummyRegister = 0; //dummy register for preventing errors
 
         //flags
         bool RFLAGS[64];

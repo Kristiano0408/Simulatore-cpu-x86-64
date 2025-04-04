@@ -31,7 +31,7 @@ class CPU
         void cpuStep();
         void cpuStart();
 
-        void connectMemory(Memory* mem) { memory = mem; } //connect the memory to the CPU
+        void connectMemory(Memory* mem) { memory = mem;  controlUnit.setMemory(mem);} //connect the memory to the CPU
 
         //getters for the registers and ALU
         

@@ -17,6 +17,7 @@ class CU
         Instruction* decodeInstruction(InstructionInfo instruction);
         void OperandFetch(Instruction* instruction);
         void executeInstruction(Instruction* instruction);
+        void setMemory(Memory* mem) { memory = mem; } //connect the memory to the CPU
 
         //getters for the registers
         RegisterFile& getRegisters();

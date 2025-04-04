@@ -1,12 +1,9 @@
 tutto
 
 
-//capire i danni che ho fatto con i punatore a memory
 
 
-
-
-controllare ofset quando si leggono/scrivono cose dalla memoria (e controllo stack)
+controllare ofset quando si leggono/scrivono cose dalla memoria
 controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
 
@@ -25,7 +22,6 @@ getsire flags con vettore(coem nella realta)
 
 //gestire errori
 
-//capire come gestire stack
 
 
 ///NOTE//

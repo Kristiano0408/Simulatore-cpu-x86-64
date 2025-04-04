@@ -17,15 +17,12 @@ int main()
 {
     CPU cpu;
 
-    std::cout << "----------------------------------------" << std::endl;
     Memory ram(1024, cpu); //create the memory with 1024 bytes
-    std::cout << "----------------------------------------" << std::endl;
 
     cpu.connectMemory(&ram); //connect the memory to the CPU
-    std::cout << "----------------------------------------" << std::endl;
     
     cpu.cpuReset();
-    std::cout << "----------------------------------------" << std::endl;
+
 
 
 
@@ -44,8 +41,7 @@ int main()
     for (int i = 0; i < 1 ;i++)
     {
 
-        std::cout << "aaa" << std::endl;
-        
+    
 
     info = cpu.getControlUnit().fetchInstruction();
 
@@ -93,14 +89,11 @@ int main()
     cout << hex << instruction->getSourceOperand()->getValue() << endl;
     cout << hex << instruction->getDestinationOperand()->getValue() << endl;
 
-    std::cout << "----------------------------------------" << std::endl;
-
 
     //delete the operands
     delete instruction->getSourceOperand(); // delete the source operand after use
     delete instruction->getDestinationOperand(); // delete the destination operand after use
 
-    std::cout << "----------------------------------------" << std::endl;
 
 
 
@@ -118,8 +111,8 @@ int main()
     std::cout << "RDX: " << hex << cpu.getRegisters().getRegisterValue("RDX") << std::endl;
     std::cout << "RSI: " << hex << cpu.getRegisters().getRegisterValue("RSI") << std::endl;
     std::cout << "RDI: " << hex << cpu.getRegisters().getRegisterValue("RDI") << std::endl;
-    std::cout << "RSP: " << hex << cpu.getRegisters().getRegisterValue("RSP") << std::endl;
-    std::cout << "RBP: " << hex << cpu.getRegisters().getRegisterValue("RBP") << std::endl;
+    std::cout << "RSP: " << hex << cpu.getRegisters().getRSP() << std::endl;
+    std::cout << "RBP: " << hex << cpu.getRegisters().getRBP() << std::endl;
     std::cout << "R8: " << hex << cpu.getRegisters().getRegisterValue("R8") << std::endl;
     std::cout << "R9: " << hex << cpu.getRegisters().getRegisterValue("R9") << std::endl;
     std::cout << "R10: " << hex << cpu.getRegisters().getRegisterValue("R10") << std::endl;
@@ -128,9 +121,11 @@ int main()
     std::cout << "R13: " << hex << cpu.getRegisters().getRegisterValue("R13") << std::endl;
     std::cout << "R14: " << hex << cpu.getRegisters().getRegisterValue("R14") << std::endl;
     std::cout << "R15: " << hex << cpu.getRegisters().getRegisterValue("R15") << std::endl;
-    std::cout << "RIP: " << hex << cpu.getRegisters().getRegisterValue("RIP") << std::endl;
+    std::cout << "RIP: " << hex << cpu.getRegisters().getRIP() << std::endl;
     std::cout << "----------------------------------------" << std::endl;
 
+}
+    
 
 }
 
@@ -144,4 +139,3 @@ int main()
 
 
 
-};
