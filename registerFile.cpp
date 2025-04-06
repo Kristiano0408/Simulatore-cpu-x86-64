@@ -275,50 +275,91 @@ uint64_t* RegisterFile::getRBPPointer()
 }
 
 
+
 void RegisterFile::setZF(bool value)
 {
-    
+    this->RFLAGS[6] = value; // ZF is the 6th bit in RFLAGS
 }
 
 bool RegisterFile::getZF()
 {
-    
+    return this->RFLAGS[6]; // ZF is the 6th bit in RFLAGS
 }
 
 void RegisterFile::setSF(bool value)
 {
-    
+    this->RFLAGS[7] = value; // SF is the 7th bit in RFLAGS
 }
 
 bool RegisterFile::getSF()
 {
+    return this->RFLAGS[7]; // SF is the 7th bit in RFLAGS
     
 }
 
 void RegisterFile::setOF(bool value)
 {
-    
+    this->RFLAGS[11] = value; // OF is the 11th bit in RFLAGS
 }
 
 bool RegisterFile::getOF()
 {
+    return this->RFLAGS[11]; // OF is the 11th bit in RFLAGS
     
 }
 
 
 void RegisterFile::setCF(bool value)
 {
+
+    this->RFLAGS[0] = value; // CF is the 0th bit in RFLAGS
     
 }
 
 bool RegisterFile::getCF()
 {
-    
+    return this->RFLAGS[0]; // CF is the 0th bit in RFLAGS
 }
+
+void RegisterFile::setPF(bool value)
+{
+    this->RFLAGS[2] = value; // PF is the 2nd bit in RFLAGS
+}
+
+bool RegisterFile::getPF()
+{
+    return this->RFLAGS[2]; // PF is the 2nd bit in RFLAGS
+}
+
 
 void RegisterFile::reset()
 {
+    // Reset all registers to 0
+    RAX = 0;
+    RBX = 0;
+    RCX = 0;
+    RDX = 0;
+    RSI = 0;
+    RDI = 0;
+    RSP = 0;
+    RBP = 0;
+    R8 = 0;
+    R9 = 0;
+    R10 = 0;
+    R11 = 0;
+    R12 = 0;
+    R13 = 0;
+    R14 = 0;
+    R15 = 0;
+    RIP = 0;
+
+    // Reset all flags to false
+    for (int i = 0; i < 64; i++)
+    {
+        RFLAGS[i] = false;
+    }
     
+
 }
 
 

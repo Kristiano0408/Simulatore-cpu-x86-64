@@ -1,13 +1,11 @@
 tutto
 
 
-
+//idea da chat pgt: cache in fetchign per velocizzare il processo
 
 controllare ofset quando si leggono/scrivono cose dalla memoria
 controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
-
-getsire flags con vettore(coem nella realta)
 
 
 //testare esecuzuoone move instruction

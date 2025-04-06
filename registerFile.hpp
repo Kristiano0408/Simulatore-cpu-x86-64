@@ -46,6 +46,9 @@ class RegisterFile {
         void setCF(bool value);
         bool getCF();
 
+        void setPF(bool value);
+        bool getPF();
+
         //reset the registers
         void reset();
 
