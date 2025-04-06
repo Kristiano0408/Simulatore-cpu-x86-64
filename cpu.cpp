@@ -11,7 +11,9 @@ CPU::CPU() : memory(nullptr), /*decoder(),*/ controlUnit(memory)
 //destructor
 CPU::~CPU()
 {
-    //nothing to do here
+    delete memory; //delete the memory
+    //delete decoder; //delete the decoder
+
 }
 
 //getters for the registers and ALU

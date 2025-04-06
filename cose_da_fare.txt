@@ -17,7 +17,7 @@ getsire flags con vettore(coem nella realta)
 
 //fare una fuznione tempalte per scrittura e lettura unica da memoria
 
-//sempificare ulterioremnet decodifica rm
+//sistemare enum class
 
 
 //gestire errori

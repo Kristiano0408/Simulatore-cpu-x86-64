@@ -131,85 +131,110 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* control
 
     position += instruction.opcodeLength;
 
-    std::cout << "Position: " << position << std::endl;
+    //getting the type and adressing mode of the instruction
+    auto it = instructionMap.find(instruction.opcode)->second;
 
-    
-    //move (in future will be implemented a function for controlloing the opcode)
-    if (isMoveInstruction(instruction.opcode))
+    typeofInstruction type_instruction = it.type;
+
+    AddressingMode mode = it.mode;
+
+
+    //creating the constructor of the instruction based on the type of instruction
+    Instruction* inst = ConstructorCreation(type_instruction);
+
+    //setting the instruction parameters like the opcode, the prefix, the rex, etc
+    settingInstructionParameters(inst, instruction);
+
+
+    //getting the corrisponding function for the addressing mode
+    auto it2 = Addressing_modes.find(mode);
+
+    if (it2 != Addressing_modes.end())
     {
-        return decodeMov(instruction, position, controlUnit);
+        DecodeFunc decodeFunc = it2->second;
+        //calling the function for decoding the instruction
+        decodeFunc(inst, instruction, position);
+
+        return inst;
     }
-
-
-    return nullptr;
-   
-    
-
-
+    else
+    {
+        std::cerr << "Unknown addressing mode" << std::endl;
+        return nullptr;
+    }
 
 
 
 
 }
-       
-Instruction* Decoder::decodeMov(InstructionInfo instruction, int position, CU* controlUnit)
+
+//methods for decoding the instructions based on the addressing mode
+void Decoder::decodeInstructionOI(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
 {
-    //create the instruction
-    Instruction* mov = new MoveInstruction();
-
-
-    uint64_t value = 0;
-    uint64_t displacement = 0;
-
-
-    //setting the parameters of instruction(like the opcode, the prefix, the rex, etc)
-    settingInstructionParameters(mov, instruction);
+    //decode the immediate value
+    decodeImmediateValue(instructionInfo, instruction, position);
+    instruction->setHasImmediate(true);
 
     
-    //if there is a a0-a3 opcode( FD,TD instructions)
-    if (instruction.hasDisplacement && !instruction.hasModRM)
-    {
-        mov->setHasDisplacement(true);
+}
 
-        if(isMoveInstructionOffsetRAX_mem(instruction.opcode))
-        {
-            mov->setRegToMem(true);
-        }
-        else if(isMoveInstructionOffsetMem_RAx(instruction.opcode))
-        {
-            mov->setMemToReg(true);
-        }
+void Decoder::decodeInstructionMI(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+{
+    decode_RM_instruction(instruction, instructionInfo, position);
+}
 
-        displacement = decodeDisplacement(instruction, position, 4);
+void Decoder::decodeInstructionMR(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+{
+    instruction->setRegToMem(true);
+    decode_RM_instruction(instruction, instructionInfo, position);
+}
 
-        mov->setDisplacement(displacement);
-    }
+void Decoder::decodeInstructionRM(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+{
+    instruction->setMemToReg(true);
+    decode_RM_instruction(instruction, instructionInfo, position);
+}
 
+void Decoder::decodeInstructionFD(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+{
+    //decode 
+    instruction->setHasDisplacement(true);
+    instruction->setMemToReg(true);
+    instruction->setDisplacement(decodeDisplacement(instructionInfo, position, 4));
+}
 
-    //if there is immediate value and no ModRM
-    if (instruction.hasImmediate && !instruction.hasModRM)
-    {
-        decodeImmediateValue(instruction, mov, position);
-        
-    }
-    
-    else if (instruction.hasModRM)
-    {
- 
-        if(isMoveR_M_mem_reg(instruction.opcode)) mov->setMemToReg(true);
-       
-        else if(isMoveR_M_reg_mem(instruction.opcode)) mov->setRegToMem(true);
-
-
-        decode_RM_instruction(mov,instruction, position);
-
-    
-    }
-
-    return mov;
+void Decoder::decodeInstructionTD(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+{
+    //decode 
+    instruction->setHasDisplacement(true);
+    instruction->setRegToMem(true);
+    instruction->setDisplacement(decodeDisplacement(instructionInfo, position, 4));
 }
 
 
+//constructor of the instruction based on the type of instruction
+Instruction* Decoder::ConstructorCreation(typeofInstruction type_instruction)
+{
+    Instruction* instruction = nullptr;
+
+    switch (type_instruction)
+    {
+        case typeofInstruction::MOV:
+            instruction = new MoveInstruction();
+            break;
+        
+        default:
+            std::cerr << "Unknown instruction type" << std::endl;
+            return nullptr;
+    }
+
+    return instruction;
+}
+       
+
+
+
+//helper methods for decoding the instruction
 
 SIB Decoder::decodeSIB(uint8_t sib)
 {
@@ -242,9 +267,8 @@ void Decoder::decodeImmediateValue(InstructionInfo instructionInfo, Instruction*
         value |= static_cast<uint64_t>(instructionInfo.instruction[position + i]) << (i * 8);
     }
 
-    position += instructionInfo.operandLength;
+    //position += instructionInfo.operandLength;
 
-    instruction->setHasImmediate(true);
     instruction->setValue(value);
 
 

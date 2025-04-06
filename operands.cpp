@@ -285,10 +285,10 @@ void MemOperand::setValue(uint64_t v) {
     {
         throw std::runtime_error("Memory pointer is null. Cannot set value.");
     }
-    else if (this->address == 0)
+    /*else if (this->address == 0)
     {
         throw std::invalid_argument("Address is null. Cannot set value.");
-    }
+    }*/
     else if (this->size == 0)
     {
         throw std::invalid_argument("Size is null. Cannot set value.");
