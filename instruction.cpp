@@ -234,6 +234,17 @@ Operand* Instruction::getDestinationOperand() {
     return destinationOperand;
 }
 
+void Instruction::setAddressingMode(AddressingMode addressingMode) {
+    this->addressingMode = addressingMode;
+}
+
+AddressingMode Instruction::getAddressingMode() {
+    return addressingMode;
+}
+
+
+
+
 //Move instruction
 
 
@@ -249,41 +260,39 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
     //fetch the operands
 
 
-    //get the type of the move instruction
-    auto MOVType = move_instruction.find(opcode)->second;
 
     
     //using switch case to get the operands
-    switch (MOVType)
+    switch (getAddressingMode())
     {
-        case MOVType::MOV_MR:                     //move register to R/M
+        case AddressingMode::MR:                     //move register to R/M
             std::cout << "MOV_MR" << std::endl;
             operandFetch::fetchMR(this, controlUnit, ram);
             break;
         
-        case MOVType::MOV_RM:                     //move R/M to register
+        case AddressingMode::RM:                    //move R/M to register
             std::cout << "MOV_RM" << std::endl;
             std::cout << "opcode: " << opcode << std::endl;
             operandFetch::fetchRM(this, controlUnit, ram);
             break;
         
         
-        case MOVType::MOV_MI:                     //move immediate to memory/register
+        case AddressingMode::MI:                   //move immediate to memory/register
             std::cout << "MOV_MI" << std::endl;
             operandFetch::fetchMI(this, controlUnit, ram);
             break;
         
-        case MOVType::MOV_OI:                     //move immediate to reg
+        case AddressingMode::OI:                  //move immediate to reg
             std::cout << "MOV_OI" << std::endl;
             operandFetch::fetchOI(this, controlUnit, ram, opcode);
             break;
         
-        case MOVType::MOV_FD:                     //move from offset to Rax
+        case AddressingMode::FD:                     //move from offset to Rax
             std::cout << "MOV_FD" << std::endl;
             operandFetch::fetchFD(this, controlUnit, ram);
             break;
         
-        case MOVType::MOV_TD:                    //move from Rax to offset
+        case AddressingMode::TD:                    //move from Rax to offset
             std::cout << "MOV_TD" << std::endl;
             operandFetch::fetchTD(this, controlUnit, ram);
             break;

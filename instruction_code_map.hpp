@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <unordered_map>
+#include <functional>
 
 
 //farward declaration of the classes
@@ -10,12 +11,13 @@ class Instruction;
 struct InstructionInfo;
 
 
-
+//enum for the type of instruction
 enum class typeofInstruction
 {
     MOV, //move instruction
 };
 
+//enum for the addressing mode of the instruction
 enum class AddressingMode
 {
     OI, //move immediate to register
@@ -38,34 +40,23 @@ struct InstructionType_and_addMode
 //map for the instructions types 
 extern std::unordered_map<uint32_t, InstructionType_and_addMode> instructionMap;
 
+//generic function pointer for the constructor of the instruction
+using  ConstructorFunc = std::function<Instruction*()>;
+
+// map for the constructors of the instructions
+extern std::unordered_map<typeofInstruction, ConstructorFunc> instructionConstructors;
+
+
 // generic function pointer for the decode function
 using DecodeFunc = void (*)(Instruction*, const InstructionInfo&, int);
 
-// Mappa per le modalità di decodifica delle istruzioni MOV
+// map for the decode functions
 extern std::unordered_map<AddressingMode, DecodeFunc> Addressing_modes;
 
  
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-enum class MOVType
-{
-    MOV_MR,  //move register to R/M
-    MOV_RM,  //move R/M to register
-    MOV_MI,  //move immediate to memory/register
-    MOV_OI,  //move immediate to reg
-    MOV_FD,  //move from offset to Rax
-    MOV_TD,  //move from Rax to offset
-
-};
-
-
-
-
-// Mappa per le istruzioni MOV
-// La chiave è l'opcode e il valore è il tipo di istruzione MOV
-extern std::unordered_map<uint32_t, MOVType> move_instruction;
 
 
 

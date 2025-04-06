@@ -94,10 +94,15 @@ class Instruction
         void setDestinationOperand(Operand* destinationOperand);
         Operand* getDestinationOperand();
 
+        void setAddressingMode(AddressingMode addressingMode);
+        AddressingMode getAddressingMode();
+
     protected:
         // operands for the instruction
         Operand* sourceOperand; //source operand (register or memory)
         Operand* destinationOperand; //destination operand (register or memory)
+
+        AddressingMode addressingMode; //addressing mode of the instruction
 
     private:
     //parts of the instruction
@@ -119,6 +124,7 @@ class Instruction
         bool regToReg;
         bool regToMem;
         bool memToReg;
+        
 
 };
 
@@ -127,6 +133,9 @@ class Instruction
 class MoveInstruction : public Instruction
 {
     public:
+
+
+
         //destructor
         ~MoveInstruction() override = default;
 

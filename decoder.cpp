@@ -142,6 +142,8 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* control
     //creating the constructor of the instruction based on the type of instruction
     Instruction* inst = ConstructorCreation(type_instruction);
 
+    
+
     //setting the instruction parameters like the opcode, the prefix, the rex, etc
     settingInstructionParameters(inst, instruction);
 
@@ -149,11 +151,16 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* control
     //getting the corrisponding function for the addressing mode
     auto it2 = Addressing_modes.find(mode);
 
+    
+
     if (it2 != Addressing_modes.end())
     {
         DecodeFunc decodeFunc = it2->second;
         //calling the function for decoding the instruction
         decodeFunc(inst, instruction, position);
+
+        //setting the addressing mode of the instruction
+        inst->setAddressingMode(mode);
 
         return inst;
     }
@@ -217,17 +224,18 @@ Instruction* Decoder::ConstructorCreation(typeofInstruction type_instruction)
 {
     Instruction* instruction = nullptr;
 
-    switch (type_instruction)
-    {
-        case typeofInstruction::MOV:
-            instruction = new MoveInstruction();
-            break;
-        
-        default:
-            std::cerr << "Unknown instruction type" << std::endl;
-            return nullptr;
-    }
+    auto it = instructionConstructors.find(type_instruction);
 
+    if (it != instructionConstructors.end())
+    {
+        ConstructorFunc constructorFunc = it->second;
+        instruction = constructorFunc(); //create the instruction based on the type of instruction
+    }
+    else
+    {
+        std::cerr << "Unknown instruction type" << std::endl;
+        return nullptr;
+    }
     return instruction;
 }
        

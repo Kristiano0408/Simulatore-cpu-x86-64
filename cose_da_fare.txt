@@ -17,7 +17,11 @@ getsire flags con vettore(coem nella realta)
 
 //fare una fuznione tempalte per scrittura e lettura unica da memoria
 
-//sistemare enum class
+
+//Uso della costante 0b111 per il controllo dei bit (MASK)
+
+//usare smart pointers al posto di new e delete
+
 
 
 //gestire errori
