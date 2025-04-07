@@ -14,7 +14,7 @@ namespace operandFetch {
         Register source_register; 
         Register destination_register;
 
-        std::cout << "fetchRM" << std::endl;
+        //std::cout << "fetchRM" << std::endl;
         //getting the r/m byte
         r_m rm = i->getRM();
 
@@ -41,6 +41,11 @@ namespace operandFetch {
         //Case 2: operation between register and memory
     
         uint64_t address {calculatingAddressR_M(i,controlUnit, ram)};
+
+        std ::cout<<std::hex << "Address: " << address <<  std::dec <<std::endl;
+
+        std::cout <<std::dec << "Address: " << address << std::endl;
+
 
         destination_register = decodeRegisterReg(rm.reg, rex);
 
@@ -328,10 +333,10 @@ uint64_t MemOperand::getValue() {
     {
         throw std::runtime_error("Memory pointer is null. Cannot get value.");
     }
-    else if (this->address == 0)
+    /*else if (this->address == 0)
     {
         throw std::invalid_argument("Address is null. Cannot get value.");
-    }
+    }*/
     else if (this->size == 0)
     {
         throw std::invalid_argument("Size is null. Cannot get value.");

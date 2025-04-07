@@ -1,14 +1,19 @@
 tutto
 
+//controllare i prefissi sbaglaiti (ad esempio 0x66 quando ho 8 bit)
+
+//capire cosa fare con prefisso 0x67
+
+//alto livello: separazione tra instruction e visitor
 
 //idea da chat pgt: cache in fetchign per velocizzare il processo
 
 controllare ofset quando si leggono/scrivono cose dalla memoria
+
 controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
 
 
-//testare esecuzuoone move instruction
 
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore

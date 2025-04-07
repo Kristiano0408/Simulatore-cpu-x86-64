@@ -78,13 +78,13 @@ InstructionInfo CU::fetchInstruction()
 
     //calculate the number of bytes to be fetched
     int bytesToFetch = static_cast<int>(info.totalLength) - byteCounter;
-    std::cout << "Bytes to fetch: " << bytesToFetch << std::endl;
+    //std::cout << "Bytes to fetch: " << bytesToFetch << std::endl;
 
     //fetch the remaining bytes (teoricallly the immediate value)
     for (int i = 0; i < bytesToFetch; i++)
     {
         byte = fetchByte(index, byteCounter); //fetch the byte from the memory
-        std::cout << "Byte: " << std::hex << static_cast<int>(byte) << std::endl;
+        //std::cout << "Byte: " << std::hex << static_cast<int>(byte) << std::endl;
         bytes.push_back(byte);
     }
 
@@ -146,8 +146,6 @@ void CU::executeInstruction(Instruction* instruction)
 
     //delete the instruction
     //delete instruction;
-
-
 
 }
 

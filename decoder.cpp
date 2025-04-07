@@ -424,7 +424,7 @@ void Decoder::decode_RM_instruction(Instruction* instruction, InstructionInfo in
         decodeImmediateValue(instructionInfo, instruction, position);
     }
 
-    std::cout <<"DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"<< std::endl;
+
    
 
 }

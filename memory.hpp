@@ -64,8 +64,8 @@ private:
     std::vector<uint8_t> data;
     size_t size;
     size_t size_stack;
-    uint64_t* RSP;
-    uint64_t* RBP;
+    uint64_t& RSP;
+    uint64_t& RBP;
 
 
 

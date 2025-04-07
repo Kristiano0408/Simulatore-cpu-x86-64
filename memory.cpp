@@ -6,16 +6,16 @@
 //ricordasri controllo offset e size per evitare buffer overflow
 
 //Constructor
-Memory::Memory(size_t size, CPU& cpu) : size(size), RSP(&cpu.getRegisters().getReg(Register::RSP).raw()),
-                                         RBP(&cpu.getRegisters().getReg(Register::RBP).raw()) {
+Memory::Memory(size_t size, CPU& cpu) : size(size), RSP(cpu.getRegisters().getReg(Register::RSP).raw()),
+                                         RBP(cpu.getRegisters().getReg(Register::RBP).raw()) {
     
 
     data.resize(size, 0); //initialize the memory with 0
 
     size_stack = size / 4; //initialize the stack size to 1/4 of the memory size
 
-    *RSP = size - 1; //initialize the stack pointer to the end of the memory
-    *RBP = size - 1; //initialize the base pointer to the end of the memory
+    RSP = size - 1; //initialize the stack pointer to the end of the memory
+    RBP = size - 1; //initialize the base pointer to the end of the memory
 
 
 };
@@ -69,7 +69,6 @@ void Memory::writeDWord(uint64_t address, uint32_t value)
 uint64_t Memory::readQWord(uint64_t address) const
 {
     return  (static_cast<uint64_t>(data[address]) | (static_cast<uint64_t>(data[address + 1]) << 8) | (static_cast<uint64_t>(data[address + 2]) << 16) | (static_cast<uint64_t>(data[address + 3]) << 24) | (static_cast<uint64_t>(data[address + 4]) << 32) | (static_cast<uint64_t>(data[address + 5]) << 40) | (static_cast<uint64_t>(data[address + 6]) << 48) | (static_cast<uint64_t>(data[address + 7]) << 56));
-
 };
 
 void Memory::writeQWord(uint64_t address, uint64_t value)
@@ -111,28 +110,28 @@ void Memory::clear()
 
 void Memory::setStackPointer(uint64_t value)
 {
-    *RSP = value;
+    RSP = value;
 };
 
 uint64_t Memory::getStackPointer() const
 {
-    return *RSP;
+    return RSP;
 };
 
 void Memory::setBasePointer(uint64_t value)
 {
-    *RBP = value;
+    RBP = value;
 };
 
 uint64_t Memory::getBasePointer() const
 {
-    return *RBP;
+    return RBP;
 };
 
 void Memory::push(uint64_t value)
 {
     //controllo overflow
-    if (*RSP - 8 < size - size_stack) //check if the stack pointer is out of bounds
+    if (RSP - 8 < size - size_stack) //check if the stack pointer is out of bounds
     {
         std::cerr << "Stack overflow!" << std::endl; //print error message
         return; //return from the function
@@ -140,21 +139,21 @@ void Memory::push(uint64_t value)
 
 
     RSP -= 8; //decrement the stack pointer
-    writeQWord(*RSP, value); //write the value in the stack
+    writeQWord(RSP, value); //write the value in the stack
 };
 
 
 uint64_t Memory::pop()
 {
     //controllo underflow
-    if (*RSP > size - 8) //check if the stack pointer is out of bounds
+    if (RSP > size - 8) //check if the stack pointer is out of bounds
     {
         std::cerr << "Stack underflow!" << std::endl; //print error message
         return 0; //return 0 from the function
     }
 
 
-    uint64_t value = readQWord(*RSP); //read the value from the stack
-    *RSP += 8; //increment the stack pointer
+    uint64_t value = readQWord(RSP); //read the value from the stack
+    RSP += 8; //increment the stack pointer
     return value; //return the value
 };

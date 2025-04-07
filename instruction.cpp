@@ -252,7 +252,7 @@ AddressingMode Instruction::getAddressingMode() {
 //fetch the operands
 void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 
-    std::cout << "Fetching operands for Move Instruction" << std::endl;
+    //std::cout << "Fetching operands for Move Instruction" << std::endl;
     //getting the opcode
     uint32_t opcode = getOpcode();
 
@@ -272,7 +272,7 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
         
         case AddressingMode::RM:                    //move R/M to register
             std::cout << "MOV_RM" << std::endl;
-            std::cout << "opcode: " << opcode << std::endl;
+            //std::cout << "opcode: " << opcode << std::endl;
             operandFetch::fetchRM(this, controlUnit, ram);
             break;
         
@@ -307,13 +307,13 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 // Move instruction
 void MoveInstruction::execute(CU* controlUnit, Memory* ram) 
 {
-    std::cout << "Executing Move Instruction" << std::endl;
+    //std::cout << "Executing Move Instruction" << std::endl;
 
     //setting the size of the operands
     int bit = calculating_number_of_bits(controlUnit);
 
-    std::cout << "Number of bits: " << bit << std::endl;
-    std::cout << "Hex: 0x" << std::hex << bit << std::dec << std::endl;
+    //std::cout << "Number of bits: " << bit << std::endl;
+    //std::cout << "Hex: 0x" << std::hex << bit << std::dec << std::endl;
 
     setNbit(bit);
 
@@ -322,19 +322,20 @@ void MoveInstruction::execute(CU* controlUnit, Memory* ram)
     getSourceOperand()->setSize(bit);
     getDestinationOperand()->setSize(bit);
 
-    std::cout << "Source operand size: " << getSourceOperand()->getSize() << std::endl;
-    std::cout << "Destination operand size: " << getDestinationOperand()->getSize() << std::endl;
+    std::cout << std::dec <<"Source operand size: " << getSourceOperand()->getSize() << std::endl;
+    std::cout << std::dec <<"Destination operand size: " << getDestinationOperand()->getSize() << std::endl;
 
 
 
 
     if(getDestinationOperand() && getSourceOperand())
     {
-        //getting the value from the source operand
+         //getting the value from the source operand
         uint64_t value = getSourceOperand()->getValue();
 
         //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
         value = castingValue(value, getNbit());
+
 
         //setting the value to the destination operand
         getDestinationOperand()->setValue(value);
@@ -345,7 +346,7 @@ void MoveInstruction::execute(CU* controlUnit, Memory* ram)
         std::cerr << "Error: Source or destination operand is null" << std::endl;
     }
 
-    std::cout<< "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ"<< std::endl;
+    //std::cout<< "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ"<< std::endl;
 
     //delete sourceOperand; // delete the source operand after use
     //delete destinationOperand; // delete the destination operand after use
