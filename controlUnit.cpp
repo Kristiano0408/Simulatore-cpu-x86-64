@@ -38,7 +38,7 @@ InstructionInfo CU::fetchInstruction()
 
 
     //take the value of istruction register
-    index = registers.getRIP();
+    index = registers.getReg(Register::RIP).raw();
 
     //fetch whit a while loop one byte at time for serching the prefix
     fetchPrefix(index, byteCounter, prefix, numbersOfPrefix, bytes);
@@ -108,9 +108,9 @@ InstructionInfo CU::fetchInstruction()
     }
 
     //set the value of the IR
-    registers.setRIP(index + static_cast<uint64_t>(info.totalLength));
+    registers.getReg(Register::RIP) = index + static_cast<uint64_t>(info.totalLength);
 
-    std::cout << "IR: " << std::hex << registers.getRIP() << std::endl;
+    std::cout << "IR: " << std::hex << registers.getReg(Register::RIP).raw() << std::endl;
 
     return info;
 

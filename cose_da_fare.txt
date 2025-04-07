@@ -20,8 +20,7 @@ controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
 //usare smart pointers al posto di new e delete
 
-//fixare i registri nelle varie decodifiche, etc( classe gia fatta)
-
+//aggiungere metodi per accedere ai byte inferiori di tutti i registri
 
 
 //gestire errori

@@ -3,6 +3,8 @@
 #include "helpers.hpp"
 #include <string>
 #include <iostream>
+#include "registerFile.hpp"
+
 bool isPrefix(uint8_t byte)
 {
     if (byte == 0x66 || byte == 0x67 || byte == 0xF0 || byte == 0xF2 || byte == 0xF3 || byte == 0x2E || byte == 0x3E || byte == 0x26 || byte == 0x64 || byte == 0x65 || byte == 0x36)
@@ -39,8 +41,6 @@ bool isMoveInstruction(uint32_t opcode)
     
 
 }
-
-
 
 bool isMoveInstructionIO(uint32_t opcode)
 {
@@ -149,7 +149,10 @@ bool isMoveR_M_mem_reg(uint32_t opcode)
     return false;
 }
 
-const std::string decodeRegisterReg(uint8_t reg, uint8_t rexprefix)
+
+
+
+Register decodeRegisterReg(uint8_t reg, uint8_t rexprefix)
 {
     if (rexprefix & 0x04)
     {
@@ -160,60 +163,43 @@ const std::string decodeRegisterReg(uint8_t reg, uint8_t rexprefix)
     switch (reg)
     {
         case 0:
-            return "RAX";
-            break;
+            return Register::RAX;
         case 1:
-            return "RCX";
-            break;
+            return Register::RCX;
         case 2:
-            return "RDX";
-            break;
+            return Register::RDX;
         case 3:
-            return "RBX";
-            break;
+            return Register::RBX;
         case 4:
-            return "RSP";
-            break;
+            return Register::RSP;
         case 5:
-            return "RBP";
-            break;
+            return Register::RBP;
         case 6:
-            return "RSI";
-            break;
+            return Register::RSI;
         case 7:
-            return "RDI";
-            break;
+            return Register::RDI;
         case 8:
-            return "R8";
-            break;
+            return Register::R8;
         case 9:
-            return "R9";
-            break;
+            return Register::R9;
         case 10:
-            return "R10";
-            break;
+            return Register::R10;
         case 11:
-            return "R11";
-            break;
+            return Register::R11;
         case 12:
-            return "R12";
-            break;
+            return Register::R12;
         case 13:
-            return "R13";
-            break;
+            return Register::R13;
         case 14:
-            return "R14";
-            break;
+            return Register::R14;
         case 15:
-            return "R15";
-            break;
+            return Register::R15;
         default:
-            return "Unknown register";
-            break;
+            return Register::DummyRegister; // Unknown register
     }
 }
 
-const std::string decodeRegisterRM(uint8_t reg, uint8_t rexprefix, bool hasSIB)
+Register decodeRegisterRM(uint8_t reg, uint8_t rexprefix, bool hasSIB)
 {
     if (rexprefix & 0x01 && !hasSIB)
     {
@@ -223,60 +209,43 @@ const std::string decodeRegisterRM(uint8_t reg, uint8_t rexprefix, bool hasSIB)
     switch (reg)
     {
         case 0:
-            return "RAX";
-            break;
+            return Register::RAX;
         case 1:
-            return "RCX";
-            break;
+            return Register::RCX;
         case 2:
-            return "RDX";
-            break;
+            return Register::RDX;
         case 3:
-            return "RBX";
-            break;
+            return Register::RBX;
         case 4:
-            return "RSP";
-            break;
+            return Register::RSP;
         case 5:
-            return "RBP";
-            break;
+            return Register::RBP;
         case 6:
-            return "RSI";
-            break;
+            return Register::RSI;
         case 7:
-            return "RDI";
-            break;
+            return Register::RDI;
         case 8:
-            return "R8";
-            break;
+            return Register::R8;
         case 9:
-            return "R9";
-            break;
+            return Register::R9;
         case 10:
-            return "R10";
-            break;
+            return Register::R10;
         case 11:
-            return "R11";
-            break;
+            return Register::R11;
         case 12:
-            return "R12";
-            break;
+            return Register::R12;
         case 13:
-            return "R13";
-            break;
+            return Register::R13;
         case 14:
-            return "R14";
-            break;
+            return Register::R14;
         case 15:
-            return "R15";
-            break;
+            return Register::R15;
         default:
-            return "Unknown register";
-            break;
+            return Register::DummyRegister; // Unknown register
     }
 }
 
-const std::string decodeRegisterSIB_base(uint8_t reg, uint8_t rexprefix, bool hasSIB)
+Register decodeRegisterSIB_base(uint8_t reg, uint8_t rexprefix, bool hasSIB)
 {
     if (rexprefix & 0x01 && hasSIB)
     {
@@ -286,61 +255,44 @@ const std::string decodeRegisterSIB_base(uint8_t reg, uint8_t rexprefix, bool ha
     switch (reg)
     {
         case 0:
-            return "RAX";
-            break;
+            return Register::RAX;
         case 1:
-            return "RCX";
-            break;
+            return Register::RCX;
         case 2:
-            return "RDX";
-            break;
+            return Register::RDX;
         case 3:
-            return "RBX";
-            break;
+            return Register::RBX;
         case 4:
-            return "RSP";
-            break;
+            return Register::RSP;
         case 5:
-            return "RBP";
-            break;
+            return Register::RBP;
         case 6:
-            return "RSI";
-            break;
+            return Register::RSI;
         case 7:
-            return "RDI";
-            break;
+            return Register::RDI;
         case 8:
-            return "R8";
-            break;
+            return Register::R8;
         case 9:
-            return "R9";
-            break;
+            return Register::R9;
         case 10:
-            return "R10";
-            break;
+            return Register::R10;
         case 11:
-            return "R11";
-            break;
+            return Register::R11;
         case 12:
-            return "R12";
-            break;
+            return Register::R12;
         case 13:
-            return "R13";
-            break;
+            return Register::R13;
         case 14:
-            return "R14";
-            break;
+            return Register::R14;
         case 15:
-            return "R15";
-            break;
+            return Register::R15;
         default:
-            return "Unknown register";
-            break;
+            return Register::DummyRegister; // Unknown register
     }
 
 }
 
-const std::string decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool hasSIB)
+Register decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool hasSIB)
 {
     if (rexprefix & 0x02 && hasSIB)
     {
@@ -350,56 +302,41 @@ const std::string decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool h
     switch (reg)
     {
         case 0:
-            return "RAX";
-            break;
+            return Register::RAX;
         case 1:
-            return "RCX";
-            break;
+            return Register::RCX;
         case 2:
-            return "RDX";
-            break;
+            return Register::RDX;
         case 3:
-            return "RBX";
-            break;
+            return Register::RBX;
         case 4:
-            return "RSP";
-            break;
+            return Register::RSP;
         case 5:
-            return "RBP";
-            break;
+            return Register::RBP;
         case 6:
-            return "RSI";
-            break;
+            return Register::RSI;
         case 7:
-            return "RDI";
-            break;
+            return Register::RDI;
         case 8:
-            return "R8";
-            break;
+            return Register::R8;
         case 9:
-            return "R9";
-            break;
+            return Register::R9;
         case 10:
-            return "R10";
-            break;
+            return Register::R10;
         case 11:
-            return "R11";
-            break;
+            return Register::R11;
         case 12:
-            return "R12";
-            break;
+            return Register::R12;
         case 13:
-            return "R13";
-            break;
+            return Register::R13;
         case 14:
-            return "R14";
-            break;
+            return Register::R14;
         case 15:
-            return "R15";
-            break;
+            return Register::R15;
         default:
-            return "Unknown register";
-            break;
+            return Register::DummyRegister; // Unknown register
     }
+
 }
 
+     

@@ -6,18 +6,17 @@
 //ricordasri controllo offset e size per evitare buffer overflow
 
 //Constructor
-Memory::Memory(size_t size, CPU& cpu) : size(size) {
+Memory::Memory(size_t size, CPU& cpu) : size(size), RSP(&cpu.getRegisters().getReg(Register::RSP).raw()),
+                                         RBP(&cpu.getRegisters().getReg(Register::RBP).raw()) {
+    
 
     data.resize(size, 0); //initialize the memory with 0
 
     size_stack = size / 4; //initialize the stack size to 1/4 of the memory size
 
-    RBP = cpu.getRegisters().getRBPPointer(); //get the base pointer from the CPU
-    
-    RSP = cpu.getRegisters().getRSPPointer(); //get the stack pointer from the CPU
-
     *RSP = size - 1; //initialize the stack pointer to the end of the memory
     *RBP = size - 1; //initialize the base pointer to the end of the memory
+
 
 };
 
@@ -140,7 +139,7 @@ void Memory::push(uint64_t value)
     }
 
 
-    *RSP -= 8; //decrement the stack pointer
+    RSP -= 8; //decrement the stack pointer
     writeQWord(*RSP, value); //write the value in the stack
 };
 

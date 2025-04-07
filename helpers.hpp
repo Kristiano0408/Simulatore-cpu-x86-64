@@ -3,6 +3,8 @@
 #include<cstdint> 
 #include<string>
 
+//farward declaration of the enum class for registers
+enum class Register;
 
 struct r_m {
     uint8_t r_m : 3;
@@ -42,13 +44,13 @@ bool isMoveR_M_reg_mem(uint32_t opcode);
 bool isMoveR_M_mem_reg(uint32_t opcode);
 
 
-const std::string decodeRegisterReg(uint8_t reg, uint8_t rexprefix);
+Register decodeRegisterReg(uint8_t reg, uint8_t rexprefix);
 
-const std::string decodeRegisterRM(uint8_t reg, uint8_t rexprefix, bool hasSIB);
+Register decodeRegisterRM(uint8_t reg, uint8_t rexprefix, bool hasSIB);
 
-const std::string decodeRegisterSIB_base(uint8_t reg, uint8_t rexprefix, bool hasSIB);
+Register decodeRegisterSIB_base(uint8_t reg, uint8_t rexprefix, bool hasSIB);
 
-const std::string decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool hasSIB);
+Register decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool hasSIB);
 
 template<typename T>
 T castTo(uint64_t value) {

@@ -59,7 +59,7 @@ public:
 
 
 
-    
+
 private:
     std::vector<uint8_t> data;
     size_t size;

@@ -21,7 +21,7 @@ int main()
 
     cpu.connectMemory(&ram); //connect the memory to the CPU
     
-    cpu.cpuReset();
+    //cpu.cpuReset();
 
 
 
@@ -80,8 +80,8 @@ int main()
     cout << "SIB: " << static_cast<int>(instruction->getSIB().scale) << " " << static_cast<int>(instruction->getSIB().index) << " " << static_cast<int>(instruction->getSIB().base) << endl;
 
 
-    cpu.getRegisters().setRegisterValue("RAX", 0x000000000000000A);
-    cpu.getRegisters().setRegisterValue("R8", 0x00000000000000000);
+    cpu.getRegisters().getReg(Register::RAX) = 0x000000000000000A;
+    cpu.getRegisters().getReg(Register::R8) = 0x00000000000000000;
     
     cpu.getControlUnit().OperandFetch(instruction);
     cpu.getControlUnit().executeInstruction(instruction);
@@ -105,23 +105,23 @@ int main()
     std::cout << "----------------------------------------" << std::endl;
 
     std::cout << "----------------------------------------" << std::endl;
-    std::cout << "RAX: " << hex << cpu.getRegisters().getRegisterValue("RAX") << std::endl;
-    std::cout << "RBX: " << hex << cpu.getRegisters().getRegisterValue("RBX") << std::endl;
-    std::cout << "RCX: " << hex << cpu.getRegisters().getRegisterValue("RCX") << std::endl;
-    std::cout << "RDX: " << hex << cpu.getRegisters().getRegisterValue("RDX") << std::endl;
-    std::cout << "RSI: " << hex << cpu.getRegisters().getRegisterValue("RSI") << std::endl;
-    std::cout << "RDI: " << hex << cpu.getRegisters().getRegisterValue("RDI") << std::endl;
-    std::cout << "RSP: " << hex << cpu.getRegisters().getRSP() << std::endl;
-    std::cout << "RBP: " << hex << cpu.getRegisters().getRBP() << std::endl;
-    std::cout << "R8: " << hex << cpu.getRegisters().getRegisterValue("R8") << std::endl;
-    std::cout << "R9: " << hex << cpu.getRegisters().getRegisterValue("R9") << std::endl;
-    std::cout << "R10: " << hex << cpu.getRegisters().getRegisterValue("R10") << std::endl;
-    std::cout << "R11: " << hex << cpu.getRegisters().getRegisterValue("R11") << std::endl;
-    std::cout << "R12: " << hex << cpu.getRegisters().getRegisterValue("R12") << std::endl;
-    std::cout << "R13: " << hex << cpu.getRegisters().getRegisterValue("R13") << std::endl;
-    std::cout << "R14: " << hex << cpu.getRegisters().getRegisterValue("R14") << std::endl;
-    std::cout << "R15: " << hex << cpu.getRegisters().getRegisterValue("R15") << std::endl;
-    std::cout << "RIP: " << hex << cpu.getRegisters().getRIP() << std::endl;
+    std::cout << "RAX: " << hex << cpu.getRegisters().getReg(Register::RAX).raw() << std::endl;
+    std::cout << "RBX: " << hex << cpu.getRegisters().getReg(Register::RBX).raw() << std::endl;
+    std::cout << "RCX: " << hex << cpu.getRegisters().getReg(Register::RCX).raw() << std::endl;
+    std::cout << "RDX: " << hex << cpu.getRegisters().getReg(Register::RDX).raw() << std::endl;
+    std::cout << "RSI: " << hex << cpu.getRegisters().getReg(Register::RSI).raw() << std::endl;
+    std::cout << "RDI: " << hex << cpu.getRegisters().getReg(Register::RDI).raw() << std::endl;
+    std::cout << "RSP: " << hex << cpu.getRegisters().getReg(Register::RSP).raw() << std::endl;
+    std::cout << "RBP: " << hex << cpu.getRegisters().getReg(Register::RBP).raw() << std::endl;
+    std::cout << "R8: " << hex << cpu.getRegisters().getReg(Register::R8).raw() << std::endl;
+    std::cout << "R9: " << hex << cpu.getRegisters().getReg(Register::R9).raw() << std::endl;
+    std::cout << "R10: " << hex << cpu.getRegisters().getReg(Register::R10).raw() << std::endl;
+    std::cout << "R11: " << hex << cpu.getRegisters().getReg(Register::R11).raw() << std::endl;
+    std::cout << "R12: " << hex << cpu.getRegisters().getReg(Register::R12).raw() << std::endl;
+    std::cout << "R13: " << hex << cpu.getRegisters().getReg(Register::R13).raw() << std::endl;
+    std::cout << "R14: " << hex << cpu.getRegisters().getReg(Register::R14).raw() << std::endl;
+    std::cout << "R15: " << hex << cpu.getRegisters().getReg(Register::R15).raw() << std::endl;
+    std::cout << "RIP: " << hex << cpu.getRegisters().getReg(Register::RIP).raw() << std::endl;
     std::cout << "----------------------------------------" << std::endl;
 
 }
