@@ -5,6 +5,72 @@
 #define REGISTERFILE_HPP
 #include <cstdint>
 #include <string>
+#include <memory>
+#include <array>
+
+enum class Register {
+    RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP,
+    R8, R9, R10, R11, R12, R13, R14, R15,
+    RIP
+};
+
+
+enum Flagbit{
+
+    CF = 0, //carry flag
+    PF = 2, //parity flag
+    AF = 4, //auxiliary carry flag
+    ZF = 6, //zero flag
+    SF = 7, //sign flag
+    OF = 11 //overflow flag
+};
+
+
+class Reg{
+
+    public:
+        Reg() : value(0) {};
+        Reg(uint64_t val) : value(val) {};
+
+        operator uint64_t() const { return value; } //conversion operator to uint64_t
+
+        Reg& operator=(uint64_t val) { value = val; return *this; } //assignment operator (you can assign a uint64_t to a Reg object)
+
+        uint64_t& raw() { return value; } //get the raw value of the register
+
+        const uint64_t& raw() const { return value; } //get the raw value of the register (const version)
+
+
+    private:
+        uint64_t value;
+        
+
+
+
+};
+
+
+class FlagReg : public Reg {
+    public:
+        FlagReg() : Reg() {};
+
+        bool getFlag(Flagbit flag) const {
+            return (raw() >> static_cast<int>(flag)) & 1; //get the flag bit
+        }
+
+        void setFlag(Flagbit flag, bool value) {
+            if (value) {
+                raw() |= (1 << static_cast<int>(flag)); //set the flag bit
+            } else {
+                raw() &= ~(1 << static_cast<int>(flag)); //clear the flag bit
+            }
+        }
+
+        
+
+};
+
+
 
 class RegisterFile {
     // Implementation of the RegisterFile class
@@ -13,41 +79,11 @@ class RegisterFile {
         RegisterFile();
         ~RegisterFile();
 
-        //getters and setters for the registers
-        void setRegisterValue(const std::string& name, uint64_t value);
-        uint64_t getRegisterValue(const std::string& name);
-        uint64_t& getRegister(const std::string& name);
+        //access to general purpose registers
+        Reg& getReg(Register reg);
 
-        //getters and setters for the special registers
-        void setRSP(uint64_t value);
-        uint64_t getRSP();
-
-        void setRIP(uint64_t value);
-        uint64_t getRIP();
-
-        void setRBP(uint64_t value);
-        uint64_t getRBP();
-
-        uint64_t* getRSPPointer();
-        
-        uint64_t* getRBPPointer();
-
-
-        //getters and setters for the flags
-        void setZF(bool value);
-        bool getZF();
-
-        void setSF(bool value);
-        bool getSF();
-
-        void setOF(bool value);
-        bool getOF();
-
-        void setCF(bool value);
-        bool getCF();
-
-        void setPF(bool value);
-        bool getPF();
+        //access to rflags register
+        FlagReg& getFlags();
 
         //reset the registers
         void reset();
@@ -57,28 +93,12 @@ class RegisterFile {
 
     private:
 
-        //registers(olnly 64 bit version)
-        uint64_t RAX; 
-        uint64_t RBX;
-        uint64_t RCX;
-        uint64_t RDX;
-        uint64_t RSI;
-        uint64_t RDI;
-        uint64_t RSP;
-        uint64_t RBP;
-        uint64_t R8;
-        uint64_t R9;
-        uint64_t R10;
-        uint64_t R11;
-        uint64_t R12;
-        uint64_t R13;
-        uint64_t R14;
-        uint64_t R15;
-        uint64_t RIP;
-        uint64_t dummyRegister = 0; //dummy register for preventing errors
+        std::array<std::unique_ptr<Reg>, 17> GPregisters; //array of unique_ptrs to Reg objects
+        std::unique_ptr<FlagReg> flags; //unique_ptr to FlagReg object
 
-        //flags
-        bool RFLAGS[64];
+        //in the future we can add more registers like simmd, xmm, etc.
+
+        
 
 };
 #endif // REGISTERFILE_HPP
