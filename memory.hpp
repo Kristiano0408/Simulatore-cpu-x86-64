@@ -4,9 +4,11 @@
 #include <cstdint>
 #include <vector>
 #include <cstring>
+#include <iostream>
 
 
 class CPU; //forward declaration of the CPU class
+
 
 // Class that represents the memory RAM of the CPU
 class Memory {
@@ -17,6 +19,12 @@ public:
     template <typename T>
     T readGeneric(uint64_t address) 
     {
+        if (address + sizeof(T) > size) //check if the address is out of bounds
+        {
+            std::cerr << "Memory access out of bounds!" << std::endl; //print error message
+            return 0; //return 0 from the function
+        }
+
         T value = 0;
         std::memcpy(&value, &data[address], sizeof(T));
         return value;
@@ -25,6 +33,13 @@ public:
     template <typename T>
     void writeGeneric(uint64_t address, T value) 
     {
+        if (address + sizeof(T) > size) //check if the address is out of bounds
+        {
+            std::cerr << "Memory access out of bounds!" << std::endl; //print error message
+            return; //return from the function
+        }
+
+
         std::memcpy(&data[address], &value, sizeof(T));
     }
 
