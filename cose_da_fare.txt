@@ -1,5 +1,6 @@
 tutto
 
+//capire coem guadaganre con reiterpreted cast o mecpy
 
 
 //controllare i prefissi sbaglaiti (ad esempio 0x66 quando ho 8 bit)
