@@ -6,31 +6,29 @@
 
 Instruction::Instruction()
 {
-    setRM({0, 0, 0});
-    setSIB({0, 0, 0});
-    setHasDisplacement(false);
-    setHasImmediate(false);
-    setHasModRM(false);
-    setHasSIB(false);
-    setMemToReg(false);
-    setRegToMem(false);
-    setRegToReg(false);
-    setNumPrefixes(0);
-    setRex(false);
-    setRexprefix(0);
-    setNbit(0);
-    setOpcode(0);
-    setValue(0);
-    setDisplacement(0);
-    setSIBdisplacement(0);
-    setSourceOperand(nullptr);
-    setDestinationOperand(nullptr);
+    rm = {0, 0, 0};
+    sib = {0, 0, 0};
+    hasDisplacement = false;
+    hasImmediate = false;
+    hasModRM = false;
+    hasSIB = false;
+    regToReg = false;
+    regToMem = false;
+    memToReg = false;
+    numPrefixes = 0;
+    rex = false;
+    rexprefix = 0;
+    nbit = 0;
+    opcode = 0;
+    value = 0;
+    displacement = 0;
+    SIBdisplacement = 0;
+    sourceOperand = std::make_unique<EmptyOperand>();
+    destinationOperand = std::make_unique<EmptyOperand>();
 
 }
 
 Instruction::~Instruction() {
-    delete sourceOperand;
-    delete destinationOperand;
 }
 
 void Instruction::execute(CU* cu, Memory* memory) {
@@ -216,22 +214,20 @@ uint64_t Instruction::castingValue(uint64_t value, int nbit)
 
 
 //getters and setters for the operands
-void Instruction::setSourceOperand(Operand* sourceOperand) {
-    delete this->sourceOperand; // delete the old source operand
-    this->sourceOperand = sourceOperand;
+void Instruction::setSourceOperand(std::unique_ptr<Operand> sourceOperand) {
+    sourceOperand = std::move(sourceOperand); // move the unique_ptr to the member variable
 }
 
 Operand* Instruction::getSourceOperand() {
-    return sourceOperand;
+    return sourceOperand.get(); // return the raw pointer of the unique_ptr
 }
 
-void Instruction::setDestinationOperand(Operand* destinationOperand) {
-    delete this->destinationOperand; // delete the old destination operand
-    this->destinationOperand = destinationOperand;
+void Instruction::setDestinationOperand(std::unique_ptr<Operand> destinationOperand) {
+    destinationOperand = std::move(destinationOperand); // move the unique_ptr to the member variable
 }
 
 Operand* Instruction::getDestinationOperand() {
-    return destinationOperand;
+    return destinationOperand.get(); // return the raw pointer of the unique_ptr
 }
 
 void Instruction::setAddressingMode(AddressingMode addressingMode) {
@@ -307,18 +303,35 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 // Move instruction
 void MoveInstruction::execute(CU* controlUnit, Memory* ram) 
 {
-    //std::cout << "Executing Move Instruction" << std::endl;
+    std::cout << "Executing Move Instruction" << std::endl;
 
     //setting the size of the operands
     int bit = calculating_number_of_bits(controlUnit);
 
-    //std::cout << "Number of bits: " << bit << std::endl;
+    std::cout << "Number of bits: " << bit << std::endl;
     //std::cout << "Hex: 0x" << std::hex << bit << std::dec << std::endl;
 
     setNbit(bit);
 
+    std::cout << "Nbit: " << getNbit() << std::endl;
+    //std::cout << "Source operand: " << getSourceOperand()->getValue() << std::endl;
+
     //setting the size of the operands(it might not be necessary but for know we dont have a geeneic function for fethcing 
     //from memory so we have to set the size of the operands to know what to fetch from memory)
+
+    if(getSourceOperand())
+    {
+        std::cout << "aaa" << std::endl;
+        std::cout << "Source operand: " << getSourceOperand()->getValue() << std::endl;
+    }
+
+    if(getDestinationOperand())
+    {
+        std::cout << "Destination operand: " << getDestinationOperand()->getValue() << std::endl;
+    }
+
+    std::cout << "bbb" << std::endl;
+
     getSourceOperand()->setSize(bit);
     getDestinationOperand()->setSize(bit);
 

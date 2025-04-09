@@ -4,6 +4,7 @@
 
 
 #include <cstdint>
+#include <memory>
 #include "helpers.hpp"
 
 
@@ -41,6 +42,16 @@ class Operand
 
 
 
+};
+
+// Derived class for empty operand (no value) for initialization of the unique_ptr
+class EmptyOperand : public Operand {
+    
+    public:
+        EmptyOperand() = default;
+    
+        void setValue(uint64_t v) override {}
+        uint64_t getValue() override { return 0; }
 };
 
 class RegOperand : public Operand 

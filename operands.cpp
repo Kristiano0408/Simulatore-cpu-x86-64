@@ -27,12 +27,12 @@ namespace operandFetch {
             source_register = decodeRegisterReg(rm.reg, rex);
             destination_register = decodeRegisterRM(rm.r_m, rex, false);
 
-            Operand* sourceOperand = new RegOperand(controlUnit->getRegisters().getReg(source_register).raw());
-            Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getReg(destination_register).raw());
+            auto sourceOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(source_register).raw());
+            auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(destination_register).raw());
 
 
-            i->setSourceOperand(sourceOperand);
-            i->setDestinationOperand(destinationOperand);
+            i->setSourceOperand(std::move(sourceOperand));
+            i->setDestinationOperand(std::move(destinationOperand));
 
             return;
 
@@ -51,11 +51,11 @@ namespace operandFetch {
 
         
         //Source operand is an address and destination is a register
-        Operand* sourceOperand = new MemOperand(ram, address);
-        Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getReg(destination_register).raw());
+        auto sourceOperand = std::make_unique<MemOperand>(ram, address);
+        auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(destination_register).raw());
 
-        i->setSourceOperand(sourceOperand);
-        i->setDestinationOperand(destinationOperand);
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
                 
 
     }
@@ -79,13 +79,13 @@ namespace operandFetch {
             destination_register = decodeRegisterRM(rm.r_m, rex, false);
 
             //operand constructors for source and destination operands
-            Operand* sourceOperand = new RegOperand(controlUnit->getRegisters().getReg(source_register).raw());
-            Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getReg(destination_register).raw());
+            auto sourceOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(source_register).raw());
+            auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(destination_register).raw());
 
 
             //setting the source and destination operands
-            i->setSourceOperand(sourceOperand);
-            i->setDestinationOperand(destinationOperand);
+            i->setSourceOperand(std::move(sourceOperand));
+            i->setDestinationOperand(std::move(destinationOperand));
 
             return;
 
@@ -101,11 +101,12 @@ namespace operandFetch {
         source_register = decodeRegisterReg(rm.reg, rex);
 
         //operand constructors for source and destination operands
-        Operand* sourceOperand = new RegOperand(controlUnit->getRegisters().getReg(source_register).raw());
-        Operand* destinationOperand = new MemOperand(ram, address);
+        auto sourceOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(source_register).raw());
+        auto destinationOperand = std::make_unique<MemOperand>(ram, address);
+        
 
-        i->setSourceOperand(sourceOperand);
-        i->setDestinationOperand(destinationOperand);
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
                 
 
     }
@@ -115,12 +116,12 @@ namespace operandFetch {
         //operand constructors for source and destination operands
 
         //the destination is a register aand the source is a memory address(displacement)
-        Operand* sourceOperand = new MemOperand(ram, i->getDisplacement());
-        Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getReg(Register::RAX).raw());
+        auto sourceOperand = std::make_unique<MemOperand>(ram, i->getDisplacement());
+        auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(Register::RAX).raw());
 
 
-        i->setSourceOperand(sourceOperand);
-        i->setDestinationOperand(destinationOperand);
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
     
     }
 
@@ -129,11 +130,11 @@ namespace operandFetch {
         //operand constructors for source and destination operands
 
         //the source is a register and the destination is a memory address(displacement)
-        Operand* sourceOperand = new RegOperand(controlUnit->getRegisters().getReg(Register::RAX).raw());
-        Operand* destinationOperand = new MemOperand(ram, i->getDisplacement());
+        auto sourceOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(Register::RAX).raw());
+        auto destinationOperand = std::make_unique<MemOperand>(ram, i->getDisplacement());
 
-        i->setSourceOperand(sourceOperand);
-        i->setDestinationOperand(destinationOperand);
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
 
     }
 
@@ -152,12 +153,13 @@ namespace operandFetch {
         reg_index += 8;
         }
         
-        //operand constructors for destination operand (source is null because we are moving immediate value)
-        Operand* sourceOperand = new ImmediateOperand(i->getValue());
-        Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getReg(register_name[reg_index]).raw());
+        //operand constructors for destination operand 
+        //the source is an immediate value and the destination is a register
+        auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
+        auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(register_name[reg_index]).raw());
         
-        i->setSourceOperand(sourceOperand); // no source operand for immediate move
-        i->setDestinationOperand(destinationOperand); // set destination operand to the register
+        i->setSourceOperand(std::move(sourceOperand)); // no source operand for immediate move
+        i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the register
 
 
     }
@@ -171,11 +173,11 @@ namespace operandFetch {
         {
                 Register  destination_register = decodeRegisterRM(rm.r_m, i->getRexprefix(), false);
                 
-                Operand* sourceOperand = new ImmediateOperand(i->getValue());
-                Operand* destinationOperand = new RegOperand(controlUnit->getRegisters().getReg(destination_register).raw());
+                auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
+                auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(destination_register).raw());
 
-                i->setSourceOperand(sourceOperand); 
-                i->setDestinationOperand(destinationOperand); // set destination operand to the register
+                i->setSourceOperand(std::move(sourceOperand));
+                i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the register
 
             return;
 
@@ -184,12 +186,12 @@ namespace operandFetch {
         uint64_t address {calculatingAddressR_M(i,controlUnit, ram)};
 
         //the source is an immediate value and the destination is a memory address
-        Operand* sourceOperand = new ImmediateOperand(i->getValue());
-        Operand* destinationOperand = new MemOperand(ram, address);
+        auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
+        auto destinationOperand = std::make_unique<MemOperand>(ram, address);
 
 
-        i->setSourceOperand(sourceOperand); // no source operand for immediate move
-        i->setDestinationOperand(destinationOperand); // set destination operand to the register
+        i->setSourceOperand(std::move(sourceOperand)); // no source operand for immediate move
+        i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the register
 
 
     }

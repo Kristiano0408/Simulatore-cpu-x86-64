@@ -22,7 +22,6 @@ Memory::Memory(size_t size, CPU& cpu) : size(size), RSP(cpu.getRegisters().getRe
 };
 
 
-
 //get the size of the memory
 size_t Memory::getSize() const
 {

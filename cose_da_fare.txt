@@ -1,5 +1,9 @@
 tutto
 
+
+//capire i danni che ho fatto
+
+
 //controllare i prefissi sbaglaiti (ad esempio 0x66 quando ho 8 bit)
 
 //capire cosa fare con prefisso 0x67
@@ -8,7 +12,6 @@ tutto
 
 //idea da chat pgt: cache in fetchign per velocizzare il processo
 
-controllare ofset quando si leggono/scrivono cose dalla memoria
 
 controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
@@ -18,12 +21,11 @@ controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
 
-//finire fuznione tempalte per scrittura e lettura unica da memoria
 
 
 //Uso della costante 0b111 per il controllo dei bit (MASK)
 
-//usare smart pointers al posto di new e delete
+//usare smart pointers al posto di new e delete 
 
 //aggiungere metodi per accedere ai byte inferiori di tutti i registri
 

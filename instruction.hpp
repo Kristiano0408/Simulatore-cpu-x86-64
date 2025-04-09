@@ -10,6 +10,7 @@
 #include "addressCalculator.hpp"
 #include "instruction_code_map.hpp"
 #include <unordered_set>
+#include <memory>
 #include "operands.hpp"
 
 
@@ -89,18 +90,19 @@ class Instruction
         bool getMemToReg();
 
          //setters and getters for the operands
-        void setSourceOperand(Operand* sourceOperand);
+        void setSourceOperand(std::unique_ptr<Operand> sourceOperand);
         Operand* getSourceOperand();
-        void setDestinationOperand(Operand* destinationOperand);
+        void setDestinationOperand(std::unique_ptr<Operand> destinationOperand);
         Operand* getDestinationOperand();
 
         void setAddressingMode(AddressingMode addressingMode);
         AddressingMode getAddressingMode();
 
     protected:
+
         // operands for the instruction
-        Operand* sourceOperand; //source operand (register or memory)
-        Operand* destinationOperand; //destination operand (register or memory)
+        std::unique_ptr<Operand> sourceOperand; //SOURCE openad 
+        std::unique_ptr<Operand> destinationOperand; //destination operand
 
         AddressingMode addressingMode; //addressing mode of the instruction
 
