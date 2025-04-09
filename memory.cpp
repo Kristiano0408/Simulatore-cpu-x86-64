@@ -1,6 +1,7 @@
 #include "memory.hpp"
 #include "cpu.hpp"
 #include <cmath>
+
 //ricordarsi di convertire indirizzi dec per accedere al vettore e in binario per utilizzare l'indirizzo
 
 //ricordasri controllo offset e size per evitare buffer overflow
@@ -19,6 +20,8 @@ Memory::Memory(size_t size, CPU& cpu) : size(size), RSP(cpu.getRegisters().getRe
 
 
 };
+
+
 
 
 //methods for reading and writing bytes

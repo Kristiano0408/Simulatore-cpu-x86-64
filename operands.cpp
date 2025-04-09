@@ -346,16 +346,16 @@ uint64_t MemOperand::getValue() {
         switch (size)
         {
             case 8:
-                return this->mem->readByte(this->address);
+                return this->mem->readGeneric<uint8_t>(this->address);
             
             case 16:
-                return this->mem->readWord(this->address);
+                return this->mem->readGeneric<uint16_t>(this->address);
             
             case 32:
-                return this->mem->readDWord(this->address);
+                return this->mem->readGeneric<uint32_t>(this->address);
             
             case 64:
-                return this->mem->readQWord(this->address);
+                return this->mem->readGeneric<uint64_t>(this->address);
             
             default:
                 return 0; // or throw an exception

@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <vector>
+#include <cstring>
+
 
 class CPU; //forward declaration of the CPU class
 
@@ -11,6 +13,19 @@ class Memory {
 public:
     Memory(size_t size, CPU& cpu); //constructor that takes the size of the memory and a reference to the CPU
 
+    template <typename T>
+    T readGeneric(uint64_t address) 
+    {
+        T value = 0;
+        std::memcpy(&value, &data[address], sizeof(T));
+        return value;
+    }
+
+    template <typename T>
+    void writeGeneric(uint64_t address, T value) 
+    {
+        std::memcpy(&data[address], &value, sizeof(T));
+    }
 
     //methods for reading and writing bytes
     uint8_t readByte(uint64_t address) const;

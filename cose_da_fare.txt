@@ -18,7 +18,7 @@ controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
 //controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
 
-//fare una fuznione tempalte per scrittura e lettura unica da memoria
+//finire fuznione tempalte per scrittura e lettura unica da memoria
 
 
 //Uso della costante 0b111 per il controllo dei bit (MASK)

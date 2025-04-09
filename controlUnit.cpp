@@ -167,9 +167,8 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
         if(rm.r_m == 0b100)
         {
                 //if the r/m is 100, there is the SIB byte
-            byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+            byte = fetchByte(index, byteCounter);
             bytes.push_back(byte);
-            byteCounter++;
             std::cout << "SIB: " << std::hex << static_cast<int>(byte) << std::endl;
             info.hasSIB = true;
             info.totalLength += 1;
@@ -183,10 +182,9 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
 
                 for (int i = 0; i < 4; i++)
                 {
-                    byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+                    byte = fetchByte(index, byteCounter);
                     std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                     bytes.push_back(byte);
-                    byteCounter++;
                     
                 }
 
@@ -199,9 +197,8 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
         if (rm.mod == 0b01)
         {
             //there is a displacement of 8 bit
-            byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+            byte = fetchByte(index, byteCounter);
             bytes.push_back(byte);
-            byteCounter++;
             info.hasDisplacement = true;
             info.totalLength += 1;
             info.additionalBytes += 1;
@@ -213,10 +210,9 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
             //there is a displacement of 32 bit
             for (int i = 0; i < 4; i++)
             {
-                byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+                byte = fetchByte(index, byteCounter);
                 std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                 bytes.push_back(byte);
-                byteCounter++;
             }
             info.totalLength += 4;
             info.additionalBytes += 4;
@@ -229,10 +225,9 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
             //there is a displacement of 32 bit
             for (int i = 0; i < 4; i++)
             {
-                byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+                byte = fetchByte(index, byteCounter);
                 std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                 bytes.push_back(byte);
-                byteCounter++;
                 
             }
             info.totalLength += 4;
@@ -255,26 +250,22 @@ void CU::fetchOpcode(std::vector<uint8_t>& bytes, int& byteCounter, uint64_t ind
     {
                 //the opcode has two bytes
                 bytes.push_back(byte);
-                byteCounter++;
-                byte = memory->readByte(index + static_cast<int64_t>(byteCounter));
+                byte = fetchByte(index, byteCounter);
 
                 if (byte == 0x38 || byte == 0x3A)
                 {
                     //the opcode has three bytes
                     opcode = (opcode << 8) | static_cast<uint32_t>(byte);
                     bytes.push_back(byte);
-                    byteCounter++;
-                    byte = memory->readByte(index + static_cast<uint64_t>(byteCounter));
+                    byte = fetchByte(index, byteCounter);
                     opcode = (opcode << 8) | byte;
                     bytes.push_back(byte);
-                    byteCounter++;
                 }
                 else
                 {
                     //the opcode has two bytes
                     opcode = (opcode << 8) | static_cast<uint32_t>(byte);
                     bytes.push_back(byte);
-                    byteCounter++;
                 }
 
     }
@@ -300,8 +291,9 @@ uint8_t CU::fetchByte(uint64_t index, int& bytecounter)
         std::cerr << "Memory not connected!" << std::endl;
         return 0;
     }
+
     //fethcing the byte from the memory using base + offset style
-    uint8_t byte {memory->readByte(index + static_cast<uint64_t>(bytecounter))};
+    uint8_t byte {memory->readGeneric<uint8_t>(index + static_cast<uint64_t>(bytecounter))};
     
     //increment the byte counter
     bytecounter++;
