@@ -172,6 +172,8 @@ namespace operandFetch {
         if(rm.mod == 0b11)
         {
                 Register  destination_register = decodeRegisterRM(rm.r_m, i->getRexprefix(), false);
+
+                
                 
                 auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
                 auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(destination_register).raw());

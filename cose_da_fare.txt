@@ -1,8 +1,6 @@
 tutto
 
 
-//capire i danni che ho fatto
-
 
 //controllare i prefissi sbaglaiti (ad esempio 0x66 quando ho 8 bit)
 

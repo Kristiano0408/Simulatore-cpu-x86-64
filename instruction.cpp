@@ -215,15 +215,17 @@ uint64_t Instruction::castingValue(uint64_t value, int nbit)
 
 //getters and setters for the operands
 void Instruction::setSourceOperand(std::unique_ptr<Operand> sourceOperand) {
-    sourceOperand = std::move(sourceOperand); // move the unique_ptr to the member variable
+    this->sourceOperand = std::move(sourceOperand); // move the unique_ptr to the member variable
+
 }
 
 Operand* Instruction::getSourceOperand() {
     return sourceOperand.get(); // return the raw pointer of the unique_ptr
 }
 
-void Instruction::setDestinationOperand(std::unique_ptr<Operand> destinationOperand) {
-    destinationOperand = std::move(destinationOperand); // move the unique_ptr to the member variable
+void Instruction::setDestinationOperand(std::unique_ptr<Operand> destinationOperand) 
+{
+    this->destinationOperand = std::move(destinationOperand); // move the unique_ptr to the member variable
 }
 
 Operand* Instruction::getDestinationOperand() {
@@ -303,40 +305,21 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 // Move instruction
 void MoveInstruction::execute(CU* controlUnit, Memory* ram) 
 {
-    std::cout << "Executing Move Instruction" << std::endl;
 
     //setting the size of the operands
     int bit = calculating_number_of_bits(controlUnit);
 
-    std::cout << "Number of bits: " << bit << std::endl;
-    //std::cout << "Hex: 0x" << std::hex << bit << std::dec << std::endl;
-
     setNbit(bit);
 
-    std::cout << "Nbit: " << getNbit() << std::endl;
-    //std::cout << "Source operand: " << getSourceOperand()->getValue() << std::endl;
 
     //setting the size of the operands(it might not be necessary but for know we dont have a geeneic function for fethcing 
     //from memory so we have to set the size of the operands to know what to fetch from memory)
 
-    if(getSourceOperand())
-    {
-        std::cout << "aaa" << std::endl;
-        std::cout << "Source operand: " << getSourceOperand()->getValue() << std::endl;
-    }
-
-    if(getDestinationOperand())
-    {
-        std::cout << "Destination operand: " << getDestinationOperand()->getValue() << std::endl;
-    }
-
-    std::cout << "bbb" << std::endl;
+    
 
     getSourceOperand()->setSize(bit);
     getDestinationOperand()->setSize(bit);
 
-    std::cout << std::dec <<"Source operand size: " << getSourceOperand()->getSize() << std::endl;
-    std::cout << std::dec <<"Destination operand size: " << getDestinationOperand()->getSize() << std::endl;
 
 
 
@@ -348,6 +331,8 @@ void MoveInstruction::execute(CU* controlUnit, Memory* ram)
 
         //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
         value = castingValue(value, getNbit());
+
+        std::cout << "Value: " << value << std::endl;
 
 
         //setting the value to the destination operand
