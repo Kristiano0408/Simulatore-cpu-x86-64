@@ -309,19 +309,19 @@ void MemOperand::setValue(uint64_t v) {
         switch (size)
         {
             case 8:
-                this->mem->writeByte(this->address, static_cast<uint8_t>(v));
+                this->mem->writeGeneric<uint8_t>(this->address, static_cast<uint8_t>(v));
                 break;
             
             case 16:
-                this->mem->writeWord(this->address, static_cast<uint16_t>(v));
+                this->mem->writeGeneric<uint16_t>(this->address, static_cast<uint16_t>(v));
                 break;
             
             case 32:
-                this->mem->writeDWord(this->address, static_cast<uint32_t>(v));
+                this->mem->writeGeneric<uint32_t>(this->address, static_cast<uint32_t>(v));
                 break;
             
             case 64:
-                this->mem->writeQWord(this->address, static_cast<uint64_t>(v));
+                this->mem->writeGeneric<uint64_t>(this->address, v);
                 break;
 
         }

@@ -13,6 +13,7 @@ class Memory {
 public:
     Memory(size_t size, CPU& cpu); //constructor that takes the size of the memory and a reference to the CPU
 
+    //methods for reading and writing from memory
     template <typename T>
     T readGeneric(uint64_t address) 
     {
@@ -26,20 +27,6 @@ public:
     {
         std::memcpy(&data[address], &value, sizeof(T));
     }
-
-    //methods for reading and writing bytes
-    uint8_t readByte(uint64_t address) const;
-    void writeByte(uint64_t address, uint8_t value);
-
-    //others methods for reading and writing 16, 32, 64 bit values
-    uint16_t readWord(uint64_t address) const;
-    void writeWord(uint64_t address, uint16_t value);
-
-    uint32_t readDWord(uint64_t address) const;
-    void writeDWord(uint64_t address, uint32_t value);
-
-    uint64_t readQWord(uint64_t address) const;
-    void writeQWord(uint64_t address, uint64_t value);
 
     //get the size of the memory
     size_t getSize() const;
