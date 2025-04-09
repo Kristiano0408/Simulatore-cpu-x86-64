@@ -55,11 +55,11 @@ std::unordered_map<AddressingMode, DecodeFunc> Addressing_modes
 };
 
 
-std::unordered_map<typeofInstruction, ConstructorFunc> instructionConstructors
-{
-    {typeofInstruction::MOV, []() -> Instruction* { return new MoveInstruction(); }}
-};
 
+std::unordered_map<typeofInstruction, std::function<std::unique_ptr<Instruction>()>> instructionConstructors 
+{
+    {typeofInstruction::MOV, [](){ return std::make_unique<MoveInstruction>(); }}
+};
 
 
 

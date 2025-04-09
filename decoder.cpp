@@ -222,21 +222,18 @@ void Decoder::decodeInstructionTD(Instruction* instruction, const InstructionInf
 //constructor of the instruction based on the type of instruction
 Instruction* Decoder::ConstructorCreation(typeofInstruction type_instruction)
 {
-    Instruction* instruction = nullptr;
-
     auto it = instructionConstructors.find(type_instruction);
 
     if (it != instructionConstructors.end())
     {
-        ConstructorFunc constructorFunc = it->second;
-        instruction = constructorFunc(); //create the instruction based on the type of instruction
+        std::unique_ptr<Instruction> instruction = it->second(); // Creo l'oggetto con unique_ptr
+        return instruction.release(); // Rilascia il controllo del puntatore e lo restituisce come raw pointer
     }
     else
     {
         std::cerr << "Unknown instruction type" << std::endl;
         return nullptr;
     }
-    return instruction;
 }
        
 

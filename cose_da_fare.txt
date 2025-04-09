@@ -23,7 +23,6 @@ controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
 //Uso della costante 0b111 per il controllo dei bit (MASK)
 
-//usare smart pointers al posto di new e delete 
 
 //aggiungere metodi per accedere ai byte inferiori di tutti i registri
 

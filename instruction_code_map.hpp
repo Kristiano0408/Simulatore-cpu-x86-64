@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <functional>
+#include <memory>
 
 
 //farward declaration of the classes
@@ -41,7 +42,7 @@ struct InstructionType_and_addMode
 extern std::unordered_map<uint32_t, InstructionType_and_addMode> instructionMap;
 
 //generic function pointer for the constructor of the instruction
-using  ConstructorFunc = std::function<Instruction*()>;
+using  ConstructorFunc = std::function<std::unique_ptr<Instruction>()>;
 
 // map for the constructors of the instructions
 extern std::unordered_map<typeofInstruction, ConstructorFunc> instructionConstructors;
