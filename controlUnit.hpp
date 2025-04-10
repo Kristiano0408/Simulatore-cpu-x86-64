@@ -5,6 +5,7 @@
 #include "registerFile.hpp"
 #include "alu.hpp"
 #include "memory.hpp"
+#include <array>
 
 
 class CU
@@ -22,21 +23,22 @@ class CU
         //getters for the registers
         RegisterFile& getRegisters();
         ALU& getALU();
+        Decoder& getDecoder();
 
         
         
 
     private:
-        Decoder* decoder;
+        Decoder decoder;
         RegisterFile registers; 
         ALU alu;
         Memory* memory;
 
         //helpers function for making the code more readable
-        void searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm, uint64_t index);
-        void fetchOpcode(std::vector<uint8_t>& bytes, int& byteCounter, uint64_t index, uint32_t& opcode);
-        uint8_t fetchByte(uint64_t index, int& bytecounter);
-        void fetchPrefix(uint64_t index, int& byteCounter, uint8_t (&prefix)[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes);
+        void searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm, uint64_t index);
+        void fetchOpcode(std::array<uint8_t, 15>& buffer, uint32_t& opcode, int& byteCounter, std::vector<uint8_t>& bytes);
+
+        void fetchPrefix(std::array<uint8_t, 15>& buffer, uint8_t prefix[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes, int& byteCounter);
         void fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter, std::vector<uint8_t>& bytes);
         
 

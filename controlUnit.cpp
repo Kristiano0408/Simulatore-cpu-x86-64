@@ -10,7 +10,6 @@ CU::CU(Memory* memory): memory(memory), decoder(),registers(), alu()
 
 CU::~CU()
 {
-    delete decoder;
 }
 
 RegisterFile& CU::getRegisters()
@@ -23,6 +22,11 @@ ALU& CU::getALU()
     return alu;
 }
 
+Decoder& CU::getDecoder()
+{
+    return decoder;
+}
+
 //method for fethcing the instruction from the ram
 InstructionInfo CU::fetchInstruction()
 {
@@ -30,47 +34,70 @@ InstructionInfo CU::fetchInstruction()
     uint8_t prefix[4] {0}; //prefix of the instruction
     int numbersOfPrefix {0}; //number of prefix
     uint32_t opcode; //opcode of the instruction
-    std::vector<uint8_t> bytes; //bytes of the instruction()
+    std::vector<uint8_t> Instructionbytes; //bytes of the instruction()
     uint8_t byte; //byte fetched from the memory
     int byteCounter {0}; //counter of the byte (for IR)
     bool rex = false; //rex prefix flag
     uint8_t rexprefix{0}; //rex prefix
 
+    std::array<uint8_t, 15> buffer {0}; //buffer for the instruction
+
 
     //take the value of istruction register
     index = registers.getReg(Register::RIP).raw();
 
-    //fetch whit a while loop one byte at time for serching the prefix
-    fetchPrefix(index, byteCounter, prefix, numbersOfPrefix, bytes);
 
-    byte = fetchByte(index, byteCounter); //fetch the next byte(or the same byte if it was not a prefix)
+    //fcthing the instruction from the memory
+    memcpy(buffer.data(), &memory->getData()[index], 15); //fetch the instruction from the memory
+
+
+    //fetch whit a while loop one byte at time for serching the prefix
+    fetchPrefix(buffer, prefix, numbersOfPrefix, Instructionbytes, byteCounter);
+
+    std::cout << "Prefix: " << std::hex << static_cast<int>(prefix[0]) << std::endl;
+    std::cout << "Prefix: " << std::hex << static_cast<int>(prefix[1]) << std::endl;  
+    std::cout << "Prefix: " << std::hex << static_cast<int>(prefix[2]) << std::endl;
+    std::cout << "Prefix: " << std::hex << static_cast<int>(prefix[3]) << std::endl;
+
+    std::cout << "Number of prefix: " << numbersOfPrefix << std::endl;
+
 
     //fetch the REX prefix
-    fetchREX(byte, rex, rexprefix, byteCounter, bytes); 
+    fetchREX(buffer[byteCounter], rex, rexprefix, byteCounter, Instructionbytes);
+
+    std::cout << "REX: " << std::hex << static_cast<int>(rexprefix) << std::endl;
+    std::cout << "REX: " << std::hex << static_cast<int>(rex) << std::endl;
+
+    std::cout << "ByteCounter: " << std::dec << byteCounter << std::endl;
 
     //fetch the opcode
-    fetchOpcode(bytes, byteCounter, index, opcode);
+    fetchOpcode(buffer, opcode, byteCounter, Instructionbytes);
 
+    std::cout << "Opcode: " << std::hex << opcode << std::endl;
+    std::cout << "ByteCounter: " << std::dec << byteCounter << std::endl;
 
 
 
     //decode the opcode and get the length of the instruction
-    InstructionInfo info = decoder->LenghtOfInstruction(opcode, prefix, numbersOfPrefix, rex, rexprefix);
+    InstructionInfo info = decoder.LenghtOfInstruction(opcode, prefix, numbersOfPrefix, rex, rexprefix);
 
 
     //searching for the sib and displacement
     if (info.hasModRM)
     {
-        byte = fetchByte(index, byteCounter); //fetch the byte from the memory
-        r_m rm = decoder->decodeRM(byte);
+        byte = buffer[byteCounter]; //fetch the byte from the buffer
+        byteCounter++; //increment the byte counter
+        r_m rm = decoder.decodeRM(byte);
 
         std::cout << "Mod: " << std::hex << static_cast<int>(rm.mod) << std::endl;
         std::cout << "Reg: " << std::hex << static_cast<int>(rm.reg) << std::endl;
         std::cout << "R/M: " << std::hex << static_cast<int>(rm.r_m) << std::endl;
 
-        bytes.push_back(byte);
+        Instructionbytes.push_back(byte); //add the byte to the instruction bytes
 
-        searchingSIB_Displacement(bytes, info, byteCounter, rm, index);
+        searchingSIB_Displacement(buffer, Instructionbytes, info, byteCounter, rm, index);
+
+        
 
        
     }
@@ -78,14 +105,14 @@ InstructionInfo CU::fetchInstruction()
 
     //calculate the number of bytes to be fetched
     int bytesToFetch = static_cast<int>(info.totalLength) - byteCounter;
-    //std::cout << "Bytes to fetch: " << bytesToFetch << std::endl;
 
-    //fetch the remaining bytes (teoricallly the immediate value)
+    //fetch the remaining bytes (the immediate value or the rest of the instruction) from the buffer
     for (int i = 0; i < bytesToFetch; i++)
     {
-        byte = fetchByte(index, byteCounter); //fetch the byte from the memory
+        byte = buffer[byteCounter]; //fetch the byte from the buffer
+        byteCounter++; //increment the byte counter
         //std::cout << "Byte: " << std::hex << static_cast<int>(byte) << std::endl;
-        bytes.push_back(byte);
+        Instructionbytes.push_back(byte);
     }
 
     std::cout << "Opcode: " << std::hex << info.opcode << std::endl;
@@ -98,7 +125,7 @@ InstructionInfo CU::fetchInstruction()
     std::cout << "Operand Length: " << info.operandLength << std::endl;
 
     //load the bytes in the struct of the instruction
-    info.instruction = bytes;
+    info.instruction = Instructionbytes;
 
     std::cout << "Instruction: " << std::endl;
 
@@ -107,7 +134,7 @@ InstructionInfo CU::fetchInstruction()
         std::cout << "Byte: " << std::hex << static_cast<int>(info.instruction[i]) << std::endl;
     }
 
-    //set the value of the IR
+    //set the RIP to the next instruction
     registers.getReg(Register::RIP) = index + static_cast<uint64_t>(info.totalLength);
 
     std::cout << "IR: " << std::hex << registers.getReg(Register::RIP).raw() << std::endl;
@@ -121,7 +148,7 @@ Instruction* CU::decodeInstruction(InstructionInfo instruction)
 {
 
 
-   return decoder->decodeInstruction(instruction, this);
+   return decoder.decodeInstruction(instruction, this);
    
 
 
@@ -154,7 +181,9 @@ void CU::executeInstruction(Instruction* instruction)
 
 
 //function for searching the SIB and displacement
-void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm, uint64_t index) {
+void CU::searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm, uint64_t index) {
+    
+    
     uint8_t byte;
 
     if (rm.mod == 0b11)
@@ -167,7 +196,8 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
         if(rm.r_m == 0b100)
         {
                 //if the r/m is 100, there is the SIB byte
-            byte = fetchByte(index, byteCounter);
+            byte = buffer[byteCounter]; //fetch the byte from the buffer
+            byteCounter++; //increment the byte counter
             bytes.push_back(byte);
             std::cout << "SIB: " << std::hex << static_cast<int>(byte) << std::endl;
             info.hasSIB = true;
@@ -182,7 +212,8 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
 
                 for (int i = 0; i < 4; i++)
                 {
-                    byte = fetchByte(index, byteCounter);
+                    byte = buffer[byteCounter]; //fetch the byte from the buffer
+                    byteCounter++; //increment the byte counter
                     std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                     bytes.push_back(byte);
                     
@@ -197,7 +228,8 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
         if (rm.mod == 0b01)
         {
             //there is a displacement of 8 bit
-            byte = fetchByte(index, byteCounter);
+            byte = buffer[byteCounter]; //fetch the byte from the buffer
+            byteCounter++; //increment the byte counter
             bytes.push_back(byte);
             info.hasDisplacement = true;
             info.totalLength += 1;
@@ -210,7 +242,8 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
             //there is a displacement of 32 bit
             for (int i = 0; i < 4; i++)
             {
-                byte = fetchByte(index, byteCounter);
+                byte = buffer[byteCounter]; //fetch the byte from the buffer
+                byteCounter++; //increment the byte counter
                 std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                 bytes.push_back(byte);
             }
@@ -225,7 +258,8 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
             //there is a displacement of 32 bit
             for (int i = 0; i < 4; i++)
             {
-                byte = fetchByte(index, byteCounter);
+                byte = buffer[byteCounter]; //fetch the byte from the buffer
+                byteCounter++; //increment the byte counter
                 std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
                 bytes.push_back(byte);
                 
@@ -241,24 +275,34 @@ void CU::searchingSIB_Displacement(std::vector<uint8_t>& bytes, InstructionInfo&
 
 }
 
-//function for fetching the opcode
-void CU::fetchOpcode(std::vector<uint8_t>& bytes, int& byteCounter, uint64_t index, uint32_t& opcode)
-{
-    uint8_t byte = fetchByte(index, byteCounter); //fetch the byte from the memory
 
+
+
+//function for fetching the opcode
+void CU::fetchOpcode(std::array<uint8_t, 15>& buffer, uint32_t& opcode, int& byteCounter, std::vector<uint8_t>& bytes)
+{
+    uint8_t byte; //byte fetched from buffer
+
+    byte = buffer[byteCounter]; //fetch the byte from the buffer
+    byteCounter++; //increment the byte counter
+
+    
     if (byte == 0x0F)
     {
                 //the opcode has two bytes
+                opcode = static_cast<uint32_t>(byte); //set the opcode
                 bytes.push_back(byte);
-                byte = fetchByte(index, byteCounter);
+                byte = buffer[byteCounter]; //fetch the next byte
+                byteCounter++; //increment the byte counter
 
                 if (byte == 0x38 || byte == 0x3A)
                 {
                     //the opcode has three bytes
                     opcode = (opcode << 8) | static_cast<uint32_t>(byte);
                     bytes.push_back(byte);
-                    byte = fetchByte(index, byteCounter);
-                    opcode = (opcode << 8) | byte;
+                    byte = buffer[byteCounter]; //fetch the next byte
+                    byteCounter++; //increment the byte counter
+                    opcode = (opcode << 8) | static_cast<uint32_t>(byte);
                     bytes.push_back(byte);
                 }
                 else
@@ -275,59 +319,33 @@ void CU::fetchOpcode(std::vector<uint8_t>& bytes, int& byteCounter, uint64_t ind
         //the opcode has one byte
         opcode = static_cast<uint32_t>(byte);
         bytes.push_back(byte);
-        byteCounter;
     }
 
 
-
-
-}
-
-//function for fetching the byte from the memory
-uint8_t CU::fetchByte(uint64_t index, int& bytecounter)
-{
-    if (memory == nullptr)
-    {
-        std::cerr << "Memory not connected!" << std::endl;
-        return 0;
-    }
-
-    //fethcing the byte from the memory using base + offset style
-    uint8_t byte {memory->readGeneric<uint8_t>(index + static_cast<uint64_t>(bytecounter))};
-    
-    //increment the byte counter
-    bytecounter++;
-
-    return byte;
 }
 
 //function for fetching the prefix
-void CU::fetchPrefix(uint64_t index, int& byteCounter, uint8_t (&prefix)[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes)
+void CU::fetchPrefix(std::array<uint8_t, 15>& buffer, uint8_t prefix[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes, int& byteCounter)
 {
-    uint8_t byte; //byte fetched from the memory
+    int i = 0; //index for the buffer
 
-    //fetch the prefix from the memory
-    while (numbersOfPrefix < 4)
+    while(numbersOfPrefix < 4)
     {
-        byte=fetchByte(index, byteCounter);
-
-        //if the byte is a prefix
-        if (isPrefix(byte))
+        if(isPrefix(buffer[i]))
         {
-            //the byte is a prefix
-            prefix[numbersOfPrefix] = byte;
-            numbersOfPrefix++;
-            bytes.push_back(byte);
-            
-
+            prefix[numbersOfPrefix] = buffer[i]; //set the prefix
+            bytes.push_back(buffer[i]); //add the prefix to the bytes vector
+            numbersOfPrefix++; //increment the number of prefix
+            i++; //increment the index of the buffer
         }
-        else 
+        else
         {
-            byteCounter--; //the byte is not a prefix, so we need to decrement the counter
-            break;
+            break; //exit the loop if there is no more prefix
         }
-
     }
+
+    //increment the byte counter
+    byteCounter += numbersOfPrefix; //increment the byte counter by the number of prefix
 }
 
 void CU::fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter, std::vector<uint8_t>& bytes)
@@ -340,12 +358,9 @@ void CU::fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter,
         rex = true;
         bytes.push_back(byte);
         rexprefix = byte;
+        byteCounter++; //increment the byte counter
     }
-    else 
-    {
-        //the byte is not a rex prefix, so we need to decrement the counter
-        byteCounter--;
-    }
+
 }
 
 
