@@ -84,7 +84,7 @@ int main()
 
     Instruction* instruction;
 
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 28; i++) {
         info = cpu.getControlUnit().fetchInstruction();
         instruction = cpu.getControlUnit().decodeInstruction(info);
         cpu.getControlUnit().OperandFetch(instruction);

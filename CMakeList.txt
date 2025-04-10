@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.10)
+project(SimulatoreX86_64)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_BUILD_TYPE Debug)
+
+add_executable(simulatore
+    prova.cpp
+    memory.cpp
+    cpu.cpp
+    alu.cpp
+    controlUnit.cpp
+    registerFile.cpp
+    instruction.cpp
+    instruction_code_map.cpp
+    decoder.cpp
+    addressCalculator.cpp
+    operands.cpp
+    helpers.cpp
+    opcode_map.cpp
+    
+)
