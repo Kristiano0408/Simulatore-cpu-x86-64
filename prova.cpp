@@ -22,8 +22,7 @@ int main()
     cpu.connectMemory(&ram); //connect the memory to the CPU
     
     //cpu.cpuReset();
-
-
+    
 
 
     vector<uint8_t> data;
@@ -78,13 +77,14 @@ int main()
 
     ram.setData(data);
 
+
     
 
     InstructionInfo info;
 
     Instruction* instruction;
 
-    for (int i = 0; i < 28; i++) {
+    for (int i = 0; i < 1; i++) {
         info = cpu.getControlUnit().fetchInstruction();
         instruction = cpu.getControlUnit().decodeInstruction(info);
         cpu.getControlUnit().OperandFetch(instruction);
