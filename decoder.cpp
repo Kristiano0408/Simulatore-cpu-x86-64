@@ -132,7 +132,9 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* control
     position += instruction.opcodeLength;
 
     //getting the type and adressing mode of the instruction
+    
     auto it = instructionMap.find(instruction.opcode)->second;
+    
 
     typeofInstruction type_instruction = it.type;
 
