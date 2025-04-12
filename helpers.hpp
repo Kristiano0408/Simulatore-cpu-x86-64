@@ -21,6 +21,53 @@ struct SIB {
 };
 
 
+enum class ComponentType {
+    CACHE_L1,
+    CACHE_L2,
+    CACHE_L3,
+    RAM,
+    MEMORY,
+    ALU,
+    FPU,
+    UNKNOWN
+};
+
+enum class ErrorType {
+    NONE,
+    INVALID_ADDRESS,
+    OUT_OF_BOUNDS,
+    WRITE_FAIL,
+    READ_FAIL,
+    UNKNOWN
+};
+
+
+
+enum class EventType {
+    NONE,
+    CACHE_HIT,
+    CACHE_MISS,
+    RAM_ACCESS,
+    ERROR
+};
+
+
+struct Error_Event_Info {
+    ComponentType source = ComponentType::UNKNOWN; // Source of the error or event
+    EventType event = EventType::NONE;
+    ErrorType error = ErrorType::NONE;
+    std::string message =""; // Error message optional for debugging
+};
+
+template<typename T>
+struct Result {
+    T data;
+    bool success;
+    Error_Event_Info errorInfo; // Error information if any
+};
+
+
+
 bool isPrefix(unsigned char byte); // Dichiarazione della funzione
 
 bool isMoveInstruction(uint32_t opcode);

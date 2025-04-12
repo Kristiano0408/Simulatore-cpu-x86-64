@@ -3,7 +3,7 @@
 
 
 
-L1Cache::L1Cache(uint64_t size, uint64_t associativity)
+CacheLevel::CacheLevel(uint64_t size, uint64_t associativity)
     : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE))
 {
     //resizing the vector of sets
@@ -23,9 +23,10 @@ L1Cache::L1Cache(uint64_t size, uint64_t associativity)
     }
 }
 
-L1Cache::~L1Cache()
+CacheLevel::~CacheLevel()
 {
     // No dynamic memory to free, but can be used for cleanup if needed
 
 }
+
 
