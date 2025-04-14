@@ -1,8 +1,8 @@
 tutto
 
-//capire coem guadaganre con reiterpreted cast o mecpy
+//flame grafh
 
-//FIxare fetching opoce (ce gia opcode lenght)
+//controllo big indian 
 
 //controllare i prefissi sbaglaiti (ad esempio 0x66 quando ho 8 bit)
 
@@ -10,8 +10,7 @@ tutto
 
 //alto livello: separazione tra instruction e visitor
 
-//idea da chat pgt: cache in fetchign per velocizzare il processo
-
+//cache 
 
 controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
@@ -42,3 +41,5 @@ solo long mode 64 bit
 i nomi dei egistri non cambiano in base alla grandezza, pero posso scrivere 8/16/32 nei registri a 64 bit
 
 solo alu, no fpu, no vector unit, solo gpr e siene cs e ss e rimasugli da 32 bit
+
+ficnhe non implementiamo un claock, lastaccesedtime della linea è un conattore quindi non si usa la politica LRU ma si guarda quella meno usata
