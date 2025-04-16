@@ -1,4 +1,5 @@
 #include "cacheManager.hpp"
+#include "memory.hpp"
 #include <iostream>
 
 
@@ -29,11 +30,11 @@ CacheLevel::~CacheLevel()
 
 }
 
-
-Result<uint64_t> CacheLevel::read(uint64_t address)
+template <typename T>
+Result<T> CacheLevel::read(uint64_t address)
 {
     //craetion of the structure for the result
-    Result<uint64_t> result;
+    Result<T> result;
 
 
     uint64_t setIndex = (address / CACHE_LINE_SIZE) % numSets; // Calculate the set index
@@ -48,11 +49,22 @@ Result<uint64_t> CacheLevel::read(uint64_t address)
     {
         // Cache hit
 
+        //manage the offset for the read operation
+        if (offset + sizeof(T) > CACHE_LINE_SIZE)
+        {
+            result.success = false;
+            result.errorInfo.event = EventType::CACHE_READ_ERROR;
+            result.errorInfo.source = ComponentType::CACHE;
+            result.errorInfo.message = "Read exceeds cache line boundary at address: " + std::to_string(address);
+            result.errorInfo.error = ErrorType::READ_FAIL
+            return result;
+        }
+
         // Calculate the offset within the cache line
         uint64_t offset = address % CACHE_LINE_SIZE; 
 
         // Read the data from the cache line
-        result.data = line->data[offset]; 
+        std::memcpy(&result.data, &line->data[offset], sizeof(T)); // Copy the data from the cache line to the result
 
         line->lastAccessTime++;
 
@@ -89,13 +101,15 @@ Result<uint64_t> CacheLevel::read(uint64_t address)
     
 }
 
-Result<void> CacheLevel::write(uint64_t address, const std::array<uint8_t, CACHE_LINE_SIZE>& data)
+template <typename T>
+Result<void> CacheLevel::write(uint64_t address, const T& data)
 {
     // Create a result structure for the write operation
     Result<void> result;
 
     uint64_t setIndex = (address / CACHE_LINE_SIZE) % numSets; // Calculate the set index
     uint64_t tag = address / (CACHE_LINE_SIZE * numSets); // Calculate the tag
+    uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
 
     CacheSet& set = sets[setIndex]; // Get the cache set
 
@@ -103,10 +117,22 @@ Result<void> CacheLevel::write(uint64_t address, const std::array<uint8_t, CACHE
 
     if(line != nullptr)
     {
+        //manage the offset for the write operation
+        if (offset + sizeof(T) > CACHE_LINE_SIZE) {
+            result.success = false;
+            result.errorInfo.event = EventType::CACHE_WRITE_ERROR;
+            result.errorInfo.source = ComponentType::CACHE;
+            result.errorInfo.message = "Write exceeds cache line boundary at address: " + std::to_string(address);
+            result.errorInfo.error = ErrorType::WRITE_FAIL
+            return result;
+        }
+
         // Cache hit
-        line->data = data; // Write data to the cache line
         line->dirty = true; // Mark the line as dirty
         line->lastAccessTime++; // Increment the last access time
+
+        // Write the data to the cache line
+        std::memcpy(&line->data[offset], &data, sizeof(T)); 
 
         result.success = true; // Set success to true
 
@@ -130,7 +156,7 @@ Result<void> CacheLevel::write(uint64_t address, const std::array<uint8_t, CACHE
         result.errorInfo.event = EventType::CACHE_MISS; // Set the event type to CACHE_MISS
         result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
         result.errorInfo.message = "Cache miss at address: " + std::to_string(address); // Set the message for debugging
-        result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
+        result.errorInfo.error = ErrorType::NONE;
 
         std::cout << "Cache miss at address: " << std::hex << address << std::endl; // Print the cache miss message
 
@@ -260,9 +286,12 @@ uint64_t CacheLevel::manageReplacementPolicy(const CacheSet& set)
     return index; // Return the index of the line to be replaced
 }
 
+
+
+
 // CacheManager class implementation
-CacheManager::CacheManager(uint64_t l1Size, uint64_t l1Associativity, uint64_t l2Size, uint64_t l2Associativity, uint64_t l3Size, uint64_t l3Associativity) 
-                         :L1Cache(l1Size, l1Associativity), L2Cache(l2Size, l2Associativity), L3Cache(l3Size, l3Associativity)
+CacheManager::CacheManager(Memory* memory, uint64_t l1Size, uint64_t l1Associativity, uint64_t l2Size, uint64_t l2Associativity, uint64_t l3Size, uint64_t l3Associativity) 
+                         :L1Cache(l1Size, l1Associativity), L2Cache(l2Size, l2Associativity), L3Cache(l3Size, l3Associativity), ram(memory)
 {
     //nothing to do here
 
@@ -271,5 +300,155 @@ CacheManager::CacheManager(uint64_t l1Size, uint64_t l1Associativity, uint64_t l
 CacheManager::~CacheManager()
 {
     // No dynamic memory to free, but can be used for cleanup if needed
+}
+
+
+template <typename T>
+Result<T> CacheManager::read(uint64_t address)
+{
+    uint64_t l1SetIndex = (address / CACHE_LINE_SIZE) % L1Cache.getNumSets(); // Calculate the L1 set index
+    uint64_t l1Tag = address / (CACHE_LINE_SIZE * L1Cache.getNumSets()); // Calculate the L1 tag
+
+    uint64_t l2SetIndex = (address / CACHE_LINE_SIZE) % L2Cache.getNumSets(); // Calculate the L2 set index
+    uint64_t l2Tag = address / (CACHE_LINE_SIZE * L2Cache.getNumSets()); // Calculate the L2 tag
+
+    uint64_t l3SetIndex = (address / CACHE_LINE_SIZE) % L3Cache.getNumSets(); // Calculate the L3 set index
+    uint64_t l3Tag = address / (CACHE_LINE_SIZE * L3Cache.getNumSets()); // Calculate the L3 tag
+
+    uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
+
+
+    // Try to read from L1 cache
+    Result<T> temporary_result = L1Cache.read<T>(address); // Read from L1 cache
+
+    if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
+    {
+        return temporary_result; // Return the result if there was an error in the read operation
+    }
+
+    if (temporary_result.success) // Check if the read was successful
+    {
+        //changing the event type from generic cache to l1 cache
+        temporary_result.errorInfo.source = ComponentType::CACHE_L1; // Set the source to CACHE_L1
+        
+        return temporary_result; // Return the result
+    }
+    else
+    {
+        // Cache miss in L1, try L2 cache
+        temporary_result = L2Cache.read<T>(address); // Read from L2 cache
+
+        if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
+        {
+        return temporary_result; // Return the result if there was an error in the read operation
+        }
+
+        // Check if the read was successful
+        if(temporary_result.success)
+        {
+            //load the data into L1 cache
+
+            // Find a free line in L1 cache
+            uint64_t freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
+
+            // Load the data into L1 cache
+            L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+
+            //changing the event type from generic cache to l2 cache
+            temporary_result.errorInfo.source = ComponentType::CACHE_L2; // Set the source to CACHE_L2
+
+            return temporary_result; // Return the result
+
+        }
+        else
+        {
+            // Cache miss in L2, try L3 cache
+            temporary_result = L3Cache.read<T>(address); // Read from L3 cache
+
+            if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
+            {
+                return temporary_result; // Return the result if there was an error in the read operation
+            }
+
+            // Check if the read was successful
+            if(temporary_result.success)
+            {
+                //load the data into L2 cache
+
+                // Find a free line in L2 cache
+                uint64_t freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
+
+                // Load the data into L2 cache
+                L2Cache.load(l2SetIndex, l2Tag, temporary_result.data, freePosition); // Load the data into L2 cache
+
+                //load the data into L1 cache
+
+                // Find a free line in L1 cache
+                freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
+
+                // Load the data into L1 cache
+                L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+
+                //changing the event type from generic cache to l3 cache
+                temporary_result.errorInfo.source = ComponentType::CACHE_L3; // Set the source to CACHE_L3
+
+                return temporary_result; // Return the result
+
+            }
+            else
+            {
+                // Cache miss in L3, read from RAM
+                temporary_result = ram->read<T>(address); // Read from RAM
+
+                // Check if the read was successful
+                if(temporary_result.success)
+                {
+                    //load the data into L3 cache
+
+                    // Find a free line in L3 cache
+                    uint64_t freePosition = L3Cache.findFreeLineIndex(L3Cache.getSets()[l3SetIndex]); 
+
+                    // Load the data into L3 cache
+                    L3Cache.load(l3SetIndex, l3Tag, result.data, freePosition); // Load the data into L3 cache
+
+                    //load the data into L2 cache
+
+                    // Find a free line in L2 cache
+                    freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
+
+                    // Load the data into L2 cache
+                    L2Cache.load(l2SetIndex, l2Tag, result.data, freePosition); // Load the data into L2 cache
+
+                    //load the data into L1 cache
+
+                    // Find a free line in L1 cache
+                    freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
+
+                    // Load the data into L1 cache
+                    L1Cache.load(l1SetIndex, l1Tag, result.data, freePosition); // Load the data into L1 cache
+
+                    return temporary_result; // Return the result
+
+                }
+                else
+                {
+                    // Cache miss in RAM, return error
+                    temporary_result.success = false; // Set success to false
+
+                    // Set the event type to RAM_ACCESS
+                    temporary_result.errorInfo.event = EventType::RAM_ACCESS; // Set the event type to RAM_ACCESS
+                    temporary_result.errorInfo.source = ComponentType::RAM; // Set the source to RAM
+                    temporary_result.errorInfo.message = "RAM access failed at address: " + std::to_string(address); // Set the message for debugging
+                    temporary_result.errorInfo.error = ErrorType::READ_FAIL; // Set the error type to READ_FAIL
+
+                    return temporary_result; // Return the result
+
+                }
+
+                
+            }
+
+        }
+    }  
 }
 
