@@ -10,11 +10,11 @@ tutto
 
 //alto livello: separazione tra instruction e visitor
 
-//cache 
+//cache (flsuh e writeback delle liene dirty)
 
 controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
-
+//modificare anche ram con reuslt !!!!!!
 
 
 
