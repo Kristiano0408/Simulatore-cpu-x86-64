@@ -1,59 +1,37 @@
 #include "controlUnit.hpp"
 #include <iostream>
+#include "bus.hpp"
+#include "cpu.hpp"
 
-
-CU::CU(Memory* memory): memory(memory), decoder(),registers(), alu()
+CU::CU(Bus& bus, CPU& cpu) : bus(bus), cpu(cpu)
 {
     //nothing to do here
-    
+
 }
 
 CU::~CU()
 {
 }
 
-RegisterFile& CU::getRegisters()
-{
-    return registers;
-}
-
-ALU& CU::getALU()
-{
-    return alu;
-}
-
-Decoder& CU::getDecoder()
-{
-    return decoder;
-}
 
 //method for fethcing the instruction from the ram
 InstructionInfo CU::fetchInstruction()
 {
+    RegisterFile& cpuRegisters = cpu.getRegisters();  // get the registers of the CPU temporarily
     
-    
-    
-
-    
-    
-
-    
-
     //take the value of istruction register
-    uint64_t index = registers.getReg(Register::RIP).raw();
-
-
-
+    uint64_t index = cpuRegisters.getReg(Register::RIP).raw();
+    
     //control the index of the instruction register
-    if (index + 15 > memory->getSize()) {
+    if (index + 15 > bus.getMemory().getSize()) {
         throw std::out_of_range("Attempted to fetch instruction beyond memory bounds.");
     }
 
     std::array<uint8_t, 15> buffer {0}; //buffer for the instruction
 
     //fetch the instruction from the memory
-    memcpy(buffer.data(), &memory->getData()[index], 15);
-    
+    memcpy(buffer.data(), &bus.getMemory().getData()[index], 15);
+
 
     std::vector<uint8_t> Instructionbytes; //bytes of the instruction()
     int byteCounter {0}; //counter of the byte (for IR)
@@ -133,14 +111,15 @@ InstructionInfo CU::fetchInstruction()
     }
 
     //set the RIP to the next instruction
-    registers.getReg(Register::RIP) = index + static_cast<uint64_t>(info.totalLength);
+    cpuRegisters.getReg(Register::RIP) = index + static_cast<uint64_t>(info.totalLength);
 
-    std::cout << "IR: " << std::hex << registers.getReg(Register::RIP).raw() << std::endl;
+    std::cout << "IR: " << std::hex << cpuRegisters.getReg(Register::RIP).raw() << std::endl;
 
     return info;
 
 }
 
+/*
 //method for decoding the instruction
 Instruction* CU::decodeInstruction(InstructionInfo instruction)
 {
@@ -173,7 +152,7 @@ void CU::executeInstruction(Instruction* instruction)
     //delete instruction;
 
 }
-
+*/
 
 //helpers function for making the code more readable
 

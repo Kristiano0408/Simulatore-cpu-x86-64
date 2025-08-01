@@ -5,6 +5,8 @@
 #include "decoder.hpp"
 #include "addressCalculator.hpp"
 #include "controlUnit.hpp"
+#include "bus.hpp"
+
 #include <string>
 #include <vector>
 
@@ -15,21 +17,12 @@ using namespace std;
 
 int main()
 {
-    CPU cpu;
 
-    Memory ram(50000, cpu); //create the memory with 1024 bytes
-
-    cpu.connectMemory(&ram); //connect the memory to the CPU
-    
-    //cpu.cpuReset();
+    Bus bus; // Create a bus instance
     
 
 
-    vector<uint8_t> data;
-    //load the program in the memory
-    //data= {0x48, 0x8b, 0x43, 0x12, 0x00, 0x00, 0x00,0x8a, 0x03, 0x24, 0x10, 0x48, 0xBF, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x48, 0x8B, 0x07, 0x41, 0xB8, 0X34, 0X12, 0X11, 0X11, 0X11, 0X11, 0x8B, 0x04, 0x13,  0x89, 0x78, 0x56, 0x34, 0x12, 0x11, 0x11,0x11,0x11};
-
-    data = {
+    std::vector<uint8_t> data= {
         // Inizializza alcuni registri con valori noti
          0xC7, 0xC0, 0x01, 0x00, 0x00, 0x00,    // MOV RAX, 1
          0xC7, 0xC3, 0x02, 0x00, 0x00, 0x00,    // MOV RBX, 2
@@ -75,7 +68,7 @@ int main()
         0x48, 0x8B, 0x3C, 0xCE                       // MOV RDI, [RSI+RCX*8]
     };
 
-    ram.setData(data);
+    bus.getMemory().setData(data); // Set the data in memory
 
 
     
@@ -85,31 +78,36 @@ int main()
     Instruction* instruction;
 
     for (int i = 0; i < 28; i++) {
-        info = cpu.getControlUnit().fetchInstruction();
-        instruction = cpu.getControlUnit().decodeInstruction(info);
-        cpu.getControlUnit().OperandFetch(instruction);
-        cpu.getControlUnit().executeInstruction(instruction);
+        info = bus.getCPU().getControlUnit().fetchInstruction();
+
+        cout << "Instruction size: " << info.instruction.size() << endl;
+        for (int j = 0; j < info.instruction.size(); j++) {
+            cout << "Byte: " << hex << static_cast<int>(info.instruction[j]) << endl;
+        }
+        //instruction = bus.getCPU().getControlUnit().decodeInstruction(info);
+        //bus.getCPU().getControlUnit().OperandFetch(instruction);
+        //bus.getCPU().getControlUnit().executeInstruction(instruction);
         
         // Stampa lo stato dei registri dopo ogni istruzione
         std::cout << "Dopo l'istruzione " << i+1 << ":" << std::endl;
-        std::cout << "RAX: " << std::hex << cpu.getRegisters().getReg(Register::RAX).raw() << std::endl;
-        std::cout << "RBX: " << std::hex << cpu.getRegisters().getReg(Register::RBX).raw() << std::endl;
-        std::cout << "RCX: " << std::hex << cpu.getRegisters().getReg(Register::RCX).raw() << std::endl;
-        std::cout << "RDX: " << std::hex << cpu.getRegisters().getReg(Register::RDX).raw() << std::endl;
-        std::cout << "RSI: " << std::hex << cpu.getRegisters().getReg(Register::RSI).raw() << std::endl;
-        std::cout << "RDI: " << std::hex << cpu.getRegisters().getReg(Register::RDI).raw() << std::endl;
-        std::cout << "RSP: " << std::hex << cpu.getRegisters().getReg(Register::RSP).raw() << std::endl;
-        std::cout << "RBP: " << std::hex << cpu.getRegisters().getReg(Register::RBP).raw() << std::endl;
-        std::cout << "R8: " << std::hex << cpu.getRegisters().getReg(Register::R8).raw() << std::endl;
-        std::cout << "R9: " << std::hex << cpu.getRegisters().getReg(Register::R9).raw() << std::endl;
-        std::cout << "R10: " << std::hex << cpu.getRegisters().getReg(Register::R10).raw() << std::endl;
-        std::cout << "R11: " << std::hex << cpu.getRegisters().getReg(Register::R11).raw() << std::endl;
-        std::cout << "R12: " << std::hex << cpu.getRegisters().getReg(Register::R12).raw() << std::endl;
-        std::cout << "R13: " << std::hex << cpu.getRegisters().getReg(Register::R13).raw() << std::endl;
-        std::cout << "R14: " << std::hex << cpu.getRegisters().getReg(Register::R14).raw() << std::endl;
-        std::cout << "R15: " << std::hex << cpu.getRegisters().getReg(Register::R15).raw() << std::endl;
-        std::cout << "RIP: " << std::hex << cpu.getRegisters().getReg(Register::RIP).raw() << std::endl;
-        
+        std::cout << "RAX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RAX).raw() << std::endl;
+        std::cout << "RBX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RBX).raw() << std::endl;
+        std::cout << "RCX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RCX).raw() << std::endl;
+        std::cout << "RDX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RDX).raw() << std::endl;
+        std::cout << "RSI: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RSI).raw() << std::endl;
+        std::cout << "RDI: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RDI).raw() << std::endl;
+        std::cout << "RSP: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RSP).raw() << std::endl;
+        std::cout << "RBP: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RBP).raw() << std::endl;
+        std::cout << "R8: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R8).raw() << std::endl;
+        std::cout << "R9: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R9).raw() << std::endl;
+        std::cout << "R10: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R10).raw() << std::endl;
+        std::cout << "R11: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R11).raw() << std::endl;
+        std::cout << "R12: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R12).raw() << std::endl;
+        std::cout << "R13: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R13).raw() << std::endl;
+        std::cout << "R14: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R14).raw() << std::endl;
+        std::cout << "R15: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R15).raw() << std::endl;
+        std::cout << "RIP: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RIP).raw() << std::endl;
+
         std::cout << "----------------------------------------" << std::endl;
     }
 

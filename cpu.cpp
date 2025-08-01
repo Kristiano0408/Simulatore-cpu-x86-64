@@ -1,25 +1,23 @@
 #include "cpu.hpp"
 
 //constructor that receives a pointer to the memory
-CPU::CPU() : memory(nullptr), /*decoder(),*/ controlUnit(memory)
-{
-
-    
-
-}
+CPU::CPU(Bus& bus): bus(bus), controlUnit(bus, *this), alu(), registers() {}
 
 //destructor
 CPU::~CPU()
 {
-    delete memory; //delete the memory
-    //delete decoder; //delete the decoder
+    // Clean up the decoded instruction if it exists
+    if (decodedInstruction) {
+        delete decodedInstruction;
+        decodedInstruction = nullptr;
+    }
 
 }
 
 //getters for the registers and ALU
 ALU& CPU::getALU()
 {
-    return controlUnit.getALU();
+    return alu;
 }
 
 CU& CPU::getControlUnit()
@@ -29,7 +27,7 @@ CU& CPU::getControlUnit()
 
 RegisterFile& CPU::getRegisters()
 {
-    return controlUnit.getRegisters();
+    return registers;
 }
 
 //cpu operations
@@ -38,7 +36,7 @@ void CPU::cpuStart()
     //start the CPU
     while(true)
     {
-        cpuStep();
+        bus.tick(); //tick the bus, this will call cpuStep() and clock.tick()
     }
 }
 
@@ -51,6 +49,40 @@ void CPU::cpuReset()
 
 void CPU::cpuStep()
 {
+
+    switch (state) {
+        case CPUState::FETCH:
+            // Fetch the instruction
+            current_instruction = controlUnit.fetchInstruction();
+            state = CPUState::DECODE;
+            break;
+        /*
+        case CPUState::DECODE:
+            // Decode the instruction
+            decodedInstruction = controlUnit.decodeInstruction(current_instruction);
+            state = CPUState::OPERAND_FETCH;
+            break;
+
+        case CPUState::OPERAND_FETCH:
+            // Fetch operands for the instruction
+            controlUnit.OperandFetch(decodedInstruction);
+            state = CPUState::EXECUTE;
+            break;
+
+        case CPUState::EXECUTE:
+            // Execute the instruction
+            controlUnit.executeInstruction(decodedInstruction);
+            state = CPUState::FETCH; // Go back to fetch state
+            delete decodedInstruction; // Clean up the decoded instruction
+            decodedInstruction = nullptr; // Reset the pointer
+            break;
+        */
+
+        default:
+            throw std::runtime_error("Invalid CPU state");
+    }
+
+    /*
     //fetch the instruction
     InstructionInfo  instruction = controlUnit.fetchInstruction();
     //decode the instruction
@@ -63,6 +95,6 @@ void CPU::cpuStep()
     controlUnit.executeInstruction(decodedInstruction);
     
     //delete the instruction
-    delete decodedInstruction;
+    delete decodedInstruction;*/
     
 }

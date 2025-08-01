@@ -2,6 +2,7 @@
 #define HELPERS_HPP
 #include<cstdint> 
 #include<string>
+#include <vector> 
 
 //farward declaration of the enum class for registers
 enum class Register;
@@ -22,6 +23,7 @@ struct SIB {
 
 
 enum class ComponentType {
+    CACHE,
     CACHE_L1,
     CACHE_L2,
     CACHE_L3,
@@ -41,16 +43,15 @@ enum class ErrorType {
     UNKNOWN
 };
 
-
-
 enum class EventType {
     NONE,
     CACHE_HIT,
     CACHE_MISS,
     RAM_ACCESS,
-    ERROR
+    ERROR,
+    CACHE_READ_ERROR,
+    CACHE_WRITE_ERROR,
 };
-
 
 struct Error_Event_Info {
     ComponentType source = ComponentType::UNKNOWN; // Source of the error or event
@@ -66,7 +67,7 @@ struct Result {
     Error_Event_Info errorInfo; // Error information if any
 };
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool isPrefix(unsigned char byte); // Dichiarazione della funzione
 
@@ -106,5 +107,37 @@ T castTo(uint64_t value) {
     return static_cast<T>(value);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct InstructionInfo {
+    size_t totalLength;  // Lunghezza totale dell'istruzione
+    size_t opcodeLength; // Lunghezza dell'opcode (1, 2 o 3 byte)
+    size_t prefixCount;  // Numero di prefissi
+    uint8_t prefix[4] {0};   // Prefissi
+    bool rex;            // Flag REX
+    uint16_t rexprefix;   // Prefisso REX
+    uint32_t opcode;     // Opcode completo (1, 2 o 3 byte)
+    size_t additionalBytes; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
+    size_t numOperands; // Numero di operandi
+    size_t operandLength; // Lunghezza degli operandi
+    bool hasModRM;            // Presenza del byte ModR/M
+    bool hasSIB;              // Presenza del byte SIB
+    bool hasDisplacement;     // Presenza di un displacement
+    bool hasImmediate;        // Presenza di un valore immediato
+    std::vector<uint8_t> instruction;
+    const char* description; // Descrizione dell'istruzione (opzionale)
+
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+enum class CPUState {
+    FETCH,
+    DECODE,
+    OPERAND_FETCH,
+    EXECUTE,
+    COMPLETE
+};
 
 #endif // HELPERS_HPP

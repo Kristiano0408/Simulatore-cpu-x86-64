@@ -7,7 +7,7 @@
 
 class Memory; // Forward declaration of Memory class
 
-const uint64_t CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
+constexpr unsigned CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
 
 
 //basic structure for the cache line
@@ -32,7 +32,6 @@ struct CacheSet
 };
 
 
-
 /// Cache level structure
 /// Contains multiple cache sets and manages the cache operations
 class CacheLevel
@@ -43,11 +42,16 @@ class CacheLevel
         uint64_t associativity;
         uint64_t cacheSize;
 
+        //reference to cachemanager for the flush and invalidate operations
+        CacheManager& cacheManager; // Pointer to the cache manager for flush and invalidate operations
+
     public:
         CacheLevel(uint64_t size, uint64_t associativity);
         ~CacheLevel();
-        Result<uint64_t> read(uint64_t address);
-        Result<void> write(uint64_t address, const std::array<uint8_t, CACHE_LINE_SIZE>& data);
+        template <typename T>
+        Result<T> read(uint64_t address);
+        template <typename T>
+        Result<void> write(uint64_t address, const T& data); // Write data to the cache
         void load(uint64_t setIndex, uint64_t tag, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t freePosition);
 
 
@@ -58,6 +62,7 @@ class CacheLevel
         uint64_t findFreeLineIndex(const CacheSet& set);
 
         void invalidate(uint64_t address);
+        void invalidateAll(); // Invalidate all lines in the cache
         void flush();
         void printCacheState() const; // For debugging purposes
 
@@ -82,8 +87,10 @@ class CacheManager
     public:
         CacheManager(Memory* mem,uint64_t l1Size, uint64_t l2Size, uint64_t l3Size, uint64_t l1Assoc, uint64_t l2Assoc, uint64_t l3Assoc);
         ~CacheManager();
-        Result<uint64_t> read(uint64_t address);
-        Result<void> write(uint64_t address, const std::array<uint8_t, CACHE_LINE_SIZE>& data);
+        template <typename T>
+        Result<T> read(uint64_t address);
+        template <typename T>
+        Result<void> write(uint64_t address, const T& data); // Write data to the cache
         void flushAllCaches();
         void invalidateAllCaches();
         void printCacheState() const; // For debugging purposes

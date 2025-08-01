@@ -7,23 +7,34 @@
 #include <cstdint>
 #include <array>
 #include <string>
-#include "Memory.hpp"
-#include "ControlUnit.hpp"
+#include "bus.hpp"
+#include "controlUnit.hpp"
+#include "alu.hpp"
+#include "registerFile.hpp"
+
+
 
 class CPU
 {
 
     private:
         
-        // registers, ALU, memory and decoder          
-        Memory* memory;          
-        //Decoder decoder;   
-        CU controlUnit;    
+        Bus& bus; //pointer to the bus
+
+        CU controlUnit; //control unit of the CPU
+        ALU alu; //arithmetic logic unit
+        RegisterFile registers; //register file of the CPU
+
+        CPUState state = CPUState::FETCH; //current state of the CPU
+
+        InstructionInfo  current_instruction; //current instruction fetched from memory
+        Instruction* decodedInstruction = nullptr; //decoded instruction
+
 
     public:
         
         //constructor that receives a pointer to the memory
-        CPU(); 
+        CPU(Bus& bus);
         ~CPU();
 
         //cpu operations
@@ -31,10 +42,8 @@ class CPU
         void cpuStep();
         void cpuStart();
 
-        void connectMemory(Memory* mem) { memory = mem;  controlUnit.setMemory(mem);} //connect the memory to the CPU
-
-        //getters for the registers and ALU
-        
+    
+        //getters for the registers and ALU 
         ALU& getALU();
 
         RegisterFile& getRegisters();

@@ -1,4 +1,8 @@
-tutto
+
+fixare errori link(testare cpu fino fetch isntruction)
+/////////// implemenatre sistem buss
+
+////modificare grandezza memoria dal bus
 
 //flame grafh
 

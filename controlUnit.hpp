@@ -2,37 +2,33 @@
 #define CONTROL_UNIT_HPP
 
 #include "decoder.hpp"
-#include "registerFile.hpp"
-#include "alu.hpp"
-#include "memory.hpp"
 #include <array>
+
+class Bus;   // forward declaration
+class CPU;   // forward declaration
 
 
 class CU
 {
     public:
-        CU(Memory* memory);
+        CU(Bus& bus, CPU& cpu);
         ~CU();
 
-        InstructionInfo fetchInstruction();
-        Instruction* decodeInstruction(InstructionInfo instruction);
-        void OperandFetch(Instruction* instruction);
-        void executeInstruction(Instruction* instruction);
-        void setMemory(Memory* mem) { memory = mem; } //connect the memory to the CPU
 
-        //getters for the registers
-        RegisterFile& getRegisters();
-        ALU& getALU();
-        Decoder& getDecoder();
+
+        InstructionInfo fetchInstruction();
+        //Instruction* decodeInstruction(InstructionInfo instruction);
+        //void OperandFetch(Instruction* instruction);
+        //void executeInstruction(Instruction* instruction);
 
         
         
 
     private:
         Decoder decoder;
-        RegisterFile registers; 
-        ALU alu;
-        Memory* memory;
+        Bus& bus; //reference to the bus
+        CPU& cpu; //reference to the CPU
+        
 
         //helpers function for making the code more readable
         void searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm, uint64_t index);

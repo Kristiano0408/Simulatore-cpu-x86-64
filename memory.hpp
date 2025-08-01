@@ -7,13 +7,12 @@
 #include <iostream>
 
 
-class CPU; //forward declaration of the CPU class
-
+class Bus; // Forward declaration of Bus class
 
 // Class that represents the memory RAM of the CPU
 class Memory {
 public:
-    Memory(size_t size, CPU& cpu); //constructor that takes the size of the memory and a reference to the CPU
+    Memory(size_t size, Bus& bus); //constructor that takes the size of the memory and a reference to the Bus
 
     //methods for reading and writing from memory
     template <typename T>

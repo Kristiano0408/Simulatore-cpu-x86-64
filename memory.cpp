@@ -1,15 +1,15 @@
 #include "memory.hpp"
 #include "cpu.hpp"
 #include <cmath>
-
+#include "bus.hpp"
 //ricordarsi di convertire indirizzi dec per accedere al vettore e in binario per utilizzare l'indirizzo
 
 //ricordasri controllo offset e size per evitare buffer overflow
 
 //Constructor
-Memory::Memory(size_t size, CPU& cpu) : size(size), RSP(cpu.getRegisters().getReg(Register::RSP).raw()),
-                                         RBP(cpu.getRegisters().getReg(Register::RBP).raw()) {
-    
+Memory::Memory(size_t size, Bus& bus) : size(size), RSP(bus.getCPU().getRegisters().getReg(Register::RSP).raw()),
+                                         RBP(bus.getCPU().getRegisters().getReg(Register::RBP).raw()) {
+
 
     data.resize(size, 0); //initialize the memory with 0
 
