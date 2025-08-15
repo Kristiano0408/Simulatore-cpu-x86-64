@@ -28,9 +28,9 @@ class Instruction
         //destructor
         virtual  ~Instruction();
         //execute the instruction
-        virtual void execute(CU* controlUnit, Memory* ram);//Polimorfic method that will be implemented in the derived classes
+        virtual void execute(CU* controlUnit, Memory& ram);//Polimorfic method that will be implemented in the derived classes
 
-        virtual void fetchOperands(CU* controlUnit, Memory* ram) = 0; //Polimorfic method that will be implemented in the derived classes
+        virtual void fetchOperands(CU* controlUnit, Memory& ram) = 0; //Polimorfic method that will be implemented in the derived classes
 
         uint64_t castingValue(uint64_t value, int nbit); //cast the value to the number of bits of the operand (8, 16, 32, 64)
 
@@ -143,13 +143,13 @@ class MoveInstruction : public Instruction
 
 
 
-        void fetchOperands(CU* controlUnit, Memory* ram) override;
+        void fetchOperands(CU* controlUnit, Memory& ram) override;
 
-        uint64_t calculatingAddressR_M(CU* controlUnit, Memory* ram); //calculate the address for the operation R/M   
+        uint64_t calculatingAddressR_M(CU* controlUnit, Memory& ram); //calculate the address for the operation R/M
 
        
         //execute the instruction
-        void execute(CU* controlUnit, Memory* ram) override;
+        void execute(CU* controlUnit, Memory& ram) override;
         int calculating_number_of_bits(CU* controlUnit); //calculate the number of bits of the value/operand
         
 

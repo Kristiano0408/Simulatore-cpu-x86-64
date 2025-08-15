@@ -31,7 +31,7 @@ Instruction::Instruction()
 Instruction::~Instruction() {
 }
 
-void Instruction::execute(CU* cu, Memory* memory) {
+void Instruction::execute(CU* cu, Memory& memory) {
 }
 
 void Instruction::setOpcode(uint32_t opcode) {
@@ -248,7 +248,7 @@ AddressingMode Instruction::getAddressingMode() {
 
 
 //fetch the operands
-void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
+void MoveInstruction::fetchOperands(CU* controlUnit, Memory& ram) {
 
     //std::cout << "Fetching operands for Move Instruction" << std::endl;
     //getting the opcode
@@ -303,7 +303,7 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory* ram) {
 }
 
 // Move instruction
-void MoveInstruction::execute(CU* controlUnit, Memory* ram) 
+void MoveInstruction::execute(CU* controlUnit, Memory& ram) 
 {
 
     //setting the size of the operands

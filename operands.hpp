@@ -13,13 +13,13 @@ class Memory;  // Forward declaration of Memory
 class Instruction;  // Forward declaration OF Instruction
 
 namespace operandFetch {
-    void fetchRM(Instruction* i, CU* controlUnit, Memory* ram);
-    void fetchMR(Instruction* i, CU* controlUnit, Memory* ram);
-    void fetchFD(Instruction* i, CU* controlUnit, Memory* ram);
-    void fetchTD(Instruction* i, CU* controlUnit, Memory* ram);
-    void fetchOI(Instruction* i, CU* controlUnit, Memory* ram, uint32_t opcode);
-    void fetchMI(Instruction* i, CU* controlUnit, Memory* ram);
-    uint64_t calculatingAddressR_M(Instruction* i, CU* controlUnit, Memory* ram);
+    void fetchRM(Instruction* i, CU* controlUnit, Memory& ram);
+    void fetchMR(Instruction* i, CU* controlUnit, Memory& ram);
+    void fetchFD(Instruction* i, CU* controlUnit, Memory& ram);
+    void fetchTD(Instruction* i, CU* controlUnit, Memory& ram);
+    void fetchOI(Instruction* i, CU* controlUnit, Memory& ram, uint32_t opcode);
+    void fetchMI(Instruction* i, CU* controlUnit, Memory& ram);
+    uint64_t calculatingAddressR_M(Instruction* i, CU* controlUnit, Memory& ram);
 }
 
 class Operand 
@@ -69,12 +69,12 @@ class RegOperand : public Operand
 class MemOperand : public Operand 
 {
     public:
-        MemOperand(Memory* mem, uint64_t address) : mem(mem), address(address) {} // Constructor to initialize memory and address
+        MemOperand(Memory& mem, uint64_t address) : mem(mem), address(address) {} // Constructor to initialize memory and address
         void setValue(uint64_t v) override ;
         uint64_t getValue() override ;
 
     private:
-        Memory* mem; // Pointer to the memory object
+        Memory& mem; // Reference to the memory object
         uint64_t address; // Address in memory
 };
 

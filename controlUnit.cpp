@@ -2,6 +2,7 @@
 #include <iostream>
 #include "bus.hpp"
 #include "cpu.hpp"
+#include "registerFile.hpp"
 
 CU::CU(Bus& bus, CPU& cpu) : bus(bus), cpu(cpu)
 {
@@ -13,6 +14,10 @@ CU::~CU()
 {
 }
 
+RegisterFile& CU::getRegisters()
+{
+    return cpu.getRegisters();
+}
 
 //method for fethcing the instruction from the ram
 InstructionInfo CU::fetchInstruction()
@@ -119,7 +124,7 @@ InstructionInfo CU::fetchInstruction()
 
 }
 
-/*
+
 //method for decoding the instruction
 Instruction* CU::decodeInstruction(InstructionInfo instruction)
 {
@@ -134,25 +139,27 @@ Instruction* CU::decodeInstruction(InstructionInfo instruction)
 }
 
 
+
 void CU::OperandFetch(Instruction* instruction)
 {   
-    instruction->fetchOperands(this, memory);
+    instruction->fetchOperands(this, bus.getMemory());
  
 
 }
+
 
 //method for executing the instruction
 void CU::executeInstruction(Instruction* instruction)
 {
 
     std::cout << "executeInstruction" << std::endl;
-    instruction->execute(this, memory);
+    instruction->execute(this, bus.getMemory());
 
     //delete the instruction
     //delete instruction;
 
 }
-*/
+
 
 //helpers function for making the code more readable
 

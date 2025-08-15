@@ -3,12 +3,13 @@
 #include "controlUnit.hpp"
 #include "memory.hpp"
 #include <string>
+#include "registerFile.hpp"
 
 
 namespace operandFetch {
 
     //fetching RM operands 
-    void fetchRM(Instruction* i, CU* controlUnit, Memory* ram)
+    void fetchRM(Instruction* i, CU* controlUnit, Memory& ram)
     {
         //declaring the registers (the type of the register is Register an enum class)
         Register source_register; 
@@ -60,7 +61,7 @@ namespace operandFetch {
 
     }
 
-    void fetchMR(Instruction* i, CU* controlUnit, Memory* ram)
+    void fetchMR(Instruction* i, CU* controlUnit, Memory& ram)
     {
         //declaring the registers (the type of the register is Register an enum class)
         Register source_register; 
@@ -111,7 +112,7 @@ namespace operandFetch {
 
     }
 
-    void fetchFD(Instruction* i, CU* controlUnit, Memory* ram)
+    void fetchFD(Instruction* i, CU* controlUnit, Memory& ram)
     {
         //operand constructors for source and destination operands
 
@@ -125,7 +126,7 @@ namespace operandFetch {
     
     }
 
-    void fetchTD(Instruction* i, CU* controlUnit, Memory* ram)
+    void fetchTD(Instruction* i, CU* controlUnit, Memory& ram)
     {
         //operand constructors for source and destination operands
 
@@ -138,7 +139,7 @@ namespace operandFetch {
 
     }
 
-    void fetchOI(Instruction* i, CU* controlUnit, Memory* ram, uint32_t opcode)
+    void fetchOI(Instruction* i, CU* controlUnit, Memory& ram, uint32_t opcode)
     {
         Register register_name[16] = {Register::RAX, Register::RCX, Register::RDX, Register::RBX, Register::RSP, Register::RBP, Register::RSI, Register::RDI,
                                     Register::R8,Register::R9, Register::R10, Register::R11, Register::R12, Register::R13, Register::R14, Register::R15};
@@ -164,7 +165,7 @@ namespace operandFetch {
 
     }
 
-    void fetchMI(Instruction* i, CU* controlUnit, Memory* ram)
+    void fetchMI(Instruction* i, CU* controlUnit, Memory& ram)
     {
         //getting the r/m byte
         r_m rm = i->getRM();
@@ -198,7 +199,7 @@ namespace operandFetch {
 
     }
 
-    uint64_t calculatingAddressR_M(Instruction* i, CU* controlUnit, Memory* ram)
+    uint64_t calculatingAddressR_M(Instruction* i, CU* controlUnit, Memory& ram)
     {
         //getting the r/m byte
         r_m rm = i->getRM();
@@ -296,15 +297,12 @@ uint64_t RegOperand::getValue() {
 
 void MemOperand::setValue(uint64_t v) {
     
-    if(this->mem == nullptr)
-    {
-        throw std::runtime_error("Memory pointer is null. Cannot set value.");
-    }
+
     /*else if (this->address == 0)
     {
         throw std::invalid_argument("Address is null. Cannot set value.");
     }*/
-    else if (this->size == 0)
+    if (this->size == 0)
     {
         throw std::invalid_argument("Size is null. Cannot set value.");
     }
@@ -313,19 +311,19 @@ void MemOperand::setValue(uint64_t v) {
         switch (size)
         {
             case 8:
-                this->mem->writeGeneric<uint8_t>(this->address, static_cast<uint8_t>(v));
+                this->mem.writeGeneric<uint8_t>(this->address, static_cast<uint8_t>(v));
                 break;
             
             case 16:
-                this->mem->writeGeneric<uint16_t>(this->address, static_cast<uint16_t>(v));
+                this->mem.writeGeneric<uint16_t>(this->address, static_cast<uint16_t>(v));
                 break;
             
             case 32:
-                this->mem->writeGeneric<uint32_t>(this->address, static_cast<uint32_t>(v));
+                this->mem.writeGeneric<uint32_t>(this->address, static_cast<uint32_t>(v));
                 break;
             
             case 64:
-                this->mem->writeGeneric<uint64_t>(this->address, v);
+                this->mem.writeGeneric<uint64_t>(this->address, v);
                 break;
 
         }
@@ -333,15 +331,11 @@ void MemOperand::setValue(uint64_t v) {
 }
 
 uint64_t MemOperand::getValue() {
-    if(this->mem == nullptr)
-    {
-        throw std::runtime_error("Memory pointer is null. Cannot get value.");
-    }
     /*else if (this->address == 0)
     {
         throw std::invalid_argument("Address is null. Cannot get value.");
     }*/
-    else if (this->size == 0)
+    if (this->size == 0)
     {
         throw std::invalid_argument("Size is null. Cannot get value.");
     }
@@ -350,17 +344,17 @@ uint64_t MemOperand::getValue() {
         switch (size)
         {
             case 8:
-                return this->mem->readGeneric<uint8_t>(this->address);
-            
+                return this->mem.readGeneric<uint8_t>(this->address);
+
             case 16:
-                return this->mem->readGeneric<uint16_t>(this->address);
-            
+                return this->mem.readGeneric<uint16_t>(this->address);
+
             case 32:
-                return this->mem->readGeneric<uint32_t>(this->address);
-            
+                return this->mem.readGeneric<uint32_t>(this->address);
+
             case 64:
-                return this->mem->readGeneric<uint64_t>(this->address);
-            
+                return this->mem.readGeneric<uint64_t>(this->address);
+
             default:
                 return 0; // or throw an exception
         }

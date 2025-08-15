@@ -77,17 +77,34 @@ int main()
 
     Instruction* instruction;
 
-    for (int i = 0; i < 28; i++) {
+    for (int i = 0; i < 1; i++) {
         info = bus.getCPU().getControlUnit().fetchInstruction();
 
         cout << "Instruction size: " << info.instruction.size() << endl;
         for (int j = 0; j < info.instruction.size(); j++) {
             cout << "Byte: " << hex << static_cast<int>(info.instruction[j]) << endl;
         }
-        //instruction = bus.getCPU().getControlUnit().decodeInstruction(info);
-        //bus.getCPU().getControlUnit().OperandFetch(instruction);
-        //bus.getCPU().getControlUnit().executeInstruction(instruction);
+        instruction = bus.getCPU().getControlUnit().decodeInstruction(info);
+
+        cout << "Instruction: " << hex << static_cast<int>(instruction->getOpcode()) << endl;
+        cout << "Prefix: " << hex << static_cast<int>(instruction->getPrefix()[0]) << endl;
+        cout << "Prefix: " << hex << static_cast<int>(instruction->getPrefix()[1]) << endl;
+        cout << "Prefix: " << hex << static_cast<int>(instruction->getPrefix()[2]) << endl;
+        cout << "Prefix: " << hex << static_cast<int>(instruction->getPrefix()[3]) << endl;
+        cout << "Opcode: " << hex << static_cast<int>(instruction->getOpcode()) << endl;
         
+        bus.getCPU().getControlUnit().OperandFetch(instruction);
+
+        cout << "Fetched operands for Move Instruction" << endl;
+        cout << "Source Operand: " << hex << instruction->getSourceOperand()->getValue() << endl;
+        cout << "Source Operand Size: " << instruction->getSourceOperand()->getSize() << endl;
+        cout << "Destination Operand: " << hex << instruction->getDestinationOperand()->getValue() << endl;
+        cout << "Destination Operand Size: " << instruction->getDestinationOperand()->getSize() << endl;
+
+        // Esegui l'istruzione
+        
+        bus.getCPU().getControlUnit().executeInstruction(instruction);
+
         // Stampa lo stato dei registri dopo ogni istruzione
         std::cout << "Dopo l'istruzione " << i+1 << ":" << std::endl;
         std::cout << "RAX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RAX).raw() << std::endl;

@@ -6,6 +6,7 @@
 
 class Bus;   // forward declaration
 class CPU;   // forward declaration
+class RegisterFile;   // forward declaration
 
 
 class CU
@@ -13,13 +14,14 @@ class CU
     public:
         CU(Bus& bus, CPU& cpu);
         ~CU();
+        RegisterFile& getRegisters();
 
 
 
         InstructionInfo fetchInstruction();
-        //Instruction* decodeInstruction(InstructionInfo instruction);
-        //void OperandFetch(Instruction* instruction);
-        //void executeInstruction(Instruction* instruction);
+        Instruction* decodeInstruction(InstructionInfo instruction);
+        void OperandFetch(Instruction* instruction);
+        void executeInstruction(Instruction* instruction);
 
         
         
@@ -28,6 +30,7 @@ class CU
         Decoder decoder;
         Bus& bus; //reference to the bus
         CPU& cpu; //reference to the CPU
+
         
 
         //helpers function for making the code more readable

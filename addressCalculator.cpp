@@ -1,5 +1,6 @@
 #include "addressCalculator.hpp"
 #include "controlUnit.hpp"
+#include "registerFile.hpp"
 
 namespace  AddressCalculator
 {
