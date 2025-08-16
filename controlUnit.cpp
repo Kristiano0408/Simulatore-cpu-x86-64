@@ -4,7 +4,7 @@
 #include "cpu.hpp"
 #include "registerFile.hpp"
 
-CU::CU(Bus& bus, CPU& cpu) : bus(bus), cpu(cpu)
+CU::CU(Bus& bus) : bus(bus)
 {
     //nothing to do here
 
@@ -14,16 +14,11 @@ CU::~CU()
 {
 }
 
-RegisterFile& CU::getRegisters()
-{
-    return cpu.getRegisters();
-}
-
 //method for fethcing the instruction from the ram
 InstructionInfo CU::fetchInstruction()
 {
-    RegisterFile& cpuRegisters = cpu.getRegisters();  // get the registers of the CPU temporarily
-    
+    RegisterFile& cpuRegisters = bus.getCPU().getRegisters();  // get the registers of the CPU temporarily
+
     //take the value of istruction register
     uint64_t index = cpuRegisters.getReg(Register::RIP).raw();
     
@@ -130,7 +125,7 @@ Instruction* CU::decodeInstruction(InstructionInfo instruction)
 {
 
 
-   return decoder.decodeInstruction(instruction, this);
+   return decoder.decodeInstruction(instruction);
    
 
 
@@ -142,7 +137,7 @@ Instruction* CU::decodeInstruction(InstructionInfo instruction)
 
 void CU::OperandFetch(Instruction* instruction)
 {   
-    instruction->fetchOperands(this, bus.getMemory());
+    instruction->fetchOperands(bus);
  
 
 }
@@ -153,7 +148,7 @@ void CU::executeInstruction(Instruction* instruction)
 {
 
     std::cout << "executeInstruction" << std::endl;
-    instruction->execute(this, bus.getMemory());
+    instruction->execute(bus);
 
     //delete the instruction
     //delete instruction;

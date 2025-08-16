@@ -1,57 +1,58 @@
 #include "addressCalculator.hpp"
-#include "controlUnit.hpp"
+#include "cpu.hpp"
 #include "registerFile.hpp"
+#include "bus.hpp"
 
 namespace  AddressCalculator
 {
-    uint64_t indirectAddressing(CU* controlUnit, Register reg_address) 
+    uint64_t indirectAddressing(Bus& bus, Register reg_address) 
     {
-        return controlUnit->getRegisters().getReg(reg_address).raw();
+        return bus.getCPU().getRegisters().getReg(reg_address).raw();
     }
 
-    uint64_t registerAddressing(CU* controlUnit, Register reg_value) 
+    uint64_t registerAddressing(Bus& bus, Register reg_value) 
     {
-        return controlUnit->getRegisters().getReg(reg_value).raw();
+        return bus.getCPU().getRegisters().getReg(reg_value).raw();
     }
 
-    uint64_t BaseAddressing(CU* controlUnit, Register base)
+    uint64_t BaseAddressing(Bus& bus, Register base)
     {
-        return controlUnit->getRegisters().getReg(base).raw();
-    }
-    
-    uint64_t BaseScaleAddressing(CU* controlUnit, Register base, uint8_t scale)
-     {
-        return controlUnit->getRegisters().getReg(base).raw() * ScaleConversion(scale);
+        return bus.getCPU().getRegisters().getReg(base).raw();
     }
 
-    uint64_t BaseIndexAddressing(CU* controlUnit, Register base, Register index)
+    uint64_t BaseScaleAddressing(Bus& bus, Register base, uint8_t scale)
     {
-        return controlUnit->getRegisters().getReg(base).raw() + controlUnit->getRegisters().getReg(index).raw();
+        return bus.getCPU().getRegisters().getReg(base).raw() * ScaleConversion(scale);
     }
 
-    uint64_t BaseIndexScaleAddressing(CU* controlUnit,Register base, Register index, uint8_t scale)
+    uint64_t BaseIndexAddressing(Bus& bus, Register base, Register index)
     {
-        return controlUnit->getRegisters().getReg(base).raw() + controlUnit->getRegisters().getReg(index).raw() * ScaleConversion(scale);
+        return bus.getCPU().getRegisters().getReg(base).raw() + bus.getCPU().getRegisters().getReg(index).raw();
     }
 
-    uint64_t BaseIndexScaleDisplacementAddressing(CU* controlUnit, Register base, Register index, uint8_t scale, uint64_t displacement)
+    uint64_t BaseIndexScaleAddressing(Bus& bus, Register base, Register index, uint8_t scale)
     {
-        return controlUnit->getRegisters().getReg(base).raw() + controlUnit->getRegisters().getReg(index).raw() * ScaleConversion(scale) + displacement;
+        return bus.getCPU().getRegisters().getReg(base).raw() + bus.getCPU().getRegisters().getReg(index).raw() * ScaleConversion(scale);
     }
 
-    uint64_t BaseIndexDIsplacementAddressing(CU* controlUnit, Register base, Register index, uint64_t displacement)
+    uint64_t BaseIndexScaleDisplacementAddressing(Bus& bus, Register base, Register index, uint8_t scale, uint64_t displacement)
     {
-        return controlUnit->getRegisters().getReg(base).raw() + controlUnit->getRegisters().getReg(index).raw() + displacement;
+        return bus.getCPU().getRegisters().getReg(base).raw() + bus.getCPU().getRegisters().getReg(index).raw() * ScaleConversion(scale) + displacement;
     }
 
-    uint64_t BaseScaleDisplacementAddressing(CU* controlUnit, Register base, uint8_t scale, uint64_t displacement)
+    uint64_t BaseIndexDDisplacementAddressing(Bus& bus, Register base, Register index, uint64_t displacement)
     {
-        return controlUnit->getRegisters().getReg(base).raw() * ScaleConversion(scale) + displacement;
+        return bus.getCPU().getRegisters().getReg(base).raw() + bus.getCPU().getRegisters().getReg(index).raw() + displacement;
     }
 
-    uint64_t BaseDisplacementAddressing(CU* controlUnit, Register base, uint64_t displacement)
+    uint64_t BaseScaleDisplacementAddressing(Bus& bus, Register base, uint8_t scale, uint64_t displacement)
     {
-        return controlUnit->getRegisters().getReg(base).raw() + displacement;
+        return bus.getCPU().getRegisters().getReg(base).raw() * ScaleConversion(scale) + displacement;
+    }
+
+    uint64_t BaseDisplacementAddressing(Bus& bus, Register base, uint64_t displacement)
+    {
+        return bus.getCPU().getRegisters().getReg(base).raw() + displacement;
     }
 
     int ScaleConversion(uint8_t scale)

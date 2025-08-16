@@ -1,7 +1,7 @@
 #include "instruction.hpp"
 #include <cstdint>
 #include "controlUnit.hpp"
-
+#include "bus.hpp"
 
 
 Instruction::Instruction()
@@ -31,7 +31,7 @@ Instruction::Instruction()
 Instruction::~Instruction() {
 }
 
-void Instruction::execute(CU* cu, Memory& memory) {
+void Instruction::execute(Bus& bus) {
 }
 
 void Instruction::setOpcode(uint32_t opcode) {
@@ -248,7 +248,7 @@ AddressingMode Instruction::getAddressingMode() {
 
 
 //fetch the operands
-void MoveInstruction::fetchOperands(CU* controlUnit, Memory& ram) {
+void MoveInstruction::fetchOperands(Bus& bus) {
 
     //std::cout << "Fetching operands for Move Instruction" << std::endl;
     //getting the opcode
@@ -265,34 +265,34 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory& ram) {
     {
         case AddressingMode::MR:                     //move register to R/M
             std::cout << "MOV_MR" << std::endl;
-            operandFetch::fetchMR(this, controlUnit, ram);
+            operandFetch::fetchMR(this, bus);
             break;
         
         case AddressingMode::RM:                    //move R/M to register
             std::cout << "MOV_RM" << std::endl;
             //std::cout << "opcode: " << opcode << std::endl;
-            operandFetch::fetchRM(this, controlUnit, ram);
+            operandFetch::fetchRM(this, bus);
             break;
         
         
         case AddressingMode::MI:                   //move immediate to memory/register
             std::cout << "MOV_MI" << std::endl;
-            operandFetch::fetchMI(this, controlUnit, ram);
+            operandFetch::fetchMI(this, bus);
             break;
         
         case AddressingMode::OI:                  //move immediate to reg
             std::cout << "MOV_OI" << std::endl;
-            operandFetch::fetchOI(this, controlUnit, ram, opcode);
+            operandFetch::fetchOI(this, bus, opcode);
             break;
         
         case AddressingMode::FD:                     //move from offset to Rax
             std::cout << "MOV_FD" << std::endl;
-            operandFetch::fetchFD(this, controlUnit, ram);
+            operandFetch::fetchFD(this, bus);
             break;
         
         case AddressingMode::TD:                    //move from Rax to offset
             std::cout << "MOV_TD" << std::endl;
-            operandFetch::fetchTD(this, controlUnit, ram);
+            operandFetch::fetchTD(this, bus);
             break;
         
         default:
@@ -303,11 +303,11 @@ void MoveInstruction::fetchOperands(CU* controlUnit, Memory& ram) {
 }
 
 // Move instruction
-void MoveInstruction::execute(CU* controlUnit, Memory& ram) 
+void MoveInstruction::execute(Bus& bus) 
 {
 
     //setting the size of the operands
-    int bit = calculating_number_of_bits(controlUnit);
+    int bit = calculating_number_of_bits();
 
     setNbit(bit);
 
@@ -355,7 +355,7 @@ void MoveInstruction::execute(CU* controlUnit, Memory& ram)
 
 }
 
-int MoveInstruction::calculating_number_of_bits(CU* controlUnit) 
+int MoveInstruction::calculating_number_of_bits() 
 {
     uint32_t opcode = getOpcode();
 

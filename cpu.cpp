@@ -1,7 +1,7 @@
 #include "cpu.hpp"
 
 //constructor that receives a pointer to the memory
-CPU::CPU(Bus& bus): bus(bus), controlUnit(bus, *this), alu(), registers() {}
+CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(), registers() {}
 
 //destructor
 CPU::~CPU()

@@ -12,9 +12,9 @@ class RegisterFile;   // forward declaration
 class CU
 {
     public:
-        CU(Bus& bus, CPU& cpu);
+        CU(Bus& bus);
         ~CU();
-        RegisterFile& getRegisters();
+        //RegisterFile& getRegisters();
 
 
 
@@ -29,7 +29,6 @@ class CU
     private:
         Decoder decoder;
         Bus& bus; //reference to the bus
-        CPU& cpu; //reference to the CPU
 
         
 

@@ -1,5 +1,4 @@
-cerare di sistemare il codice in funzionde del bus e capire cosa afre con il clock
-sostituire punattori con riferimenti
+
 /////////// implemenatre sistem buss
 
 ////modificare grandezza memoria dal bus

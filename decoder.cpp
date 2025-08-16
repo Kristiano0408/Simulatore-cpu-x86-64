@@ -116,7 +116,7 @@ void Decoder::fixTotalLengthPrefix(InstructionInfo& info)
 
 
 
-Instruction* Decoder::decodeInstruction(InstructionInfo instruction, CU* controlUnit)
+Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
 {
     int position = 0;
 

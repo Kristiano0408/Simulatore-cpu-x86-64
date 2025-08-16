@@ -8,18 +8,18 @@
 #include "helpers.hpp"
 
 
-class CU;  // Forward declaration of CU
-class Memory;  // Forward declaration of Memory
+class Bus;
+class Memory;
 class Instruction;  // Forward declaration OF Instruction
 
 namespace operandFetch {
-    void fetchRM(Instruction* i, CU* controlUnit, Memory& ram);
-    void fetchMR(Instruction* i, CU* controlUnit, Memory& ram);
-    void fetchFD(Instruction* i, CU* controlUnit, Memory& ram);
-    void fetchTD(Instruction* i, CU* controlUnit, Memory& ram);
-    void fetchOI(Instruction* i, CU* controlUnit, Memory& ram, uint32_t opcode);
-    void fetchMI(Instruction* i, CU* controlUnit, Memory& ram);
-    uint64_t calculatingAddressR_M(Instruction* i, CU* controlUnit, Memory& ram);
+    void fetchRM(Instruction* i, Bus& bus);
+    void fetchMR(Instruction* i, Bus& bus);
+    void fetchFD(Instruction* i, Bus& bus);
+    void fetchTD(Instruction* i, Bus& bus);
+    void fetchOI(Instruction* i, Bus& bus, uint32_t opcode);
+    void fetchMI(Instruction* i, Bus& bus);
+    uint64_t calculatingAddressR_M(Instruction* i, Bus& bus);
 }
 
 class Operand 

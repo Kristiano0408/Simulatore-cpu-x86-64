@@ -1,15 +1,15 @@
 #include "operands.hpp"
 #include "instruction.hpp"
-#include "controlUnit.hpp"
+#include "cpu.hpp"
 #include "memory.hpp"
 #include <string>
 #include "registerFile.hpp"
-
+#include "bus.hpp"
 
 namespace operandFetch {
 
     //fetching RM operands 
-    void fetchRM(Instruction* i, CU* controlUnit, Memory& ram)
+    void fetchRM(Instruction* i, Bus& bus)
     {
         //declaring the registers (the type of the register is Register an enum class)
         Register source_register; 
@@ -28,8 +28,8 @@ namespace operandFetch {
             source_register = decodeRegisterReg(rm.reg, rex);
             destination_register = decodeRegisterRM(rm.r_m, rex, false);
 
-            auto sourceOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(source_register).raw());
-            auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(destination_register).raw());
+            auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(source_register).raw());
+            auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
 
 
             i->setSourceOperand(std::move(sourceOperand));
@@ -40,8 +40,8 @@ namespace operandFetch {
         }
 
         //Case 2: operation between register and memory
-    
-        uint64_t address {calculatingAddressR_M(i,controlUnit, ram)};
+
+        uint64_t address {calculatingAddressR_M(i, bus)};
 
         std ::cout<<std::hex << "Address: " << address <<  std::dec <<std::endl;
 
@@ -52,8 +52,8 @@ namespace operandFetch {
 
         
         //Source operand is an address and destination is a register
-        auto sourceOperand = std::make_unique<MemOperand>(ram, address);
-        auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(destination_register).raw());
+        auto sourceOperand = std::make_unique<MemOperand>(bus.getMemory(), address);
+        auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
@@ -61,7 +61,7 @@ namespace operandFetch {
 
     }
 
-    void fetchMR(Instruction* i, CU* controlUnit, Memory& ram)
+    void fetchMR(Instruction* i, Bus& bus)
     {
         //declaring the registers (the type of the register is Register an enum class)
         Register source_register; 
@@ -80,8 +80,8 @@ namespace operandFetch {
             destination_register = decodeRegisterRM(rm.r_m, rex, false);
 
             //operand constructors for source and destination operands
-            auto sourceOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(source_register).raw());
-            auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(destination_register).raw());
+            auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(source_register).raw());
+            auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
 
 
             //setting the source and destination operands
@@ -96,15 +96,15 @@ namespace operandFetch {
 
         //the address is calculated with the calculatingAddressR_M function 
         //and the address is set to the destination operand
-        uint64_t address {calculatingAddressR_M(i,controlUnit, ram)};
+        uint64_t address {calculatingAddressR_M(i, bus)};
 
         //the source is a register
         source_register = decodeRegisterReg(rm.reg, rex);
 
         //operand constructors for source and destination operands
-        auto sourceOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(source_register).raw());
-        auto destinationOperand = std::make_unique<MemOperand>(ram, address);
-        
+        auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(source_register).raw());
+        auto destinationOperand = std::make_unique<MemOperand>(bus.getMemory(), address);
+
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
@@ -112,13 +112,13 @@ namespace operandFetch {
 
     }
 
-    void fetchFD(Instruction* i, CU* controlUnit, Memory& ram)
+    void fetchFD(Instruction* i, Bus& bus)
     {
         //operand constructors for source and destination operands
 
         //the destination is a register aand the source is a memory address(displacement)
-        auto sourceOperand = std::make_unique<MemOperand>(ram, i->getDisplacement());
-        auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(Register::RAX).raw());
+        auto sourceOperand = std::make_unique<MemOperand>(bus.getMemory(), i->getDisplacement());
+        auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(Register::RAX).raw());
 
 
         i->setSourceOperand(std::move(sourceOperand));
@@ -126,20 +126,20 @@ namespace operandFetch {
     
     }
 
-    void fetchTD(Instruction* i, CU* controlUnit, Memory& ram)
+    void fetchTD(Instruction* i, Bus& bus)
     {
         //operand constructors for source and destination operands
 
         //the source is a register and the destination is a memory address(displacement)
-        auto sourceOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(Register::RAX).raw());
-        auto destinationOperand = std::make_unique<MemOperand>(ram, i->getDisplacement());
+        auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(Register::RAX).raw());
+        auto destinationOperand = std::make_unique<MemOperand>(bus.getMemory(), i->getDisplacement());
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
 
     }
 
-    void fetchOI(Instruction* i, CU* controlUnit, Memory& ram, uint32_t opcode)
+    void fetchOI(Instruction* i, Bus& bus, uint32_t opcode)
     {
         Register register_name[16] = {Register::RAX, Register::RCX, Register::RDX, Register::RBX, Register::RSP, Register::RBP, Register::RSI, Register::RDI,
                                     Register::R8,Register::R9, Register::R10, Register::R11, Register::R12, Register::R13, Register::R14, Register::R15};
@@ -157,15 +157,15 @@ namespace operandFetch {
         //operand constructors for destination operand 
         //the source is an immediate value and the destination is a register
         auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
-        auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(register_name[reg_index]).raw());
-        
+        auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(register_name[reg_index]).raw());
+
         i->setSourceOperand(std::move(sourceOperand)); // no source operand for immediate move
         i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the register
 
 
     }
 
-    void fetchMI(Instruction* i, CU* controlUnit, Memory& ram)
+    void fetchMI(Instruction* i, Bus& bus)
     {
         //getting the r/m byte
         r_m rm = i->getRM();
@@ -177,7 +177,7 @@ namespace operandFetch {
                 
                 
                 auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
-                auto destinationOperand = std::make_unique<RegOperand>(controlUnit->getRegisters().getReg(destination_register).raw());
+                auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
 
                 i->setSourceOperand(std::move(sourceOperand));
                 i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the register
@@ -186,11 +186,11 @@ namespace operandFetch {
 
         }
 
-        uint64_t address {calculatingAddressR_M(i,controlUnit, ram)};
+        uint64_t address {calculatingAddressR_M(i, bus)};
 
         //the source is an immediate value and the destination is a memory address
         auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
-        auto destinationOperand = std::make_unique<MemOperand>(ram, address);
+        auto destinationOperand = std::make_unique<MemOperand>(bus.getMemory(), address);
 
 
         i->setSourceOperand(std::move(sourceOperand)); // no source operand for immediate move
@@ -199,7 +199,7 @@ namespace operandFetch {
 
     }
 
-    uint64_t calculatingAddressR_M(Instruction* i, CU* controlUnit, Memory& ram)
+    uint64_t calculatingAddressR_M(Instruction* i, Bus& bus)
     {
         //getting the r/m byte
         r_m rm = i->getRM();
@@ -219,12 +219,12 @@ namespace operandFetch {
             if (rm.r_m == 0b101 && rm.mod == 0b00)
             {
                 //calculation of the address with  RIP displacement
-                return AddressCalculator::BaseDisplacementAddressing(controlUnit, Register::RIP, displacement);
+                return AddressCalculator::BaseDisplacementAddressing(bus, Register::RIP, displacement);
             }
             else
             {
                 //destination adress is in the register
-                return AddressCalculator::indirectAddressing(controlUnit, decodeRegisterRM(rm.r_m, rex, i->getHasSIB())) + displacement;
+                return AddressCalculator::indirectAddressing(bus, decodeRegisterRM(rm.r_m, rex, i->getHasSIB())) + displacement;
 
             }
         }
@@ -243,17 +243,17 @@ namespace operandFetch {
             //if the base is 0b101 and the index is not 0b100, base(displacement), index and scale addressing
             else if (sib.base == 0b101 && sib.index != 0b100 && rm.mod == 0b00)
             {
-                address = i->getSIBdisplacement() + AddressCalculator::BaseScaleAddressing(controlUnit, index, sib.scale);
+                address = i->getSIBdisplacement() + AddressCalculator::BaseScaleAddressing(bus, index, sib.scale);
             }
             //if the base is not 0b101 and the index is 0b100, normal base addressing
             else if (sib.base != 0b101 && sib.index == 0b100)
             {
-                address = AddressCalculator::BaseAddressing(controlUnit, base);
+                address = AddressCalculator::BaseAddressing(bus, base);
             }
             //if the base is not 0b101 and the index is not 0b100, base, index and scale addressing
             else
             {
-                address += AddressCalculator::BaseIndexScaleAddressing(controlUnit, base, index, sib.scale);
+                address += AddressCalculator::BaseIndexScaleAddressing(bus, base, index, sib.scale);
             }
 
             //if the mod is 0b01 or 0b10, there is a displacement to add
