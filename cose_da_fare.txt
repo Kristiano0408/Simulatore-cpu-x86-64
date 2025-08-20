@@ -1,6 +1,6 @@
 
-/////////// implemenatre sistem buss
-
+//vedere con lastaccesedtime DELLA cache
+//finire di sistemare cahce
 ////modificare grandezza memoria dal bus
 
 //flame grafh
@@ -17,7 +17,7 @@
 
 controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
-//modificare anche ram con reuslt !!!!!!
+!!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE AL CACHE MANAGER!!!
 
 
 

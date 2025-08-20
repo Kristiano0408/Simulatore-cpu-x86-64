@@ -77,7 +77,7 @@ int main()
 
     Instruction* instruction;
 
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 3; i++) {
         info = bus.getCPU().getControlUnit().fetchInstruction();
 
         cout << "Instruction size: " << info.instruction.size() << endl;
@@ -123,7 +123,7 @@ int main()
         std::cout << "R13: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R13).raw() << std::endl;
         std::cout << "R14: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R14).raw() << std::endl;
         std::cout << "R15: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R15).raw() << std::endl;
-        std::cout << "RIP: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RIP).raw() << std::endl;
+        std::cout << "RIP: " << std::dec << bus.getCPU().getRegisters().getReg(Register::RIP).raw() << std::endl;
 
         std::cout << "----------------------------------------" << std::endl;
     }
