@@ -11,8 +11,8 @@ static inline unsigned ilog2(uint64_t x) {
     return r;
 }
 
-CacheLevel::CacheLevel(uint64_t size, uint64_t associativity)
-    : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE))
+CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, Bus& bus)
+    : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus)
 {
     //resizing the vector of sets
     sets.resize(numSets);
@@ -142,7 +142,7 @@ void CacheLevel::printCacheState() const
 }
 
 
-uint64_t CacheLevel::findFreeLineIndex(const CacheSet& set)
+uint64_t CacheLevel::findFreeLineIndex(CacheSet& set)
 {
     for (uint64_t i = 0; i < set.lines.size(); ++i)
     {
@@ -154,7 +154,7 @@ uint64_t CacheLevel::findFreeLineIndex(const CacheSet& set)
     return manageReplacementPolicy(set);
 }
 
-uint64_t CacheLevel::manageReplacementPolicy(const CacheSet& set)
+uint64_t CacheLevel::manageReplacementPolicy(CacheSet& set)
 {
     uint64_t index = 0; // Initialize the index to 0
 
@@ -169,6 +169,17 @@ uint64_t CacheLevel::manageReplacementPolicy(const CacheSet& set)
         }
     }
 
+    //control for dirty lines
+    if (set.lines[index].dirty)
+    {
+        // Write back the dirty line
+        bus.getMemory().writeGeneric( (set.lines[index].tag * numSets + set.setIndex) * CACHE_LINE_SIZE, set.lines[index].data);
+
+        set.lines[index].dirty = false; // Mark the line as not dirty after writing back
+
+
+    }
+
     return index; // Return the index of the line to be replaced
 }
 
@@ -177,7 +188,7 @@ uint64_t CacheLevel::manageReplacementPolicy(const CacheSet& set)
 
 // CacheManager class implementation
 CacheManager::CacheManager(Bus& bus, uint64_t l1Size, uint64_t l1Associativity, uint64_t l2Size, uint64_t l2Associativity, uint64_t l3Size, uint64_t l3Associativity) 
-                         :L1Cache(l1Size, l1Associativity), L2Cache(l2Size, l2Associativity), L3Cache(l3Size, l3Associativity), bus(bus)
+                         :L1Cache(l1Size, l1Associativity, bus), L2Cache(l2Size, l2Associativity, bus), L3Cache(l3Size, l3Associativity, bus), bus(bus)
 {
     //nothing to do here
 

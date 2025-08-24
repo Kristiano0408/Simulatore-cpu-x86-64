@@ -415,11 +415,11 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
 
 
     // Try to write to L1 cache
-    Result<void> temporary_result = L1Cache.write(address, data); // Write to L1 cache
+    Result<T> temporary_result = L1Cache.write(address, data); // Write to L1 cache
 
     if(temporary_result.errorInfo.error == ErrorType::WRITE_FAIL)
     {
-        return temporary_result; // Return the result if there was an error in the write operation
+        return From_T_toVoid(temporary_result); // Return the result if there was an error in the write operation
     }
 
     if (temporary_result.success) // Check if the write was successful
@@ -427,7 +427,7 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
         //changing the event type from generic cache to l1 cache
         temporary_result.errorInfo.source = ComponentType::CACHE_L1; // Set the source to CACHE_L1
         
-        return temporary_result; // Return the result
+        return From_T_toVoid(temporary_result); // Return the result
     }
     else
     {
@@ -436,7 +436,7 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
 
         if(temporary_result.errorInfo.error == ErrorType::WRITE_FAIL)
         {
-            return temporary_result; // Return the result if there was an error in the write operation
+            return From_T_toVoid(temporary_result); // Return the result if there was an error in the write operation
         }
 
         // Check if the write was successful
@@ -453,7 +453,7 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
             //changing the event type from generic cache to l2 cache
             temporary_result.errorInfo.source = ComponentType::CACHE_L2; // Set the source to CACHE_L2
 
-            return temporary_result; // Return the result
+            return From_T_toVoid(temporary_result); // Return the result
         }
         else
         {
@@ -462,7 +462,7 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
 
             if(temporary_result.errorInfo.error == ErrorType::WRITE_FAIL)
             {
-                return temporary_result; // Return the result if there was an error in the write operation
+                return From_T_toVoid(temporary_result); // Return the result if there was an error in the write operation
             }
 
             // Check if the write was successful
@@ -487,7 +487,7 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
                 //changing the event type from generic cache to l3 cache
                 temporary_result.errorInfo.source = ComponentType::CACHE_L3; // Set the source to CACHE_L3
 
-                return temporary_result; // Return the result
+                return From_T_toVoid(temporary_result); // Return the result
 
             }
             else
@@ -522,7 +522,7 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
                     // Load the data into L1 cache
                     L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
 
-                    return temporary_result; // Return the result
+                    return From_T_toVoid(temporary_result); // Return the result
                 }
                 else
                 {
@@ -535,7 +535,7 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
                     temporary_result.errorInfo.message = "RAM access failed at address: " + std::to_string(address); // Set the message for debugging
                     temporary_result.errorInfo.error = ErrorType::WRITE_FAIL; // Set the error type to WRITE_FAIL
 
-                    return temporary_result; // Return the result
+                    return From_T_toVoid(temporary_result); // Return the result
 
                 }
             }

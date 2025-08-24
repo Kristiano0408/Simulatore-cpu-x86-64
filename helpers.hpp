@@ -108,6 +108,16 @@ T castTo(uint64_t value) {
     return static_cast<T>(value);
 }
 
+
+template<typename T>
+Result<void> From_T_toVoid (const Result<T>& r)
+{
+    Result<void> result_void;
+    result_void.success = r.success;
+    result_void.errorInfo = r.errorInfo;
+    return result_void;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct InstructionInfo {

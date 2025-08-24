@@ -1,5 +1,5 @@
 
-//vedere con lastaccesedtime DELLA cache
+//vedere WRITEBACK
 //finire di sistemare cahce
 ////modificare grandezza memoria dal bus
 
