@@ -39,12 +39,13 @@ class CacheLevel
 {
     private:
         std::vector<CacheSet> sets; // Cache sets
+        Bus &bus; // Reference to the bus for memory access
         uint64_t numSets;
         uint64_t associativity;
         uint64_t cacheSize;
 
     public:
-        CacheLevel(uint64_t size, uint64_t associativity);
+        CacheLevel(uint64_t size, uint64_t associativity, Bus& bus);
         ~CacheLevel();
         template <typename T>
         Result<T> read(uint64_t address);
@@ -56,8 +57,9 @@ class CacheLevel
         // Function to find a cache line in a set
         CacheLine* findLine(const CacheSet& set, uint64_t tag);
 
-        uint64_t manageReplacementPolicy(const CacheSet& set);
-        uint64_t findFreeLineIndex(const CacheSet& set);
+        uint64_t manageReplacementPolicy(CacheSet& set);
+        
+        uint64_t findFreeLineIndex(CacheSet& set);
 
         void invalidate(uint64_t address);
         void invalidateAll(); // Invalidate all lines in the cache
@@ -105,6 +107,27 @@ class CacheManager
 
 
 
+
+// Function to manage cache offset errors
+template<typename T>
+bool offset_cache(EventType event, ErrorType error, Result<T>& result, uint64_t offset, uint64_t address)
+{
+    if (offset + sizeof(T) > CACHE_LINE_SIZE)
+    {
+        result.success = false;
+        result.errorInfo.event = event;
+        result.errorInfo.source = ComponentType::CACHE;
+        result.errorInfo.message = "Read exceeds cache line boundary at address: " + std::to_string(address);
+        result.errorInfo.error = error;
+        return true; // Indicate that there was an error
+        
+    }
+    return false; // No error
+}
+
+
+
+
 //tempalte functions implementation
 
 template <typename T>
@@ -120,13 +143,8 @@ Result<T> CacheLevel::read(uint64_t address)
     uint64_t offset = address & ((1ULL << offsetBits) - 1); // Calculate the offset within the cache line
 
     //manage the offset for the read operation
-    if (offset + sizeof(T) > CACHE_LINE_SIZE)
+    if (offset_cache(EventType::CACHE_READ_ERROR, ErrorType::READ_FAIL, result, offset, address)) 
     {
-        result.success = false;
-        result.errorInfo.event = EventType::CACHE_READ_ERROR;
-        result.errorInfo.source = ComponentType::CACHE;
-        result.errorInfo.message = "Read exceeds cache line boundary at address: " + std::to_string(address);
-        result.errorInfo.error = ErrorType::READ_FAIL;
         return result;
     }
 
@@ -143,7 +161,7 @@ Result<T> CacheLevel::read(uint64_t address)
         // Read the data from the cache line
         std::memcpy(&result.data, &line->data[offset], sizeof(T)); // Copy the data from the cache line to the result
         
-        line->lastAccessTime++;
+        line->lastAccessTime = bus.clock.getCycles(); // Update the last access time
 
         // Set success to true
         result.success = true; 
@@ -190,12 +208,8 @@ Result<void> CacheLevel::write(uint64_t address, const T& data)
     uint64_t offset = address & ((1ULL << offsetBits) - 1); // Calculate the offset within the cache line
 
     //manage the offset for the write operation
-    if (offset + sizeof(T) > CACHE_LINE_SIZE) {
-        result.success = false;
-        result.errorInfo.event = EventType::CACHE_WRITE_ERROR;
-        result.errorInfo.source = ComponentType::CACHE;
-        result.errorInfo.message = "Write exceeds cache line boundary at address: " + std::to_string(address);
-        result.errorInfo.error = ErrorType::WRITE_FAIL;
+    if (offset_cache(EventType::CACHE_WRITE_ERROR, ErrorType::WRITE_FAIL, result, offset, address))
+    {
         return result;
     }
 
@@ -213,7 +227,7 @@ Result<void> CacheLevel::write(uint64_t address, const T& data)
         
         // Cache hit
         line->dirty = true; // Mark the line as dirty
-        line->lastAccessTime++; // Increment the last access time
+        line->lastAccessTime = bus.clock.getCycles(); // Update the last access time
 
         // Write the data to the cache line
         std::memcpy(&line->data[offset], &data, sizeof(T)); 
@@ -248,7 +262,6 @@ Result<void> CacheLevel::write(uint64_t address, const T& data)
     }
     
 }
-
 
 template <typename T>
 Result<T> CacheManager::read(uint64_t address)

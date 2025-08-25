@@ -4,12 +4,6 @@
 
 #include <iostream>
 
-// Utility function to compute log2 of power-of-two sizes
-static inline unsigned ilog2(uint64_t x) {
-    unsigned r = 0;
-    while (x >>= 1) ++r;
-    return r;
-}
 
 CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, Bus& bus)
     : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus)
@@ -49,7 +43,7 @@ void CacheLevel::load(uint64_t setIndex, uint64_t tag, const std::array<uint8_t,
     line.dirty = false; // Mark the line as not dirty
     line.tag = tag; // Set the tag
     line.data = data; // Load the data into the cache line
-    line.lastAccessTime++; // Increment the last access time
+    line.lastAccessTime = bus.getClock().getCycles(); // Update the last access time
 
     std::cout << "Loaded data into cache at set index: " << setIndex << ", tag: " << tag << std::endl; // Print the load message
 
@@ -80,6 +74,12 @@ void CacheLevel::invalidate(uint64_t address)
 
     for (CacheLine& line : set.lines) // Loop through the lines in the set
     {
+        //check if the line is dirty
+        if (line.dirty)
+        {
+            bus.getMemory().writeGeneric( (line.tag * numSets + setIndex) * CACHE_LINE_SIZE, line.data);
+        }
+
         if (line.valid && line.tag == tag) // Check if the line is valid and the tag matches
         {
             line.valid = false; // Invalidate the line
@@ -100,6 +100,12 @@ void CacheLevel::invalidateAll()
     {
         for (CacheLine& line : set.lines) // Loop through the lines in the set
         {
+            if (line.dirty) // Check if the line is dirty
+            {
+                // Write back the dirty line
+                bus.getMemory().writeGeneric( (line.tag * numSets + set.setIndex) * CACHE_LINE_SIZE, line.data);
+            }
+
             line.valid = false; // Invalidate the line
             line.dirty = false; // Mark the line as not dirty
         }
@@ -116,7 +122,7 @@ void CacheLevel::flush()
         {
             if (line.dirty) // Check if the line is dirty
             {
-                // Write back the data to memory (not implemented here)
+                bus.getMemory().writeGeneric( (line.tag * numSets + set.setIndex) * CACHE_LINE_SIZE, line.data);
                 line.dirty = false; // Mark the line as not dirty after flushing
             }
             line.valid = false; // Invalidate the line
@@ -184,8 +190,6 @@ uint64_t CacheLevel::manageReplacementPolicy(CacheSet& set)
 }
 
 
-
-
 // CacheManager class implementation
 CacheManager::CacheManager(Bus& bus, uint64_t l1Size, uint64_t l1Associativity, uint64_t l2Size, uint64_t l2Associativity, uint64_t l3Size, uint64_t l3Associativity) 
                          :L1Cache(l1Size, l1Associativity, bus), L2Cache(l2Size, l2Associativity, bus), L3Cache(l3Size, l3Associativity, bus), bus(bus)
@@ -222,3 +226,4 @@ void CacheManager::printCacheState() const
     L2Cache.printCacheState(); // Print L2 cache state
     L3Cache.printCacheState(); // Print L3 cache state
 }
+

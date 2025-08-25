@@ -118,6 +118,12 @@ Result<void> From_T_toVoid (const Result<T>& r)
     return result_void;
 }
 
+
+
+// Utility function to compute log2 of power-of-two sizes
+static inline unsigned ilog2(uint64_t x); 
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct InstructionInfo {

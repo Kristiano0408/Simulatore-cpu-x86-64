@@ -339,4 +339,10 @@ Register decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool hasSIB)
 
 }
 
-     
+
+// Utility function to compute log2 of power-of-two sizes
+static inline unsigned ilog2(uint64_t x) {
+    unsigned r = 0;
+    while (x >>= 1) ++r;
+    return r;
+}   

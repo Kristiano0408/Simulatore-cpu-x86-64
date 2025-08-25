@@ -1,5 +1,5 @@
 
-//vedere WRITEBACK
+//aganciare cahce a cpu
 //finire di sistemare cahce
 ////modificare grandezza memoria dal bus
 
