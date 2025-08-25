@@ -22,16 +22,19 @@ InstructionInfo CU::fetchInstruction()
     //take the value of istruction register
     uint64_t index = cpuRegisters.getReg(Register::RIP).raw();
     
-    //control the index of the instruction register
-    if (index + 15 > bus.getMemory().getSize()) {
-        throw std::out_of_range("Attempted to fetch instruction beyond memory bounds.");
-    }
-
+    //fetching the instruction from cache or memory
     std::array<uint8_t, 15> buffer {0}; //buffer for the instruction
 
-    //fetch the instruction from the memory
-    memcpy(buffer.data(), &bus.getMemory().getData()[index], 15);
-
+    for(int i = 0; i < 15; i++) {
+        
+        auto result = bus.getCPU().getCacheManager().read<uint8_t>(index + i); // Read a byte from the cache or memory
+        if (result.success) {
+            buffer[i] = result.data;
+        } else 
+        {
+            //exception that must be handled in the future
+        }
+    }
 
     std::vector<uint8_t> Instructionbytes; //bytes of the instruction()
     int byteCounter {0}; //counter of the byte (for IR)

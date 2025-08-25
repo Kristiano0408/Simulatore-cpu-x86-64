@@ -67,31 +67,38 @@ uint64_t Memory::getBasePointer() const
     return RBP;
 };
 
-void Memory::push(uint64_t value)
+Result<void> Memory::push(uint64_t value)
 {
+    Result<void> result;
     //controllo overflow
     if (RSP - 8 < size - size_stack) //check if the stack pointer is out of bounds
     {
         std::cerr << "Stack overflow!" << std::endl; //print error message
-        return; //return from the function
+        result.success = false;
+        result.errorInfo = {ComponentType::RAM, EventType::RAM_WRITE_ERROR, ErrorType::OUT_OF_BOUNDS, "Stack overflow!"};
+        return result;
     }
 
-
     RSP -= 8; //decrement the stack pointer
-    writeGeneric<uint64_t>(RSP, value); //write the value to the stack
+    result = writeGeneric<uint64_t>(RSP, value); //write the value to the stack
+    return result;
 };
 
-uint64_t Memory::pop()
+
+Result<uint64_t> Memory::pop()
 {
+    Result<uint64_t> result;
     //controllo underflow
     if (RSP > size - 8) //check if the stack pointer is out of bounds
     {
         std::cerr << "Stack underflow!" << std::endl; //print error message
-        return 0; //return 0 from the function
+        result.success = false;
+        result.errorInfo = {ComponentType::RAM, EventType::RAM_READ_ERROR, ErrorType::OUT_OF_BOUNDS, "Stack underflow!"};
+        return result;
     }
 
-
-    uint64_t value = readGeneric<uint64_t>(RSP); //read the value from the stack
+    result = readGeneric<uint64_t>(RSP); //read the value from the stack
     RSP += 8; //increment the stack pointer
-    return value; //return the value
+    return result;
 };
+

@@ -1,8 +1,8 @@
 #ifndef HELPERS_HPP
 #define HELPERS_HPP
-#include<cstdint> 
 #include<string>
 #include <vector> 
+#include <cstddef>
 
 //farward declaration of the enum class for registers
 enum class Register;
@@ -29,7 +29,6 @@ enum class ComponentType {
     CACHE_L2,
     CACHE_L3,
     RAM,
-    MEMORY,
     ALU,
     FPU,
     UNKNOWN
@@ -52,6 +51,8 @@ enum class EventType {
     ERROR,
     CACHE_READ_ERROR,
     CACHE_WRITE_ERROR,
+    RAM_READ_ERROR,
+    RAM_WRITE_ERROR
 };
 
 struct Error_Event_Info {
@@ -64,6 +65,13 @@ struct Error_Event_Info {
 template<typename T>
 struct Result {
     T data;
+    bool success;
+    Error_Event_Info errorInfo; // Error information if any
+};
+
+//specialization for void
+template<>
+struct Result<void> {
     bool success;
     Error_Event_Info errorInfo; // Error information if any
 };
@@ -121,7 +129,15 @@ Result<void> From_T_toVoid (const Result<T>& r)
 
 
 // Utility function to compute log2 of power-of-two sizes
-static inline unsigned ilog2(uint64_t x); 
+inline unsigned ilog2(uint64_t x)
+{
+    return (x == 1) ? 0 : 1 + ilog2(x >> 1);
+}
+
+constexpr unsigned ilog2_constexpr(uint64_t x)
+{
+    return (x == 1) ? 0 : 1 + ilog2_constexpr(x >> 1);
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////

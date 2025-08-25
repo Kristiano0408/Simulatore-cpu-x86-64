@@ -11,7 +11,7 @@
 #include "controlUnit.hpp"
 #include "alu.hpp"
 #include "registerFile.hpp"
-
+#include "cacheManager.hpp"
 
 
 class CPU
@@ -25,6 +25,15 @@ class CPU
         ALU alu; //arithmetic logic unit
         RegisterFile registers; //register file of the CPU
 
+        uint64_t L1_cache_size = 16;
+        uint64_t L2_cache_size = 32;
+        uint64_t L3_cache_size = 64;
+        uint64_t L1_cache_assoc = 2;
+        uint64_t L2_cache_assoc = 4;
+        uint64_t L3_cache_assoc = 8;
+
+        CacheManager cacheManager;
+
         CPUState state = CPUState::FETCH; //current state of the CPU
 
         InstructionInfo  current_instruction; //current instruction fetched from memory
@@ -32,8 +41,8 @@ class CPU
 
 
     public:
-        
-        //constructor that receives a pointer to the memory
+
+        //constructor that receives a pointer to the bus
         CPU(Bus& bus);
         ~CPU();
 
@@ -50,9 +59,8 @@ class CPU
         
         CU& getControlUnit();
 
-        
-    
-        
+        CacheManager& getCacheManager();
+
 };
 
 

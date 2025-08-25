@@ -1,8 +1,10 @@
 #ifndef CACHEMANAGER_HPP
 #define CACHEMANAGER_HPP
 #include <cstdint>
+#include <cstring>
 #include <vector>
 #include <array>
+#include <iostream>
 #include "helpers.hpp"
 
 class Bus;
@@ -137,8 +139,8 @@ Result<T> CacheLevel::read(uint64_t address)
     Result<T> result;
 
     //bitwise index/tag calculation
-    constexpr unsigned offsetBits = ilog2(CACHE_LINE_SIZE); // Calculate the number of bits for the offset
-    constexpr unsigned indexBits = ilog2(numSets); // Calculate the number of bits for the index
+    constexpr unsigned offsetBits = ilog2_constexpr(CACHE_LINE_SIZE); // Calculate the number of bits for the offset
+    unsigned indexBits = ilog2(numSets); // Calculate the number of bits for the index
 
     uint64_t offset = address & ((1ULL << offsetBits) - 1); // Calculate the offset within the cache line
 
@@ -160,8 +162,8 @@ Result<T> CacheLevel::read(uint64_t address)
 
         // Read the data from the cache line
         std::memcpy(&result.data, &line->data[offset], sizeof(T)); // Copy the data from the cache line to the result
-        
-        line->lastAccessTime = bus.clock.getCycles(); // Update the last access time
+
+        line->lastAccessTime = bus.getClock().getCycles(); // Update the last access time
 
         // Set success to true
         result.success = true; 
@@ -202,8 +204,8 @@ Result<void> CacheLevel::write(uint64_t address, const T& data)
     // Create a result structure for the write operation
     Result<void> result;
 
-    constexpr unsigned offsetBits = ilog2(CACHE_LINE_SIZE); // Calculate the number of bits for the offset
-    constexpr unsigned indexBits = ilog2(numSets); // Calculate the number of bits for the index
+    constexpr unsigned offsetBits = ilog2_constexpr(CACHE_LINE_SIZE); // Calculate the number of bits for the offset
+    unsigned indexBits = ilog2(numSets); // Calculate the number of bits for the index
 
     uint64_t offset = address & ((1ULL << offsetBits) - 1); // Calculate the offset within the cache line
 
@@ -227,7 +229,7 @@ Result<void> CacheLevel::write(uint64_t address, const T& data)
         
         // Cache hit
         line->dirty = true; // Mark the line as dirty
-        line->lastAccessTime = bus.clock.getCycles(); // Update the last access time
+        line->lastAccessTime = bus.getClock().getCycles(); // Update the last access time
 
         // Write the data to the cache line
         std::memcpy(&line->data[offset], &data, sizeof(T)); 
@@ -358,7 +360,7 @@ Result<T> CacheManager::read(uint64_t address)
             else
             {
                 // Cache miss in L3, read from RAM
-                temporary_result = bus.getMemory().readGeneric<T>(address); // Read from RAM
+                temporary_result = bus.getMemory().template readGeneric<T>(address); // Read from RAM
 
                 // Check if the read was successful
                 if(temporary_result.success)

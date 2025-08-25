@@ -5,6 +5,8 @@
 #include <vector>
 #include <cstring>
 #include <iostream>
+#include "helpers.hpp"
+
 
 
 class Bus; // Forward declaration of Bus class
@@ -16,31 +18,44 @@ public:
 
     //methods for reading and writing from memory
     template <typename T>
-    T readGeneric(uint64_t address) 
+    Result<T> readGeneric(uint64_t address) 
     {
+        Result<T> result;
         if (address + sizeof(T) > size) //check if the address is out of bounds
         {
             std::cerr << "Memory access out of bounds!" << std::endl; //print error message
-            return 0; //return 0 from the function
+            result.success = false;
+            result.errorInfo = {ComponentType::RAM, EventType::RAM_READ_ERROR, ErrorType::OUT_OF_BOUNDS, "Memory access out of bounds!"};
+            return result;
         }
 
         T value = 0;
         std::memcpy(&value, &data[address], sizeof(T));
-        return value;
+        result.success = true;
+        result.data = value;
+        result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
+        return result;
     }
 
     template <typename T>
-    void writeGeneric(uint64_t address, T value) 
+    Result<void> writeGeneric(uint64_t address, T value) 
     {
+        Result<void> result;
+
         if (address + sizeof(T) > size) //check if the address is out of bounds
         {
             std::cerr << "Memory access out of bounds!" << std::endl; //print error message
-            return; //return from the function
+            result.success = false;
+            result.errorInfo = {ComponentType::RAM, EventType::RAM_WRITE_ERROR, ErrorType::OUT_OF_BOUNDS, "Memory access out of bounds!"};
+            return result;
         }
 
-
         std::memcpy(&data[address], &value, sizeof(T));
-    }
+        result.success = true;
+        result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
+        return result;
+        }
+
 
     //get the size of the memory
     size_t getSize() const;
@@ -68,9 +83,9 @@ public:
     void setBasePointer(uint64_t value);
 
     //push and pop methods for the stack
-    void push(uint64_t value);
+    Result<void> push(uint64_t value);
 
-    uint64_t pop();
+    Result<uint64_t> pop();
 
 
 

@@ -49,8 +49,8 @@ class EmptyOperand : public Operand {
     
     public:
         EmptyOperand() = default;
-    
-        void setValue(uint64_t v) override {}
+
+        void setValue([[maybe_unused]] uint64_t v) override {}
         uint64_t getValue() override { return 0; }
 };
 

@@ -1,6 +1,7 @@
+!!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE AL CACHE MANAGER e ram!!!
 
-//aganciare cahce a cpu
-//finire di sistemare cahce
+//funzioni per modificare grandezza rame e cache
+//finire di sistemare cahce (errori compilazione)
 ////modificare grandezza memoria dal bus
 
 //flame grafh
@@ -13,11 +14,11 @@
 
 //alto livello: separazione tra instruction e visitor
 
-//cache (flsuh e writeback delle liene dirty)
+
 
 controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
-!!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE AL CACHE MANAGER!!!
+
 
 
 

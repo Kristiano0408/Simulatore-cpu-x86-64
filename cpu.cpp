@@ -1,7 +1,7 @@
 #include "cpu.hpp"
 
-//constructor that receives a pointer to the memory
-CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(), registers() {}
+//constructor for the CPU
+CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(), registers(), cacheManager(bus, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc) {}
 
 //destructor
 CPU::~CPU()
@@ -28,6 +28,11 @@ CU& CPU::getControlUnit()
 RegisterFile& CPU::getRegisters()
 {
     return registers;
+}
+
+CacheManager& CPU::getCacheManager()
+{
+    return cacheManager;
 }
 
 //cpu operations
