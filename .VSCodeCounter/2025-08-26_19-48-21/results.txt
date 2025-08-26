@@ -1,0 +1,57 @@
+Date : 2025-08-26 19:48:21
+Directory : /home/franco/Documents/GitHub/Simulatore-cpu-x86-64
+Total : 32 files,  2865 codes, 746 comments, 1295 blanks, all 4906 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C++      |         31 |      2,864 |        746 |      1,293 |      4,903 |
+| Markdown |          1 |          1 |          0 |          2 |          3 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                         | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                            |         32 |      2,865 |        746 |      1,295 |      4,906 |
++------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                     | language | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/README.md                | Markdown |          1 |          0 |          2 |          3 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/addressCalculator.cpp    | C++      |         62 |          0 |         34 |         96 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/addressCalculator.hpp    | C++      |         21 |          0 |         17 |         38 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/alu.cpp                  | C++      |          7 |          2 |          2 |         11 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/alu.hpp                  | C++      |         12 |        152 |          8 |        172 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/bus.cpp                  | C++      |         12 |          0 |          7 |         19 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/bus.hpp                  | C++      |         21 |          0 |          7 |         28 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/cacheManager.cpp         | C++      |        164 |         15 |         51 |        230 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/cacheManager.hpp         | C++      |        316 |         88 |        158 |        562 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/clock.cpp                | C++      |          7 |          0 |          3 |         10 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/clock.hpp                | C++      |         11 |          0 |          4 |         15 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/controlUnit.cpp          | C++      |        219 |         98 |        120 |        437 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/controlUnit.hpp          | C++      |         26 |          2 |         26 |         54 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/cpu.cpp                  | C++      |         47 |         44 |         14 |        105 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/cpu.hpp                  | C++      |         39 |          5 |         25 |         69 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/decoder.cpp              | C++      |        272 |         40 |        118 |        430 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/decoder.hpp              | C++      |         29 |         11 |         29 |         69 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/helpers.cpp              | C++      |        297 |          0 |         47 |        344 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/helpers.hpp              | C++      |        126 |          7 |         43 |        176 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/instruction.cpp          | C++      |        248 |         20 |        133 |        401 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/instruction.hpp          | C++      |         97 |         10 |         55 |        162 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/instruction_code_map.cpp | C++      |         47 |          2 |         21 |         70 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/instruction_code_map.hpp | C++      |         32 |         10 |         23 |         65 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/memory.cpp               | C++      |         72 |          9 |         24 |        105 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/memory.hpp               | C++      |         63 |         11 |         33 |        107 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/opcode_map.cpp           | C++      |         42 |         40 |         15 |         97 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/operands.cpp             | C++      |        216 |         50 |        105 |        371 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/operands.hpp             | C++      |         63 |          2 |         29 |         94 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/prova.cpp                | C++      |         90 |         98 |         48 |        236 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/prova2.cpp               | C++      |         99 |         16 |         28 |        143 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/registerFile.cpp         | C++      |         50 |          7 |         25 |         82 |
+| /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/registerFile.hpp         | C++      |         57 |          7 |         41 |        105 |
+| Total                                                                        |          |      2,865 |        746 |      1,295 |      4,906 |
++------------------------------------------------------------------------------+----------+------------+------------+------------+------------+

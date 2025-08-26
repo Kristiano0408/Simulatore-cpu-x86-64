@@ -6,9 +6,9 @@
 #include <array>
 #include <iostream>
 #include "helpers.hpp"
+#include "bus.hpp"
+#include "memory.hpp"
 
-class Bus;
-class Memory;
 
 constexpr unsigned CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
 
@@ -41,10 +41,11 @@ class CacheLevel
 {
     private:
         std::vector<CacheSet> sets; // Cache sets
-        Bus &bus; // Reference to the bus for memory access
-        uint64_t numSets;
-        uint64_t associativity;
         uint64_t cacheSize;
+        uint64_t associativity;
+        uint64_t numSets;
+        Bus &bus; // Reference to the bus for memory access
+        
 
     public:
         CacheLevel(uint64_t size, uint64_t associativity, Bus& bus);
@@ -277,7 +278,7 @@ Result<T> CacheManager::read(uint64_t address)
     uint64_t l3SetIndex = (address / CACHE_LINE_SIZE) % L3Cache.getNumSets(); // Calculate the L3 set index
     uint64_t l3Tag = address / (CACHE_LINE_SIZE * L3Cache.getNumSets()); // Calculate the L3 tag
 
-    uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
+    //uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
 
 
     // Try to read from L1 cache

@@ -81,7 +81,7 @@ int main()
         info = bus.getCPU().getControlUnit().fetchInstruction();
 
         cout << "Instruction size: " << info.instruction.size() << endl;
-        for (int j = 0; j < info.instruction.size(); j++) {
+        for (size_t j = 0; j < info.instruction.size(); j++) {
             cout << "Byte: " << hex << static_cast<int>(info.instruction[j]) << endl;
         }
         instruction = bus.getCPU().getControlUnit().decodeInstruction(info);

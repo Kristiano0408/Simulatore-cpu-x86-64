@@ -1,7 +1,10 @@
 !!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE AL CACHE MANAGER e ram!!!
 
+//ACCEDERE SEMPRE A CAHCE PRIMA DI RAM
 //funzioni per modificare grandezza rame e cache
 //finire di sistemare cahce (errori compilazione)
+//SPECIALIZZAZIOEN RAED/WRITE MEM CONA aRRAY
+//gestire size(T) (offset soparttuto) CON ARRAY 64 BYTE
 ////modificare grandezza memoria dal bus
 
 //flame grafh

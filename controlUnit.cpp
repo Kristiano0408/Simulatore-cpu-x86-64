@@ -23,18 +23,30 @@ InstructionInfo CU::fetchInstruction()
     uint64_t index = cpuRegisters.getReg(Register::RIP).raw();
     
     //fetching the instruction from cache or memory
-    std::array<uint8_t, 15> buffer {0}; //buffer for the instruction
 
-    for(int i = 0; i < 15; i++) {
-        
-        auto result = bus.getCPU().getCacheManager().read<uint8_t>(index + i); // Read a byte from the cache or memory
-        if (result.success) {
-            buffer[i] = result.data;
-        } else 
-        {
+
+    std::array<uint8_t, 64> line_buffer {0}; //buffer for the line 
+    std::array<uint8_t, 15> buffer {0}; //buffer for the instruction (max length of an instruction is 15 bytes)
+
+    //alligned index for the cache line(fetching a complete line)
+   
+    uint64_t offset = index % 64;
+    uint64_t alligned_index = index - offset;
+
+
+
+    // Read a line from the cache or memory
+    auto result = bus.getCPU().getCacheManager().read<std::array<uint8_t, 64>>(alligned_index);
+
+    if (result.success)
+        std::memcpy(line_buffer.data(), result.data.data(), line_buffer.size());
+    else 
+    {
             //exception that must be handled in the future
-        }
     }
+
+    //extracting all the possible 15 instruction bytes
+    std::memcpy(buffer.data(), line_buffer.data() + offset, 15);
 
     std::vector<uint8_t> Instructionbytes; //bytes of the instruction()
     int byteCounter {0}; //counter of the byte (for IR)
@@ -76,7 +88,7 @@ InstructionInfo CU::fetchInstruction()
 
         Instructionbytes.push_back(byteRM); //add the byte to the instruction bytes
 
-        searchingSIB_Displacement(buffer, Instructionbytes, info, byteCounter, rm, index);
+        searchingSIB_Displacement(buffer, Instructionbytes, info, byteCounter, rm);
 
         
 
@@ -108,7 +120,7 @@ InstructionInfo CU::fetchInstruction()
 
     std::cout << "Instruction: " << std::endl;
 
-    for (int i = 0; i < info.instruction.size(); i++)
+    for (size_t i = 0; i < info.instruction.size(); i++)
     {
         std::cout << "Byte: " << std::hex << static_cast<int>(info.instruction[i]) << std::endl;
     }
@@ -176,7 +188,8 @@ void CU::fetchRemainingBytes(std::array<uint8_t, 15>& buffer, std::vector<uint8_
 }
 
 //function for searching the SIB and displacement
-void CU::searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm, uint64_t index) {
+void CU::searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm) 
+{
     
     
     uint8_t byte;
