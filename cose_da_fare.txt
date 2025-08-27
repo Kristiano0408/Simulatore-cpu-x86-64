@@ -1,6 +1,7 @@
 !!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE AL CACHE MANAGER e ram!!!
 
-//ACCEDERE SEMPRE A CAHCE PRIMA DI RAM
+//ristuttuarre cache read(prendere il pezzo enecsaario dentro alal ache diretatmenet senza farlo fuori), poi fixare opeardn e fetch istruzione
+//ACCEDERE SEMPRE A CAHCE PRIMA DI RAM(fix operand)
 //funzioni per modificare grandezza rame e cache
 //finire di sistemare cahce (errori compilazione)
 //SPECIALIZZAZIOEN RAED/WRITE MEM CONA aRRAY

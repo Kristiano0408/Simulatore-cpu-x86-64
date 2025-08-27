@@ -287,15 +287,18 @@ int Operand::getSize() const {
 
 
 
-void RegOperand::setValue(uint64_t v) {
+Result<void> RegOperand::setValue(uint64_t v) 
+{
     this->reg = v;
+    return Result<void>{true, {}};
 }
 
-uint64_t RegOperand::getValue() {
-    return this->reg;
+Result<uint64_t> RegOperand::getValue() 
+{
+    return Result<uint64_t>{this->reg, true};
 }
 
-void MemOperand::setValue(uint64_t v) {
+Result<void> MemOperand::setValue(uint64_t v) {
     
 
     /*else if (this->address == 0)
@@ -303,60 +306,90 @@ void MemOperand::setValue(uint64_t v) {
         throw std::invalid_argument("Address is null. Cannot set value.");
     }*/
     if (this->size == 0)
-    {
-        throw std::invalid_argument("Size is null. Cannot set value.");
+    {   
+        return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot set value."}};
     }
     else
     {
         switch (size)
         {
             case 8:
-                this->mem.writeGeneric<uint8_t>(this->address, static_cast<uint8_t>(v));
-                break;
-            
+                return this->cache.write<uint8_t>(this->address, static_cast<uint8_t>(v));
+
             case 16:
-                this->mem.writeGeneric<uint16_t>(this->address, static_cast<uint16_t>(v));
-                break;
-            
+                return this->cache.write<uint16_t>(this->address, static_cast<uint16_t>(v));
+
             case 32:
-                this->mem.writeGeneric<uint32_t>(this->address, static_cast<uint32_t>(v));
-                break;
-            
+                return this->cache.write<uint32_t>(this->address, static_cast<uint32_t>(v));
+
             case 64:
-                this->mem.writeGeneric<uint64_t>(this->address, v);
-                break;
+                return this->cache.write<uint64_t>(this->address, v);
 
         }
     }
 }
 
-uint64_t MemOperand::getValue() {
+Result<uint64_t> MemOperand::getValue() {
     /*else if (this->address == 0)
     {
         throw std::invalid_argument("Address is null. Cannot get value.");
     }*/
     if (this->size == 0)
     {
-        throw std::invalid_argument("Size is null. Cannot get value.");
+        return Result<uint64_t>{0,false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot get value."}};
     }
     else
     {
-        switch (size)
+        //extarcting value first from cache, the from memory if necessary
+        
+
+        //calculating the start of the line and the offset
+        uint64_t offset = address % CACHE_LINE_SIZE;
+        uint64_t lineStart = address - offset;
+
+        uint64_t real_value; //we fetch always more than we need(always a cache line)
+
+        Result<std::array<uint8_t,CACHE_LINE_SIZE>> result =cache.read<std::array<uint8_t,CACHE_LINE_SIZE>>(lineStart);
+        Result<uint64_t> final_result;
+
+        switch(size)
         {
             case 8:
-                return this->mem.readGeneric<uint8_t>(this->address);
+                if (result.success) 
+                {
+                    std::memcpy(&real_value, result.data.data() + offset, 1);
+                    final_result = Result<uint64_t>{real_value, true, result.errorInfo};
+                    
+                   
+                }
+                return final_result;
 
             case 16:
-                return this->mem.readGeneric<uint16_t>(this->address);
+                if (result.success) 
+                {
+                    std::memcpy(&real_value, result.data.data() + offset, 2);
+                    final_result = Result<uint64_t>{real_value, true, result.errorInfo};
+                }
+                return final_result;
 
             case 32:
-                return this->mem.readGeneric<uint32_t>(this->address);
+                if (result.success) 
+                {
+                    std::memcpy(&real_value, result.data.data() + offset, 4);
+                    final_result = Result<uint64_t>{real_value, true, result.errorInfo};
+                }
+                return final_result;
 
             case 64:
-                return this->mem.readGeneric<uint64_t>(this->address);
+                if (result.success) 
+                {
+                    std::memcpy(&real_value, &result.data + offset, 8);
+                    final_result = Result<uint64_t>{real_value, true, result.errorInfo};
+                }
+                return final_result;
 
             default:
-                return 0; // or throw an exception
+                return Result<uint64_t>{0, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE, "Invalid size. Cannot get value."}};
         }
     }
 }

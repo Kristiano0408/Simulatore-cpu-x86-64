@@ -29,6 +29,7 @@ enum class ComponentType {
     CACHE_L2,
     CACHE_L3,
     RAM,
+    OPERAND,
     ALU,
     FPU,
     UNKNOWN
@@ -37,6 +38,7 @@ enum class ComponentType {
 enum class ErrorType {
     NONE,
     INVALID_ADDRESS,
+    INVALID_SIZE,
     OUT_OF_BOUNDS,
     WRITE_FAIL,
     READ_FAIL,

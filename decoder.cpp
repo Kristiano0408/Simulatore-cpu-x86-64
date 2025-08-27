@@ -104,7 +104,7 @@ void Decoder::fixTotalLengthPrefix(InstructionInfo& info)
         info.totalLength += 1;
     }
 
-    for (int i = 0; i < info.prefixCount; i++)
+    for (size_t i = 0; i < info.prefixCount; i++)
     {
         if (info.prefix[i] != 0)
         {
@@ -269,7 +269,7 @@ void Decoder::decodeImmediateValue(InstructionInfo instructionInfo, Instruction*
 {
     uint64_t value = 0;
     //decode the immediate value
-    for (int i = 0; i < instructionInfo.operandLength; i++)
+    for (size_t i = 0; i < instructionInfo.operandLength; i++)
     {
         value |= static_cast<uint64_t>(instructionInfo.instruction[position + i]) << (i * 8);
     }
@@ -313,7 +313,6 @@ uint64_t Decoder::decodeDisplacement(InstructionInfo instruction, int& position,
 void Decoder::decode_RM_instruction(Instruction* instruction, InstructionInfo instructionInfo, int& position)
 {
     uint64_t displacement = 0;
-    uint64_t value = 0;
 
 
 

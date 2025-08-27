@@ -29,13 +29,17 @@ public:
             return result;
         }
 
-        T value = 0;
+        T value {};
         std::memcpy(&value, &data[address], sizeof(T));
         result.success = true;
         result.data = value;
         result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
         return result;
     }
+
+    
+
+
 
     template <typename T>
     Result<void> writeGeneric(uint64_t address, T value) 

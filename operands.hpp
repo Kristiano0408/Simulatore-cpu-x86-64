@@ -28,8 +28,8 @@ class Operand
         Operand() : size(0) {} // Default constructor initializing size to 0
         void setSize(int s);
         int getSize() const;
-        virtual void setValue(uint64_t v) = 0; // Pure virtual function
-        virtual uint64_t getValue() = 0; // Pure virtual function
+        virtual Result<void> setValue(uint64_t v) = 0; // Pure virtual function
+        virtual Result<uint64_t> getValue() = 0; // Pure virtual function
 
 
 
@@ -50,16 +50,16 @@ class EmptyOperand : public Operand {
     public:
         EmptyOperand() = default;
 
-        void setValue([[maybe_unused]] uint64_t v) override {}
-        uint64_t getValue() override { return 0; }
+        Result<void> setValue([[maybe_unused]] uint64_t v) override { return {}; }
+        Result<uint64_t> getValue() override { return {}; }
 };
 
 class RegOperand : public Operand 
 {
     public:
         RegOperand(uint64_t& reg) : reg(reg) {} // Constructor to initialize register reference
-        void setValue(uint64_t v) override ;
-        uint64_t getValue() override ;
+        Result<void> setValue(uint64_t v) override;
+        Result<uint64_t> getValue() override;
 
     private:
         uint64_t& reg; // Reference to the register value
@@ -69,12 +69,12 @@ class RegOperand : public Operand
 class MemOperand : public Operand 
 {
     public:
-        MemOperand(Memory& mem, uint64_t address) : mem(mem), address(address) {} // Constructor to initialize memory and address
-        void setValue(uint64_t v) override ;
-        uint64_t getValue() override ;
+        MemOperand(CacheManager& cache, uint64_t address) : cache(cache), address(address) {} // Constructor to initialize memory and address
+        Result<void> setValue(uint64_t v) override;
+        Result<uint64_t> getValue() override;
 
     private:
-        Memory& mem; // Reference to the memory object
+        CacheManager& cache; // Reference to the cache manager
         uint64_t address; // Address in memory
 };
 
@@ -82,8 +82,8 @@ class ImmediateOperand : public Operand
 {
     public:
         ImmediateOperand(uint64_t value) : value(value) {} // Constructor to initialize immediate value
-        void setValue(uint64_t v) override ;
-        uint64_t getValue() override ;
+        Result<void> setValue(uint64_t v) override;
+        Result<uint64_t> getValue() override;
 
     private:
         uint64_t value; // Immediate value

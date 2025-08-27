@@ -6,8 +6,8 @@
 
 Instruction::Instruction()
 {
-    rm = {0, 0, 0};
-    sib = {0, 0, 0};
+    rm = {0, 0, 0, 0};
+    sib = {0, 0, 0, 0};
     hasDisplacement = false;
     hasImmediate = false;
     hasModRM = false;
@@ -31,28 +31,35 @@ Instruction::Instruction()
 Instruction::~Instruction() {
 }
 
-void Instruction::execute(Bus& bus) {
+void Instruction::execute([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
 }
 
-void Instruction::setOpcode(uint32_t opcode) {
+void Instruction::setOpcode(uint32_t opcode) 
+{
     this->opcode = opcode;
 }
 
-uint32_t Instruction::getOpcode() {
+uint32_t Instruction::getOpcode() 
+{
     return opcode;
 }
 
-void Instruction::setPrefix(uint8_t prefix[4]) {
+void Instruction::setPrefix(uint8_t prefix[4]) 
+{
     for (int i = 0; i < 4; i++) {
         this->prefix[i] = prefix[i];
     }
 }
 
-uint8_t* Instruction::getPrefix() {
+uint8_t* Instruction::getPrefix() 
+{
     return prefix;
 }
 
-void Instruction::setNumPrefixes(int numPrefixes) {
+void Instruction::setNumPrefixes(int numPrefixes) 
+{
     this->numPrefixes = numPrefixes;
 }
 
@@ -303,7 +310,7 @@ void MoveInstruction::fetchOperands(Bus& bus) {
 }
 
 // Move instruction
-void MoveInstruction::execute(Bus& bus) 
+void MoveInstruction::execute([[maybe_unused]] Bus& bus) 
 {
 
     //setting the size of the operands
