@@ -1,6 +1,8 @@
 !!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE AL CACHE MANAGER e ram!!!
 
-//ristuttuarre cache read(prendere il pezzo enecsaario dentro alal ache diretatmenet senza farlo fuori), poi fixare opeardn e fetch istruzione
+, poi fixare opeardn e fetch istruzione
+
+//RIVEDER WRITE TROUGHT(DVO AFRE WRITE BAKC, CARICO D SOTTO E SCRVIO, NON SCRIVO SOTTO E CARICO)
 //ACCEDERE SEMPRE A CAHCE PRIMA DI RAM(fix operand)
 //funzioni per modificare grandezza rame e cache
 //finire di sistemare cahce (errori compilazione)
