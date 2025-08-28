@@ -2,7 +2,7 @@
 
 , poi fixare opeardn e fetch istruzione
 
-//RIVEDER WRITE TROUGHT(DVO AFRE WRITE BAKC, CARICO D SOTTO E SCRVIO, NON SCRIVO SOTTO E CARICO)
+//RIVEDER management policy ( quando cerco dis crivere , prendo dal livello sucesivo e la liena sostituita non al scrivo in ram ma al livello sotto)
 //ACCEDERE SEMPRE A CAHCE PRIMA DI RAM(fix operand)
 //funzioni per modificare grandezza rame e cache
 //finire di sistemare cahce (errori compilazione)

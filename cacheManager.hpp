@@ -127,10 +127,6 @@ bool offset_cache(EventType event, ErrorType error, Result<T>& result, uint64_t 
     return false; // No error
 }
 
-//
-
-
-
 
 //tempalte functions implementation (cachelevel:read is the only one that dont need it,cus it always read an entire line)
 
@@ -384,8 +380,11 @@ Result<T> CacheManager::read(uint64_t address)
             }
             else
             {
+                //calculating the start of the line
+                uint64_t lineStart = address - offset;
+
                 // Cache miss in L3, read from RAM
-                temporary_result = bus.getMemory().template readGeneric<std::array<uint8_t, CACHE_LINE_SIZE>>(address); // Read from RAM
+                temporary_result = bus.getMemory().template readGeneric<std::array<uint8_t, CACHE_LINE_SIZE>>(lineStart); // Read from RAM
 
                 // Check if the read was successful
                 if(temporary_result.success)
@@ -457,133 +456,109 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
 
     uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
 
+    Result<std::array<uint8_t,CACHE_LINE_SIZE>,CACHE_LINE_SIZE> read_result;
 
     // Try to write to L1 cache
-    Result<T> temporary_result = L1Cache.write(address, data); // Write to L1 cache
+    Result<void>result = L1Cache.write(address, data); // Write to L1 cache
 
-    if(temporary_result.errorInfo.error == ErrorType::WRITE_FAIL)
+    if(result.errorInfo.error == ErrorType::WRITE_FAIL)
     {
-        return From_T_toVoid(temporary_result); // Return the result if there was an error in the write operation
+        return result;
     }
 
-    if (temporary_result.success) // Check if the write was successful
+    if (result.success) // Check if the write was successful
     {
-        //changing the event type from generic cache to l1 cache
-        temporary_result.errorInfo.source = ComponentType::CACHE_L1; // Set the source to CACHE_L1
-        
-        return From_T_toVoid(temporary_result); // Return the result
+        return result;
     }
     else
     {
-        // Cache miss in L1, try L2 cache
-        temporary_result = L2Cache.write(address, data); // Write to L2 cache
+        //searching the line in L2
+        read_result = L2Cache.read(address);
 
-        if(temporary_result.errorInfo.error == ErrorType::WRITE_FAIL)
+        if(read_result.success)
         {
-            return From_T_toVoid(temporary_result); // Return the result if there was an error in the write operation
-        }
-
-        // Check if the write was successful
-        if(temporary_result.success)
-        {
-            //load the data into L1 cache
-
             // Find a free line in L1 cache
             uint64_t freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
 
             // Load the data into L1 cache
-            L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+            L1Cache.load(l1SetIndex, l1Tag, read_result.data, freePosition); // Load the data into L1 cache
 
-            //changing the event type from generic cache to l2 cache
-            temporary_result.errorInfo.source = ComponentType::CACHE_L2; // Set the source to CACHE_L2
+            result = L1Cache.write(address, data); // Write to L2 cache
 
-            return From_T_toVoid(temporary_result); // Return the result
+            return result;
         }
         else
         {
-            // Cache miss in L2, try L3 cache
-            temporary_result = L3Cache.write(address, data); // Write to L3 cache
+            //searching the line in L3
+            read_result = L3Cache.read(address);
 
-            if(temporary_result.errorInfo.error == ErrorType::WRITE_FAIL)
+            if(read_result.success)
             {
-                return From_T_toVoid(temporary_result); // Return the result if there was an error in the write operation
-            }
-
-            // Check if the write was successful
-            if(temporary_result.success)
-            {
-                //load the data into L2 cache
-
                 // Find a free line in L2 cache
                 uint64_t freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
 
                 // Load the data into L2 cache
-                L2Cache.load(l2SetIndex, l2Tag, temporary_result.data, freePosition); // Load the data into L2 cache
-
-                //load the data into L1 cache
+                L2Cache.load(l2SetIndex, l2Tag, read_result.data, freePosition); // Load the data into L2 cache
 
                 // Find a free line in L1 cache
                 freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
 
                 // Load the data into L1 cache
-                L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+                L1Cache.load(l1SetIndex, l1Tag, read_result.data, freePosition); // Load the data into L1 cache
 
-                //changing the event type from generic cache to l3 cache
-                temporary_result.errorInfo.source = ComponentType::CACHE_L3; // Set the source to CACHE_L3
+                result = L1Cache.write(address, data); // Write to L1 cache
 
-                return From_T_toVoid(temporary_result); // Return the result
-
+                return result;
             }
             else
             {
-                // Cache miss in L3, write to RAM
-                temporary_result = bus.getMemory().writeGeneric(address, data); // Write to RAM
+                //calculating the start of the line
+                uint64_t lineStart = address - offset;
 
-                // Check if the write was successful
-                if(temporary_result.success)
+                //reading the line from RAM
+                read_result = bus.getMemory().template readGeneric<std::array<uint8_t, CACHE_LINE_SIZE>>(lineStart); // Read from RAM
+
+                if(read_result.success)
                 {
-                    //load the data into L3 cache
-
                     // Find a free line in L3 cache
                     uint64_t freePosition = L3Cache.findFreeLineIndex(L3Cache.getSets()[l3SetIndex]); 
 
                     // Load the data into L3 cache
-                    L3Cache.load(l3SetIndex, l3Tag, temporary_result.data, freePosition); // Load the data into L3 cache
-
-                    //load the data into L2 cache
+                    L3Cache.load(l3SetIndex, l3Tag, read_result.data, freePosition); // Load the data into L3 cache
 
                     // Find a free line in L2 cache
                     freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
 
-                    // Load the data into L2
-                    L2Cache.load(l2SetIndex, l2Tag, temporary_result.data, freePosition); // Load the data into L2 cache
-
-                    //load the data into L1 cache
+                    // Load the data into L2 cache
+                    L2Cache.load(l2SetIndex, l2Tag, read_result.data, freePosition); // Load the data into L2 cache
 
                     // Find a free line in L1 cache
-                    freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]);
+                    freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
 
                     // Load the data into L1 cache
-                    L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+                    L1Cache.load(l1SetIndex, l1Tag, read_result.data, freePosition); // Load the data into L1 cache
 
-                    return From_T_toVoid(temporary_result); // Return the result
+                    result = L1Cache.write(address, data); // Write to L1 cache
+
+                    return result;
                 }
                 else
                 {
-                    // Cache miss in RAM, return error
-                    temporary_result.success = false; // Set success to false
+                    // RAM access failed, return error
+                    result.success = false; // Set success to false
 
                     // Set the event type to RAM_ACCESS
-                    temporary_result.errorInfo.event = EventType::RAM_ACCESS; // Set the event type to RAM_ACCESS
-                    temporary_result.errorInfo.source = ComponentType::RAM; // Set the source to RAM
-                    temporary_result.errorInfo.message = "RAM access failed at address: " + std::to_string(address); // Set the message for debugging
-                    temporary_result.errorInfo.error = ErrorType::WRITE_FAIL; // Set the error type to WRITE_FAIL
+                    result.errorInfo.event = EventType::RAM_ACCESS; // Set the event type to RAM_ACCESS
+                    result.errorInfo.source = ComponentType::RAM; // Set the source to RAM
+                    result.errorInfo.message = "RAM access failed at address: " + std::to_string(address); // Set the message for debugging
+                    result.errorInfo.error = ErrorType::WRITE_FAIL; // Set the error type to WRITE_FAIL
 
-                    return From_T_toVoid(temporary_result); // Return the result
+                    return result; // Return the result
 
                 }
             }
         }
+
     }
 }
    
