@@ -1,13 +1,9 @@
-!!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE AL CACHE MANAGER e ram!!!
+!!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE a (CACHE MANAGER,ram, operands) al moemnto la propagazione
+di result si ferma al fethc in cu e nell istruiction!!!
 
-, poi fixare opeardn e fetch istruzione
 
-//RIVEDER management policy ( quando cerco dis crivere , prendo dal livello sucesivo e la liena sostituita non al scrivo in ram ma al livello sotto)
-//ACCEDERE SEMPRE A CAHCE PRIMA DI RAM(fix operand)
 //funzioni per modificare grandezza rame e cache
 //finire di sistemare cahce (errori compilazione)
-//SPECIALIZZAZIOEN RAED/WRITE MEM CONA aRRAY
-//gestire size(T) (offset soparttuto) CON ARRAY 64 BYTE
 ////modificare grandezza memoria dal bus
 
 //flame grafh

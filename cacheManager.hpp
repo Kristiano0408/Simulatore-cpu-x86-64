@@ -45,15 +45,18 @@ class CacheLevel
         uint64_t associativity;
         uint64_t numSets;
         Bus &bus; // Reference to the bus for memory access
+        CacheLevel* nextLevel = nullptr; // Pointer to the next cache level (L2 or L3)
         
 
     public:
-        CacheLevel(uint64_t size, uint64_t associativity, Bus& bus);
+        CacheLevel(uint64_t size, uint64_t associativity, Bus& bus, CacheLevel* nextLevel);
         ~CacheLevel();
         Result<std::array<uint8_t, CACHE_LINE_SIZE>> read(uint64_t address);
         template <typename T>
         Result<void> write(uint64_t address, const T& data); // Write data to the cache
         void load(uint64_t setIndex, uint64_t tag, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t freePosition);
+
+
 
 
         // Function to find a cache line in a set
@@ -282,7 +285,7 @@ Result<T> CacheManager::read(uint64_t address)
     // Try to read from L1 cache
 
     //temporary result that holds the line read from cache
-    Result<std::array<uint8_t, CACHE_LINE_SIZE>> temporary_result = L1Cache.read<std::array<uint8_t, CACHE_LINE_SIZE>>(address);
+    Result<std::array<uint8_t, CACHE_LINE_SIZE> > temporary_result = L1Cache.read(address);
 
     Result<T> final_result{};
 
@@ -307,7 +310,7 @@ Result<T> CacheManager::read(uint64_t address)
     else
     {
         // Cache miss in L1, try L2 cache
-        temporary_result = L2Cache.read<std::array<uint8_t, CACHE_LINE_SIZE>>(address); // Read from L2 cache
+        temporary_result = L2Cache.read(address); // Read from L2 cache
 
         if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
         {
@@ -340,7 +343,7 @@ Result<T> CacheManager::read(uint64_t address)
         else
         {
             // Cache miss in L2, try L3 cache
-            temporary_result = L3Cache.read<std::array<uint8_t, CACHE_LINE_SIZE>>(address); // Read from L3 cache
+            temporary_result = L3Cache.read(address); // Read from L3 cache
 
             if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
             {
@@ -456,7 +459,7 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
 
     uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
 
-    Result<std::array<uint8_t,CACHE_LINE_SIZE>,CACHE_LINE_SIZE> read_result;
+    Result<std::array<uint8_t,CACHE_LINE_SIZE> > read_result;
 
     // Try to write to L1 cache
     Result<void>result = L1Cache.write(address, data); // Write to L1 cache

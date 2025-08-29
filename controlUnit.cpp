@@ -25,28 +25,18 @@ InstructionInfo CU::fetchInstruction()
     //fetching the instruction from cache or memory
 
 
-    std::array<uint8_t, 64> line_buffer {0}; //buffer for the line 
     std::array<uint8_t, 15> buffer {0}; //buffer for the instruction (max length of an instruction is 15 bytes)
-
-    //alligned index for the cache line(fetching a complete line)
-   
-    uint64_t offset = index % 64;
-    uint64_t alligned_index = index - offset;
-
 
 
     // Read a line from the cache or memory
-    auto result = bus.getCPU().getCacheManager().read<std::array<uint8_t, 64>>(alligned_index);
+    auto result = bus.getCPU().getCacheManager().read<std::array<uint8_t, 15>>(index);
 
     if (result.success)
-        std::memcpy(line_buffer.data(), result.data.data(), line_buffer.size());
+        std::memcpy(buffer.data(), result.data.data(), 15);
     else 
     {
             //exception that must be handled in the future
     }
-
-    //extracting all the possible 15 instruction bytes
-    std::memcpy(buffer.data(), line_buffer.data() + offset, 15);
 
     std::vector<uint8_t> Instructionbytes; //bytes of the instruction()
     int byteCounter {0}; //counter of the byte (for IR)

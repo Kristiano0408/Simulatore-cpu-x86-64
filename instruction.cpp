@@ -334,7 +334,7 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
     if(getDestinationOperand() && getSourceOperand())
     {
          //getting the value from the source operand
-        uint64_t value = getSourceOperand()->getValue();
+        uint64_t value = getSourceOperand()->getValue().data;
 
         //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
         value = castingValue(value, getNbit());

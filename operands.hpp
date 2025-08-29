@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include "helpers.hpp"
+#include "cacheManager.hpp"
 
 
 class Bus;

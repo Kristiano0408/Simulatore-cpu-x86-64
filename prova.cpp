@@ -96,9 +96,9 @@ int main()
         bus.getCPU().getControlUnit().OperandFetch(instruction);
 
         cout << "Fetched operands for Move Instruction" << endl;
-        cout << "Source Operand: " << hex << instruction->getSourceOperand()->getValue() << endl;
+        cout << "Source Operand: " << hex << instruction->getSourceOperand()->getValue().data << endl;
         cout << "Source Operand Size: " << instruction->getSourceOperand()->getSize() << endl;
-        cout << "Destination Operand: " << hex << instruction->getDestinationOperand()->getValue() << endl;
+        cout << "Destination Operand: " << hex << instruction->getDestinationOperand()->getValue().data << endl;
         cout << "Destination Operand Size: " << instruction->getDestinationOperand()->getSize() << endl;
 
         // Esegui l'istruzione

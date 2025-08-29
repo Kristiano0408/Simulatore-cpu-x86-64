@@ -5,8 +5,8 @@
 #include <iostream>
 
 
-CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, Bus& bus)
-    : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus)
+CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, Bus& bus, CacheLevel* nextLevel)
+    : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus), nextLevel(nextLevel)
 {
     //resizing the vector of sets
     sets.resize(numSets);
@@ -178,9 +178,18 @@ uint64_t CacheLevel::manageReplacementPolicy(CacheSet& set)
     //control for dirty lines
     if (set.lines[index].dirty)
     {
-        // Write back the dirty line
-        bus.getMemory().writeGeneric( (set.lines[index].tag * numSets + set.setIndex) * CACHE_LINE_SIZE, set.lines[index].data);
-
+        if(nextLevel != nullptr)
+        {
+            // Write back the dirty line to the next cache level
+            nextLevel->write( (set.lines[index].tag * numSets + set.setIndex) * CACHE_LINE_SIZE, set.lines[index].data);
+            set.lines[index].dirty = false; // Mark the line as not dirty after writing back
+        }
+        else
+        {
+            // Write back the dirty line to main memory
+            bus.getMemory().writeGeneric( (set.lines[index].tag * numSets + set.setIndex) * CACHE_LINE_SIZE, set.lines[index].data);
+            set.lines[index].dirty = false; // Mark the line as not dirty after writing back
+        }
         set.lines[index].dirty = false; // Mark the line as not dirty after writing back
 
 
@@ -192,7 +201,7 @@ uint64_t CacheLevel::manageReplacementPolicy(CacheSet& set)
 
 // CacheManager class implementation
 CacheManager::CacheManager(Bus& bus, uint64_t l1Size, uint64_t l1Associativity, uint64_t l2Size, uint64_t l2Associativity, uint64_t l3Size, uint64_t l3Associativity) 
-                         :L1Cache(l1Size, l1Associativity, bus), L2Cache(l2Size, l2Associativity, bus), L3Cache(l3Size, l3Associativity, bus), bus(bus)
+                         :L1Cache(l1Size, l1Associativity, bus, &L2Cache), L2Cache(l2Size, l2Associativity, bus, &L3Cache), L3Cache(l3Size, l3Associativity, bus, nullptr), bus(bus)
 {
     //nothing to do here
 
