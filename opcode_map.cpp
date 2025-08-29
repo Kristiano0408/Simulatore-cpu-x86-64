@@ -1,19 +1,8 @@
 #include <vector>
 #include <unordered_map>
 #include <cstdint>
+#include "opcode_map.hpp"
 
-// Struct per memorizzare i dettagli dell'istruzione
-struct InstructionDetails {
-    size_t totalLength;  // Lunghezza totale dell'istruzione
-    size_t opcodeLength; // Lunghezza dell'opcode (1, 2 o 3 byte)
-    size_t additionalBytes; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
-    size_t numOperands; // Numero di operandi
-    size_t operandLength; // Lunghezza degli operandi
-    bool hasModRM;            // Presenza del byte ModR/M
-    bool hasDisplacement;     // Presenza di un displacement
-    bool hasImmediate;        // Presenza di un valore immediato
-    const char* description; // Descrizione dell'istruzione (opzionale)
-};
 
 std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
 

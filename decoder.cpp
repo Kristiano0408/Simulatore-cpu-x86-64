@@ -1,7 +1,7 @@
 #include "decoder.hpp"
 #include <iostream>
 #include <memory>
-#include "opcode_map.cpp"
+#include "opcode_map.hpp"
 
 Decoder::Decoder()
 {

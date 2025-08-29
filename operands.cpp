@@ -6,6 +6,9 @@
 #include "registerFile.hpp"
 #include "bus.hpp"
 
+//namespace for operand fetching 
+//every addressing mode has its own function that take the istruction and the referecne to then bus for loading
+ //the right values inside the smart pointers that store the operands
 namespace operandFetch {
 
     //fetching RM operands 
@@ -52,7 +55,7 @@ namespace operandFetch {
 
         
         //Source operand is an address and destination is a register
-        auto sourceOperand = std::make_unique<MemOperand>(bus.getMemory(), address);
+        auto sourceOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), address);
         auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
 
         i->setSourceOperand(std::move(sourceOperand));
@@ -103,7 +106,7 @@ namespace operandFetch {
 
         //operand constructors for source and destination operands
         auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(source_register).raw());
-        auto destinationOperand = std::make_unique<MemOperand>(bus.getMemory(), address);
+        auto destinationOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), address);
 
 
         i->setSourceOperand(std::move(sourceOperand));
@@ -116,8 +119,8 @@ namespace operandFetch {
     {
         //operand constructors for source and destination operands
 
-        //the destination is a register aand the source is a memory address(displacement)
-        auto sourceOperand = std::make_unique<MemOperand>(bus.getMemory(), i->getDisplacement());
+        //the destination is a register and the source is a memory address(displacement)
+        auto sourceOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), i->getDisplacement());
         auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(Register::RAX).raw());
 
 
@@ -132,7 +135,7 @@ namespace operandFetch {
 
         //the source is a register and the destination is a memory address(displacement)
         auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(Register::RAX).raw());
-        auto destinationOperand = std::make_unique<MemOperand>(bus.getMemory(), i->getDisplacement());
+        auto destinationOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), i->getDisplacement());
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
@@ -190,7 +193,7 @@ namespace operandFetch {
 
         //the source is an immediate value and the destination is a memory address
         auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
-        auto destinationOperand = std::make_unique<MemOperand>(bus.getMemory(), address);
+        auto destinationOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), address);
 
 
         i->setSourceOperand(std::move(sourceOperand)); // no source operand for immediate move

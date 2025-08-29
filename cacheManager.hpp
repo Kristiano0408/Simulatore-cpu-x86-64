@@ -133,70 +133,7 @@ bool offset_cache(EventType event, ErrorType error, Result<T>& result, uint64_t 
 
 //tempalte functions implementation (cachelevel:read is the only one that dont need it,cus it always read an entire line)
 
-Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
-{
-    //craetion of the structure for the result
-    Result<std::array<uint8_t, CACHE_LINE_SIZE>> result;
 
-    //bitwise index/tag calculation
-    constexpr unsigned offsetBits = ilog2_constexpr(CACHE_LINE_SIZE); // Calculate the number of bits for the offset
-    unsigned indexBits = ilog2(numSets); // Calculate the number of bits for the index
-
-    uint64_t offset = address & ((1ULL << offsetBits) - 1); // Calculate the offset within the cache line
-
-    //manage the offset for the read operation
-    if (offset_cache(EventType::CACHE_READ_ERROR, ErrorType::READ_FAIL, result, offset, address)) 
-    {
-        return result;
-    }
-
-    uint64_t setIndex = (address >> offsetBits) & ((1ULL << indexBits) - 1); // Calculate the set index
-    uint64_t tag = address >> (offsetBits + indexBits); // Calculate the tag
-
-    CacheSet& set = sets[setIndex]; // Get the cache set
-    auto* line = findLine(set, tag); // Check if the line is in the cache
-
-    if(line != nullptr)
-    {
-        // Cache hit
-
-        // Read the data from the cache line
-        std::memcpy(&result.data, &line->data, sizeof(std::array<uint8_t, CACHE_LINE_SIZE>)); // Copy the data from the cache line to the result
-
-        line->lastAccessTime = bus.getClock().getCycles(); // Update the last access time
-
-        // Set success to true
-        result.success = true; 
-
-        // Set the event type to CACHE_HIT
-        result.errorInfo.event = EventType::CACHE_HIT; // Set the event type to CACHE_HIT
-        result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
-        result.errorInfo.message = "Cache hit at address: " + std::to_string(address); // Set the message for debugging
-        result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
-
-        std::cout << "Cache hit at address: " << std::hex << address << std::endl; // Print the cache hit message
-        
-        return result; // Return the result
-
-    }
-    else
-    {
-        // Cache miss
-        result.success = false; // Set success to false
-
-        // Set the event type to CACHE_MISS
-        result.errorInfo.event = EventType::CACHE_MISS; // Set the event type to CACHE_MISS
-        result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
-        result.errorInfo.message = "Cache miss at address: " + std::to_string(address); // Set the message for debugging
-        result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
-
-        std::cout << "Cache miss at address: " << std::hex << address << std::endl; // Print the cache miss message
-
-        return result; // Return the result
-    }
-    
-    
-}
 
 template <typename T>
 Result<void> CacheLevel::write(uint64_t address, const T& data)
@@ -302,7 +239,7 @@ Result<T> CacheManager::read(uint64_t address)
         temporary_result.errorInfo.source = ComponentType::CACHE_L1; // Set the source to CACHE_L1
         
         //coping the values from the temporary to teh final output
-        std::memcpy(final_result.data.data(), temporary_result.data.data() + offset, sizeof(T));
+        std::memcpy(&final_result.data, temporary_result.data.data() + offset, sizeof(T));
         final_result.success = true;
         final_result.errorInfo = temporary_result.errorInfo;
         return final_result; // Return the result
@@ -334,7 +271,7 @@ Result<T> CacheManager::read(uint64_t address)
             L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
 
             //coping the values from the temporary to teh final output
-            std::memcpy(final_result.data.data(), temporary_result.data.data() + offset, sizeof(T));
+            std::memcpy(&final_result.data, temporary_result.data.data() + offset, sizeof(T));
             final_result.success = true;
             final_result.errorInfo = temporary_result.errorInfo;
             return final_result; // Return the result
@@ -375,7 +312,7 @@ Result<T> CacheManager::read(uint64_t address)
                 L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
 
                 //coping the values from the temporary to teh final output
-                std::memcpy(final_result.data.data(), temporary_result.data.data() + offset, sizeof(T));
+                std::memcpy(&final_result.data, temporary_result.data.data() + offset, sizeof(T));
                 final_result.success = true;
                 final_result.errorInfo = temporary_result.errorInfo;
                 return final_result; // Return the result
@@ -417,7 +354,7 @@ Result<T> CacheManager::read(uint64_t address)
                     L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
 
                     //coping the values from the temporary to teh final output
-                    std::memcpy(final_result.data.data(), temporary_result.data.data() + offset, sizeof(T));
+                    std::memcpy(&final_result.data, temporary_result.data.data() + offset, sizeof(T));
                     final_result.success = true;
                     final_result.errorInfo = temporary_result.errorInfo;
                     return final_result; // Return the result

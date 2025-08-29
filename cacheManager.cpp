@@ -198,6 +198,70 @@ uint64_t CacheLevel::manageReplacementPolicy(CacheSet& set)
     return index; // Return the index of the line to be replaced
 }
 
+Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
+{
+    //craetion of the structure for the result
+    Result<std::array<uint8_t, CACHE_LINE_SIZE>> result;
+
+    //bitwise index/tag calculation
+    constexpr unsigned offsetBits = ilog2_constexpr(CACHE_LINE_SIZE); // Calculate the number of bits for the offset
+    unsigned indexBits = ilog2(numSets); // Calculate the number of bits for the index
+
+    uint64_t offset = address & ((1ULL << offsetBits) - 1); // Calculate the offset within the cache line
+
+    //manage the offset for the read operation
+    if (offset_cache(EventType::CACHE_READ_ERROR, ErrorType::READ_FAIL, result, offset, address)) 
+    {
+        return result;
+    }
+
+    uint64_t setIndex = (address >> offsetBits) & ((1ULL << indexBits) - 1); // Calculate the set index
+    uint64_t tag = address >> (offsetBits + indexBits); // Calculate the tag
+
+    CacheSet& set = sets[setIndex]; // Get the cache set
+    auto* line = findLine(set, tag); // Check if the line is in the cache
+
+    if(line != nullptr)
+    {
+        // Cache hit
+
+        // Read the data from the cache line
+        std::memcpy(&result.data, &line->data, sizeof(std::array<uint8_t, CACHE_LINE_SIZE>)); // Copy the data from the cache line to the result
+
+        line->lastAccessTime = bus.getClock().getCycles(); // Update the last access time
+
+        // Set success to true
+        result.success = true; 
+
+        // Set the event type to CACHE_HIT
+        result.errorInfo.event = EventType::CACHE_HIT; // Set the event type to CACHE_HIT
+        result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
+        result.errorInfo.message = "Cache hit at address: " + std::to_string(address); // Set the message for debugging
+        result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
+
+        std::cout << "Cache hit at address: " << std::hex << address << std::endl; // Print the cache hit message
+        
+        return result; // Return the result
+
+    }
+    else
+    {
+        // Cache miss
+        result.success = false; // Set success to false
+
+        // Set the event type to CACHE_MISS
+        result.errorInfo.event = EventType::CACHE_MISS; // Set the event type to CACHE_MISS
+        result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
+        result.errorInfo.message = "Cache miss at address: " + std::to_string(address); // Set the message for debugging
+        result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
+
+        std::cout << "Cache miss at address: " << std::hex << address << std::endl; // Print the cache miss message
+
+        return result; // Return the result
+    }
+    
+    
+}
 
 // CacheManager class implementation
 CacheManager::CacheManager(Bus& bus, uint64_t l1Size, uint64_t l1Associativity, uint64_t l2Size, uint64_t l2Associativity, uint64_t l3Size, uint64_t l3Associativity) 
