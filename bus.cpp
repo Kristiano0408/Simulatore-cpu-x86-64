@@ -7,7 +7,7 @@
 
 Bus::Bus() {
     cpu = std::make_unique<CPU>(*this);
-    memory = std::make_unique<Memory>(1024, *this);
+    memory = std::make_unique<Memory>(1024*1024, *this);
     clock = std::make_unique<Clock>();
 }
 

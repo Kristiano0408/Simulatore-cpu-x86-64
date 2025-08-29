@@ -17,28 +17,30 @@ CU::~CU()
 //method for fethcing the instruction from the ram
 InstructionInfo CU::fetchInstruction()
 {
-    std::cout<<"a"<<std::endl;
     RegisterFile& cpuRegisters = bus.getCPU().getRegisters();  // get the registers of the CPU temporarily
-    std::cout<<"a"<<std::endl;
     //take the value of istruction register
     uint64_t index = cpuRegisters.getReg(Register::RIP).raw();
-    std::cout<<"a"<<std::endl;
     //fetching the instruction from cache or memory
 
 
     std::array<uint8_t, 15> buffer {0}; //buffer for the instruction (max length of an instruction is 15 bytes)
 
-    std::cout<<"a"<<std::endl;
+    std::cout << "Fetching instruction at address: " << std::hex << index << std::endl;
+
 
     // Read a line from the cache or memory
     auto result = bus.getCPU().getCacheManager().read<std::array<uint8_t, 15>>(index);
 
-    std::cout<<"a"<<std::endl;
     if (result.success)
         std::memcpy(buffer.data(), result.data.data(), 15);
     else 
     {
             //exception that must be handled in the future
+    }
+
+    for(int i=0; i<15; i++)
+    {
+        std::cout << "Byte " << i << ": " << std::hex << static_cast<int>(buffer[i]) << std::endl;
     }
 
     std::vector<uint8_t> Instructionbytes; //bytes of the instruction()

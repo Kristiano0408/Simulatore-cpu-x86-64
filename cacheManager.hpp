@@ -130,9 +130,12 @@ bool offset_cache(EventType event, ErrorType error, Result<T>& result, uint64_t 
     return false; // No error
 }
 
-//specialization for void
+//specialization for void and lines 
 template<>
 bool offset_cache(EventType event, ErrorType error, Result<void>& result, uint64_t offset, uint64_t address);
+
+template<>
+bool offset_cache(EventType event, ErrorType error, Result<std::array<uint8_t, CACHE_LINE_SIZE>>& result, uint64_t offset, uint64_t address);
 
 
 //tempalte functions implementation (cachelevel:read is the only one that dont need it,cus it always read an entire line)
@@ -209,6 +212,7 @@ Result<void> CacheLevel::write(uint64_t address, const T& data)
 template <typename T>
 Result<T> CacheManager::read(uint64_t address)
 {
+    
     uint64_t l1SetIndex = (address / CACHE_LINE_SIZE) % L1Cache.getNumSets(); // Calculate the L1 set index
     uint64_t l1Tag = address / (CACHE_LINE_SIZE * L1Cache.getNumSets()); // Calculate the L1 tag
 
@@ -222,6 +226,7 @@ Result<T> CacheManager::read(uint64_t address)
 
     uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
 
+    std::cout << "Reading from cachemanager at address: " << std::hex << address << std::endl;
 
     // Try to read from L1 cache
 
@@ -239,6 +244,7 @@ Result<T> CacheManager::read(uint64_t address)
 
     if (temporary_result.success) // Check if the read was successful
     {
+        
         //changing the event type from generic cache to l1 cache
         temporary_result.errorInfo.source = ComponentType::CACHE_L1; // Set the source to CACHE_L1
         
@@ -327,8 +333,12 @@ Result<T> CacheManager::read(uint64_t address)
                 //calculating the start of the line
                 uint64_t lineStart = address - offset;
 
+                std::cout << "Cache miss in L3, reading from RAM at address: " << std::hex << lineStart << std::endl; // Print the cache miss message
+
                 // Cache miss in L3, read from RAM
                 temporary_result = bus.getMemory().template readGeneric<std::array<uint8_t, CACHE_LINE_SIZE>>(lineStart); // Read from RAM
+
+                std::cout << "Read from RAM at address: " << std::hex << lineStart << std::endl; // Print the RAM read message
 
                 // Check if the read was successful
                 if(temporary_result.success)

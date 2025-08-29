@@ -25,9 +25,9 @@ class CPU
         ALU alu; //arithmetic logic unit
         RegisterFile registers; //register file of the CPU
 
-        uint64_t L1_cache_size = 16;
-        uint64_t L2_cache_size = 32;
-        uint64_t L3_cache_size = 64;
+        uint64_t L1_cache_size = 1024;
+        uint64_t L2_cache_size = 8192;
+        uint64_t L3_cache_size = 65536;
         uint64_t L1_cache_assoc = 2;
         uint64_t L2_cache_assoc = 4;
         uint64_t L3_cache_assoc = 8;

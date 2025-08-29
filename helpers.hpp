@@ -3,6 +3,8 @@
 #include<string>
 #include <vector> 
 #include <cstddef>
+#include <cstdint>
+#include <iostream>
 
 //farward declaration of the enum class for registers
 enum class Register;
@@ -133,7 +135,15 @@ Result<void> From_T_toVoid (const Result<T>& r)
 // Utility function to compute log2 of power-of-two sizes
 inline unsigned ilog2(uint64_t x)
 {
-    return (x == 1) ? 0 : 1 + ilog2(x >> 1);
+     if (x == 0)
+        std::cerr << "Error: log2(0) is undefined." << std::endl;
+
+    unsigned result = 0;
+    while (x > 1) {
+        x >>= 1;   // sposta a destra di 1 bit
+        result++;  // conta quanti shift fai
+    }
+    return result;
 }
 
 constexpr unsigned ilog2_constexpr(uint64_t x)

@@ -32,17 +32,17 @@ int main()
          0x41, 0xC7, 0xC1, 0x06, 0x00, 0x00, 0x00,    // MOV R9, 6
     
         // Test MOV registro, registro
-        0x48, 0x89, 0xD8,                            // MOV RAX, RBX
-        0x48, 0x89, 0xCB,                            // MOV RBX, RCX
-        0x48, 0x89, 0xD1,                            // MOV RCX, RDX
-        0x4C, 0x89, 0xC2,                            // MOV RDX, R8
-        0x4D, 0x89, 0xC8,                            // MOV R8, R9
+        0x48, 0x89, 0xD8,                            // MOV RAX, RBX //rax=2
+        0x48, 0x89, 0xCB,                            // MOV RBX, RCX // rbx=3
+        0x48, 0x89, 0xD1,                            // MOV RCX, RDX //rcx=4
+        0x4C, 0x89, 0xC2,                            // MOV RDX, R8  //rdx=5
+        0x4D, 0x89, 0xC8,                            // MOV R8, R9   //r8=6
     
         // Test MOV registro, immediato
-        0xC7, 0xC0, 0x78, 0x56, 0x34, 0x12,    // MOV RAX, 0x12345678
-        0x66, 0xBB, 0x34, 0x12,                      // MOV BX, 0x1234
-        0xB1, 0x42,                                  // MOV CL, 0x42
-    
+        0xC7, 0xC0, 0x78, 0x56, 0x34, 0x12,    // MOV RAX, 0x12345678 //rax=0x12345678
+        0x66, 0xBB, 0x34, 0x12,                      // MOV BX, 0x1234 //rbx=0x1234
+        0xB1, 0x42,                                  // MOV CL, 0x42 //rcx=0x42
+
         // Prepara un'area di memoria
         0xC7, 0xC6, 0x00, 0x10, 0x00, 0x00,    // MOV RSI, 0x1000 (indirizzo base per i test di memoria)
     
@@ -70,25 +70,23 @@ int main()
 
     bus.getMemory().setData(data); // Set the data in memory
 
-    std::cout << "Initial CPU State:" << std::endl;
-    
+    std::vector<uint8_t> memoryData = bus.getMemory().getData();
+
+    for (size_t i = 0; i < memoryData.size(); i++) {
+        cout << "Memory[" << i << "]: " << hex << static_cast<int>(memoryData[i]) << endl;
+    }
 
     InstructionInfo info;
 
     Instruction* instruction;
-    std::cout << "Starting instruction execution..." << std::endl;
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 12; i++) {
 
-        std::cout<<"b"<<std::endl;
 
         auto& cu = bus.getCPU().getControlUnit();
 
-        std::cout<<"b"<<std::endl;
-
         info = cu.fetchInstruction();
-        std::cout<<"b"<<std::endl;
-        cout << "Instruction size: " << info.instruction.size() << endl;
+        std::cout << "Instruction size: " << info.instruction.size() << std::endl;
         for (size_t j = 0; j < info.instruction.size(); j++) {
             cout << "Byte: " << hex << static_cast<int>(info.instruction[j]) << endl;
         }
