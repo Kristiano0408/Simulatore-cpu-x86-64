@@ -70,16 +70,24 @@ int main()
 
     bus.getMemory().setData(data); // Set the data in memory
 
-
+    std::cout << "Initial CPU State:" << std::endl;
     
 
     InstructionInfo info;
 
     Instruction* instruction;
+    std::cout << "Starting instruction execution..." << std::endl;
 
     for (int i = 0; i < 3; i++) {
-        info = bus.getCPU().getControlUnit().fetchInstruction();
 
+        std::cout<<"b"<<std::endl;
+
+        auto& cu = bus.getCPU().getControlUnit();
+
+        std::cout<<"b"<<std::endl;
+
+        info = cu.fetchInstruction();
+        std::cout<<"b"<<std::endl;
         cout << "Instruction size: " << info.instruction.size() << endl;
         for (size_t j = 0; j < info.instruction.size(); j++) {
             cout << "Byte: " << hex << static_cast<int>(info.instruction[j]) << endl;

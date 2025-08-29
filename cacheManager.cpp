@@ -263,6 +263,21 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
     
 }
 
+template<>
+bool offset_cache(EventType event, ErrorType error, Result<void>& result, uint64_t offset, uint64_t address)
+{
+    if (offset > CACHE_LINE_SIZE)
+    {
+        result.success = false;
+        result.errorInfo.event = event;
+        result.errorInfo.source = ComponentType::CACHE;
+        result.errorInfo.message = "Write exceeds cache line boundary at address: " + std::to_string(address);
+        result.errorInfo.error = error;
+        return true; // Indicate that there was an error
+    }
+    return false; // No error
+}
+
 // CacheManager class implementation
 CacheManager::CacheManager(Bus& bus, uint64_t l1Size, uint64_t l1Associativity, uint64_t l2Size, uint64_t l2Associativity, uint64_t l3Size, uint64_t l3Associativity) 
                          :L1Cache(l1Size, l1Associativity, bus, &L2Cache), L2Cache(l2Size, l2Associativity, bus, &L3Cache), L3Cache(l3Size, l3Associativity, bus, nullptr), bus(bus)

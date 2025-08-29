@@ -130,6 +130,10 @@ bool offset_cache(EventType event, ErrorType error, Result<T>& result, uint64_t 
     return false; // No error
 }
 
+//specialization for void
+template<>
+bool offset_cache(EventType event, ErrorType error, Result<void>& result, uint64_t offset, uint64_t address);
+
 
 //tempalte functions implementation (cachelevel:read is the only one that dont need it,cus it always read an entire line)
 

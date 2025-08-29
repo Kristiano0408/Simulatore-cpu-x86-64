@@ -298,7 +298,7 @@ Result<void> RegOperand::setValue(uint64_t v)
 
 Result<uint64_t> RegOperand::getValue() 
 {
-    return Result<uint64_t>{this->reg, true};
+    return Result<uint64_t>{this->reg, true, {}};
 }
 
 Result<void> MemOperand::setValue(uint64_t v) {
@@ -330,6 +330,8 @@ Result<void> MemOperand::setValue(uint64_t v) {
 
         }
     }
+    return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE, "Invalid size"}};
+
 }
 
 Result<uint64_t> MemOperand::getValue() {
@@ -386,6 +388,7 @@ Result<uint64_t> MemOperand::getValue() {
         }
 
     }
+    return Result<uint64_t>{0, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE, "Invalid size"}};
 }
 
 Result<void> ImmediateOperand::setValue(uint64_t v) {
