@@ -1,9 +1,11 @@
 !!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE a (CACHE MANAGER,ram, operands) al moemnto la propagazione
 di result si ferma al fethc in cu e nell istruiction!!!
 
+//READ CROOS LINES CACHE
+//WRITE CROSSLINES CACHE
 
 //funzioni per modificare grandezza rame e cache
-//finire di sistemare cahce (errori compilazione)
+//finire di sistemare cahce (capire eprceh non runna)
 ////modificare grandezza memoria dal bus
 
 //flame grafh
@@ -49,3 +51,12 @@ i nomi dei egistri non cambiano in base alla grandezza, pero posso scrivere 8/16
 solo alu, no fpu, no vector unit, solo gpr e siene cs e ss e rimasugli da 32 bit
 
 ficnhe non implementiamo un claock, lastaccesedtime della linea è un conattore quindi non si usa la politica LRU ma si guarda quella meno usata
+
+
+
+
+IF(DENTRO OFSET)
+
+PUNTATORE A FUNZIONE (O QUALSIASI ALTRA COSA) =FUNZIONE 1
+
+ELSE PUNTATORE A FUNZIONE(O QUALSIASI ALTRA COSA) =FUNZIONE 2

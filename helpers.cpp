@@ -341,3 +341,58 @@ Register decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool hasSIB)
 
 
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::ostream& operator<<(std::ostream& os, const ComponentType& type)
+{
+    switch (type) {
+    case ComponentType::CACHE: os << "CACHE"; break;
+    case ComponentType::CACHE_L1: os << "CACHE_L1"; break;
+    case ComponentType::CACHE_L2: os << "CACHE_L2"; break;
+    case ComponentType::CACHE_L3: os << "CACHE_L3"; break;
+    case ComponentType::RAM: os << "RAM"; break;
+    case ComponentType::OPERAND: os << "OPERAND"; break;
+    case ComponentType::ALU: os << "ALU"; break;
+    case ComponentType::FPU: os << "FPU"; break;
+    default: os << "UNKNOWN"; break;
+    }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const EventType& type)
+{
+    switch (type) {
+    case EventType::NONE: os << "NONE"; break;
+    case EventType::CACHE_HIT: os << "CACHE_HIT"; break;
+    case EventType::CACHE_MISS: os << "CACHE_MISS"; break;
+    case EventType::RAM_ACCESS: os << "RAM_ACCESS"; break;
+    case EventType::ERROR: os << "ERROR"; break;
+    case EventType::CACHE_READ_ERROR: os << "CACHE_READ_ERROR"; break;
+    case EventType::CACHE_WRITE_ERROR: os << "CACHE_WRITE_ERROR"; break;
+    case EventType::RAM_READ_ERROR: os << "RAM_READ_ERROR"; break;
+    case EventType::RAM_WRITE_ERROR: os << "RAM_WRITE_ERROR"; break;
+    default: os << "UNKNOWN"; break;
+    }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const ErrorType& type)
+{
+    switch (type) {
+    case ErrorType::NONE: os << "NONE"; break;
+    case ErrorType::INVALID_ADDRESS: os << "INVALID_ADDRESS"; break;
+    case ErrorType::INVALID_SIZE: os << "INVALID_SIZE"; break;
+    case ErrorType::OUT_OF_BOUNDS: os << "OUT_OF_BOUNDS"; break;
+    case ErrorType::WRITE_FAIL: os << "WRITE_FAIL"; break;
+    case ErrorType::READ_FAIL: os << "READ_FAIL"; break;
+    default: os << "UNKNOWN"; break;
+    }
+    return os;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////

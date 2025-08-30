@@ -8,7 +8,7 @@
 #include "helpers.hpp"
 #include "bus.hpp"
 #include "memory.hpp"
-
+#include <variant>
 
 constexpr unsigned CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
 
@@ -228,7 +228,11 @@ Result<T> CacheManager::read(uint64_t address)
 
     std::cout << "Reading from cachemanager at address: " << std::hex << address << std::endl;
 
+    //variant for managing the reading of 1 or 2 lines depending on the position of the instruction inside the line
+    std::variant<Result<std::array<uint8_t, CACHE_LINE_SIZE>>, Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>>> readResult;
+    bool twoLines = false;
     // Try to read from L1 cache
+    if()
 
     //temporary result that holds the line read from cache
     Result<std::array<uint8_t, CACHE_LINE_SIZE> > temporary_result = L1Cache.read(address);

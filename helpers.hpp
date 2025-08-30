@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <concepts>
 
 //farward declaration of the enum class for registers
 enum class Register;
@@ -79,6 +80,42 @@ struct Result<void> {
     bool success;
     Error_Event_Info errorInfo; // Error information if any
 };
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& operator<<(std::ostream& os, const ErrorType& type);
+
+std::ostream& operator<<(std::ostream& os, const EventType& type);
+
+std::ostream& operator<<(std::ostream& os, const ComponentType& type);
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const Result<T>& result)
+{
+    if constexpr (std::is_same_v<T, void>) {
+        return os << "success: " << result.success << "\n"
+                  << "Error info:" << result.errorInfo.source << " "
+                  << result.errorInfo.event << " "
+                  << result.errorInfo.error << std::endl;
+    } else if constexpr (std::is_same_v<T, std::array<uint8_t, 64>>) {
+        os << "Data: ";
+        for (const auto& byte : result.data) {
+            os << std::hex << static_cast<int>(byte) << " ";
+        }
+        return os << "\n"
+                  << "success: " << result.success << "\n"
+                  << "Error info:" << result.errorInfo.source << " "
+                  << result.errorInfo.event << " "
+                  << result.errorInfo.error << std::endl;
+    } else {
+        return os << "Data: " << result.data << "\n"
+                  << "success: " << result.success << "\n"
+                  << "Error info:" << result.errorInfo.source << " "
+                  << result.errorInfo.event << " "
+                  << result.errorInfo.error << std::endl;
+    }
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

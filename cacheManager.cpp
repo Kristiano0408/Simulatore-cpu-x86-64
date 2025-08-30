@@ -251,7 +251,8 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
         result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
 
         std::cout << "Cache hit at address: " << std::hex << address << std::endl; // Print the cache hit message
-        
+        std::cout << result << std::endl; // Print the result
+
         return result; // Return the result
 
     }
