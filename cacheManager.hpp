@@ -232,12 +232,30 @@ Result<T> CacheManager::read(uint64_t address)
     std::variant<Result<std::array<uint8_t, CACHE_LINE_SIZE>>, Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>>> readResult;
     bool twoLines = false;
     // Try to read from L1 cache
-    if()
+    if(offset + sizeof(T) > CACHE_LINE_SIZE)
+    {
+        twoLines = true;
+        readResult = readCrossLines(address);
+    }
+    else
+    {
+        readResult = L1Cache.read(address); // Read from L1 cache
+    }
 
     //temporary result that holds the line read from cache
-    Result<std::array<uint8_t, CACHE_LINE_SIZE> > temporary_result = L1Cache.read(address);
+    Result<std::array<uint8_t, CACHE_LINE_SIZE*2> > temporary_result;
+
+    std::visit([&temporary_result](auto&& result)
+    {
+        std::memcpy(temporary_result.data.data(), &result.data.data(), sizeof(result.data));
+        temporary_result.success = result.success;
+        temporary_result.errorInfo = result.errorInfo;
+
+    }, readResult);
+
 
     Result<T> final_result{};
+    
 
     if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
     {
