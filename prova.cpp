@@ -80,7 +80,7 @@ int main()
 
     Instruction* instruction;
 
-    for (int i = 0; i < 14; i++) {
+    for (int i = 0; i < 20; i++) {
 
 
         auto& cu = bus.getCPU().getControlUnit();

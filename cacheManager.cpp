@@ -227,7 +227,9 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
     std::cout << "Offset after check: " << offset << std::endl;
 
     uint64_t setIndex = (address >> offsetBits) & ((1ULL << indexBits) - 1); // Calculate the set index
+    std::cout << "Set index: " << setIndex << std::endl;
     uint64_t tag = address >> (offsetBits + indexBits); // Calculate the tag
+    std::cout << "Tag: " << tag << std::endl;
 
     CacheSet& set = sets[setIndex]; // Get the cache set
     auto* line = findLine(set, tag); // Check if the line is in the cache
@@ -342,3 +344,222 @@ void CacheManager::printCacheState() const
     L3Cache.printCacheState(); // Print L3 cache state
 }
 
+
+Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64_t address, uint64_t l1SetIndex, uint64_t l1Tag, uint64_t l2SetIndex, uint64_t l2Tag, uint64_t l3SetIndex, uint64_t l3Tag, uint64_t offset)
+{
+    //temporary result that holds the line read from cache
+    Result<std::array<uint8_t, CACHE_LINE_SIZE>> temporary_result;
+
+    //trying to read from L1 cache
+    std::cout << "Trying to read line from L1 cache at address: " << std::hex << address << std::endl;
+    temporary_result = L1Cache.read(address); // Read from L1 cache
+
+
+     if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
+    {
+        return temporary_result;
+    }
+
+    if (temporary_result.success) // Check if the read was successful
+    {
+        //changing the event type from generic cache to l1 cache
+        temporary_result.errorInfo.source = ComponentType::CACHE_L1; // Set the source to CACHE_L1
+
+        return temporary_result; // Return the result
+    }
+    else
+    {
+        std::cout << "Cache miss in L1, trying L2 cache at address: " << std::hex << address << std::endl;
+        // Cache miss in L1, try L2 cache
+        temporary_result = L2Cache.read(address); // Read from L2 cache
+
+        if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
+        {
+            return temporary_result;
+        }
+
+        // Check if the read was successful
+        if(temporary_result.success)
+        {
+            //changing the event type from generic cache to l2 cache
+            temporary_result.errorInfo.source = ComponentType::CACHE_L2; // Set the source to CACHE_L2
+
+            //load the data into L1 cache
+
+            // Find a free line in L1 cache
+            uint64_t freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
+
+            // Load the data into L1 cache
+            L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+
+            return temporary_result; // Return the result
+
+        }
+        else
+        {
+            // Cache miss in L2, try L3 cache
+            std::cout << "Cache miss in L2, trying L3 cache at address: " << std::hex << address << std::endl;
+            
+            temporary_result = L3Cache.read(address); // Read from L3 cache
+
+            if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
+            {
+                return temporary_result;
+            }
+
+            // Check if the read was successful
+            if(temporary_result.success)
+            {
+                //changing the event type from generic cache to l3 cache
+                temporary_result.errorInfo.source = ComponentType::CACHE_L3; // Set the source to CACHE_L3
+
+                //load the data into L2 cache
+
+                // Find a free line in L2 cache
+                uint64_t freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
+
+                // Load the data into L2 cache
+                L2Cache.load(l2SetIndex, l2Tag, temporary_result.data, freePosition); // Load the data into L2 cache
+
+                //load the data into L1 cache
+
+                // Find a free line in L1 cache
+                freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
+
+                // Load the data into L1 cache
+                L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+
+                return temporary_result; // Return the result
+
+            }
+            else
+            {
+                //calculating the start of the line
+                uint64_t lineStart = address - offset;
+
+                std::cout << "Cache miss in L3, reading from RAM at address: " << std::hex << lineStart << std::endl; // Print the cache miss message
+
+                // Cache miss in L3, read from RAM
+                temporary_result = bus.getMemory().template readGeneric<std::array<uint8_t, CACHE_LINE_SIZE>>(lineStart); // Read from RAM
+
+                std::cout << "Read from RAM at address: " << std::hex << lineStart << std::endl; // Print the RAM read message
+
+                // Check if the read was successful
+                if(temporary_result.success)
+                {
+                    //load the data into L3 cache
+
+                    // Find a free line in L3 cache
+                    uint64_t freePosition = L3Cache.findFreeLineIndex(L3Cache.getSets()[l3SetIndex]); 
+
+                    // Load the data into L3 cache
+                    L3Cache.load(l3SetIndex, l3Tag, temporary_result.data, freePosition); // Load the data into L3 cache
+
+                    //load the data into L2 cache
+
+                    // Find a free line in L2 cache
+                    freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
+
+                    // Load the data into L2 cache
+                    L2Cache.load(l2SetIndex, l2Tag, temporary_result.data, freePosition); // Load the data into L2 cache
+
+                    //load the data into L1 cache
+
+                    // Find a free line in L1 cache
+                    freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
+
+                    // Load the data into L1 cache
+                    L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+
+                    return temporary_result; // Return the result
+
+                }
+                else
+                {
+                    // Cache miss in RAM, return error
+                    temporary_result.success = false; // Set success to false
+
+                    // Set the event type to RAM_ACCESS
+                    temporary_result.errorInfo.event = EventType::RAM_ACCESS; // Set the event type to RAM_ACCESS
+                    temporary_result.errorInfo.source = ComponentType::RAM; // Set the source to RAM
+                    temporary_result.errorInfo.message = "RAM access failed at address: " + std::to_string(address); // Set the message for debugging
+                    temporary_result.errorInfo.error = ErrorType::READ_FAIL; // Set the error type to READ_FAIL
+
+                    return temporary_result; // Return the result
+
+                }
+
+                
+            }
+
+        }
+    }  
+   
+}
+
+Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> CacheManager::readCrossLines(uint64_t address)
+{
+    std::cout << "Reading cross lines at address: " << std::hex << address << std::endl;
+    // Read data spanning two cache lines
+    Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> result;
+
+    uint64_t l1SetIndex = (address / CACHE_LINE_SIZE) % L1Cache.getNumSets(); // Calculate the L1 set index
+    uint64_t l1Tag = address / (CACHE_LINE_SIZE * L1Cache.getNumSets()); // Calculate the L1 tag
+
+    uint64_t l2SetIndex = (address / CACHE_LINE_SIZE) % L2Cache.getNumSets(); // Calculate the L2 set index
+    uint64_t l2Tag = address / (CACHE_LINE_SIZE * L2Cache.getNumSets()); // Calculate the L2 tag
+
+    uint64_t l3SetIndex = (address / CACHE_LINE_SIZE) % L3Cache.getNumSets(); // Calculate the L3 set index
+    uint64_t l3Tag = address / (CACHE_LINE_SIZE * L3Cache.getNumSets()); // Calculate the L3 tag
+
+    uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
+
+    // Read the first cache line
+    auto result1 = readSingleLine(address, l1SetIndex, l1Tag, l2SetIndex, l2Tag, l3SetIndex, l3Tag, offset);
+    if (!result1.success)
+    {
+        result.success = false;
+        result.errorInfo = result1.errorInfo;
+        return result;
+    }
+
+    std::cout << "First line read successfully at address: " << std::hex << address << std::endl;
+
+    uint64_t new_address = address + (CACHE_LINE_SIZE - offset);
+    l1SetIndex = (new_address / CACHE_LINE_SIZE) % L1Cache.getNumSets(); // Calculate the L1 set index
+    l1Tag = new_address / (CACHE_LINE_SIZE * L1Cache.getNumSets()); // Calculate the L1 tag
+
+    l2SetIndex = (new_address / CACHE_LINE_SIZE) % L2Cache.getNumSets(); // Calculate the L2 set index
+    l2Tag = new_address / (CACHE_LINE_SIZE * L2Cache.getNumSets());
+
+    l3SetIndex = (new_address / CACHE_LINE_SIZE) % L3Cache.getNumSets(); // Calculate the L3 set index
+    l3Tag = new_address / (CACHE_LINE_SIZE * L3Cache.getNumSets());
+
+    offset = new_address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
+
+
+
+
+
+    // Read the second cache line
+    auto result2 = readSingleLine(new_address, l1SetIndex, l1Tag, l2SetIndex, l2Tag, l3SetIndex, l3Tag, offset);
+    if (!result2.success)
+    {
+        result.success = false;
+        result.errorInfo = result2.errorInfo;
+        return result;
+    }
+
+    std::cout << "Successfully read cross lines at address: " << std::hex << address << std::endl;
+    std::cout << "First line: "<< result1 << std::endl;
+    std::cout << "Second line: "<< result2 << std::endl;
+
+    // Copy the data from both lines into the result
+    std::memcpy(result.data.data(), result1.data.data(), CACHE_LINE_SIZE);
+    std::memcpy(result.data.data() + CACHE_LINE_SIZE, result2.data.data(), CACHE_LINE_SIZE);
+
+    std::cout << "Combined data: "<< result << std::endl;
+
+    result.success = true;
+    return result;
+}

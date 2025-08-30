@@ -98,6 +98,8 @@ class CacheManager
         Result<T> read(uint64_t address);
         template <typename T>
         Result<void> write(uint64_t address, const T& data); // Write data to the cache
+        Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> readCrossLines(uint64_t address);
+        Result<std::array<uint8_t, CACHE_LINE_SIZE>> readSingleLine(uint64_t address, uint64_t l1SetIndex, uint64_t l1Tag, uint64_t l2SetIndex, uint64_t l2Tag, uint64_t l3SetIndex, uint64_t l3Tag, uint64_t offset);
         void flushAllCaches();
         void invalidateAllCaches();
         void printCacheState() const; // For debugging purposes
@@ -228,194 +230,49 @@ Result<T> CacheManager::read(uint64_t address)
 
     std::cout << "Reading from cachemanager at address: " << std::hex << address << std::endl;
 
-    //variant for managing the reading of 1 or 2 lines depending on the position of the instruction inside the line
-    std::variant<Result<std::array<uint8_t, CACHE_LINE_SIZE>>, Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>>> readResult;
+    //temporary result that holds the line read from cache
+    Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> temporary_result;
+
     bool twoLines = false;
+
     // Try to read from L1 cache
     if(offset + sizeof(T) > CACHE_LINE_SIZE)
     {
         twoLines = true;
-        readResult = readCrossLines(address);
+        temporary_result = readCrossLines(address); // Read 2 lines
     }
     else
     {
-        readResult = L1Cache.read(address); // Read from L1 cache
+        //function for copying arrays of different size inside result
+        copyPartial(temporary_result, readSingleLine(address, l1SetIndex, l1Tag, l2SetIndex, l2Tag, l3SetIndex, l3Tag, offset)); // Initialize to avoid uninitialized warning
+       
     }
-
-    //temporary result that holds the line read from cache
-    Result<std::array<uint8_t, CACHE_LINE_SIZE*2> > temporary_result;
-
-    std::visit([&temporary_result](auto&& result)
-    {
-        std::memcpy(temporary_result.data.data(), &result.data.data(), sizeof(result.data));
-        temporary_result.success = result.success;
-        temporary_result.errorInfo = result.errorInfo;
-
-    }, readResult);
-
 
     Result<T> final_result{};
-    
 
-    if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
-    {
-        final_result.success = false;
-        final_result.errorInfo = temporary_result.errorInfo;
-        return final_result;
-    }
+    T data{};
 
-    if (temporary_result.success) // Check if the read was successful
+
+    if(twoLines)
     {
-        
-        //changing the event type from generic cache to l1 cache
-        temporary_result.errorInfo.source = ComponentType::CACHE_L1; // Set the source to CACHE_L1
-        
-        //coping the values from the temporary to teh final output
-        std::memcpy(&final_result.data, temporary_result.data.data() + offset, sizeof(T));
-        final_result.success = true;
-        final_result.errorInfo = temporary_result.errorInfo;
-        return final_result; // Return the result
+        //extracting the first part of the instrcutuion/data from the first line
+        std::memcpy(&data, temporary_result.data.data() + offset, CACHE_LINE_SIZE - offset);
+
+        //extracting the second part of the instruction/data from the second line
+        std::memcpy(reinterpret_cast<uint8_t*>(&data) + (CACHE_LINE_SIZE - offset), temporary_result.data.data()+ CACHE_LINE_SIZE, sizeof(T) - (CACHE_LINE_SIZE - offset));
     }
     else
     {
-        // Cache miss in L1, try L2 cache
-        temporary_result = L2Cache.read(address); // Read from L2 cache
+        //extracting the instruction/data from the line
+        std::memcpy(&data, temporary_result.data.data() + offset, sizeof(T));
+    }
+    
 
-        if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
-        {
-            final_result.success = false;
-            final_result.errorInfo = temporary_result.errorInfo;
-            return final_result;
-        }
-
-        // Check if the read was successful
-        if(temporary_result.success)
-        {
-            //changing the event type from generic cache to l2 cache
-            temporary_result.errorInfo.source = ComponentType::CACHE_L2; // Set the source to CACHE_L2
-
-            //load the data into L1 cache
-
-            // Find a free line in L1 cache
-            uint64_t freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
-
-            // Load the data into L1 cache
-            L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
-
-            //coping the values from the temporary to teh final output
-            std::memcpy(&final_result.data, temporary_result.data.data() + offset, sizeof(T));
-            final_result.success = true;
-            final_result.errorInfo = temporary_result.errorInfo;
-            return final_result; // Return the result
-
-        }
-        else
-        {
-            // Cache miss in L2, try L3 cache
-            temporary_result = L3Cache.read(address); // Read from L3 cache
-
-            if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
-            {
-                final_result.success = false;
-                final_result.errorInfo = temporary_result.errorInfo;
-                return final_result;
-            }
-
-            // Check if the read was successful
-            if(temporary_result.success)
-            {
-                //changing the event type from generic cache to l3 cache
-                temporary_result.errorInfo.source = ComponentType::CACHE_L3; // Set the source to CACHE_L3
-
-                //load the data into L2 cache
-
-                // Find a free line in L2 cache
-                uint64_t freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
-
-                // Load the data into L2 cache
-                L2Cache.load(l2SetIndex, l2Tag, temporary_result.data, freePosition); // Load the data into L2 cache
-
-                //load the data into L1 cache
-
-                // Find a free line in L1 cache
-                freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
-
-                // Load the data into L1 cache
-                L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
-
-                //coping the values from the temporary to teh final output
-                std::memcpy(&final_result.data, temporary_result.data.data() + offset, sizeof(T));
-                final_result.success = true;
-                final_result.errorInfo = temporary_result.errorInfo;
-                return final_result; // Return the result
-
-            }
-            else
-            {
-                //calculating the start of the line
-                uint64_t lineStart = address - offset;
-
-                std::cout << "Cache miss in L3, reading from RAM at address: " << std::hex << lineStart << std::endl; // Print the cache miss message
-
-                // Cache miss in L3, read from RAM
-                temporary_result = bus.getMemory().template readGeneric<std::array<uint8_t, CACHE_LINE_SIZE>>(lineStart); // Read from RAM
-
-                std::cout << "Read from RAM at address: " << std::hex << lineStart << std::endl; // Print the RAM read message
-
-                // Check if the read was successful
-                if(temporary_result.success)
-                {
-                    //load the data into L3 cache
-
-                    // Find a free line in L3 cache
-                    uint64_t freePosition = L3Cache.findFreeLineIndex(L3Cache.getSets()[l3SetIndex]); 
-
-                    // Load the data into L3 cache
-                    L3Cache.load(l3SetIndex, l3Tag, temporary_result.data, freePosition); // Load the data into L3 cache
-
-                    //load the data into L2 cache
-
-                    // Find a free line in L2 cache
-                    freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
-
-                    // Load the data into L2 cache
-                    L2Cache.load(l2SetIndex, l2Tag, temporary_result.data, freePosition); // Load the data into L2 cache
-
-                    //load the data into L1 cache
-
-                    // Find a free line in L1 cache
-                    freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
-
-                    // Load the data into L1 cache
-                    L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
-
-                    //coping the values from the temporary to teh final output
-                    std::memcpy(&final_result.data, temporary_result.data.data() + offset, sizeof(T));
-                    final_result.success = true;
-                    final_result.errorInfo = temporary_result.errorInfo;
-                    return final_result; // Return the result
-
-                }
-                else
-                {
-                    // Cache miss in RAM, return error
-                    final_result.success = false; // Set success to false
-
-                    // Set the event type to RAM_ACCESS
-                    final_result.errorInfo.event = EventType::RAM_ACCESS; // Set the event type to RAM_ACCESS
-                    final_result.errorInfo.source = ComponentType::RAM; // Set the source to RAM
-                    final_result.errorInfo.message = "RAM access failed at address: " + std::to_string(address); // Set the message for debugging
-                    temporary_result.errorInfo.error = ErrorType::READ_FAIL; // Set the error type to READ_FAIL
-
-                    return final_result; // Return the result
-
-                }
-
-                
-            }
-
-        }
-    }  
+    final_result.success = temporary_result.success;
+    final_result.errorInfo = temporary_result.errorInfo;
+    final_result.data = data;
+    return final_result;
+   
 }
 
 template <typename T>
@@ -538,4 +395,5 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
     }
 }
    
+
 #endif //CACHEMANAGER_HPP

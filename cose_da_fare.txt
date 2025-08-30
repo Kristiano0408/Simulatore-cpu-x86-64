@@ -1,8 +1,10 @@
 !!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE a (CACHE MANAGER,ram, operands) al moemnto la propagazione
 di result si ferma al fethc in cu e nell istruiction!!!
 
-//READ CROOS LINES CACHE
+//READ CROOS LINES CACHE (in teroai va tutto)
 //WRITE CROSSLINES CACHE
+
+//per testare move su ram leggi cache no ram perch eram non viene scritta  fino a sostituzioen della linea
 
 //funzioni per modificare grandezza rame e cache
 //finire di sistemare cahce (capire eprceh non runna)

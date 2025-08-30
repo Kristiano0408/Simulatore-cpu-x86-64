@@ -6,6 +6,9 @@
 #include <cstdint>
 #include <iostream>
 #include <concepts>
+#include <type_traits>
+#include <algorithm>
+#include <cstring>
 
 //farward declaration of the enum class for registers
 enum class Register;
@@ -72,6 +75,14 @@ struct Result {
     T data;
     bool success;
     Error_Event_Info errorInfo; // Error information if any
+
+    // operator= solo per std::array
+    template<size_t N>
+    Result<std::array<uint8_t, N>>& operator=(const Result<std::array<uint8_t, N>>& other) {
+    std::memcpy(data.data(), other.data.data(), N);
+    success = other.success;
+    errorInfo = other.errorInfo;
+    return *this;}
 };
 
 //specialization for void
@@ -80,6 +91,14 @@ struct Result<void> {
     bool success;
     Error_Event_Info errorInfo; // Error information if any
 };
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+template <size_t N, size_t M>
+void copyPartial(Result<std::array<uint8_t, N>>& dest, const Result<std::array<uint8_t, M>>& src) {
+    size_t bytesToCopy = std::min(N, M);
+    std::memcpy(dest.data.data(), src.data.data(), bytesToCopy);
+    dest.success = src.success;
+    dest.errorInfo = src.errorInfo;
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::ostream& operator<<(std::ostream& os, const ErrorType& type);
@@ -96,23 +115,28 @@ std::ostream& operator<<(std::ostream& os, const Result<T>& result)
                   << "Error info:" << result.errorInfo.source << " "
                   << result.errorInfo.event << " "
                   << result.errorInfo.error << std::endl;
-    } else if constexpr (std::is_same_v<T, std::array<uint8_t, 64>>) {
-        os << "Data: ";
-        for (const auto& byte : result.data) {
-            os << std::hex << static_cast<int>(byte) << " ";
-        }
-        return os << "\n"
-                  << "success: " << result.success << "\n"
-                  << "Error info:" << result.errorInfo.source << " "
-                  << result.errorInfo.event << " "
-                  << result.errorInfo.error << std::endl;
-    } else {
+    }
+    else {
         return os << "Data: " << result.data << "\n"
                   << "success: " << result.success << "\n"
                   << "Error info:" << result.errorInfo.source << " "
                   << result.errorInfo.event << " "
                   << result.errorInfo.error << std::endl;
     }
+}
+
+template <typename T, std::size_t N>
+std::ostream& operator<<(std::ostream& os, const Result<std::array<T, N>>& result)
+{
+    os << "Data: ";
+    for (const auto& byte : result.data) {
+        os << std::hex << static_cast<int>(byte) << " ";
+    }
+    return os << "\n"
+              << "success: " << result.success << "\n"
+              << "Error info:" << result.errorInfo.source << " "
+              << result.errorInfo.event << " "
+              << result.errorInfo.error << std::endl;
 }
 
 
