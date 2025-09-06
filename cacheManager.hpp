@@ -35,7 +35,7 @@ struct CacheSet
 };
 
 
-/// Cache level structure
+/// Cache level structure(L1, L2, L3)
 /// Contains multiple cache sets and manages the cache operations
 class CacheLevel
 {
@@ -87,8 +87,7 @@ class CacheLevel
 
 };
 
-
-// Cache manager class to manage multiple cache levels
+/// Cache manager class to manage multiple cache levels
 class CacheManager
 {   
     public:
@@ -98,6 +97,10 @@ class CacheManager
         Result<T> read(uint64_t address);
         template <typename T>
         Result<void> write(uint64_t address, const T& data); // Write data to the cache
+        template< typename T>
+        Result<void> writeSingleLine(uint64_t address, const T& data, uint64_t l1SetIndex, uint64_t l1Tag, uint64_t l2SetIndex, uint64_t l2Tag, uint64_t l3SetIndex, uint64_t l3Tag, uint64_t offset);
+        template< typename T>
+        Result<void> writeCrossLines(uint64_t address, const T& data);
         Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> readCrossLines(uint64_t address);
         Result<std::array<uint8_t, CACHE_LINE_SIZE>> readSingleLine(uint64_t address, uint64_t l1SetIndex, uint64_t l1Tag, uint64_t l2SetIndex, uint64_t l2Tag, uint64_t l3SetIndex, uint64_t l3Tag, uint64_t offset);
         void flushAllCaches();
@@ -112,10 +115,7 @@ class CacheManager
 };
 
 
-
-
-
-// Function to manage cache offset errors
+/// Function to manage cache offset errors
 template<typename T>
 bool offset_cache(EventType event, ErrorType error, Result<T>& result, uint64_t offset, uint64_t address)
 {
@@ -140,9 +140,9 @@ template<>
 bool offset_cache(EventType event, ErrorType error, Result<std::array<uint8_t, CACHE_LINE_SIZE>>& result, uint64_t offset, uint64_t address);
 
 
+
+
 //tempalte functions implementation (cachelevel:read is the only one that dont need it,cus it always read an entire line)
-
-
 
 template <typename T>
 Result<void> CacheLevel::write(uint64_t address, const T& data)
@@ -289,7 +289,31 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
 
     uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
 
-    Result<std::array<uint8_t,CACHE_LINE_SIZE> > read_result;
+    
+
+    // Check if the write spans two cache lines
+    if (offset + sizeof(T) > CACHE_LINE_SIZE)
+    {
+        // Write spans two cache lines, need to read both lines first
+        return writeCrossLines(address, data);
+        
+    }
+    else
+    {
+        //write is contained in a single line
+        return writeSingleLine(address, data, l1SetIndex, l1Tag, l2SetIndex, l2Tag, l3SetIndex, l3Tag, offset);
+
+
+    }
+}
+
+
+template< typename T>
+Result<void> CacheManager::writeSingleLine(uint64_t address, const T& data, uint64_t l1SetIndex, uint64_t l1Tag, uint64_t l2SetIndex, uint64_t l2Tag, uint64_t l3SetIndex, uint64_t l3Tag, uint64_t offset)
+{
+
+    //temporary result that holds the line read from cache(it is used to load the line from lower levels or RAM)
+    Result<std::array<uint8_t, CACHE_LINE_SIZE>> read_result;
 
     // Try to write to L1 cache
     Result<void>result = L1Cache.write(address, data); // Write to L1 cache
@@ -391,9 +415,60 @@ Result<void> CacheManager::write(uint64_t address, const T& data)
                 }
             }
         }
-
-    }
+    };
 }
-   
 
+template< typename T>
+Result<void> CacheManager::writeCrossLines(uint64_t address, const T& data)
+{
+    // Write data spanning two cache lines
+    Result<void> result;
+
+    uint64_t l1SetIndex = (address / CACHE_LINE_SIZE) % L1Cache.getNumSets(); // Calculate the L1 set index
+    uint64_t l1Tag = address / (CACHE_LINE_SIZE * L1Cache.getNumSets()); // Calculate the L1 tag
+
+    uint64_t l2SetIndex = (address / CACHE_LINE_SIZE) % L2Cache.getNumSets(); // Calculate the L2 set index
+    uint64_t l2Tag = address / (CACHE_LINE_SIZE * L2Cache.getNumSets()); // Calculate the L2 tag
+
+    uint64_t l3SetIndex = (address / CACHE_LINE_SIZE) % L3Cache.getNumSets(); // Calculate the L3 set index
+    uint64_t l3Tag = address / (CACHE_LINE_SIZE * L3Cache.getNumSets()); // Calculate the L3 tag
+
+    uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
+
+    // Write the first part of the data to the first cache line
+    auto result1 = writeSingleLine(address, data, l1SetIndex, l1Tag, l2SetIndex, l2Tag, l3SetIndex, l3Tag, offset);
+    if (!result1.success)
+    {
+        result.success = false;
+        result.errorInfo = result1.errorInfo;
+        return result;
+    }
+
+    uint64_t new_address = address + (CACHE_LINE_SIZE - offset);
+    l1SetIndex = (new_address / CACHE_LINE_SIZE) % L1Cache.getNumSets(); // Calculate the L1 set index
+    l1Tag = new_address / (CACHE_LINE_SIZE * L1Cache.getNumSets()); // Calculate the L1 tag
+
+    l2SetIndex = (new_address / CACHE_LINE_SIZE) % L2Cache.getNumSets(); // Calculate the L2 set index
+    l2Tag = new_address / (CACHE_LINE_SIZE * L2Cache.getNumSets());
+
+    l3SetIndex = (new_address / CACHE_LINE_SIZE) % L3Cache.getNumSets(); // Calculate the L3 set index
+    l3Tag = new_address / (CACHE_LINE_SIZE * L3Cache.getNumSets());
+
+    offset = new_address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
+
+    // Write the second part of the data to the second cache line
+    auto result2 = writeSingleLine(new_address, reinterpret_cast<const uint8_t*>(&data) + (CACHE_LINE_SIZE - offset), l1SetIndex, l1Tag, l2SetIndex, l2Tag, l3SetIndex, l3Tag, offset);
+    if (!result2.success)
+    {
+        result.success = false;
+        result.errorInfo = result2.errorInfo;
+        return result;
+    }   
+    result.success = true;
+    result.errorInfo.event = EventType::CACHE_HIT; // Set the event type to CACHE_HIT
+    result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
+    result.errorInfo.message = "Write completed successfully at address: " + std::to_string(address); // Set the message for debugging
+    result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
+    return result;
+}
 #endif //CACHEMANAGER_HPP

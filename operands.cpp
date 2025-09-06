@@ -343,52 +343,49 @@ Result<uint64_t> MemOperand::getValue() {
     {
         return Result<uint64_t>{0,false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot get value."}};
     }
-    else
+    
+    //extarcting value first from cache, the from memory if necessary
+
+
+
+    Result<uint64_t> result;
+
+    uint64_t real_value;
+
+    switch(size) 
     {
-        //extarcting value first from cache, the from memory if necessary
-
-
-
-        Result<uint64_t> result;
-
-        uint64_t real_value;
-
-       switch(size) 
-       {
-            case 8: {
-                Result<uint8_t> res = cache.read<uint8_t>(address);
-                if (res.success) std::memcpy(&real_value, &res.data, 1);
-                result.success = res.success;
-                result.errorInfo = res.errorInfo;
-                break;
-            }
-            case 16: {
-                Result<uint16_t> res = cache.read<uint16_t>(address);
-                if (res.success) std::memcpy(&real_value, &res.data, 2);
-                result.success = res.success;
-                result.errorInfo = res.errorInfo;
-                break;
-            }
-            case 32: {
-                Result<uint32_t> res = cache.read<uint32_t>(address);
-                if (res.success) std::memcpy(&real_value, &res.data, 4);
-                result.success = res.success;
-                result.errorInfo = res.errorInfo;
-                break;
-            }
-            case 64: {
-                Result<uint64_t> res = cache.read<uint64_t>(address);
-                if (res.success) real_value = res.data;
-                result.success = res.success;
-                result.errorInfo = res.errorInfo;
-                break;
-            }
-            default:
-                return Result<uint64_t>{0, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE, "Invalid size"}};
+        case 8: {
+            Result<uint8_t> res = cache.read<uint8_t>(address);
+            if (res.success) std::memcpy(&real_value, &res.data, 1);
+            result.success = res.success;
+            result.errorInfo = res.errorInfo;
+            break;
         }
-
+        case 16: {
+            Result<uint16_t> res = cache.read<uint16_t>(address);
+            if (res.success) std::memcpy(&real_value, &res.data, 2);
+            result.success = res.success;
+            result.errorInfo = res.errorInfo;
+            break;
+        }
+        case 32: {
+            Result<uint32_t> res = cache.read<uint32_t>(address);
+            if (res.success) std::memcpy(&real_value, &res.data, 4);
+            result.success = res.success;
+            result.errorInfo = res.errorInfo;
+            break;
+        }
+        case 64: {
+            Result<uint64_t> res = cache.read<uint64_t>(address);
+            if (res.success) real_value = res.data;
+            result.success = res.success;
+            result.errorInfo = res.errorInfo;
+            break;
+        }
+        default:
+            return Result<uint64_t>{0, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE, "Invalid size"}};
     }
-    return Result<uint64_t>{0, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE, "Invalid size"}};
+    return Result<uint64_t>{real_value, result.success, result.errorInfo};
 }
 
 Result<void> ImmediateOperand::setValue(uint64_t v) {

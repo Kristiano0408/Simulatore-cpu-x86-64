@@ -5,6 +5,7 @@
 #include <iostream>
 
 
+/// CacheLevel class implementation
 CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, Bus& bus, CacheLevel* nextLevel)
     : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus), nextLevel(nextLevel)
 {
@@ -31,7 +32,7 @@ CacheLevel::~CacheLevel()
 
 }
 
-
+/// Function to LOAD an entire cache line into the cache
 void CacheLevel::load(uint64_t setIndex, uint64_t tag, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t freePosition)
 {
     // Load data into the cache line at the specified set index and tag
@@ -51,6 +52,8 @@ void CacheLevel::load(uint64_t setIndex, uint64_t tag, const std::array<uint8_t,
 
 }
 
+
+/// Function to find a cache line in a set(for read and write operations or managing replacement policy)
 CacheLine* CacheLevel::findLine(const CacheSet& set , uint64_t tag)
 {
     // Loop through the lines in the set to find a matching tag
@@ -65,6 +68,7 @@ CacheLine* CacheLevel::findLine(const CacheSet& set , uint64_t tag)
     return nullptr; // Return nullptr if no matching line is found
 }
 
+/// Function to invalidate a specific cache line based on address
 void CacheLevel::invalidate(uint64_t address)
 {
     uint64_t setIndex = (address / CACHE_LINE_SIZE) % numSets; // Calculate the set index
@@ -93,6 +97,7 @@ void CacheLevel::invalidate(uint64_t address)
 
 }
 
+/// Function to invalidate all cache lines in the cache
 void CacheLevel::invalidateAll()
 {
     // Loop through all sets and lines to invalidate the cache
@@ -113,6 +118,7 @@ void CacheLevel::invalidateAll()
 
 }
 
+/// Function to flush the cache (write back all dirty lines to memory)
 void CacheLevel::flush()
 {
     // Loop through all sets and lines to flush the cache
@@ -133,6 +139,7 @@ void CacheLevel::flush()
 
 }
 
+//helper function to print the state of the cache for debugging purposes
 void CacheLevel::printCacheState() const
 {
     // Print the state of the cache for debugging purposes
@@ -148,6 +155,7 @@ void CacheLevel::printCacheState() const
 }
 
 
+/// Function to find a free line in a set or manage replacement policy if none are free
 uint64_t CacheLevel::findFreeLineIndex(CacheSet& set)
 {
     for (uint64_t i = 0; i < set.lines.size(); ++i)
@@ -160,6 +168,7 @@ uint64_t CacheLevel::findFreeLineIndex(CacheSet& set)
     return manageReplacementPolicy(set);
 }
 
+/// Function to manage the replacement policy (LRU) and return the index of the line to be replaced
 uint64_t CacheLevel::manageReplacementPolicy(CacheSet& set)
 {
     uint64_t index = 0; // Initialize the index to 0
@@ -198,6 +207,7 @@ uint64_t CacheLevel::manageReplacementPolicy(CacheSet& set)
     return index; // Return the index of the line to be replaced
 }
 
+/// Function to read data from the cache
 Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
 {
     //craetion of the structure for the result
@@ -277,6 +287,8 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
     
 }
 
+
+//helpers functions specializations for offset_cache
 template<>
 bool offset_cache(EventType event, ErrorType error, Result<void>& result, uint64_t offset, uint64_t address)
 {
@@ -307,6 +319,9 @@ bool offset_cache(EventType event, ErrorType error, Result<std::array<uint8_t, C
     return false; // No error
 }
 
+
+
+
 // CacheManager class implementation
 CacheManager::CacheManager(Bus& bus, uint64_t l1Size, uint64_t l2Size, uint64_t l3Size,uint64_t l1Associativity, uint64_t l2Associativity, uint64_t l3Associativity) 
                          :L1Cache(l1Size, l1Associativity, bus, &L2Cache), L2Cache(l2Size, l2Associativity, bus, &L3Cache), L3Cache(l3Size, l3Associativity, bus, nullptr), bus(bus)
@@ -321,7 +336,7 @@ CacheManager::~CacheManager()
 }
 
 
-
+// Flush all caches (L1, L2, L3)
 void CacheManager::flushAllCaches()
 {
     L1Cache.flush(); // Flush L1 cache
@@ -329,6 +344,7 @@ void CacheManager::flushAllCaches()
     L3Cache.flush(); // Flush L3 cache
 }
 
+// Invalidate all caches (L1, L2, L3)
 void CacheManager::invalidateAllCaches()
 {
     L1Cache.invalidateAll(); // Invalidate all lines in L1 cache
@@ -336,6 +352,7 @@ void CacheManager::invalidateAllCaches()
     L3Cache.invalidateAll(); // Invalidate all lines in L3 cache
 }
 
+// Function to print the state of all caches for debugging purposes
 void CacheManager::printCacheState() const
 {
     std::cout << "Cache Manager State:" << std::endl; // Print the cache manager state
@@ -344,7 +361,7 @@ void CacheManager::printCacheState() const
     L3Cache.printCacheState(); // Print L3 cache state
 }
 
-
+//function to read data that is contained in a single cache line
 Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64_t address, uint64_t l1SetIndex, uint64_t l1Tag, uint64_t l2SetIndex, uint64_t l2Tag, uint64_t l3SetIndex, uint64_t l3Tag, uint64_t offset)
 {
     //temporary result that holds the line read from cache
@@ -497,6 +514,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
    
 }
 
+//function for reading data that is contained in two cache lines
 Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> CacheManager::readCrossLines(uint64_t address)
 {
     std::cout << "Reading cross lines at address: " << std::hex << address << std::endl;
@@ -563,3 +581,4 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> CacheManager::readCrossLines(ui
     result.success = true;
     return result;
 }
+
