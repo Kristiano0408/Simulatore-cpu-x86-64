@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "opcode_map.hpp"
 
+//REMINDER: the legth of the instruction(for 16/32/64 bit mode)  is standardized to 32bit , the others sizes are modified with prefixes
 
 std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
 
@@ -42,6 +43,20 @@ std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
     {0xA1, {5, 1, 4, 1, 4, false, true, false, "MOV EAX/RAX, moffs32/64"}},
     {0xA2, {5, 1, 4, 1, 4, false, true, false, "MOV moffs8, AL"}},
     {0xA3, {5, 1, 4, 1, 4, false, true, false, "MOV moffs32/64, EAX/RAX"}},
+
+
+    // Istruzioni ADD
+
+    {0x04, {2, 1, 1, 1, 1, false, false, true, "ADD AL, imm8"}},
+    {0x05, {5, 1, 4, 1, 4, false, false, true, "ADD EAX/RAX, imm16/imm32/imm64"}},
+    {0x80, {3, 1, 2, 2, 1, true, false, true, "ADD r/m8, imm8"}},
+    {0x81, {6, 1, 5, 2, 4, true, false, true, "ADD r/m16/32/64, imm16/32/64"}},
+    {0x83, {3, 1, 2, 2, 1, true, false, true, "ADD r/m16/32/64, imm8"}},
+
+    {0x00, {2, 1, 1, 2, 1, true, false, false, "ADD r/m8, r8"}},
+    {0x01, {2, 1, 1, 2, 1, true, false, false, "ADD r/m16/32/64, r16/32/64"}},
+    {0x02, {2, 1, 1, 2, 1, true, false, false, "ADD r8 , r/m8"}},
+    {0x03, {2, 1, 1, 2, 1 ,true ,false ,false , "ADD r16/32/64 , r/m16/32/64"}},
 
 
 

@@ -37,6 +37,17 @@ std::unordered_map<uint32_t, InstructionType_and_addMode> instructionMap
     {0xA2, {typeofInstruction::MOV, AddressingMode::TD}},
     {0xA3, {typeofInstruction::MOV, AddressingMode::TD}},
 
+    // Add instruction opcodes can be added here in a similar manner
+    {0x04, {typeofInstruction::ADD, AddressingMode::I}},
+    {0x05, {typeofInstruction::ADD, AddressingMode::I}},
+    {0x80, {typeofInstruction::ADD, AddressingMode::MI}},
+    {0x81, {typeofInstruction::ADD, AddressingMode::MI}},
+    {0x83, {typeofInstruction::ADD, AddressingMode::MI}},
+    {0x00, {typeofInstruction::ADD, AddressingMode::MR}},
+    {0x01, {typeofInstruction::ADD, AddressingMode::MR}},
+    {0x02, {typeofInstruction::ADD, AddressingMode::RM}},
+    {0x03, {typeofInstruction::ADD, AddressingMode::RM}},
+
 };
 
 
@@ -49,6 +60,7 @@ std::unordered_map<AddressingMode, DecodeFunc> Addressing_modes
     {AddressingMode::RM, &Decoder::decodeInstructionRM},
     {AddressingMode::FD, &Decoder::decodeInstructionFD},
     {AddressingMode::TD, &Decoder::decodeInstructionTD},
+    {AddressingMode::I, &Decoder::decodeInstructionI},
     
 
    
@@ -58,7 +70,8 @@ std::unordered_map<AddressingMode, DecodeFunc> Addressing_modes
 
 std::unordered_map<typeofInstruction, std::function<std::unique_ptr<Instruction>()>> instructionConstructors 
 {
-    {typeofInstruction::MOV, [](){ return std::make_unique<MoveInstruction>(); }}
+    {typeofInstruction::MOV, [](){ return std::make_unique<MoveInstruction>(); }},
+    {typeofInstruction::ADD, [](){ return std::make_unique<AddInstruction>(); }}
 };
 
 

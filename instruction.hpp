@@ -128,24 +128,17 @@ class Instruction
 
 };
 
-//define the instruction classes (an iscrutction for each operation)
+//define the instruction classes (an instruction for each operation)
 
 class MoveInstruction : public Instruction
 {
     public:
 
-
-
         //destructor
         ~MoveInstruction() override = default;
+        void fetchOperands(Bus& bus) override;
+        //uint64_t calculatingAddressR_M(Bus& bus); //calculate the address for the operation R/M
 
-
-
-    void fetchOperands(Bus& bus) override;
-
-        uint64_t calculatingAddressR_M(Bus& bus); //calculate the address for the operation R/M
-
-       
         //execute the instruction
         void execute(Bus& bus) override;
         int calculating_number_of_bits(); //calculate the number of bits of the value/operand
@@ -157,6 +150,21 @@ class MoveInstruction : public Instruction
         
 
        
+};
+
+
+class AddInstruction : public Instruction
+{
+    public:
+        //destructor
+        ~AddInstruction() override = default;
+
+        void fetchOperands(Bus& bus) override;
+
+        //execute the instruction
+        void execute(Bus& bus) override;
+        int calculating_number_of_bits(); //calculate the number of bits of the value/operand
+
 };
 
 #endif // INSTRUCTION_HPP    

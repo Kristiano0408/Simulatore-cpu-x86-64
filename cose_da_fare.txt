@@ -2,12 +2,15 @@
 di result si ferma al fethc in cu e nell istruiction!!!
 
 
-//per testare move su ram leggi cache no ram perch eram non viene scritta  fino a sostituzioen della linea
+//IMPLEMENTARE ADD(STRUTTURA GIA FATTA(MAGARI CONTROLLARE MAPPE, IMPLEMENTARE DECODIFICA ED ESECUZIONE))
 
-//funzioni per modificare grandezza rame e cache
+//funzioni per modificare grandezza ram e cache
 ////modificare grandezza memoria dal bus
 
-//flame grafh
+//flame grafh(FATTO, va solo compialto quando si vuole eseguire profiling)
+
+
+
 
 //controllo big indian 
 

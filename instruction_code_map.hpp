@@ -16,11 +16,13 @@ struct InstructionInfo;
 enum class typeofInstruction
 {
     MOV, //move instruction
+    ADD, //add instruction
 };
 
 //enum for the addressing mode of the instruction
 enum class AddressingMode
 {
+    I,  //move immediate to accumulator
     OI, //move immediate to register
     MI, //move immediate to memory/register
     MR, //move register to R/M
@@ -38,20 +40,20 @@ struct InstructionType_and_addMode
 };
 
 
-//map for the instructions types 
+//map for the instructions types(for every key(opcode) there is a value(type of instruction and addressing mode))
 extern std::unordered_map<uint32_t, InstructionType_and_addMode> instructionMap;
 
-//generic function pointer for the constructor of the instruction
+//generic function pointer for the constructor of the instruction(it returns a unique pointer to an instruction)
 using  ConstructorFunc = std::function<std::unique_ptr<Instruction>()>;
 
-// map for the constructors of the instructions
+// map for the constructors of the instructions(for every key(type of instruction) there is a value(constructor function))
 extern std::unordered_map<typeofInstruction, ConstructorFunc> instructionConstructors;
 
 
-// generic function pointer for the decode function
+// generic function pointer for the decode function (it takes a pointer to an instruction, a reference to InstructionInfo struct and an integer as parameters and returns void)
 using DecodeFunc = void (*)(Instruction*, const InstructionInfo&, int);
 
-// map for the decode functions
+// map for the decode functions (for every key(addressing mode) there is a value(decode function))
 extern std::unordered_map<AddressingMode, DecodeFunc> Addressing_modes;
 
  

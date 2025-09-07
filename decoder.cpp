@@ -220,6 +220,12 @@ void Decoder::decodeInstructionTD(Instruction* instruction, const InstructionInf
     instruction->setDisplacement(decodeDisplacement(instructionInfo, position, 4));
 }
 
+void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+{
+    //decode the immediate value
+}
+
+
 
 //constructor of the instruction based on the type of instruction
 Instruction* Decoder::ConstructorCreation(typeofInstruction type_instruction)

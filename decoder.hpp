@@ -35,11 +35,8 @@ class Decoder {
         static void decodeInstructionRM(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
         static void decodeInstructionFD(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
         static void decodeInstructionTD(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
-        
+        static void decodeInstructionI(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
 
-
-        
-        
 
         
     private:
