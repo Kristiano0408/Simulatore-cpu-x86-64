@@ -20,6 +20,7 @@ namespace operandFetch {
     void fetchTD(Instruction* i, Bus& bus);
     void fetchOI(Instruction* i, Bus& bus, uint32_t opcode);
     void fetchMI(Instruction* i, Bus& bus);
+    void fetchI(Instruction* i, Bus& bus);
     uint64_t calculatingAddressR_M(Instruction* i, Bus& bus);
 }
 

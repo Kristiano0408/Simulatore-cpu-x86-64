@@ -2,7 +2,8 @@
 #include <cstdint>
 #include "controlUnit.hpp"
 #include "bus.hpp"
-
+#include "registerFile.hpp"
+#include "cpu.hpp"
 
 Instruction::Instruction()
 {
@@ -243,6 +244,38 @@ void Instruction::setAddressingMode(AddressingMode addressingMode) {
     this->addressingMode = addressingMode;
 }
 
+//calculate the number of bits of the value/operand
+int Instruction::calculating_number_of_bits() 
+{
+    uint32_t opcode = getOpcode();
+
+    if (getRexprefix() & 0x08)
+    {
+        return 64;
+    }
+
+    for (int i = 0; i < getNumPrefixes(); i++)
+    {
+        if (getPrefix()[i] == 0x66)
+        {
+            std::cout << "66 prefix" << std::endl;
+            return 16;
+        }
+    }
+
+    static const std::unordered_set<uint32_t> opcode_8bit = {0xA0, 0xA2, 0xC6, 0x88, 0x8A, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, //mov
+                                                            0x04, 0x80,0x83, 0x00, 0x02}; //add
+
+    if(opcode_8bit.count(opcode))
+    {
+        return 8;
+    }
+   
+
+    return 32;
+}
+
+//get the addressing mode
 AddressingMode Instruction::getAddressingMode() {
     return addressingMode;
 }
@@ -362,36 +395,91 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
 
 }
 
-int MoveInstruction::calculating_number_of_bits() 
+
+//Add instruction
+
+//fetch the operands
+void AddInstruction::fetchOperands(Bus& bus)
 {
+    //std::cout << "Fetching operands for Add Instruction" << std::endl;
+    //getting the opcode
     uint32_t opcode = getOpcode();
 
-    if (getRexprefix() & 0x08)
+
+    //fetch the operands
+    //using switch case to get the operands
+    switch (getAddressingMode())
     {
-        return 64;
-    }
+        case AddressingMode::MR:                     //add register to R/M
+            std::cout << "ADD_MR" << std::endl;
+            operandFetch::fetchMR(this, bus);
+            break;  
 
-    for (int i = 0; i < getNumPrefixes(); i++)
-    {
-        if (getPrefix()[i] == 0x66)
-        {
-            std::cout << "66 prefix" << std::endl;
-            return 16;
-        }
-    }
-
-    static const std::unordered_set<uint32_t> opcode_8bit = {0xA0, 0xA2, 0xC6, 0x88, 0x8A, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7};
-
-    if(opcode_8bit.count(opcode))
-    {
-        return 8;
-    }
-   
-
-    return 32;
+        case AddressingMode::RM:                    //add R/M to register
+            std::cout << "ADD_RM" << std::endl;
+            operandFetch::fetchRM(this, bus);
+            break;
+        case AddressingMode::MI:                   //add immediate to memory/register
+            std::cout << "ADD_MI" << std::endl;
+            operandFetch::fetchMI(this, bus);
+            break;
+        case AddressingMode::I:                  //add immediate to accumulator
+            std::cout << "ADD_I" << std::endl;
+            operandFetch::fetchI(this, bus);
+            break;
+        default:
+            break;
+   }
 }
 
 
+void AddInstruction::execute(Bus& bus) 
+{
+    //setting the size of the operands
+    int bit = calculating_number_of_bits();
+
+    setNbit(bit);
+
+    //setting the size of the operands(it might not be necessary but for know we dont have a geeneic function for fethcing 
+    //from memory so we have to set the size of the operands to know what to fetch
+
+    getSourceOperand()->setSize(bit);
+    getDestinationOperand()->setSize(bit);
+
+    int64_t res = 0, src_value = 0, dst_value = 0;
+
+    if(getDestinationOperand() && getSourceOperand())
+    {
+         //getting the value from the source operand
+        src_value = static_cast<int64_t>(getSourceOperand()->getValue().data);
+
+        //getting the value from the destination operand
+        dst_value = static_cast<int64_t>(getDestinationOperand()->getValue().data);
+
+        res = bus.getCPU().getALU().add(dst_value, src_value);
+
+        
+        //setting the value to the destination operand
+        getDestinationOperand()->setValue(res);
+
+    }
+    else
+    {
+        std::cerr << "Error: Source or destination operand is null" << std::endl;
+    }
+
+
+    //UPDATING FLAGS
+    FlagReg& flags = bus.getCPU().getRegisters().getFlags();
+
+    //Zero Flag
+    flags.setFlag(Flagbit::ZF, (res == 0));
+
+    //Carry Flag
+    flags.setFlag(Flagbit::CF, (dst_value + src_value) >> bit);
+
+
+}
 
 
 

@@ -2,7 +2,7 @@
 di result si ferma al fethc in cu e nell istruiction!!!
 
 
-//IMPLEMENTARE ADD(STRUTTURA GIA FATTA(MAGARI CONTROLLARE MAPPE, IMPLEMENTARE DECODIFICA ED ESECUZIONE))
+//finire add (FARE TUTTO IN UINT64_T E FLAGS)
 
 //funzioni per modificare grandezza ram e cache
 ////modificare grandezza memoria dal bus

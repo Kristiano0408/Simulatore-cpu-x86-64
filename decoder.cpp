@@ -222,7 +222,9 @@ void Decoder::decodeInstructionTD(Instruction* instruction, const InstructionInf
 
 void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
 {
-    //decode the immediate value
+    instruction->setHasImmediate(true);
+    decodeImmediateValue(instructionInfo, instruction, position);
+    
 }
 
 

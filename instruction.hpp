@@ -96,10 +96,12 @@ class Instruction
         void setAddressingMode(AddressingMode addressingMode);
         AddressingMode getAddressingMode();
 
+        int calculating_number_of_bits(); //calculate the number of bits of the value/operand
+
     protected:
 
         // operands for the instruction
-        std::unique_ptr<Operand> sourceOperand; //SOURCE openad 
+        std::unique_ptr<Operand> sourceOperand; //SOURCE operand
         std::unique_ptr<Operand> destinationOperand; //destination operand
 
         AddressingMode addressingMode; //addressing mode of the instruction
@@ -141,7 +143,7 @@ class MoveInstruction : public Instruction
 
         //execute the instruction
         void execute(Bus& bus) override;
-        int calculating_number_of_bits(); //calculate the number of bits of the value/operand
+       
         
 
     

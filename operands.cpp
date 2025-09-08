@@ -202,6 +202,19 @@ namespace operandFetch {
 
     }
 
+    void fetchI(Instruction* i, Bus& bus)
+    {
+        //the source is an immediate value and the destination is a register
+        auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
+        auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(Register::RAX).raw());
+
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+
+    }
+    
+
+
     uint64_t calculatingAddressR_M(Instruction* i, Bus& bus)
     {
         //getting the r/m byte
