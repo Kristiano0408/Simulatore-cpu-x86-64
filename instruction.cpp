@@ -402,10 +402,6 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
 void AddInstruction::fetchOperands(Bus& bus)
 {
     //std::cout << "Fetching operands for Add Instruction" << std::endl;
-    //getting the opcode
-    uint32_t opcode = getOpcode();
-
-
     //fetch the operands
     //using switch case to get the operands
     switch (getAddressingMode())
@@ -446,15 +442,15 @@ void AddInstruction::execute(Bus& bus)
     getSourceOperand()->setSize(bit);
     getDestinationOperand()->setSize(bit);
 
-    int64_t res = 0, src_value = 0, dst_value = 0;
+    uint64_t src_value = 0, dst_value = 0, res = 0;
 
     if(getDestinationOperand() && getSourceOperand())
     {
          //getting the value from the source operand
-        src_value = static_cast<int64_t>(getSourceOperand()->getValue().data);
+        src_value = getSourceOperand()->getValue().data;
 
         //getting the value from the destination operand
-        dst_value = static_cast<int64_t>(getDestinationOperand()->getValue().data);
+        dst_value = getDestinationOperand()->getValue().data;
 
         res = bus.getCPU().getALU().add(dst_value, src_value);
 
@@ -469,14 +465,7 @@ void AddInstruction::execute(Bus& bus)
     }
 
 
-    //UPDATING FLAGS
-    FlagReg& flags = bus.getCPU().getRegisters().getFlags();
-
-    //Zero Flag
-    flags.setFlag(Flagbit::ZF, (res == 0));
-
-    //Carry Flag
-    flags.setFlag(Flagbit::CF, (dst_value + src_value) >> bit);
+   
 
 
 }

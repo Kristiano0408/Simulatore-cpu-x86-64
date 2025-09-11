@@ -4,19 +4,23 @@
 #ifndef ALU_HPP
 #define ALU_HPP
 #include <cstdint>
+#include "bus.hpp"
 
 class ALU {
-    // Implemenattion of the ALU class
+    // Implementation of the ALU class
 
     public:
-        ALU();
+        ALU(Bus& bus);
         ~ALU();
 
         //arithmetic operations
-        int64_t add(int64_t a, int64_t b);
-        int64_t sub(int64_t a, int64_t b);
-        int64_t mul(int64_t a, int64_t b);
+        uint64_t add(uint64_t a, uint64_t b);
+        uint64_t sub(uint64_t a, uint64_t b);
+        uint64_t mul(uint64_t a, uint64_t b);
         //etc 
+    private:
+        //private members if needed
+        Bus& bus;
 
 };
 

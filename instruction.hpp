@@ -165,7 +165,6 @@ class AddInstruction : public Instruction
 
         //execute the instruction
         void execute(Bus& bus) override;
-        int calculating_number_of_bits(); //calculate the number of bits of the value/operand
 
 };
 

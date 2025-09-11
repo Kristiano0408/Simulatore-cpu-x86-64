@@ -1,20 +1,19 @@
-!!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE a (CACHE MANAGER,ram, operands) al moemnto la propagazione
-di result si ferma al fethc in cu e nell istruiction!!!
+!!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE a (CACHE MANAGER,ram, operands) al momento la propagazione
+di result si ferma al fetch in cu e nell istruction!!!
 
-
-//finire add (FARE TUTTO IN UINT64_T E FLAGS)
+//CONTROLLARE FUNZIONAMENTO ADD(DIEMSIONE SBAGLIATA DEGLI OPERANDI)
 
 //funzioni per modificare grandezza ram e cache
 ////modificare grandezza memoria dal bus
 
-//flame grafh(FATTO, va solo compialto quando si vuole eseguire profiling)
+//flame grafh(FATTO, va solo compilato quando si vuole eseguire profiling)
 
 
 
 
 //controllo big indian 
 
-//controllare i prefissi sbaglaiti (ad esempio 0x66 quando ho 8 bit)
+//controllare i prefissi sbagliati (ad esempio 0x66 quando ho 8 bit)
 
 //capire cosa fare con prefisso 0x67
 
@@ -28,7 +27,7 @@ controllare overflow neL CALCOLO DEGLI INDIRIZZI
 
 
 
-//controllo erroi in decodifica c6 e c7 move, se reg non è 000 errore
+//controllo errori in decodifica c6 e c7 move, se reg non è 000 errore
 
 
 
@@ -38,7 +37,6 @@ controllare overflow neL CALCOLO DEGLI INDIRIZZI
 //aggiungere metodi per accedere ai byte inferiori di tutti i registri
 
 
-//gestire errori
 
 
 
@@ -48,7 +46,7 @@ non esisto i registri alti per 8 bit AH, CH, DH, BH vengono sempre utilizzati SP
 
 solo long mode 64 bit
 
-i nomi dei egistri non cambiano in base alla grandezza, pero posso scrivere 8/16/32 nei registri a 64 bit
+i nomi dei registri non cambiano in base alla grandezza, pero posso scrivere 8/16/32 nei registri a 64 bit
 
 solo alu, no fpu, no vector unit, solo gpr e senza cs e ss e rimasugli da 32 bit
 
