@@ -1,8 +1,6 @@
 !!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE a (CACHE MANAGER,ram, operands) al momento la propagazione
 di result si ferma al fetch in cu e nell istruction!!!
 
-//CONTROLLARE FUNZIONAMENTO ADD(DIEMSIONE SBAGLIATA DEGLI OPERANDI)
-
 //funzioni per modificare grandezza ram e cache
 ////modificare grandezza memoria dal bus
 
@@ -37,7 +35,7 @@ controllare overflow neL CALCOLO DEGLI INDIRIZZI
 //aggiungere metodi per accedere ai byte inferiori di tutti i registri
 
 
-
+//AZZERARE 32BIT ALTI IN SCRITTURA REGISTRI(TIPO MOVE)
 
 
 ///NOTE//

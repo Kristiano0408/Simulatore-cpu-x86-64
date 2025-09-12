@@ -98,6 +98,8 @@ class Instruction
 
         int calculating_number_of_bits(); //calculate the number of bits of the value/operand
 
+        uint64_t mask(int nbit);// return a mask for the number of bits (8, 16, 32, 64)
+
     protected:
 
         // operands for the instruction

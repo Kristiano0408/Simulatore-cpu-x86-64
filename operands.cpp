@@ -28,8 +28,8 @@ namespace operandFetch {
         //Case 1: operation between register and register
         if(rm.mod == 0b11)   
         {
-            source_register = decodeRegisterReg(rm.reg, rex);
-            destination_register = decodeRegisterRM(rm.r_m, rex, false);
+            source_register = decodeRegisterRM(rm.r_m, rex, false);
+            destination_register = decodeRegisterReg(rm.reg, rex);
 
             auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(source_register).raw());
             auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());

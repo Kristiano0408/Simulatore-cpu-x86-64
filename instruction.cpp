@@ -280,8 +280,24 @@ AddressingMode Instruction::getAddressingMode() {
     return addressingMode;
 }
 
+uint64_t Instruction::mask(int nbit) 
+{
+    switch (nbit)
+    {
+        case 8:
+            return 0xFF;
+        case 16:
+            return 0xFFFF;
+        case 32:
+            return 0xFFFFFFFF;
+        case 64:
+            return 0xFFFFFFFFFFFFFFFF;
+        default:
+            std::cerr << "Invalid number of bits" << std::endl;
+            return 0; // or throw an exception 
 
-
+    }
+}
 
 //Move instruction
 
@@ -436,6 +452,8 @@ void AddInstruction::execute(Bus& bus)
 
     setNbit(bit);
 
+    uint64_t mask = this->mask(bit);
+
     //setting the size of the operands(it might not be necessary but for know we dont have a geeneic function for fethcing 
     //from memory so we have to set the size of the operands to know what to fetch
 
@@ -447,26 +465,34 @@ void AddInstruction::execute(Bus& bus)
     if(getDestinationOperand() && getSourceOperand())
     {
          //getting the value from the source operand
-        src_value = getSourceOperand()->getValue().data;
+        src_value = getSourceOperand()->getValue().data & mask;
 
-        //getting the value from the destination operand
-        dst_value = getDestinationOperand()->getValue().data;
+        if(getOpcode() == 0x83) // it is only encessary to mask the source 
+        {
+            dst_value = getDestinationOperand()->getValue().data;
 
-        res = bus.getCPU().getALU().add(dst_value, src_value);
+            res = bus.getCPU().getALU().add(dst_value, src_value);
 
-        
-        //setting the value to the destination operand
-        getDestinationOperand()->setValue(res);
+             //setting the value to the destination operand
+            getDestinationOperand()->setValue(res);
+            
+        }
+        else
+        {
+            //getting the value from the destination operand
+            dst_value = getDestinationOperand()->getValue().data & mask;
 
+            res = bus.getCPU().getALU().add(dst_value, src_value) & mask;
+
+
+            //setting the value to the destination operand (old destination + result of the addition masked)
+            getDestinationOperand()->setValue((getDestinationOperand()->getValue().data & ~mask) | (res & mask));
+        }
     }
     else
     {
         std::cerr << "Error: Source or destination operand is null" << std::endl;
     }
-
-
-   
-
 
 }
 
