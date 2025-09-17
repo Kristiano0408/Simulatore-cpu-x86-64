@@ -7,7 +7,7 @@ di result si ferma al fetch in cu e nell istruction!!!
 //flame grafh(FATTO, va solo compilato quando si vuole eseguire profiling)
 
 
-
+//fixare add,sub,etc quandio ce imm32 con rex(64bit extension)
 
 //controllo big indian 
 

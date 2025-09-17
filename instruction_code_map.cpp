@@ -40,9 +40,9 @@ std::unordered_map<uint32_t, InstructionType_and_addMode> instructionMap
     // Add instruction opcodes can be added here in a similar manner
     {0x04, {typeofInstruction::ADD, AddressingMode::I}},
     {0x05, {typeofInstruction::ADD, AddressingMode::I}},
-    {0x80, {typeofInstruction::ADD, AddressingMode::MI}},
-    {0x81, {typeofInstruction::ADD, AddressingMode::MI}},
-    {0x83, {typeofInstruction::ADD, AddressingMode::MI}},
+    {0x8000, {typeofInstruction::ADD, AddressingMode::MI}},
+    {0x8100, {typeofInstruction::ADD, AddressingMode::MI}},
+    {0x8300, {typeofInstruction::ADD, AddressingMode::MI}},
     {0x00, {typeofInstruction::ADD, AddressingMode::MR}},
     {0x01, {typeofInstruction::ADD, AddressingMode::MR}},
     {0x02, {typeofInstruction::ADD, AddressingMode::RM}},

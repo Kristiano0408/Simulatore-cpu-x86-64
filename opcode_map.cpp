@@ -49,9 +49,9 @@ std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
 
     {0x04, {2, 1, 1, 1, 1, false, false, true, "ADD AL, imm8"}},
     {0x05, {5, 1, 4, 1, 4, false, false, true, "ADD EAX/RAX, imm16/imm32/imm64"}},
-    {0x80, {3, 1, 2, 2, 1, true, false, true, "ADD r/m8, imm8"}},
-    {0x81, {6, 1, 5, 2, 4, true, false, true, "ADD r/m16/32/64, imm16/32/64"}},
-    {0x83, {3, 1, 2, 2, 1, true, false, true, "ADD r/m16/32/64, imm8"}},
+    {0x8000, {3, 1, 2, 2, 1, true, false, true, "ADD r/m8, imm8"}},
+    {0x8100, {6, 1, 5, 2, 4, true, false, true, "ADD r/m16/32/64, imm16/32/64"}},
+    {0x8300, {3, 1, 2, 2, 1, true, false, true, "ADD r/m16/32/64, imm8"}},
 
     {0x00, {2, 1, 1, 2, 1, true, false, false, "ADD r/m8, r8"}},
     {0x01, {2, 1, 1, 2, 1, true, false, false, "ADD r/m16/32/64, r16/32/64"}},
@@ -59,18 +59,24 @@ std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
     {0x03, {2, 1, 1, 2, 1 ,true ,false ,false , "ADD r16/32/64 , r/m16/32/64"}},
 
 
+    // Istruzioni SUB
+    {0x2C, {2, 1, 1, 1, 1, false, false, true, "SUB AL, imm8"}},
+    {0x2D, {5, 1, 4, 1, 4, false, false, true, "SUB  AX/EAX/RAX, imm16/imm32/imm64"}},
+    {0x8005, {3, 1, 2, 2, 1, true, false, true, "SUB r/m8, imm8"}},
+    {0x8105, {6, 1, 5, 2, 4, true, false, true, "SUB r/m16/32/64, imm16/32/64"}},
+    {0x8305, {3, 1, 2, 2, 1, true, false, true, "SUB r/m16/32/64, imm8"}},
+
+    {0x28, {2, 1, 1, 2, 1 ,true ,false ,false , "SUB r/m8 , r8"}},
+    {0x29, {2, 1, 1, 2, 1 ,true ,false ,false , "SUB r/m16/32/64 , r16/32/64"}},
+    {0x2A, {2, 1, 1, 2, 1 ,true ,false ,false , "SUB r8 , r/m8"}},
+    {0x2B, {2, 1, 1, 2, 1 ,true ,false ,false , "SUB r16/32/64 , r/m16/32/64"}},
+
 
 
 
 
 
     /*
-    // Istruzioni ADD
-    {0x04, {2, 1, 1, "ADD AL, imm8"}},
-    {0x05, {5, 1, 4, "ADD EAX, imm32"}},
-    {0x80, {3, 1, 2, "ADD r/m8, imm8"}},
-    {0x81, {6, 1, 5, "ADD r/m32, imm32"}},
-
     // Istruzioni SUB
     {0x2C, {2, 1, 1, "SUB AL, imm8"}},
     {0x2D, {5, 1, 4, "SUB EAX, imm32"}},

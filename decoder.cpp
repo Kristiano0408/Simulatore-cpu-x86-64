@@ -134,6 +134,8 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
     //getting the type and adressing mode of the instruction
     
     auto it = instructionMap.find(instruction.opcode)->second;
+
+    std::cout << "Decoding instruction: " << std::hex << instruction.opcode <<" - " << static_cast<int>(it.mode) << std::endl;
     
 
     typeofInstruction type_instruction = it.type;

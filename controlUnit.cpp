@@ -286,7 +286,7 @@ void CU::fetchOpcode(std::array<uint8_t, 15>& buffer, uint32_t& opcode, int& byt
     byte = buffer[byteCounter]; //fetch the byte from the buffer
     byteCounter++; //increment the byte counter
 
-    
+    //checking if the opcode has two or three bytes
     if (byte == 0x0F)
     {
                 //the opcode has two bytes
@@ -319,6 +319,32 @@ void CU::fetchOpcode(std::array<uint8_t, 15>& buffer, uint32_t& opcode, int& byt
         //the opcode has one byte
         opcode = static_cast<uint32_t>(byte);
         bytes.push_back(byte);
+    }
+
+    //checking if the opcode  is part of a group of instructions (the opcode is followed by a ModRM byte)
+    if( opcode == 0x80 || opcode == 0x81 || opcode == 0x83)
+    {
+        //the opcode is part of a group of instructions
+        //the real opcode is in the ModRM byte
+        //the lenght of the opcode is 1 byte
+        std::cout << "Opcode is part of a group of instructions" << std::endl;
+
+        //fething the ModRM byte
+        byte = buffer[byteCounter]; //fetch the byte from the buffer (DONT INCREMENT THE BYTE COUNTER, ONLY READ THE BYTE)
+
+
+        uint8_t reg = (byte >> 3) & 0b111; //extract the reg field from the ModRM byte
+
+        //setting the real opcode
+        opcode = (opcode << 8) | static_cast<uint32_t>(reg);
+
+        std::cout << "Real Opcode: " << std::hex << opcode << std::endl;
+
+        //the opcode is still 1 byte, this script just modify the "opcode" variable to avoid mistakes in the decoding phase using it has a key for the map
+        
+
+       
+
     }
 
 

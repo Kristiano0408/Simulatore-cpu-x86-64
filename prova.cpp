@@ -23,6 +23,7 @@ int main()
 
 
     std::vector<uint8_t> data= {
+        /*
         // Inizializza alcuni registri con valori noti
          0xC7, 0xC0, 0x01, 0x00, 0x00, 0x00,    // MOV RAX, 1
          0xC7, 0xC3, 0x02, 0x00, 0x00, 0x00,    // MOV RBX, 2
@@ -66,7 +67,7 @@ int main()
         0x48, 0x8B, 0x1C, 0x4E,                      // MOV RBX, [RSI+RCX*2]
         0x48, 0x8B, 0x14, 0x8E,                      // MOV RDX, [RSI+RCX*4]
         0x48, 0x8B, 0x3C, 0xCE                       // MOV RDI, [RSI+RCX*8]
-       /*
+       */
         0xC7, 0xC6, 0x00, 0x10, 0x00, 0x00,    // MOV RSI, 0x1000
 
         0x04, 0x05,                                  // ADD AL, imm8  (opcode 0x04) / ADD AX, imm16? esempio base
@@ -80,7 +81,7 @@ int main()
         0x03, 0xC2,                                  // ADD EAX, EDX (RM)
         0x03, 0x04, 0x0E,                            // ADD EAX, [RSI+RCX*1]
         0x03, 0x14, 0x8E,                            // ADD EDX, [RSI+RCX*4]
-        */
+        
     };
 
     bus.getMemory().setData(data); // Set the data in memory
@@ -95,7 +96,7 @@ int main()
 
     Instruction* instruction;
 
-    for (int i = 0; i < 29; i++) {
+    for (int i = 0; i < 12; i++) {
 
 
         auto& cu = bus.getCPU().getControlUnit();
