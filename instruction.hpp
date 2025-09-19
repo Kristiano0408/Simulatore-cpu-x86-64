@@ -134,6 +134,7 @@ class Instruction
 
 //define the instruction classes (an instruction for each operation)
 
+//MOV instruction class
 class MoveInstruction : public Instruction
 {
     public:
@@ -145,18 +146,10 @@ class MoveInstruction : public Instruction
 
         //execute the instruction
         void execute(Bus& bus) override;
-       
         
-
-    
-
-    
-        
-
-       
 };
 
-
+//ADD instruction class
 class AddInstruction : public Instruction
 {
     public:
@@ -169,5 +162,20 @@ class AddInstruction : public Instruction
         void execute(Bus& bus) override;
 
 };
+
+//SUB instruction class
+class SubInstruction : public Instruction
+{
+    public:
+        //destructor
+        ~SubInstruction() override = default;
+
+        void fetchOperands(Bus& bus) override;
+
+        //execute the instruction
+        void execute(Bus& bus) override;
+
+};
+
 
 #endif // INSTRUCTION_HPP    

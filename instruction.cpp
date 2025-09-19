@@ -299,9 +299,10 @@ uint64_t Instruction::mask(int nbit)
     }
 }
 
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
 //Move instruction
-
-
 
 //fetch the operands
 void MoveInstruction::fetchOperands(Bus& bus) {
@@ -358,7 +359,7 @@ void MoveInstruction::fetchOperands(Bus& bus) {
 
 }
 
-// Move instruction
+
 void MoveInstruction::execute([[maybe_unused]] Bus& bus) 
 {
 
@@ -411,6 +412,7 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
 
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
 
 //Add instruction
 
@@ -496,9 +498,87 @@ void AddInstruction::execute(Bus& bus)
 
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
 
+//Sub instruction
 
+//fetch the operands
+void SubInstruction::fetchOperands(Bus& bus)
+{
+    //std::cout << "Fetching operands for Sub Instruction" << std::endl;
+    //fetch the operands
+    //using switch case to get the operands
+    switch (getAddressingMode())
+    {
+        case AddressingMode::MR:                     //sub register to R/M
+            std::cout << "SUB_MR" << std::endl;
+            operandFetch::fetchMR(this, bus);
+            break;  
 
+        case AddressingMode::RM:                    //sub R/M to register
+            std::cout << "SUB_RM" << std::endl;
+            operandFetch::fetchRM(this, bus);
+            break;
+        case AddressingMode::MI:                   //sub immediate to memory/register
+            std::cout << "SUB_MI" << std::endl;
+            operandFetch::fetchMI(this, bus);
+            break;
+        case AddressingMode::I:                  //sub immediate to accumulator
+            std::cout << "SUB_I" << std::endl;
+            operandFetch::fetchI(this, bus);
+            break;
+        default:
+            break;
+   }
+}
+
+void SubInstruction::execute(Bus& bus) 
+{
+    //setting the size of the operands
+    int bit = calculating_number_of_bits();
+
+    setNbit(bit);
+
+    uint64_t mask = this->mask(bit);
+
+    //setting the size of the operands(it might not be necessary but for know we dont have a geeneic function for fethcing 
+    //from memory so we have to set the size of the operands to know what to fetch
+
+    getSourceOperand()->setSize(bit);
+    getDestinationOperand()->setSize(bit);
+
+    uint64_t src_value = 0, dst_value = 0, res = 0;
+
+    if(getDestinationOperand() && getSourceOperand())
+    {
+         //getting the value from the source operand
+        src_value = getSourceOperand()->getValue().data & mask;
+
+        if(getOpcode() == 0x83) // it is only encessary to mask the source 
+        {
+            dst_value = getDestinationOperand()->getValue().data;
+
+            res = bus.getCPU().getALU().sub(dst_value, src_value);
+
+             //setting the value to the destination operand
+            getDestinationOperand()->setValue(res);
+            
+        }
+        else
+        {
+            //getting the value from the destination operand
+            dst_value = getDestinationOperand()->getValue().data & mask;
+
+            res = bus.getCPU().getALU().sub(dst_value, src_value) & mask;
+            //setting the value to the destination operand (old destination + result of the addition masked)
+            getDestinationOperand()->setValue((getDestinationOperand()->getValue().data & ~mask) | (res & mask));
+        }
+    }
+    else
+    {
+        std::cerr << "Error: Source or destination operand is null" << std::endl;
+    }
+}
 
 
 

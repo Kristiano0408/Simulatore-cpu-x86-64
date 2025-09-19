@@ -17,6 +17,7 @@ enum class typeofInstruction
 {
     MOV, //move instruction
     ADD, //add instruction
+    SUB, //sub instruction
 };
 
 //enum for the addressing mode of the instruction
