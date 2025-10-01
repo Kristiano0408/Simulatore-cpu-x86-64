@@ -68,6 +68,7 @@ int main()
         0x48, 0x8B, 0x14, 0x8E,                      // MOV RDX, [RSI+RCX*4]
         0x48, 0x8B, 0x3C, 0xCE                       // MOV RDI, [RSI+RCX*8]
        */
+        /*
         0xC7, 0xC6, 0x00, 0x10, 0x00, 0x00,    // MOV RSI, 0x1000
 
         0x04, 0x05,                                  // ADD AL, imm8  (opcode 0x04) / ADD AX, imm16? esempio base
@@ -81,6 +82,34 @@ int main()
         0x03, 0xC2,                                  // ADD EAX, EDX (RM)
         0x03, 0x04, 0x0E,                            // ADD EAX, [RSI+RCX*1]
         0x03, 0x14, 0x8E,                            // ADD EDX, [RSI+RCX*4]
+        */
+       // 0x2C : SUB AL, imm8
+        0x2C, 0x03,         // sub al, 0x03
+
+        // 0x2D : SUB EAX, imm32
+        0x2D, 0x05,0x00,0x00,0x00, // sub eax, 5
+
+        // 0x80 /5 : SUB r/m8, imm8 (r/m8 = BL)
+        0x80, 0xEB, 0x01,   // sub bl, 0x01   ; ModR/M = EB => r/m8=BL, /5=sub
+
+        // 0x81 /5 : SUB r/m32, imm32 (r/m32 = ECX)
+        0x81, 0xE9, 0xFF,0xFF,0xFF,0xFF, // sub ecx, 0xFFFFFFFF
+
+        // 0x83 /5 : SUB r/m32, imm8 (sign-extended, r/m32 = EDX)
+        0x83, 0xEA, 0x02,   // sub edx, 0x02
+
+        // 0x28 : SUB r/m8, r8 (AL - BL)
+        0x28, 0xD8,         // sub al, bl  ; ModR/M = D8 => AL, BL
+
+        // 0x29 : SUB r/m32, r32 (EAX - EBX)
+        0x29, 0xD8,         // sub eax, ebx
+
+        // 0x2A : SUB r8, r/m8 (BL - AL)
+        0x2A, 0xD8,         // sub bl, al
+
+        // 0x2B : SUB r32, r/m32 (EAX - EBX)
+        0x2B, 0xD8          // sub eax, ebx
+        
         
     };
 
@@ -96,7 +125,7 @@ int main()
 
     Instruction* instruction;
 
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 9; i++) {
 
 
         auto& cu = bus.getCPU().getControlUnit();

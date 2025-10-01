@@ -264,7 +264,9 @@ int Instruction::calculating_number_of_bits()
     }
 
     static const std::unordered_set<uint32_t> opcode_8bit = {0xA0, 0xA2, 0xC6, 0x88, 0x8A, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, //mov
-                                                            0x04, 0x8000,0x8300, 0x00, 0x02}; //add
+                                                            0x04, 0x8000,0x8300, 0x00, 0x02, //add
+                                                            0x8005, 0x2C, 0x28, 0x2A, //sub
+                                                            };
 
     if(opcode_8bit.count(opcode))
     {

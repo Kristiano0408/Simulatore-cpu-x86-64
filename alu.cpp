@@ -55,10 +55,10 @@ uint64_t ALU::sub(uint64_t dest, uint64_t src)
     flags.setFlag(Flagbit::PF, !__builtin_parity(res & 0xFF));
 
     //Auxiliary Carry Flag(set if there is a borrow from bit 4 to bit 3)
-    flags.setFlag(Flagbit::AF, ((dest & 0xF) + (src & 0xF)) > 0xF);
+    flags.setFlag(Flagbit::AF, ((dest ^ src ^ res) & 0x10)!= 0);  //xor between dest, src and res to check if there is a change in the bits and the & 0x10 to check only the bit 4
 
     //Sign Flag(set if the result is negative)
-    flags.setFlag(Flagbit::SF, (static_cast<int64_t>(res) < 0));
+    flags.setFlag(Flagbit::SF, (res >> 63) & 1);
 
     //Overflow Flag(set if there is a signed overflow)
     flags.setFlag(Flagbit::OF, (((static_cast<int64_t>(dest) < 0) != (static_cast<int64_t>(src) < 0)) && ((static_cast<int64_t>(res) < 0) != (static_cast<int64_t>(dest) < 0))));
