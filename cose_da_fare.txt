@@ -1,5 +1,12 @@
+
+
+
+!!IMPLEMENTARE SIGN EXTENSION IN MOV,SUB,ADD PRIMA DI PASSARE AD ALTRE ISTRUZIONI(CAPIRE COME FARE LOGICA GENERALE SENZA CASO PER CASO)
+
+
 !!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE a (CACHE MANAGER,ram, operands) al momento la propagazione
 di result si ferma al fetch in cu e nell istruction!!!
+
 
 //funzioni per modificare grandezza ram e cache
 ////modificare grandezza memoria dal bus

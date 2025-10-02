@@ -6,6 +6,7 @@
 #include "addressCalculator.hpp"
 #include "controlUnit.hpp"
 #include "bus.hpp"
+#include "registerFile.hpp"
 
 #include <string>
 #include <vector>
@@ -107,10 +108,10 @@ int main()
         // 0x2A : SUB r8, r/m8 (BL - AL)
         0x2A, 0xD8,         // sub bl, al
 
-        // 0x2B : SUB r32, r/m32 (EAX - EBX)
-        0x2B, 0xD8          // sub eax, ebx
-        
-        
+        // 0x2B : SUB r32, r/m32 (ebx - eax)
+        0x2B, 0xD8          // sub ebx, eax
+
+
     };
 
     bus.getMemory().setData(data); // Set the data in memory
@@ -175,6 +176,15 @@ int main()
         std::cout << "R14: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R14).raw() << std::endl;
         std::cout << "R15: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R15).raw() << std::endl;
         std::cout << "RIP: " << std::dec << bus.getCPU().getRegisters().getReg(Register::RIP).raw() << std::endl;
+
+        //stampa dei flag
+        std::cout << "CF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::CF) << std::endl;
+        std::cout << "PF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::PF) << std::endl;
+        std::cout << "AF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::AF) << std::endl;
+        std::cout << "ZF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::ZF) << std::endl;
+        std::cout << "SF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::SF) << std::endl;
+        std::cout << "OF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::OF) << std::endl;
+        
 
         std::cout << "----------------------------------------" << std::endl;
     }

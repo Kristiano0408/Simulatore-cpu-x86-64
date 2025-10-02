@@ -72,17 +72,17 @@ std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
     {0x2B, {2, 1, 1, 2, 1 ,true ,false ,false , "SUB r16/32/64 , r/m16/32/64"}},
 
 
+    // Istruzioni AND
+    
+
+
+
 
 
 
 
     /*
-    // Istruzioni SUB
-    {0x2C, {2, 1, 1, "SUB AL, imm8"}},
-    {0x2D, {5, 1, 4, "SUB EAX, imm32"}},
-    {0x80, {3, 1, 2, "SUB r/m8, imm8"}},
-    {0x81, {6, 1, 5, "SUB r/m32, imm32"}},
-
+    
     // Istruzioni di controllo del flusso
     {0xEB, {2, 1, 1, "JMP rel8"}},
     {0xE9, {5, 1, 4, "JMP rel32"}},
