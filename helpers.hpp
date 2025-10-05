@@ -226,6 +226,9 @@ struct InstructionInfo {
     size_t additionalBytes; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
     size_t numOperands; // Numero di operandi
     size_t operandLength; // Lunghezza degli operandi
+    size_t src_operand_length; // Lunghezza dell'operando sorgente
+    size_t dest_operand_length; // Lunghezza dell'operando destinazione
+    size_t bit_extension; // Estensione in bit (0 se non esteso, 1 per 0 extension, 2 per sign extension)
     bool hasModRM;            // Presenza del byte ModR/M
     bool hasSIB;              // Presenza del byte SIB
     bool hasDisplacement;     // Presenza di un displacement
