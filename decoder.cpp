@@ -39,6 +39,11 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
         info.hasModRM = it->second.hasModRM;
         info.hasDisplacement = it->second.hasDisplacement;
         info.hasImmediate = it->second.hasImmediate;
+        info.src_operand_length = it->second.src_operand_length;
+        info.dest_operand_length = it->second.dest_operand_length;
+        info.bit_extension = it->second.bit_extension;
+        info.rex_w_sensitive = it->second.rex_w_sensitive;
+
         
     }
     else
@@ -52,6 +57,10 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
         info.hasModRM = false;
         info.hasDisplacement = false;
         info.hasImmediate = false;
+        info.src_operand_length = 0;
+        info.dest_operand_length = 0;
+        info.bit_extension = 0;
+        info.rex_w_sensitive = false;
         info.description = "Unknown instruction";
 
         std::cerr << "Unknown instruction: " << std::hex << opcode << std::endl;
