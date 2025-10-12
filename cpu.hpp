@@ -12,6 +12,7 @@
 #include "alu.hpp"
 #include "registerFile.hpp"
 #include "cacheManager.hpp"
+#include "pipeline.hpp"
 
 
 class CPU

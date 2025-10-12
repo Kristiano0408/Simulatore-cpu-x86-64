@@ -1,4 +1,25 @@
 
+/////refactory massivo//////
+
+classe device da cui derivano tutti gli altri componenti (fatto)-va implememnatta poi nelel altre parti
+
+clock serio(lasciato invaraito, siccoem ho bus non serve)
+
+pipeline(da fare, classe piu classi polimorfich per sateg e passare dati tar di loro)
+
+conclusione instruction set
+
+cache pazzurda pazza sgravata
+
+
+////////////////////////////////////////////////
+
+
+
+
+
+
+
 
 
 !!IMPLEMENTARE SIGN EXTENSION IN MOV,SUB,ADD PRIMA DI PASSARE AD ALTRE ISTRUZIONI(CAPIRE COME FARE LOGICA GENERALE SENZA CASO PER CASO)

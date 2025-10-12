@@ -5,6 +5,7 @@
 #include <memory>
 #include "helpers.hpp"
 #include "clock.hpp"
+#include "device.hpp"
 
 class CPU;
 class Memory;

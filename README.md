@@ -79,7 +79,7 @@ Questo progetto è un **simulatore didattico dell’architettura x86-64**, scrit
 
 > 💡 Attualmente supportato solo su **Linux** (su windows il linker da errori)
 
-- compilazione con:  "g++ -std=c++23 -O2 -Wall -Wextra -o prova prova.cpp bus.cpp cpu.cpp memory.cpp clock.cpp addressCalculator.cpp alu.cpp cacheManager.cpp controlUnit.cpp decoder.cpp helpers.cpp instruction_code_map.cpp instruction.cpp opcode_map.cpp operands.cpp registerFile.cpp"
+- compilazione con:  "g++ -std=c++23 -O2 -Wall -Wextra -o prova prova.cpp bus.cpp cpu.cpp memory.cpp clock.cpp addressCalculator.cpp alu.cpp cacheManager.cpp controlUnit.cpp decoder.cpp helpers.cpp instruction_code_map.cpp instruction.cpp opcode_map.cpp operands.cpp registerFile.cpp device.cpp"
 
 - esecuzione: ./prova
 
