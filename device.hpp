@@ -16,6 +16,15 @@ public:
 
     virtual void execute_operation() = 0; // Pure virtual function to be implemented by derived classes
 
+    int getTicksNeeded() const; // Get the number of ticks needed for the current operation
+
+    int getTicksProgress() const; // Get the current progress in ticks
+
+    void setTicksNeeded(int ticks); // Set the number of ticks needed for the current operation
+
+    void resetTicksProgress(); // Reset the ticks progress to zero
+    
+
 
     
 };
