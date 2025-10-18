@@ -5,12 +5,28 @@ classe device da cui derivano tutti gli altri componenti (fatto)-va implememnatt
 
 clock serio(lasciato invaraito, siccoem ho bus non serve)
 
-pipeline(da fare, classe piu classi polimorfich per sateg e passare dati tar di loro)
+pipeline(da fare, classe piu classi polimorfich per sateg e passare dati tar di loro, implemetare accesmemmory e writeback in instruction, finire pipeline
 
 conclusione instruction set
 
 cache pazzurda pazza sgravata
 
+
+
+
+Pipeline & Tick – Riassunto Essenziale
+
+Tick globale: 1 per ciclo, chiamato dal bus/clock.
+
+Stage: ognuno ha ticksDone / ticksNeeded.
+
+Stall: se uno stage non ha finito (ticksDone < ticksNeeded), blocca gli altri stage (stalled = true).
+
+Avanzamento: solo gli stage pronti incrementano ticksDone.
+
+Completion: quando ticksDone == ticksNeeded, stage libero → pipeline avanza la prossima istruzione.
+
+Note: non tutte le istruzioni usano tutti gli stage; operand e flag memorizzati solo se servono.
 
 ////////////////////////////////////////////////
 

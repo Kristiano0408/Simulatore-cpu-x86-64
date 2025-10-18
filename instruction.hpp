@@ -25,10 +25,15 @@ class Instruction
         Instruction();
         //destructor
         virtual  ~Instruction();
-        //execute the instruction
+
+        //methods for pipeline stages
         virtual void execute(Bus& bus);//Polimorfic method that will be implemented in the derived classes
 
         virtual void fetchOperands(Bus& bus) = 0; //Polimorfic method that will be implemented in the derived classes
+
+        virtual void accessMemory(Bus& bus) {} //Polimorfic method for memory access (only for load/store instructions)
+
+        virtual void writeBack(Bus& bus) {} //Polimorfic method for write-back (only for store instructions)
 
         uint64_t castingValue(uint64_t value, int nbit); //cast the value to the number of bits of the operand (8, 16, 32, 64)
 
@@ -128,6 +133,18 @@ class Instruction
         bool regToReg;
         bool regToMem;
         bool memToReg;
+
+        //intermediate value for pipeline stages
+        uint64_t intermediate_result;
+        bool tempCF;
+        bool tempZF;
+        bool tempSF;
+        bool tempOF;
+        bool tempPF;
+        bool tempAF;
+
+
+
         
 
 };
@@ -146,6 +163,13 @@ class MoveInstruction : public Instruction
 
         //execute the instruction
         void execute(Bus& bus) override;
+
+        void accessMemory(Bus& bus) override;
+
+        void writeBack(Bus& bus) override;
+
+
+
         
 };
 
@@ -161,6 +185,11 @@ class AddInstruction : public Instruction
         //execute the instruction
         void execute(Bus& bus) override;
 
+        void accessMemory(Bus& bus) override;
+
+        void writeBack(Bus& bus) override;
+
+
 };
 
 //SUB instruction class
@@ -174,6 +203,10 @@ class SubInstruction : public Instruction
 
         //execute the instruction
         void execute(Bus& bus) override;
+
+        void accessMemory(Bus& bus) override;
+
+        void writeBack(Bus& bus) override;
 
 };
 

@@ -112,8 +112,6 @@ class MemoryStage : public Stage {
         //any additional members specific to the memory stage
         std::unique_ptr<Instruction> instruction_to_memory; //pointer to the instruction being processed in memory stage
 
-        uint64_t memoryData; //data read from or written to memory
-
         bool memoryAccessSuccess; //flag indicating if the memory access was successful
 
 };
@@ -141,7 +139,7 @@ class WriteBackStage : public Stage {
 
 class Pipeline : public Device {
     public:
-        Pipeline();
+        Pipeline(Bus& bus);
         ~Pipeline();
 
         void tick() override; //advance the pipeline by one clock cycle
@@ -155,6 +153,7 @@ class Pipeline : public Device {
         WriteBackStage& getWriteBackStage();
 
     private:
+        Bus& bus;
         FetchStage fetchStage;
         DecodeStage decodeStage;
         ExecuteStage executeStage;

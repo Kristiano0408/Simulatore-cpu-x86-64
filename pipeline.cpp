@@ -106,7 +106,7 @@ bool ExecuteStage::wasExecutionSuccessful() const {
 }
 
 // Implementation of MemoryStage class methods
-MemoryStage::MemoryStage() : Stage(), instruction_to_memory(nullptr), memoryData(0), memoryAccessSuccess(false) {}
+MemoryStage::MemoryStage() : Stage(), instruction_to_memory(nullptr), memoryAccessSuccess(false) {}
 
 MemoryStage::~MemoryStage() {}
 
@@ -119,12 +119,15 @@ Instruction* MemoryStage::getInstructionToMemory() const {
 }
 
 void MemoryStage::accessMemory(Bus& bus) {
+    if (instruction_to_memory) {
+        instruction_to_memory->accessMemory(bus);
+        memoryAccessSuccess = true;
+    } else {
+        memoryAccessSuccess = false;
+    }
     
 }
 
-uint64_t MemoryStage::getMemoryData() const {
-    return memoryData;
-}
 
 bool MemoryStage::wasMemoryAccessSuccessful() const {
     return memoryAccessSuccess;
@@ -145,9 +148,29 @@ Instruction* WriteBackStage::getInstructionToWriteBack() const {
 }
 
 void WriteBackStage::writeBack(Bus& bus) {
+
+    if (instruction_to_writeback) {
+        instruction_to_writeback->writeBack(bus);
+        writeBackSuccess = true;
+    } else {
+        writeBackSuccess = false;
+    }
+    
   
 }
 
 bool WriteBackStage::wasWriteBackSuccessful() const {
     return writeBackSuccess;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+//impelemtation of teh pipeline class
+
+Pipeline::Pipeline(Bus& bus) : bus(bus),fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage() {
+    
+}
+                               
+
+    

@@ -22,6 +22,8 @@ class CU
         Instruction* decodeInstruction(InstructionInfo instruction);
         void OperandFetch(Instruction* instruction);
         void executeInstruction(Instruction* instruction);
+        void memoryphase(Instruction* instruction);
+        void writeBack(Instruction* instruction);
 
         
         

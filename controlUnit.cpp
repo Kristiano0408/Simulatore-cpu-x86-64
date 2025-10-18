@@ -165,6 +165,19 @@ void CU::executeInstruction(Instruction* instruction)
 
 }
 
+void CU::memoryphase(Instruction* instruction)
+{
+    instruction->accessMemory(bus);
+}
+
+void CU::writeBack(Instruction* instruction)
+{
+    instruction->writeBack(bus);
+}
+
+
+
+
 
 //helpers function for making the code more readable
 

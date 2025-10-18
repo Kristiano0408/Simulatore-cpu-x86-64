@@ -55,13 +55,13 @@ void CPU::cpuReset()
 void CPU::cpuStep()
 {
 
-    switch (state) {
+    /*switch (state) {
         case CPUState::FETCH:
             // Fetch the instruction
             current_instruction = controlUnit.fetchInstruction();
             state = CPUState::DECODE;
             break;
-        /*
+        
         case CPUState::DECODE:
             // Decode the instruction
             decodedInstruction = controlUnit.decodeInstruction(current_instruction);
@@ -81,7 +81,7 @@ void CPU::cpuStep()
             delete decodedInstruction; // Clean up the decoded instruction
             decodedInstruction = nullptr; // Reset the pointer
             break;
-        */
+        
 
         default:
             throw std::runtime_error("Invalid CPU state");
