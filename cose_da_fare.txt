@@ -2,12 +2,11 @@
 
 
 
-fare refactory operand fetch
-(ricostruire tutto, opern fetch non ha latenze) devo rifare smepcleimete get value di em operand 
+finito operand fecth piplien(priam di pasare ad exevcute riafre operand con anydata)
 
 finire refacrory pipeline (ANCEH CONTROLLO SU BUFFER STALLED)
 
-// e controllare pipeline+ metaprogramamzione per visitor 
+// e controllare pipeline+ metaprogramamzione per visitor(anydata)
 
 /////refactory massivo//////
 

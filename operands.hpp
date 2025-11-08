@@ -30,8 +30,8 @@ class Operand
         Operand() : size(0) {} // Default constructor initializing size to 0
         void setSize(int s);
         int getSize() const;
-        virtual Result<void> setValue(uint64_t v) = 0; // Pure virtual function
-        virtual Result<uint64_t> getValue() = 0; // Pure virtual function
+        virtual Result<void> setValue(anydata v) = 0; // Pure virtual function
+        virtual Result<anydata> getValue() = 0; // Pure virtual function
 
 
 
@@ -52,16 +52,16 @@ class EmptyOperand : public Operand {
     public:
         EmptyOperand() = default;
 
-        Result<void> setValue([[maybe_unused]] uint64_t v) override { return {}; }
-        Result<uint64_t> getValue() override { return {}; }
+        Result<void> setValue([[maybe_unused]] anydata v) override { return {}; }
+        Result<anydata> getValue() override { return {}; }
 };
 
 class RegOperand : public Operand 
 {
     public:
         RegOperand(uint64_t& reg) : reg(reg) {} // Constructor to initialize register reference
-        Result<void> setValue(uint64_t v) override;
-        Result<uint64_t> getValue() override;
+        Result<void> setValue(anydata v) override;
+        Result<anydata> getValue() override;
 
     private:
         uint64_t& reg; // Reference to the register value
@@ -71,24 +71,26 @@ class RegOperand : public Operand
 class MemOperand : public Operand 
 {
     public:
-        MemOperand(CacheManager& cache, uint64_t address) : cache(cache), address(address) {} // Constructor to initialize memory and address
-        Result<void> setValue(uint64_t v) override;
-        Result<uint64_t> getValue() override;
+        MemOperand(CacheManager& cache, uint64_t address, uint64_t instructionID) : cache(cache), address(address), instructionID(instructionID) {} // Constructor to initialize memory and address
+        Result<void> setValue(anydata v) override;
+        Result<anydata> getValue() override;
 
     private:
         CacheManager& cache; // Reference to the cache manager
         uint64_t address; // Address in memory
+        bool requestSent = false; // Flag to indicate if a request has been sent to the cache
+        uint64_t instructionID;
 };
 
 class ImmediateOperand : public Operand 
 {
     public:
-        ImmediateOperand(uint64_t value) : value(value) {} // Constructor to initialize immediate value
-        Result<void> setValue(uint64_t v) override;
-        Result<uint64_t> getValue() override;
+        ImmediateOperand(anydata value) : value(value) {} // Constructor to initialize immediate value
+        Result<void> setValue(anydata v) override;
+        Result<anydata> getValue() override;
 
     private:
-        uint64_t value; // Immediate value
+        anydata value; // Immediate value
 };
 
 

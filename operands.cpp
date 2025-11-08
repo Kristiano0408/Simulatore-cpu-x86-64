@@ -299,9 +299,19 @@ int Operand::getSize() const {
 
 
 
-Result<void> RegOperand::setValue(uint64_t v) 
+Result<void> RegOperand::setValue(anydata v) 
 {
-    this->reg = v;
+    // Using std::visit to handle the variant type 
+
+    std::visit([this](auto&& arg) {
+        using T = std::decay_t<decltype(arg)>;
+
+        //assingning the value to the register based on the type(8 bit will modify only the lower 8 bit of the register, 16 bit the lower 16 bit and so on)
+        if constexpr (std::is_integral_v<T>) {
+            this->reg = (reg & ~((1ULL << (sizeof(T) * 8)) - 1)) | arg;
+        }
+    }, v);
+
     return Result<void>{true, {}};
 }
 
@@ -312,11 +322,46 @@ Result<uint64_t> RegOperand::getValue()
 
 Result<void> MemOperand::setValue(uint64_t v) {
     
-
-    /*else if (this->address == 0)
+    if(!requestSent)
     {
-        throw std::invalid_argument("Address is null. Cannot set value.");
-    }*/
+        debugLog("MemOperand: Sending write request to address " + to_string_hex(this->address) + " with value " + to_string_hex(v) + " and size " + std::to_string(this->size) + " bytes.");
+        requestSent = true;
+
+        anydata data_variant;
+
+        switch (this->size)
+        {
+           
+
+            case 8:
+                data_variant = uint8_t {0};
+                break;
+
+            case 16:
+                data_variant = uint16_t {0};
+                break;
+
+            case 32:
+                data_variant = uint32_t {0};
+                break;
+
+            case 64:
+                data_variant = uint64_t {0};
+                break;
+
+            default:
+                break;
+        }
+
+        cache.setRequest(std::make_unique<CacheRequest<anydata>>(RequestType::WRITE, this->address, v,false, instructionID));
+    }
+
+
+
+
+
+
+
     if (this->size == 0)
     {   
         return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot set value."}};
