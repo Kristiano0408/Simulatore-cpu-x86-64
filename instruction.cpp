@@ -301,9 +301,11 @@ uint64_t Instruction::mask(int nbit)
 
 //Move instruction
 
-//start fetching operands
-void MoveInstruction::startFetchOperands(Bus& bus)
-{
+
+//fetch the operands
+void MoveInstruction::fetchOperands(Bus& bus) {
+
+    //std::cout << "Fetching operands for Move Instruction" << std::endl;
     debugLog("MoveInstruction startFetchOperands called");
 
     //getting the opcode
@@ -312,14 +314,6 @@ void MoveInstruction::startFetchOperands(Bus& bus)
     debugLog("Opcode: " + to_string_hex(opcode));
 
 
-    
-}
-
-//fetch the operands
-void MoveInstruction::fetchOperands(Bus& bus) {
-
-    //std::cout << "Fetching operands for Move Instruction" << std::endl;
-    
 
 
     //fetch the operands

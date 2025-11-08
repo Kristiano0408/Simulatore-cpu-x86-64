@@ -81,7 +81,6 @@ void CPU::cpuStep()
             throw std::runtime_error("Invalid CPU state");
     }
 
-    /*
     //fetch the instruction
     InstructionInfo  instruction = controlUnit.fetchInstruction();
     //decode the instruction

@@ -31,17 +31,13 @@ class Instruction
 
         //////////////////////////////////////////////////////////////
 
-        virtual void startFetchOperands(Bus& bus) = 0; //Polimorfic method that will be implemented in the derived classes
-
-        virtual void updateFetchOperands(Bus& bus) = 0; //Polimorfic method that will be implemented in the derived classes
-
         virtual void fetchOperands(Bus& bus) = 0; //Polimorfic method for fetching operands
 
         //////////////////////////////////////////////////
 
-        virtual void accessMemory(Bus& bus) {} //Polimorfic method for memory access (only for load/store instructions)
+        virtual void accessMemory([[maybe_unused]] Bus& bus) {} //Polimorfic method for memory access (only for load/store instructions)
 
-        virtual void writeBack(Bus& bus) {} //Polimorfic method for write-back (only for store instructions)
+        virtual void writeBack([[maybe_unused]]Bus& bus) {} //Polimorfic method for write-back (only for store instructions)
 
         uint64_t castingValue(uint64_t value, int nbit); //cast the value to the number of bits of the operand (8, 16, 32, 64)
 
@@ -165,18 +161,14 @@ class EmptyInstruction : public Instruction
         //destructor
         ~EmptyInstruction() override = default;
 
-        void startFetchOperands(Bus& bus) override {}
-
-        void updateFetchOperands(Bus& bus) override {}
-
-        void fetchOperands(Bus& bus) override {}
+        void fetchOperands([[maybe_unused]] Bus& bus) override {}
 
         //execute the instruction
-        void execute(Bus& bus) override {}
+        void execute([[maybe_unused]] Bus& bus) override {}
 
-        void accessMemory(Bus& bus) override {}
+        void accessMemory([[maybe_unused]] Bus& bus) override {}
 
-        void writeBack(Bus& bus) override {debugLog("EmptyInstruction writeBack called");}
+        void writeBack([[maybe_unused]] Bus& bus) override {debugLog("EmptyInstruction writeBack called");}
 
 };
 
@@ -190,11 +182,7 @@ class MoveInstruction : public Instruction
         //destructor
         ~MoveInstruction() override = default;
 
-        void startFetchOperands(Bus& bus) override {}
-
-        void updateFetchOperands(Bus& bus) override {}
-
-        void fetchOperands(Bus& bus) override {}
+        void fetchOperands(Bus& bus) override;
 
         //execute the instruction
         void execute(Bus& bus) override;
@@ -215,11 +203,7 @@ class AddInstruction : public Instruction
         //destructor
         ~AddInstruction() override = default;
 
-        void startFetchOperands(Bus& bus) override {}
-
-        void updateFetchOperands(Bus& bus) override {}
-
-        void fetchOperands(Bus& bus) override {}
+        void fetchOperands(Bus& bus) override;
 
         //execute the instruction
         void execute(Bus& bus) override;
@@ -238,11 +222,7 @@ class SubInstruction : public Instruction
         //destructor
         ~SubInstruction() override = default;
 
-        void startFetchOperands(Bus& bus) override {}
-
-        void updateFetchOperands(Bus& bus) override {}
-
-        void fetchOperands(Bus& bus) override {}
+        void fetchOperands(Bus& bus) override;
 
         //execute the instruction
         void execute(Bus& bus) override;

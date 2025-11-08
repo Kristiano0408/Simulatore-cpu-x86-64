@@ -47,7 +47,7 @@ class FetchStage : public Stage {
         InstructionInfo currentInstructionInfo; //information about the current instruction being fetched
 };
 
-class DecodeStage : public Stage {
+class  DecodeStage : public Stage {
     public:
         DecodeStage();
         ~DecodeStage();
@@ -152,48 +152,53 @@ class WriteBackStage : public Stage {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct FetchDecodeBuffer {
-    InstructionInfo instructionInfo;
+    
     bool valid = false;
     bool stalled = false;
     bool flushed = false;
+    InstructionInfo instructionInfo;
 
 };
 
 struct DecodeOperandFetchBuffer {
+    
+    bool valid;
+    bool stalled;
+    bool flushed;
     std::unique_ptr<Instruction> decodedInstruction;
-    bool valid = false;
-    bool stalled = false;
-    bool flushed = false;
 
     DecodeOperandFetchBuffer() : valid(false), stalled(false), flushed(false), decodedInstruction(std::make_unique<EmptyInstruction>()) {}
 
 };
 
 struct OperandFetchExecuteBuffer {
+    
+    bool valid;
+    bool stalled;
+    bool flushed;
     std::unique_ptr<Instruction> instructionWithOperands;
-    bool valid = false;
-    bool stalled = false;
-    bool flushed = false;
 
     OperandFetchExecuteBuffer() : valid(false), stalled(false), flushed(false), instructionWithOperands(std::make_unique<EmptyInstruction>()) {}
 
 };
 
 struct ExecuteMemoryBuffer {
+    
+    bool valid;
+    bool stalled;
+    bool flushed;
     std::unique_ptr<Instruction> executedInstruction;
-    bool valid = false;
-    bool stalled = false;
-    bool flushed = false;
 
     ExecuteMemoryBuffer() : valid(false), stalled(false), flushed(false), executedInstruction(std::make_unique<EmptyInstruction>()) {}
 
 };
 
 struct MemoryWriteBackBuffer {
+
+    bool valid;
+    bool stalled;
+    bool flushed;
     std::unique_ptr<Instruction> memoryAccessedInstruction;
-    bool valid = false;
-    bool stalled = false;
-    bool flushed = false;
 
     MemoryWriteBackBuffer() : valid(false), stalled(false), flushed(false), memoryAccessedInstruction(std::make_unique<EmptyInstruction>()) {}
 

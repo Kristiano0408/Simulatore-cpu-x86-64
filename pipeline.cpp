@@ -21,7 +21,12 @@ void Stage::setStatus(StageStatus newStatus) {
 
 
 // Implementation of FetchStage class methods
-FetchStage::FetchStage() : Stage(), currentInstructionInfo{0,0,0,{0},false,0,0,0,0,0,0,0,0,false,false,false,false,false,{0},""} {}
+FetchStage::FetchStage() : Stage(),currentInstructionInfo{.instructionId = 0, .totalLength = 0, .opcodeLength = 0, .prefixCount = 0,
+                                                          .prefix = {0,0,0,0}, .rex = false, .rexprefix = 0, .opcode = 0, .additionalBytes = 0,
+                                                          .numOperands = 0, .operandLength = 0, .src_operand_length = 0, .dest_operand_length = 0,
+                                                          .bit_extension = 0, .rex_w_sensitive = false, .hasModRM = false,
+                                                          .hasSIB = false, .hasDisplacement = false, .hasImmediate = false,
+                                                          .instruction = {}, .description = ""} {}
 
 FetchStage::~FetchStage() {}
 
@@ -59,7 +64,12 @@ void FetchStage::setCurrentInstructionInfo(InstructionInfo info) {
 
 
 // Implementation of DecodeStage class methods
-DecodeStage::DecodeStage() : Stage(), instruction_info_to_decode{0,0,0,{0},false,0,0,0,0,0,0,0,0,false,false,false,false,false,{0},""}, decoded_instruction(std::make_unique<EmptyInstruction>()) {}
+DecodeStage::DecodeStage() : Stage(), instruction_info_to_decode{.instructionId = 0, .totalLength = 0, .opcodeLength = 0, .prefixCount = 0,
+                                                          .prefix = {0,0,0,0}, .rex = false, .rexprefix = 0, .opcode = 0, .additionalBytes = 0,
+                                                          .numOperands = 0, .operandLength = 0, .src_operand_length = 0, .dest_operand_length = 0,
+                                                          .bit_extension = 0, .rex_w_sensitive = false, .hasModRM = false,
+                                                          .hasSIB = false, .hasDisplacement = false, .hasImmediate = false,
+                                                          .instruction = {}, .description = ""} , decoded_instruction(std::make_unique<EmptyInstruction>()) {}
 DecodeStage::~DecodeStage() {}
 
 void DecodeStage::setInstructionToDecode(const InstructionInfo& info) {
@@ -374,6 +384,7 @@ void Pipeline::execute_operation() {
         debugLog("OPERAND FETCH STAGE processing...");
         if(decodeOperandFetchBuffer.valid) 
         {
+            debugLog("Decoding-OperandFetch buffer has valid instruction.");
             operandFetchStage.setInstructionWithFetchedOperands(std::move(decodeOperandFetchBuffer.decodedInstruction));
             decodeOperandFetchBuffer.valid = false;
             operandFetchStage.fetchOperands(bus);
@@ -387,6 +398,7 @@ void Pipeline::execute_operation() {
         }
         else if (decodeStage.isStageReady() && decodeStage.getDecodedInstruction())
         {
+            debugLog("Decode stage has valid instruction.");
             operandFetchStage.setInstructionWithFetchedOperands(decodeStage.getDecodedInstruction());
             operandFetchStage.fetchOperands(bus);
             

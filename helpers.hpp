@@ -303,7 +303,7 @@ using anydata = std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 //debuging functions
-inline void debugLog(const std::string& message) {
+inline void debugLog([[maybe_unused]] const std::string& message) {
 
     #ifdef DEBUG
     std::cout << "[DEBUG] " << message << std::endl;    

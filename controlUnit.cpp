@@ -26,8 +26,6 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index)
     //fetching the instruction from cache or memory
 
 
-    std::array<uint8_t, 15> buffer {0}; //buffer for the instruction (max length of an instruction is 15 bytes)
-
     debugLog("Fetching instruction at address: " + to_string_hex(index));
 
     anydata Datavariant = std::array<uint8_t, 15>{};
@@ -74,7 +72,7 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
     debugLog("Fetching instruction from memory...");
 
     // Read a line from the cache buffer_responseQueue
-    auto it = std::move(bus.getCPU().cacheResponseQueue.find(instructionId));
+    auto it = bus.getCPU().cacheResponseQueue.find(instructionId);
 
     
 

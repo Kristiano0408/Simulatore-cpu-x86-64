@@ -52,7 +52,6 @@ namespace operandFetch {
  
         //Source operand is an address and destination is a register
         auto sourceOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), address);
-        bus.getCPU().sendCacheRequest(std::make_unique<CacheRequest<anydata>>(address, RequestType::READ, i->getInstructionId()));
         auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
 
         i->setSourceOperand(std::move(sourceOperand));
