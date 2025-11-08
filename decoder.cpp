@@ -144,8 +144,7 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
     
     auto it = instructionMap.find(instruction.opcode)->second;
 
-    std::cout << "Decoding instruction: " << std::hex << instruction.opcode <<" - " << static_cast<int>(it.mode) << std::endl;
-    
+    debugLog("Decoding instruction: " + to_string_hex(instruction.opcode) + " - " + std::to_string(static_cast<int>(it.mode)));
 
     typeofInstruction type_instruction = it.type;
 
@@ -313,6 +312,8 @@ void Decoder::settingInstructionParameters(Instruction* instruction, Instruction
     instruction->setRex(instructionInfo.rex);
 
     instruction->setRexprefix(instructionInfo.rexprefix);
+
+    instruction->setInstructionId(instructionInfo.instructionId);
     
 }
 

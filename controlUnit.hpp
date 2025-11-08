@@ -17,8 +17,10 @@ class CU
         //RegisterFile& getRegisters();
 
 
+        void startFetch(uint64_t instructionId, uint64_t& index);
 
-        InstructionInfo fetchInstruction();
+        void updateFetch(uint64_t instructionId);
+        InstructionInfo fetchInstruction(uint64_t instructionID, uint64_t index);
         Instruction* decodeInstruction(InstructionInfo instruction);
         void OperandFetch(Instruction* instruction);
         void executeInstruction(Instruction* instruction);
@@ -31,6 +33,7 @@ class CU
     private:
         Decoder decoder;
         Bus& bus; //reference to the bus
+        uint64_t currentInstructionId;
 
         
 

@@ -9,9 +9,8 @@
 #include "bus.hpp"
 #include "memory.hpp"
 #include <variant>
-
-constexpr unsigned CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
-
+#include <queue>
+// 
 
 //basic structure for the cache line
 //it contains the data, the tag, the valid bit and the dirty bit
@@ -88,11 +87,16 @@ class CacheLevel
 };
 
 /// Cache manager class to manage multiple cache levels
-class CacheManager
+class CacheManager : public Device
 {   
     public:
         CacheManager(Bus& bus,uint64_t l1Size, uint64_t l2Size, uint64_t l3Size, uint64_t l1Assoc, uint64_t l2Assoc, uint64_t l3Assoc);
         ~CacheManager();
+
+        void execute_operation() override; // Override of the pure virtual function from Device class
+
+        void processRequest(); // Function to process cache requests
+
         template <typename T>
         Result<T> read(uint64_t address);
         template <typename T>
@@ -107,11 +111,19 @@ class CacheManager
         void invalidateAllCaches();
         void printCacheState() const; // For debugging purposes
 
+        void setRequest(std::unique_ptr<CacheRequest<anydata>>&& request) { requestQueue.push(std::move(request)); } // Set the request queue
+
+
+
     private:
         CacheLevel L1Cache;
         CacheLevel L2Cache;
         CacheLevel L3Cache;
         Bus& bus; // Reference to the bus
+
+        // Queue to hold cache requests
+        std::queue<std::unique_ptr<CacheRequest<anydata>>> requestQueue;
+
 };
 
 
@@ -185,11 +197,11 @@ Result<void> CacheLevel::write(uint64_t address, const T& data)
         // Set the event type to CACHE_HIT
         result.errorInfo.event = EventType::CACHE_HIT; // Set the event type to CACHE_HIT
         result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
-        result.errorInfo.message = "Cache hit at address: " + std::to_string(address); // Set the message for debugging
+        result.errorInfo.message = "Cache hit at address: " + to_string_hex(address); // Set the message for debugging
         result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
 
-        std::cout << "Cache hit at address: " << std::hex << address << std::endl; // Print the cache hit message
-        
+        debugLog("Cache hit at address: " + to_string_hex(address));
+
         return result; // Return the result
 
     }
@@ -201,10 +213,10 @@ Result<void> CacheLevel::write(uint64_t address, const T& data)
         // Set the event type to CACHE_MISS
         result.errorInfo.event = EventType::CACHE_MISS; // Set the event type to CACHE_MISS
         result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
-        result.errorInfo.message = "Cache miss at address: " + std::to_string(address); // Set the message for debugging
+        result.errorInfo.message = "Cache miss at address: " + to_string_hex(address); // Set the message for debugging
         result.errorInfo.error = ErrorType::NONE;
 
-        std::cout << "Cache miss at address: " << std::hex << address << std::endl; // Print the cache miss message
+        debugLog("Cache miss at address: " + to_string_hex(address));
 
         return result; // Return the result
     }
@@ -228,7 +240,7 @@ Result<T> CacheManager::read(uint64_t address)
 
     uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
 
-    std::cout << "Reading from cachemanager at address: " << std::hex << address << std::endl;
+    debugLog("Reading from cachemanager at address: " + to_string_hex(address));
 
     //temporary result that holds the line read from cache
     Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> temporary_result;
@@ -407,7 +419,7 @@ Result<void> CacheManager::writeSingleLine(uint64_t address, const T& data, uint
                     // Set the event type to RAM_ACCESS
                     result.errorInfo.event = EventType::RAM_ACCESS; // Set the event type to RAM_ACCESS
                     result.errorInfo.source = ComponentType::RAM; // Set the source to RAM
-                    result.errorInfo.message = "RAM access failed at address: " + std::to_string(address); // Set the message for debugging
+                    result.errorInfo.message = "RAM access failed at address: " + to_string_hex(address); // Set the message for debugging
                     result.errorInfo.error = ErrorType::WRITE_FAIL; // Set the error type to WRITE_FAIL
 
                     return result; // Return the result
@@ -467,7 +479,7 @@ Result<void> CacheManager::writeCrossLines(uint64_t address, const T& data)
     result.success = true;
     result.errorInfo.event = EventType::CACHE_HIT; // Set the event type to CACHE_HIT
     result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
-    result.errorInfo.message = "Write completed successfully at address: " + std::to_string(address); // Set the message for debugging
+    result.errorInfo.message = "Write completed successfully at address: " + to_string_hex(address); // Set the message for debugging
     result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
     return result;
 }

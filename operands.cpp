@@ -5,12 +5,14 @@
 #include <string>
 #include "registerFile.hpp"
 #include "bus.hpp"
+#include "helpers.hpp"
 
 //namespace for operand fetching 
 //every addressing mode has its own function that take the istruction and the referecne to then bus for loading
  //the right values inside the smart pointers that store the operands
 namespace operandFetch {
 
+    
     //fetching RM operands 
     void fetchRM(Instruction* i, Bus& bus)
     {
@@ -18,14 +20,14 @@ namespace operandFetch {
         Register source_register; 
         Register destination_register;
 
-        //std::cout << "fetchRM" << std::endl;
         //getting the r/m byte
         r_m rm = i->getRM();
 
         //getting the rex prefix
         uint8_t rex = i->getRexprefix();
 
-        //Case 1: operation between register and register
+
+        //Case 1: operation between register and register (maybe you can use the regToReg boolean variable)
         if(rm.mod == 0b11)   
         {
             source_register = decodeRegisterRM(rm.r_m, rex, false);
@@ -42,27 +44,22 @@ namespace operandFetch {
 
         }
 
-        //Case 2: operation between register and memory
+         //Case 2: operation between register and memory
 
         uint64_t address {calculatingAddressR_M(i, bus)};
 
-        std ::cout<<std::hex << "Address: " << address <<  std::dec <<std::endl;
-
-        std::cout <<std::dec << "Address: " << address << std::endl;
-
-
         destination_register = decodeRegisterReg(rm.reg, rex);
-
-        
+ 
         //Source operand is an address and destination is a register
         auto sourceOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), address);
+        bus.getCPU().sendCacheRequest(std::make_unique<CacheRequest<anydata>>(address, RequestType::READ, i->getInstructionId()));
         auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
-                
 
     }
+
 
     void fetchMR(Instruction* i, Bus& bus)
     {

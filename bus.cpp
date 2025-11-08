@@ -12,7 +12,8 @@ Bus::Bus() {
 }
 
 void Bus::tick() {
-    cpu->cpuStep(); // Execute a CPU step
+    cpu->getPipeline().tick();
+    cpu->getCacheManager().tick();
     clock->tick();
 }
 

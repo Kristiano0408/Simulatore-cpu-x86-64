@@ -14,34 +14,113 @@ CU::~CU()
 {
 }
 
-//method for fethcing the instruction from the ram
-InstructionInfo CU::fetchInstruction()
+void CU::startFetch(uint64_t instructionId, uint64_t& index)
 {
+    // Implementation of instruction fetching using the bus
+    // This is a placeholder implementation and should be replaced with actual logic
+    debugLog("Starting instruction fetch...");
+
     RegisterFile& cpuRegisters = bus.getCPU().getRegisters();  // get the registers of the CPU temporarily
     //take the value of istruction register
-    uint64_t index = cpuRegisters.getReg(Register::RIP).raw();
+    index = cpuRegisters.getReg(Register::RIP).raw();
     //fetching the instruction from cache or memory
 
 
     std::array<uint8_t, 15> buffer {0}; //buffer for the instruction (max length of an instruction is 15 bytes)
 
-    std::cout << "Fetching instruction at address: " << std::hex << index << std::endl;
+    debugLog("Fetching instruction at address: " + to_string_hex(index));
+
+    anydata Datavariant = std::array<uint8_t, 15>{};
+    auto cacheRequest = std::make_unique<CacheRequest<anydata>>();
+    cacheRequest->type = RequestType::READ;
+    cacheRequest->address = index;
+    cacheRequest->data = Datavariant;
+    cacheRequest->requestID = instructionId;
+
+    bus.getCPU().getCacheManager().setRequest(std::move(cacheRequest));
+
+    debugLog("Cache request sent for instruction fetch.");
+}
+
+void CU::updateFetch(uint64_t instructionId)
+{
+    // Implementation of updating fetch stage using the bus
+    // This is a placeholder implementation and should be replaced with actual logic
+    debugLog("Updating fetch stage...");
+
+    auto it = bus.getCPU().cacheResponseQueue.find(instructionId);
+
+    if (it != bus.getCPU().cacheResponseQueue.end())
+    {
+        debugLog("memory/cache response found for instruction ID: " + std::to_string(instructionId));
+    }
+    else
+    {
+        debugLog("No cache response found for instruction ID: " + std::to_string(instructionId));
+    }
+
+    bus.getCPU().getPipeline().getFetchStage().setStatus(StageStatus::MEMORY_DONE);
+
+}
 
 
-    // Read a line from the cache or memory
-    auto result = bus.getCPU().getCacheManager().read<std::array<uint8_t, 15>>(index);
 
-    if (result.success)
-        std::memcpy(buffer.data(), result.data.data(), 15);
+    
+
+//method for fethcing the instruction from the ram
+InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
+{
+
+    debugLog("Fetching instruction from memory...");
+
+    // Read a line from the cache buffer_responseQueue
+    auto it = std::move(bus.getCPU().cacheResponseQueue.find(instructionId));
+
+    
+
+    Result<anydata> result = *(it->second);
+
+    //extarcting the correct data from the variant
+    std::array<uint8_t, 15> buffer {0}; //buffer for the instruction (max length of an instruction is 15 bytes)
+
+    //using the visist to extract the data
+    Result<std::array<uint8_t, 15>> temp_result;
+
+    std::visit([&](auto&& value)
+    {
+        using T = std::decay_t<decltype(value)>;
+
+        if constexpr (std::is_same_v<T, std::array<uint8_t, 15>>)
+        {
+            temp_result.data = value;
+            temp_result.success = result.success;
+            temp_result.errorInfo = result.errorInfo;
+        }
+        else
+        {
+            // Handle unexpected type
+            temp_result.success = false;
+            temp_result.errorInfo.event = EventType::CACHE_READ_ERROR;
+            temp_result.errorInfo.source = ComponentType::CACHE;
+            temp_result.errorInfo.message = "Unexpected data type in cache response";
+            temp_result.errorInfo.error = ErrorType::READ_FAIL;
+        }
+    }, result.data);
+
+    if (temp_result.success)
+        std::memcpy(buffer.data(), temp_result.data.data(), 15);
     else 
     {
-            //exception that must be handled in the future
+        debugLog("Error fetching instruction: " + temp_result.errorInfo.message);
+        // Handle the error appropriately (e.g., throw an exception, return an error code, etc.)
     }
 
     for(int i=0; i<15; i++)
     {
-        std::cout << "Byte " << i << ": " << std::hex << static_cast<int>(buffer[i]) << std::endl;
+        debugLog("Byte " + std::to_string(i) + ": " + to_string_hex(static_cast<int>(buffer[i])));
     }
+
+    //extracting the instruction from the buffer
 
     std::vector<uint8_t> Instructionbytes; //bytes of the instruction()
     int byteCounter {0}; //counter of the byte (for IR)
@@ -70,6 +149,10 @@ InstructionInfo CU::fetchInstruction()
     InstructionInfo info = decoder.LenghtOfInstruction(opcode, prefix, numbersOfPrefix, rex, rexprefix);
 
 
+    //settinmg the id of the instruction for further tracking for helping in debugging and cache management
+    info.instructionId = instructionId;
+
+
     //searching for the sib and displacement
     if (info.hasModRM)
     {
@@ -77,9 +160,9 @@ InstructionInfo CU::fetchInstruction()
         byteCounter++; //increment the byte counter
         r_m rm = decoder.decodeRM(byteRM);
 
-        std::cout << "Mod: " << std::hex << static_cast<int>(rm.mod) << std::endl;
-        std::cout << "Reg: " << std::hex << static_cast<int>(rm.reg) << std::endl;
-        std::cout << "R/M: " << std::hex << static_cast<int>(rm.r_m) << std::endl;
+        debugLog("Mod: " + to_string_hex(static_cast<int>(rm.mod)));
+        debugLog("Reg: " + to_string_hex(static_cast<int>(rm.reg)));
+        debugLog("R/M: " + to_string_hex(static_cast<int>(rm.r_m)));
 
         Instructionbytes.push_back(byteRM); //add the byte to the instruction bytes
 
@@ -101,29 +184,29 @@ InstructionInfo CU::fetchInstruction()
 
     
 
-    std::cout << "Opcode: " << std::hex << info.opcode << std::endl;
-    std::cout << "Prefix Count: " << info.prefixCount << std::endl;
-    std::cout << "Total Length: " << info.totalLength << std::endl;
-    std::cout << "Opcode Length: " << info.opcodeLength << std::endl;
-    std::cout << "Additional Bytes: " << info.additionalBytes << std::endl;
-    std::cout << "Description: " << info.description << std::endl;
-    std::cout << "Number of Operands: " << info.numOperands << std::endl;
-    std::cout << "Operand Length: " << info.operandLength << std::endl;
+    debugLog("Opcode: " + to_string_hex(info.opcode));
+    debugLog("Prefix Count: " + std::to_string(info.prefixCount));
+    debugLog("Total Length: " + std::to_string(info.totalLength));
+    debugLog("Opcode Length: " + std::to_string(info.opcodeLength));
+    debugLog("Additional Bytes: " + std::to_string(info.additionalBytes));
+    debugLog("Description: " + std::string(info.description));
+    debugLog("Number of Operands: " + std::to_string(info.numOperands));
+    debugLog("Operand Length: " + std::to_string(info.operandLength));
 
     //load the bytes in the struct of the instruction
     info.instruction = Instructionbytes;
 
-    std::cout << "Instruction: " << std::endl;
+    debugLog("Instruction: ");
 
     for (size_t i = 0; i < info.instruction.size(); i++)
     {
-        std::cout << "Byte: " << std::hex << static_cast<int>(info.instruction[i]) << std::endl;
+        debugLog("Byte: " + to_string_hex(static_cast<int>(info.instruction[i])));
     }
 
     //set the RIP to the next instruction
-    cpuRegisters.getReg(Register::RIP) = index + static_cast<uint64_t>(info.totalLength);
+    bus.getCPU().getRegisters().getReg(Register::RIP) = index + static_cast<uint64_t>(info.totalLength);
 
-    std::cout << "IR: " << std::hex << cpuRegisters.getReg(Register::RIP).raw() << std::endl;
+    debugLog("IR: " + to_string_hex(bus.getCPU().getRegisters().getReg(Register::RIP).raw()));
 
     return info;
 
@@ -157,7 +240,7 @@ void CU::OperandFetch(Instruction* instruction)
 void CU::executeInstruction(Instruction* instruction)
 {
 
-    std::cout << "executeInstruction" << std::endl;
+    debugLog("executeInstruction");
     instruction->execute(bus);
 
     //delete the instruction
@@ -215,7 +298,7 @@ void CU::searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<
             byte = buffer[byteCounter]; //fetch the byte from the buffer
             byteCounter++; //increment the byte counter
             bytes.push_back(byte);
-            std::cout << "SIB: " << std::hex << static_cast<int>(byte) << std::endl;
+            debugLog("SIB: " + to_string_hex(static_cast<int>(byte)));
             info.hasSIB = true;
             info.totalLength += 1;
             info.additionalBytes += 1;
@@ -230,7 +313,7 @@ void CU::searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<
                 {
                     byte = buffer[byteCounter]; //fetch the byte from the buffer
                     byteCounter++; //increment the byte counter
-                    std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
+                    debugLog("Displacement: " + to_string_hex(static_cast<int>(byte)));
                     bytes.push_back(byte);
                     
                 }
@@ -250,7 +333,7 @@ void CU::searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<
             info.hasDisplacement = true;
             info.totalLength += 1;
             info.additionalBytes += 1;
-            std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
+            debugLog("Displacement: " + to_string_hex(static_cast<int>(byte)));
         }
 
         if (rm.mod == 0b10)
@@ -260,7 +343,7 @@ void CU::searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<
             {
                 byte = buffer[byteCounter]; //fetch the byte from the buffer
                 byteCounter++; //increment the byte counter
-                std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
+                debugLog("Displacement: " + to_string_hex(static_cast<int>(byte)));
                 bytes.push_back(byte);
             }
             info.totalLength += 4;
@@ -276,7 +359,7 @@ void CU::searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<
             {
                 byte = buffer[byteCounter]; //fetch the byte from the buffer
                 byteCounter++; //increment the byte counter
-                std::cout << "Displacement: " << std::hex << static_cast<int>(byte) << std::endl;
+                debugLog("Displacement: " + to_string_hex(static_cast<int>(byte)));
                 bytes.push_back(byte);
                 
             }
@@ -340,7 +423,7 @@ void CU::fetchOpcode(std::array<uint8_t, 15>& buffer, uint32_t& opcode, int& byt
         //the opcode is part of a group of instructions
         //the real opcode is in the ModRM byte
         //the lenght of the opcode is 1 byte
-        std::cout << "Opcode is part of a group of instructions" << std::endl;
+        debugLog("Opcode is part of a group of instructions");
 
         //fething the ModRM byte
         byte = buffer[byteCounter]; //fetch the byte from the buffer (DONT INCREMENT THE BYTE COUNTER, ONLY READ THE BYTE)
@@ -351,7 +434,7 @@ void CU::fetchOpcode(std::array<uint8_t, 15>& buffer, uint32_t& opcode, int& byt
         //setting the real opcode
         opcode = (opcode << 8) | static_cast<uint32_t>(reg);
 
-        std::cout << "Real Opcode: " << std::hex << opcode << std::endl;
+        debugLog("Real Opcode: " + to_string_hex(opcode));
 
         //the opcode is still 1 byte, this script just modify the "opcode" variable to avoid mistakes in the decoding phase using it has a key for the map
         

@@ -27,9 +27,17 @@ class Instruction
         virtual  ~Instruction();
 
         //methods for pipeline stages
-        virtual void execute(Bus& bus);//Polimorfic method that will be implemented in the derived classes
+        virtual void execute(Bus& bus) = 0;//Polimorfic method that will be implemented in the derived classes
 
-        virtual void fetchOperands(Bus& bus) = 0; //Polimorfic method that will be implemented in the derived classes
+        //////////////////////////////////////////////////////////////
+
+        virtual void startFetchOperands(Bus& bus) = 0; //Polimorfic method that will be implemented in the derived classes
+
+        virtual void updateFetchOperands(Bus& bus) = 0; //Polimorfic method that will be implemented in the derived classes
+
+        virtual void fetchOperands(Bus& bus) = 0; //Polimorfic method for fetching operands
+
+        //////////////////////////////////////////////////
 
         virtual void accessMemory(Bus& bus) {} //Polimorfic method for memory access (only for load/store instructions)
 
@@ -105,6 +113,10 @@ class Instruction
 
         uint64_t mask(int nbit);// return a mask for the number of bits (8, 16, 32, 64)
 
+        uint64_t getInstructionId() const { return InstructionId; }
+
+        void setInstructionId(uint64_t id) { InstructionId = id; }
+
     protected:
 
         // operands for the instruction
@@ -115,6 +127,7 @@ class Instruction
 
     private:
     //parts of the instruction
+        uint64_t InstructionId; //unique id for the instruction
         uint32_t opcode;
         uint8_t prefix[4];
         int numPrefixes;
@@ -134,14 +147,8 @@ class Instruction
         bool regToMem;
         bool memToReg;
 
-        //intermediate value for pipeline stages
-        uint64_t intermediate_result;
-        bool tempCF;
-        bool tempZF;
-        bool tempSF;
-        bool tempOF;
-        bool tempPF;
-        bool tempAF;
+        
+
 
 
 
@@ -151,6 +158,30 @@ class Instruction
 
 //define the instruction classes (an instruction for each operation)
 
+//empty instruction class (for smartpointer initialization)
+class EmptyInstruction : public Instruction
+{
+    public:
+        //destructor
+        ~EmptyInstruction() override = default;
+
+        void startFetchOperands(Bus& bus) override {}
+
+        void updateFetchOperands(Bus& bus) override {}
+
+        void fetchOperands(Bus& bus) override {}
+
+        //execute the instruction
+        void execute(Bus& bus) override {}
+
+        void accessMemory(Bus& bus) override {}
+
+        void writeBack(Bus& bus) override {debugLog("EmptyInstruction writeBack called");}
+
+};
+
+
+
 //MOV instruction class
 class MoveInstruction : public Instruction
 {
@@ -158,8 +189,12 @@ class MoveInstruction : public Instruction
 
         //destructor
         ~MoveInstruction() override = default;
-        void fetchOperands(Bus& bus) override;
-        //uint64_t calculatingAddressR_M(Bus& bus); //calculate the address for the operation R/M
+
+        void startFetchOperands(Bus& bus) override {}
+
+        void updateFetchOperands(Bus& bus) override {}
+
+        void fetchOperands(Bus& bus) override {}
 
         //execute the instruction
         void execute(Bus& bus) override;
@@ -180,7 +215,11 @@ class AddInstruction : public Instruction
         //destructor
         ~AddInstruction() override = default;
 
-        void fetchOperands(Bus& bus) override;
+        void startFetchOperands(Bus& bus) override {}
+
+        void updateFetchOperands(Bus& bus) override {}
+
+        void fetchOperands(Bus& bus) override {}
 
         //execute the instruction
         void execute(Bus& bus) override;
@@ -199,7 +238,11 @@ class SubInstruction : public Instruction
         //destructor
         ~SubInstruction() override = default;
 
-        void fetchOperands(Bus& bus) override;
+        void startFetchOperands(Bus& bus) override {}
+
+        void updateFetchOperands(Bus& bus) override {}
+
+        void fetchOperands(Bus& bus) override {}
 
         //execute the instruction
         void execute(Bus& bus) override;

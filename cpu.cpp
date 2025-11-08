@@ -1,18 +1,10 @@
 #include "cpu.hpp"
 
 //constructor for the CPU
-CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(bus), registers(), cacheManager(bus, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc) {}
+CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(bus), registers(), cacheManager(bus, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc), pipeline(bus) {}
 
 //destructor
-CPU::~CPU()
-{
-    // Clean up the decoded instruction if it exists
-    if (decodedInstruction) {
-        delete decodedInstruction;
-        decodedInstruction = nullptr;
-    }
-
-}
+CPU::~CPU(){}
 
 //getters for the registers and ALU
 ALU& CPU::getALU()
@@ -35,14 +27,15 @@ CacheManager& CPU::getCacheManager()
     return cacheManager;
 }
 
+Pipeline& CPU::getPipeline()
+{
+    return pipeline;
+}
+
 //cpu operations
 void CPU::cpuStart()
 {
-    //start the CPU
-    while(true)
-    {
-        bus.tick(); //tick the bus, this will call cpuStep() and clock.tick()
-    }
+    
 }
 
 void CPU::cpuReset()
@@ -54,6 +47,7 @@ void CPU::cpuReset()
 
 void CPU::cpuStep()
 {
+    //we non use this anymorre because we have the pipeline
 
     /*switch (state) {
         case CPUState::FETCH:
@@ -101,5 +95,15 @@ void CPU::cpuStep()
     
     //delete the instruction
     delete decodedInstruction;*/
-    
+}
+
+void CPU::execute_operation()
+{
+    bus.tick(); //advance the bus by one clock cycle (which advances all connected devices and synchronizes them and manages the timing and latencies)
+}
+
+
+void CPU::sendCacheRequest(std::unique_ptr<CacheRequest<anydata>> request)
+{
+    cacheManager.setRequest(std::move(request));
 }

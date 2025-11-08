@@ -32,11 +32,6 @@ Instruction::Instruction()
 Instruction::~Instruction() {
 }
 
-void Instruction::execute([[maybe_unused]] Bus& bus) 
-{
-    //default implementation (do nothing)
-}
-
 void Instruction::setOpcode(uint32_t opcode) 
 {
     this->opcode = opcode;
@@ -258,7 +253,7 @@ int Instruction::calculating_number_of_bits()
     {
         if (getPrefix()[i] == 0x66)
         {
-            std::cout << "66 prefix" << std::endl;
+            debugLog("66 prefix");
             return 16;
         }
     }
@@ -306,12 +301,25 @@ uint64_t Instruction::mask(int nbit)
 
 //Move instruction
 
+//start fetching operands
+void MoveInstruction::startFetchOperands(Bus& bus)
+{
+    debugLog("MoveInstruction startFetchOperands called");
+
+    //getting the opcode
+    uint32_t opcode = getOpcode();
+
+    debugLog("Opcode: " + to_string_hex(opcode));
+
+
+    
+}
+
 //fetch the operands
 void MoveInstruction::fetchOperands(Bus& bus) {
 
     //std::cout << "Fetching operands for Move Instruction" << std::endl;
-    //getting the opcode
-    uint32_t opcode = getOpcode();
+    
 
 
     //fetch the operands
@@ -323,34 +331,34 @@ void MoveInstruction::fetchOperands(Bus& bus) {
     switch (getAddressingMode())
     {
         case AddressingMode::MR:                     //move register to R/M
-            std::cout << "MOV_MR" << std::endl;
+            debugLog("MOV_MR");
             operandFetch::fetchMR(this, bus);
             break;
         
         case AddressingMode::RM:                    //move R/M to register
-            std::cout << "MOV_RM" << std::endl;
+            debugLog("MOV_RM");
             //std::cout << "opcode: " << opcode << std::endl;
             operandFetch::fetchRM(this, bus);
             break;
         
         
         case AddressingMode::MI:                   //move immediate to memory/register
-            std::cout << "MOV_MI" << std::endl;
+            debugLog("MOV_MI");
             operandFetch::fetchMI(this, bus);
             break;
         
         case AddressingMode::OI:                  //move immediate to reg
-            std::cout << "MOV_OI" << std::endl;
-            operandFetch::fetchOI(this, bus, opcode);
+            debugLog("MOV_OI");
+            operandFetch::fetchOI(this, bus, getOpcode());
             break;
         
         case AddressingMode::FD:                     //move from offset to Rax
-            std::cout << "MOV_FD" << std::endl;
+            debugLog("MOV_FD");
             operandFetch::fetchFD(this, bus);
             break;
         
         case AddressingMode::TD:                    //move from Rax to offset
-            std::cout << "MOV_TD" << std::endl;
+            debugLog("MOV_TD");
             operandFetch::fetchTD(this, bus);
             break;
         
@@ -391,8 +399,7 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
         //casting the value to the number of bits of the operand (8, 16, 32, 64) and zero extending it
         value = castingValue(value, getNbit());
 
-        std::cout << "Value: " << value << std::endl;
-
+        debugLog("Value: " + to_string_hex(value));
 
         //setting the value to the destination operand
         getDestinationOperand()->setValue(value);
@@ -400,7 +407,7 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
     }
     else
     {
-        std::cerr << "Error: Source or destination operand is null" << std::endl;
+        debugLog("Error: Source or destination operand is null");
     }
 
     //std::cout<< "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ"<< std::endl;
@@ -412,6 +419,16 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
     //destinationOperand = nullptr; // set the pointer to null after deletion
 
 
+}
+
+void MoveInstruction::accessMemory([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
+}
+
+void MoveInstruction::writeBack([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -427,20 +444,20 @@ void AddInstruction::fetchOperands(Bus& bus)
     switch (getAddressingMode())
     {
         case AddressingMode::MR:                     //add register to R/M
-            std::cout << "ADD_MR" << std::endl;
+            debugLog("ADD_MR");
             operandFetch::fetchMR(this, bus);
             break;  
 
         case AddressingMode::RM:                    //add R/M to register
-            std::cout << "ADD_RM" << std::endl;
+            debugLog("ADD_RM");
             operandFetch::fetchRM(this, bus);
             break;
         case AddressingMode::MI:                   //add immediate to memory/register
-            std::cout << "ADD_MI" << std::endl;
+            debugLog("ADD_MI");
             operandFetch::fetchMI(this, bus);
             break;
         case AddressingMode::I:                  //add immediate to accumulator
-            std::cout << "ADD_I" << std::endl;
+            debugLog("ADD_I");
             operandFetch::fetchI(this, bus);
             break;
         default:
@@ -500,6 +517,16 @@ void AddInstruction::execute(Bus& bus)
 
 }
 
+void AddInstruction::accessMemory([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
+}
+
+void AddInstruction::writeBack([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 //Sub instruction
@@ -513,20 +540,20 @@ void SubInstruction::fetchOperands(Bus& bus)
     switch (getAddressingMode())
     {
         case AddressingMode::MR:                     //sub register to R/M
-            std::cout << "SUB_MR" << std::endl;
+            debugLog("SUB_MR");
             operandFetch::fetchMR(this, bus);
             break;  
 
         case AddressingMode::RM:                    //sub R/M to register
-            std::cout << "SUB_RM" << std::endl;
+            debugLog("SUB_RM");
             operandFetch::fetchRM(this, bus);
             break;
         case AddressingMode::MI:                   //sub immediate to memory/register
-            std::cout << "SUB_MI" << std::endl;
+            debugLog("SUB_MI");
             operandFetch::fetchMI(this, bus);
             break;
         case AddressingMode::I:                  //sub immediate to accumulator
-            std::cout << "SUB_I" << std::endl;
+            debugLog("SUB_I");
             operandFetch::fetchI(this, bus);
             break;
         default:
@@ -582,6 +609,15 @@ void SubInstruction::execute(Bus& bus)
     }
 }
 
+void SubInstruction::accessMemory([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
+}
+
+void SubInstruction::writeBack([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
+}
 
 
 

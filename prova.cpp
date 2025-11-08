@@ -14,10 +14,33 @@
 #include <iomanip>
 #include <cstdint>
 
+#include <termios.h>
+#include <unistd.h>
+
+
+void setNonCanonical(bool enable) {
+    static termios oldt;
+    static bool saved = false;
+    termios newt;
+
+    if (enable) {
+        tcgetattr(STDIN_FILENO, &oldt);
+        saved = true;
+        newt = oldt;
+        newt.c_lflag &= ~(ICANON | ECHO); // disattiva buffering e echo
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    } else if (saved) {
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    }
+}
+
+
+
 using namespace std;
 
 int main()
 {
+    setNonCanonical(true); // Abilita modalità non canonica per l'input
 
     Bus bus; // Create a bus instance
     
@@ -122,75 +145,49 @@ int main()
         cout << "Memory[" << i << "]: " << hex << static_cast<int>(memoryData[i]) << endl;
     }
 
-    InstructionInfo info;
-
-    Instruction* instruction;
-
-    for (int i = 0; i < 9; i++) {
-
-
-        auto& cu = bus.getCPU().getControlUnit();
-
-        info = cu.fetchInstruction();
-        std::cout << "Instruction size: " << info.instruction.size() << std::endl;
-        for (size_t j = 0; j < info.instruction.size(); j++) {
-            cout << "Byte: " << hex << static_cast<int>(info.instruction[j]) << endl;
+    int i = 0;
+    while(true)
+    {
+        char c = getchar();
+        if (c == 'q') {
+            break; // Esci dal ciclo se l'utente preme 'q'
         }
-        instruction = bus.getCPU().getControlUnit().decodeInstruction(info);
+        if (c == ' ') {
+            cout << "---- Clock Cycle " << i + 1 << " ----" << endl;
 
-        cout << "Instruction: " << hex << static_cast<int>(instruction->getOpcode()) << endl;
-        cout << "Prefix: " << hex << static_cast<int>(instruction->getPrefix()[0]) << endl;
-        cout << "Prefix: " << hex << static_cast<int>(instruction->getPrefix()[1]) << endl;
-        cout << "Prefix: " << hex << static_cast<int>(instruction->getPrefix()[2]) << endl;
-        cout << "Prefix: " << hex << static_cast<int>(instruction->getPrefix()[3]) << endl;
-        cout << "Opcode: " << hex << static_cast<int>(instruction->getOpcode()) << endl;
+            bus.tick();
+            i++;
+
+            // Stampa lo stato dei registri
+            std::cout << "RAX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RAX).raw() << std::endl;
+            std::cout << "RBX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RBX).raw() << std::endl;
+            std::cout << "RCX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RCX).raw() << std::endl;
+            std::cout << "RDX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RDX).raw() << std::endl;
+            std::cout << "RSI: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RSI).raw() << std::endl;
+            std::cout << "RDI: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RDI).raw() << std::endl;
+            std::cout << "RSP: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RSP).raw() << std::endl;
+            std::cout << "RBP: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RBP).raw() << std::endl;
+            std::cout << "R8: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R8).raw() << std::endl;
+            std::cout << "R9: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R9).raw() << std::endl;
+            std::cout << "R10: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R10).raw() << std::endl;
+            std::cout << "R11: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R11).raw() << std::endl;
+            std::cout << "R12: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R12).raw() << std::endl;
+            std::cout << "R13: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R13).raw() << std::endl;
+            std::cout << "R14: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R14).raw() << std::endl;
+            std::cout << "R15: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R15).raw() << std::endl;
+            std::cout << "RIP: " << std::dec << bus.getCPU().getRegisters().getReg(Register::RIP).raw() << std::endl;
+
+            //stampa dei flag
+            std::cout << "CF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::CF) << std::endl;
+            std::cout << "PF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::PF) << std::endl;
+            std::cout << "AF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::AF) << std::endl;
+            std::cout << "ZF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::ZF) << std::endl;
+            std::cout << "SF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::SF) << std::endl;
+            std::cout << "OF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::OF) << std::endl;
+
+        }
         
-        bus.getCPU().getControlUnit().OperandFetch(instruction);
-
-        cout << "Fetched operands for Move Instruction" << endl;
-        cout << "Source Operand: " << hex << instruction->getSourceOperand()->getValue().data << endl;
-        cout << "Source Operand Size: " << instruction->getSourceOperand()->getSize() << endl;
-        cout << "Destination Operand: " << hex << instruction->getDestinationOperand()->getValue().data << endl;
-        cout << "Destination Operand Size: " << instruction->getDestinationOperand()->getSize() << endl;
-
-        // Esegui l'istruzione
-        
-        bus.getCPU().getControlUnit().executeInstruction(instruction);
-
-        // Stampa lo stato dei registri dopo ogni istruzione
-        std::cout << "Dopo l'istruzione " << i+1 << ":" << std::endl;
-        std::cout << "RAX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RAX).raw() << std::endl;
-        std::cout << "RBX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RBX).raw() << std::endl;
-        std::cout << "RCX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RCX).raw() << std::endl;
-        std::cout << "RDX: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RDX).raw() << std::endl;
-        std::cout << "RSI: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RSI).raw() << std::endl;
-        std::cout << "RDI: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RDI).raw() << std::endl;
-        std::cout << "RSP: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RSP).raw() << std::endl;
-        std::cout << "RBP: " << std::hex << bus.getCPU().getRegisters().getReg(Register::RBP).raw() << std::endl;
-        std::cout << "R8: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R8).raw() << std::endl;
-        std::cout << "R9: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R9).raw() << std::endl;
-        std::cout << "R10: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R10).raw() << std::endl;
-        std::cout << "R11: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R11).raw() << std::endl;
-        std::cout << "R12: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R12).raw() << std::endl;
-        std::cout << "R13: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R13).raw() << std::endl;
-        std::cout << "R14: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R14).raw() << std::endl;
-        std::cout << "R15: " << std::hex << bus.getCPU().getRegisters().getReg(Register::R15).raw() << std::endl;
-        std::cout << "RIP: " << std::dec << bus.getCPU().getRegisters().getReg(Register::RIP).raw() << std::endl;
-
-        //stampa dei flag
-        std::cout << "CF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::CF) << std::endl;
-        std::cout << "PF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::PF) << std::endl;
-        std::cout << "AF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::AF) << std::endl;
-        std::cout << "ZF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::ZF) << std::endl;
-        std::cout << "SF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::SF) << std::endl;
-        std::cout << "OF: " << bus.getCPU().getRegisters().getFlags().getFlag(Flagbit::OF) << std::endl;
-        
-
-        std::cout << "----------------------------------------" << std::endl;
     }
-
-
-
 
     /*for (int i = 0; i < 1 ;i++)
     {

@@ -1,8 +1,9 @@
 #include "cacheManager.hpp"
 #include "bus.hpp"
 #include "memory.hpp"
-
 #include <iostream>
+#include "cpu.hpp"
+
 
 
 /// CacheLevel class implementation
@@ -46,7 +47,7 @@ void CacheLevel::load(uint64_t setIndex, uint64_t tag, const std::array<uint8_t,
     line.data = data; // Load the data into the cache line
     line.lastAccessTime = bus.getClock().getCycles(); // Update the last access time
 
-    std::cout << "Loaded data into cache at set index: " << setIndex << ", tag: " << tag << std::endl; // Print the load message
+    debugLog("Loaded data into cache at set index: " + std::to_string(setIndex) + ", tag: " + std::to_string(tag));
 
 
 
@@ -88,12 +89,12 @@ void CacheLevel::invalidate(uint64_t address)
         {
             line.valid = false; // Invalidate the line
             line.dirty = false; // Mark the line as not dirty
-            std::cout << "Invalidated cache line at set index: " << setIndex << ", tag: " << tag << std::endl; // Print the invalidate message
+            debugLog("Invalidated cache line at set index: " + std::to_string(setIndex) + ", tag: " + std::to_string(tag));
             return; // Exit the function
         }
     }
 
-    std::cout << "No matching cache line found to invalidate at address: " << std::hex << address << std::endl; // Print message if no matching line is found
+    debugLog("No matching cache line found to invalidate at address: " + to_string_hex(address));
 
 }
 
@@ -135,7 +136,7 @@ void CacheLevel::flush()
         }
     }
 
-    std::cout << "Cache flushed" << std::endl; // Print the flush message
+    debugLog("Cache flushed");
 
 }
 
@@ -143,13 +144,13 @@ void CacheLevel::flush()
 void CacheLevel::printCacheState() const
 {
     // Print the state of the cache for debugging purposes
-    std::cout << "Cache State:" << std::endl;
+    debugLog("Cache State:");
     for (const CacheSet& set : sets) // Loop through the cache sets
     {
-        std::cout << "Set Index: " << set.setIndex << std::endl; // Print the set index
+        debugLog("Set Index: " + std::to_string(set.setIndex));
         for (const CacheLine& line : set.lines) // Loop through the lines in the set
         {
-            std::cout << "  Line Tag: " << line.tag << ", Valid: " << line.valid << ", Dirty: " << line.dirty << std::endl; // Print the line state
+            debugLog("  Line Tag: " + std::to_string(line.tag) + ", Valid: " + std::to_string(line.valid) + ", Dirty: " + std::to_string(line.dirty));
         }
     }
 }
@@ -213,33 +214,33 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
     //craetion of the structure for the result
     Result<std::array<uint8_t, CACHE_LINE_SIZE>> result;
 
-    std::cout << "Reading from cache at address: " << std::hex << address << std::endl;
+    debugLog("Reading from cache at address: " + to_string_hex(address));
     //bitwise index/tag calculation
     constexpr unsigned offsetBits = ilog2_constexpr(CACHE_LINE_SIZE); // Calculate the number of bits for the offset
 
-    std::cout << "Offset bits: " << offsetBits << std::endl;
+    debugLog("Offset bits: " + std::to_string(offsetBits));
 
     unsigned indexBits = ilog2(numSets); // Calculate the number of bits for the index
 
-    std::cout << "Index bits: " << indexBits << std::endl;
+    debugLog("Index bits: " + std::to_string(indexBits));
 
 
     uint64_t offset = address & ((1ULL << offsetBits) - 1); // Calculate the offset within the cache line
 
-    std::cout << "Offset: " << offset << std::endl;
+    debugLog("Offset: " + std::to_string(offset));
     //manage the offset for the read operation
     if (offset_cache(EventType::CACHE_READ_ERROR, ErrorType::READ_FAIL, result, offset, address)) 
     {
-        std::cout << "Cache read error at address: " << std::hex << address << std::endl;
+        debugLog("Cache read error at address: " + to_string_hex(address));
         return result;
     }
 
-    std::cout << "Offset after check: " << offset << std::endl;
+    debugLog("Offset after check: " + std::to_string(offset));
 
     uint64_t setIndex = (address >> offsetBits) & ((1ULL << indexBits) - 1); // Calculate the set index
-    std::cout << "Set index: " << setIndex << std::endl;
+    debugLog("Set index: " + std::to_string(setIndex));
     uint64_t tag = address >> (offsetBits + indexBits); // Calculate the tag
-    std::cout << "Tag: " << tag << std::endl;
+    debugLog("Tag: " + std::to_string(tag));
 
     CacheSet& set = sets[setIndex]; // Get the cache set
     auto* line = findLine(set, tag); // Check if the line is in the cache
@@ -262,8 +263,8 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
         result.errorInfo.message = "Cache hit at address: " + std::to_string(address); // Set the message for debugging
         result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
 
-        std::cout << "Cache hit at address: " << std::hex << address << std::endl; // Print the cache hit message
-        std::cout << result << std::endl; // Print the result
+        debugLog("Cache hit at address: " + to_string_hex(address));
+        
 
         return result; // Return the result
 
@@ -279,7 +280,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
         result.errorInfo.message = "Cache miss at address: " + std::to_string(address); // Set the message for debugging
         result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
 
-        std::cout << "Cache miss at address: " << std::hex << address << std::endl; // Print the cache miss message
+        debugLog("Cache miss at address: " + to_string_hex(address)); // Print the cache miss message
 
         return result; // Return the result
     }
@@ -336,6 +337,70 @@ CacheManager::~CacheManager()
 }
 
 
+void CacheManager::execute_operation()
+{
+    processRequest(); // Process cache requests
+}
+
+void CacheManager::processRequest()
+{   
+
+
+    // Process cache requests from the request queue
+    while (!requestQueue.empty())
+    {
+        auto& request = *(requestQueue.front()); // Get the front request(unique_ptr dereferenced)
+
+        std::visit([&](auto&& value)
+        {
+            using T = std::decay_t<decltype(value)>;
+
+            Result<anydata> response;
+
+            switch (request.type)
+            {
+                case RequestType::READ:
+                {
+                    auto readResult = read<T>(request.address);
+                    bus.getCPU().cacheResponseQueue.erase(request.requestID); // Remove the request ID from the response queue
+                    response.success = readResult.success;
+                    response.errorInfo = readResult.errorInfo;
+                    response.data = readResult.data;
+
+                    break;
+                }
+                case RequestType::WRITE:
+                {
+                    auto writeResult = write(request.address, request.data);
+                    bus.getCPU().cacheResponseQueue.erase(request.requestID); // For write operations, we can just erase the request ID as no data is returned
+                    response.success = writeResult.success;
+                    response.errorInfo = writeResult.errorInfo;
+
+                    break;
+                }
+                default:
+                    std::cerr << "Unknown request type" << std::endl;
+                    break;
+            }
+
+            // Store the response in the CPU's cache response queue
+            bus.getCPU().cacheResponseQueue[request.requestID] = std::make_unique<Result<anydata>>(response);
+
+        }, request.data);
+
+        requestQueue.pop(); // Remove the processed request from the queue
+    }
+}
+
+
+
+
+
+
+
+
+
+
 // Flush all caches (L1, L2, L3)
 void CacheManager::flushAllCaches()
 {
@@ -355,7 +420,7 @@ void CacheManager::invalidateAllCaches()
 // Function to print the state of all caches for debugging purposes
 void CacheManager::printCacheState() const
 {
-    std::cout << "Cache Manager State:" << std::endl; // Print the cache manager state
+    debugLog("Cache Manager State:");
     L1Cache.printCacheState(); // Print L1 cache state
     L2Cache.printCacheState(); // Print L2 cache state
     L3Cache.printCacheState(); // Print L3 cache state
@@ -368,7 +433,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
     Result<std::array<uint8_t, CACHE_LINE_SIZE>> temporary_result;
 
     //trying to read from L1 cache
-    std::cout << "Trying to read line from L1 cache at address: " << std::hex << address << std::endl;
+    debugLog("Trying to read line from L1 cache at address: " + to_string_hex(address));
     temporary_result = L1Cache.read(address); // Read from L1 cache
 
 
@@ -386,7 +451,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
     }
     else
     {
-        std::cout << "Cache miss in L1, trying L2 cache at address: " << std::hex << address << std::endl;
+        debugLog("Cache miss in L1, trying L2 cache at address: " + to_string_hex(address));
         // Cache miss in L1, try L2 cache
         temporary_result = L2Cache.read(address); // Read from L2 cache
 
@@ -415,8 +480,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
         else
         {
             // Cache miss in L2, try L3 cache
-            std::cout << "Cache miss in L2, trying L3 cache at address: " << std::hex << address << std::endl;
-            
+            debugLog("Cache miss in L2, trying L3 cache at address: " + to_string_hex(address));
             temporary_result = L3Cache.read(address); // Read from L3 cache
 
             if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
@@ -454,12 +518,11 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
                 //calculating the start of the line
                 uint64_t lineStart = address - offset;
 
-                std::cout << "Cache miss in L3, reading from RAM at address: " << std::hex << lineStart << std::endl; // Print the cache miss message
-
+                debugLog("Cache miss in L3, reading from RAM at address: " + std::to_string(lineStart));
                 // Cache miss in L3, read from RAM
                 temporary_result = bus.getMemory().template readGeneric<std::array<uint8_t, CACHE_LINE_SIZE>>(lineStart); // Read from RAM
 
-                std::cout << "Read from RAM at address: " << std::hex << lineStart << std::endl; // Print the RAM read message
+                debugLog("Read from RAM at address: " + std::to_string(lineStart));
 
                 // Check if the read was successful
                 if(temporary_result.success)
@@ -499,7 +562,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
                     // Set the event type to RAM_ACCESS
                     temporary_result.errorInfo.event = EventType::RAM_ACCESS; // Set the event type to RAM_ACCESS
                     temporary_result.errorInfo.source = ComponentType::RAM; // Set the source to RAM
-                    temporary_result.errorInfo.message = "RAM access failed at address: " + std::to_string(address); // Set the message for debugging
+                    temporary_result.errorInfo.message = "RAM access failed at address: " + to_string_hex(address); // Set the message for debugging
                     temporary_result.errorInfo.error = ErrorType::READ_FAIL; // Set the error type to READ_FAIL
 
                     return temporary_result; // Return the result
@@ -517,7 +580,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
 //function for reading data that is contained in two cache lines
 Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> CacheManager::readCrossLines(uint64_t address)
 {
-    std::cout << "Reading cross lines at address: " << std::hex << address << std::endl;
+    debugLog("Reading cross lines at address: " + to_string_hex(address));
     // Read data spanning two cache lines
     Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> result;
 
@@ -541,7 +604,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> CacheManager::readCrossLines(ui
         return result;
     }
 
-    std::cout << "First line read successfully at address: " << std::hex << address << std::endl;
+    debugLog("First line read successfully at address: " + to_string_hex(address));
 
     uint64_t new_address = address + (CACHE_LINE_SIZE - offset);
     l1SetIndex = (new_address / CACHE_LINE_SIZE) % L1Cache.getNumSets(); // Calculate the L1 set index
@@ -568,15 +631,12 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> CacheManager::readCrossLines(ui
         return result;
     }
 
-    std::cout << "Successfully read cross lines at address: " << std::hex << address << std::endl;
-    std::cout << "First line: "<< result1 << std::endl;
-    std::cout << "Second line: "<< result2 << std::endl;
+    debugLog("Successfully read cross lines at address: " + to_string_hex(address));
 
     // Copy the data from both lines into the result
     std::memcpy(result.data.data(), result1.data.data(), CACHE_LINE_SIZE);
     std::memcpy(result.data.data() + CACHE_LINE_SIZE, result2.data.data(), CACHE_LINE_SIZE);
 
-    std::cout << "Combined data: "<< result << std::endl;
 
     result.success = true;
     return result;

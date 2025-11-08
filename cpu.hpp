@@ -15,7 +15,7 @@
 #include "pipeline.hpp"
 
 
-class CPU
+class CPU: public Device
 {
 
     private:
@@ -33,12 +33,18 @@ class CPU
         uint64_t L2_cache_assoc = 4;
         uint64_t L3_cache_assoc = 8;
 
+
+        //instructionId counter for unique identification of instructions
+        uint64_t instructionIdCounter = 0;
+
         CacheManager cacheManager;
 
-        CPUState state = CPUState::FETCH; //current state of the CPU
+        Pipeline pipeline; //pipeline of the CPU
 
-        InstructionInfo  current_instruction; //current instruction fetched from memory
-        Instruction* decodedInstruction = nullptr; //decoded instruction
+
+
+
+    
 
 
     public:
@@ -52,8 +58,9 @@ class CPU
         void cpuStep();
         void cpuStart();
 
-    
-        //getters for the registers and ALU 
+        void execute_operation() override; //override of the pure virtual function from Device class
+
+        //getters for the registers, ALU, CU and CacheManager, Pipeline
         ALU& getALU();
 
         RegisterFile& getRegisters();
@@ -61,6 +68,20 @@ class CPU
         CU& getControlUnit();
 
         CacheManager& getCacheManager();
+
+        Pipeline& getPipeline();
+
+        void sendCacheRequest(std::unique_ptr<CacheRequest<anydata>> request); //send a cache request
+
+        void processCacheResponse(std::unique_ptr<Result<anydata>> response); //process a cache response
+
+        std::unordered_map<int, std::unique_ptr<Result<anydata>>> cacheResponseQueue; //map for cache responses
+
+        void incrementInstructionIdCounter() { instructionIdCounter++; }
+
+        uint64_t getInstructionIdCounter() const { return instructionIdCounter; }
+
+
 
 };
 

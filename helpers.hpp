@@ -9,6 +9,13 @@
 #include <type_traits>
 #include <algorithm>
 #include <cstring>
+#include <variant>
+#include <sstream>
+#include <iomanip>
+
+
+//defined constants
+constexpr unsigned CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
 
 //farward declaration of the enum class for registers
 enum class Register;
@@ -91,6 +98,7 @@ struct Result<void> {
     bool success;
     Error_Event_Info errorInfo; // Error information if any
 };
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 template <size_t N, size_t M>
 void copyPartial(Result<std::array<uint8_t, N>>& dest, const Result<std::array<uint8_t, M>>& src) {
@@ -99,6 +107,7 @@ void copyPartial(Result<std::array<uint8_t, N>>& dest, const Result<std::array<u
     dest.success = src.success;
     dest.errorInfo = src.errorInfo;
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::ostream& operator<<(std::ostream& os, const ErrorType& type);
@@ -174,13 +183,13 @@ Register decodeRegisterSIB_base(uint8_t reg, uint8_t rexprefix, bool hasSIB);
 
 Register decodeRegisterSIB_index(uint8_t reg, uint8_t rexprefix, bool hasSIB);
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename T>
 T castTo(uint64_t value) {
 
     static_assert(std::is_integral<T>::value, "T must be an integral type");
     return static_cast<T>(value);
 }
-
 
 template<typename T>
 Result<void> From_T_toVoid (const Result<T>& r)
@@ -216,6 +225,7 @@ constexpr unsigned ilog2_constexpr(uint64_t x)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct InstructionInfo {
+    uint64_t instructionId; // Unique ID for the instruction
     size_t totalLength;  // Lunghezza totale dell'istruzione
     size_t opcodeLength; // Lunghezza dell'opcode (1, 2 o 3 byte)
     size_t prefixCount;  // Numero di prefissi
@@ -249,5 +259,68 @@ enum class CPUState {
     EXECUTE,
     COMPLETE
 };
+
+
+enum class StageStatus {
+    READY,
+    MEMORY_DONE,
+    STALLED,
+    WAITING_MEMORY,
+    FLUSHED,
+    EMPTY
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+// Request type enumeration 
+enum class RequestType
+{
+    READ,
+    WRITE,
+    NONE // Default value
+};
+
+
+
+//request structure(the cache manager will use it to manage read and write requests from the cpu)
+template<typename T>
+struct CacheRequest
+{
+    RequestType type = RequestType::NONE; // Type of request (READ or WRITE)
+    uint64_t address = 0; // Memory address
+    T data{}; // Data to be written (only for WRITE requests)
+    bool completed = false; // Indicates if the request has been completed
+    int requestID = 0; // Unique ID for the request
+
+    CacheRequest(): type(RequestType::NONE), address(0), data(T{}), completed(false), requestID(0) {}
+};
+
+using anydata = std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, CACHE_LINE_SIZE>, std::array<uint8_t, 15>>;
+
+//for response structure we will use the Result<T> structure in a cpu map
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+//debuging functions
+inline void debugLog(const std::string& message) {
+
+    #ifdef DEBUG
+    std::cout << "[DEBUG] " << message << std::endl;    
+    #endif
+}
+
+template<typename T>
+std::string to_string_hex(const T& value) {
+    if constexpr (std::is_integral_v<T>) { // Solo tipi interi
+        std::ostringstream oss;
+        oss << "0x" 
+            << std::hex << std::setw(sizeof(T)*2) << std::setfill('0') 
+            << +value; // +value promuove i tipi piccoli
+        return oss.str();
+    } else {
+        return std::to_string(value); // fallback per altri tipi
+    }
+}
 
 #endif // HELPERS_HPP
