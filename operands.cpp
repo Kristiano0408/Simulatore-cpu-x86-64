@@ -51,7 +51,7 @@ namespace operandFetch {
         destination_register = decodeRegisterReg(rm.reg, rex);
  
         //Source operand is an address and destination is a register
-        auto sourceOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), address);
+        auto sourceOperand = std::make_unique<MemOperand>(bus, address, i->getInstructionId());
         auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
 
         i->setSourceOperand(std::move(sourceOperand));
@@ -102,7 +102,7 @@ namespace operandFetch {
 
         //operand constructors for source and destination operands
         auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(source_register).raw());
-        auto destinationOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), address);
+        auto destinationOperand = std::make_unique<MemOperand>(bus, address, i->getInstructionId());
 
 
         i->setSourceOperand(std::move(sourceOperand));
@@ -116,7 +116,7 @@ namespace operandFetch {
         //operand constructors for source and destination operands
 
         //the destination is a register and the source is a memory address(displacement)
-        auto sourceOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), i->getDisplacement());
+        auto sourceOperand = std::make_unique<MemOperand>(bus, i->getDisplacement(), i->getInstructionId());
         auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(Register::RAX).raw());
 
 
@@ -131,7 +131,7 @@ namespace operandFetch {
 
         //the source is a register and the destination is a memory address(displacement)
         auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(Register::RAX).raw());
-        auto destinationOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), i->getDisplacement());
+        auto destinationOperand = std::make_unique<MemOperand>(bus, i->getDisplacement(), i->getInstructionId());
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
@@ -189,7 +189,7 @@ namespace operandFetch {
 
         //the source is an immediate value and the destination is a memory address
         auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
-        auto destinationOperand = std::make_unique<MemOperand>(bus.getCPU().getCacheManager(), address);
+        auto destinationOperand = std::make_unique<MemOperand>(bus, address, i->getInstructionId());
 
 
         i->setSourceOperand(std::move(sourceOperand)); // no source operand for immediate move
@@ -308,145 +308,171 @@ Result<void> RegOperand::setValue(anydata v)
 
         //assingning the value to the register based on the type(8 bit will modify only the lower 8 bit of the register, 16 bit the lower 16 bit and so on)
         if constexpr (std::is_integral_v<T>) {
-            this->reg = (reg & ~((1ULL << (sizeof(T) * 8)) - 1)) | arg;
+            
+            constexpr uint64_t bitCount = sizeof(T) * 8;
+            const uint64_t mask = (bitCount == 64) ? ~0ULL : ((1ULL << bitCount) - 1);
+
+            // Applica la maschera coerente alla size del tipo
+            const uint64_t value = static_cast<uint64_t>(arg) & mask;
+            this->reg = (this->reg & ~mask) | value;
+            
         }
     }, v);
 
     return Result<void>{true, {}};
 }
 
-Result<uint64_t> RegOperand::getValue() 
+Result<anydata> RegOperand::getValue() 
 {
-    return Result<uint64_t>{this->reg, true, {}};
+    anydata result;
+    int64_t mask;
+
+    if(this->size == 64)
+        mask = 0xFFFFFFFFFFFFFFFF;
+    else
+        mask = ((1ULL << (this->size)) - 1);
+
+    result = this->reg & mask;
+
+
+    return Result<anydata>{result, true, {}};
 }
 
-Result<void> MemOperand::setValue(uint64_t v) {
+
+Result<void> MemOperand::setValue(anydata v) {
     
+    if (this->size == 0)
+        return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot set value."}};
+
     if(!requestSent)
     {
+        //sending the write request to the cache manager
+
         debugLog("MemOperand: Sending write request to address " + to_string_hex(this->address) + " with value " + to_string_hex(v) + " and size " + std::to_string(this->size) + " bytes.");
         requestSent = true;
 
-        anydata data_variant;
+        bus.getCPU().getCacheManager().setRequest(std::make_unique<CacheRequest<anydata>>(RequestType::WRITE, this->address, v,false, instructionID));
 
-        switch (this->size)
-        {
-           
-
-            case 8:
-                data_variant = uint8_t {0};
-                break;
-
-            case 16:
-                data_variant = uint16_t {0};
-                break;
-
-            case 32:
-                data_variant = uint32_t {0};
-                break;
-
-            case 64:
-                data_variant = uint64_t {0};
-                break;
-
-            default:
-                break;
-        }
-
-        cache.setRequest(std::make_unique<CacheRequest<anydata>>(RequestType::WRITE, this->address, v,false, instructionID));
-    }
-
-
-
-
-
-
-
-    if (this->size == 0)
-    {   
-        return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot set value."}};
+        return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Write request sent. Waiting for completion."}};
     }
     else
     {
-        switch (size)
+        //request already sent, waiting for completion
+
+        debugLog("MemOperand: Write request already sent to address " + to_string_hex(this->address) + ". Waiting for completion.");
+
+        //checking if the request is completed
+        auto it = bus.getCPU().cacheResponseQueue.find(instructionID);
+
+        if (it != bus.getCPU().cacheResponseQueue.end())
         {
-            case 8:
-                return this->cache.write<uint8_t>(this->address, static_cast<uint8_t>(v));
+            //request completed
+            debugLog("MemOperand: Write request completed for address " + to_string_hex(this->address) + ".");
+            
+            //extracting the result
+            Result<void> result;
+            Result<anydata>& response = *(it->second);
 
-            case 16:
-                return this->cache.write<uint16_t>(this->address, static_cast<uint16_t>(v));
+            result.success = response.success;
+            result.errorInfo = response.errorInfo;
+            
+            if (result.success)
+            {
+                debugLog("MemOperand: Write request successful for address " + to_string_hex(this->address) + ".");
+            }
+            else
+            {
+                debugLog("MemOperand: Write request failed for address " + to_string_hex(this->address) + ": " + response.errorInfo.message);
+            }
 
-            case 32:
-                return this->cache.write<uint32_t>(this->address, static_cast<uint32_t>(v));
+            bus.getCPU().cacheResponseQueue.erase(it);
+            requestSent = false; //resetting the flag for future requests
 
-            case 64:
-                return this->cache.write<uint64_t>(this->address, v);
-
+            return result;
         }
-    }
-    return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE, "Invalid size"}};
+        else
+        {
+            //request not completed
+            debugLog("MemOperand: Write request not completed for address " + to_string_hex(this->address) + ".");
+            return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Write request not completed yet."}};
+        }
 
+    }
 }
 
-Result<uint64_t> MemOperand::getValue() {
-    /*else if (this->address == 0)
-    {
-        throw std::invalid_argument("Address is null. Cannot get value.");
-    }*/
+Result<anydata> MemOperand::getValue() {
+    
+
     if (this->size == 0)
     {
-        return Result<uint64_t>{0,false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot get value."}};
+        return Result<anydata>{{},false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot get value."}};
     }
-    
-    //extarcting value first from cache, the from memory if necessary
 
+    //extracting value first from cache, then from memory if necessary
+    Result<anydata> result;
 
-
-    Result<uint64_t> result;
-
-    uint64_t real_value;
-
-    switch(size) 
+    if(!readRequestSent)
     {
-        case 8: {
-            Result<uint8_t> res = cache.read<uint8_t>(address);
-            if (res.success) std::memcpy(&real_value, &res.data, 1);
-            result.success = res.success;
-            result.errorInfo = res.errorInfo;
-            break;
-        }
-        case 16: {
-            Result<uint16_t> res = cache.read<uint16_t>(address);
-            if (res.success) std::memcpy(&real_value, &res.data, 2);
-            result.success = res.success;
-            result.errorInfo = res.errorInfo;
-            break;
-        }
-        case 32: {
-            Result<uint32_t> res = cache.read<uint32_t>(address);
-            if (res.success) std::memcpy(&real_value, &res.data, 4);
-            result.success = res.success;
-            result.errorInfo = res.errorInfo;
-            break;
-        }
-        case 64: {
-            Result<uint64_t> res = cache.read<uint64_t>(address);
-            if (res.success) real_value = res.data;
-            result.success = res.success;
-            result.errorInfo = res.errorInfo;
-            break;
-        }
-        default:
-            return Result<uint64_t>{0, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE, "Invalid size"}};
+        //sending the read request to the cache manager
+
+        debugLog("MemOperand: Sending read request to address " + to_string_hex(this->address) + " with size " + std::to_string(this->size) + " bytes.");
+        readRequestSent = true;
+
+        bus.getCPU().getCacheManager().setRequest(std::make_unique<CacheRequest<anydata>>(RequestType::READ, this->address, anydata{}, false, instructionID));
+
+        return Result<anydata>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request sent. Waiting for completion."}};
     }
-    return Result<uint64_t>{real_value, result.success, result.errorInfo};
+    else
+    {
+        //request already sent, waiting for completion
+
+        debugLog("MemOperand: Read request already sent to address " + to_string_hex(this->address) + ". Waiting for completion.");
+
+        //checking if the request is completed
+        auto it = bus.getCPU().cacheResponseQueue.find(instructionID);
+
+        if (it != bus.getCPU().cacheResponseQueue.end())
+        {
+            //request completed
+            debugLog("MemOperand: Read request completed for address " + to_string_hex(this->address) + ".");
+            
+            //extracting the result
+            Result<anydata>& response = *(it->second);
+
+            result.success = response.success;
+            result.errorInfo = response.errorInfo;
+            
+            if (result.success)
+            {
+                debugLog("MemOperand: Read request successful for address " + to_string_hex(this->address) + ".");
+                //getting the value based on the size
+                std::memcpy(&result.data, &response.data, sizeof(response.data));
+            }
+            else
+            {
+                debugLog("MemOperand: Read request failed for address " + to_string_hex(this->address) + ": " + response.errorInfo.message);
+            }
+
+            bus.getCPU().cacheResponseQueue.erase(it);
+            readRequestSent = false; //resetting the flag for future requests
+
+            return result;
+        }
+        else
+        {
+            //request not completed
+            debugLog("MemOperand: Read request not completed for address " + to_string_hex(this->address) + ".");
+            return Result<anydata>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request not completed yet."}};
+        }
+    }
+
 }
 
-Result<void> ImmediateOperand::setValue(uint64_t v) {
+Result<void> ImmediateOperand::setValue(anydata v) {
     this->value = v;
     return Result<void>{true, {ComponentType::OPERAND, EventType::NONE, ErrorType::NONE, ""}};
 }
 
-Result<uint64_t> ImmediateOperand::getValue() {
-    return Result<uint64_t>{this->value, true, {ComponentType::OPERAND, EventType::NONE, ErrorType::NONE, ""}};
+Result<anydata> ImmediateOperand::getValue() {
+    return Result<anydata>{this->value, true, {ComponentType::OPERAND, EventType::NONE, ErrorType::NONE, ""}};
 }

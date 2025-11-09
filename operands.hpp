@@ -71,14 +71,15 @@ class RegOperand : public Operand
 class MemOperand : public Operand 
 {
     public:
-        MemOperand(CacheManager& cache, uint64_t address, uint64_t instructionID) : cache(cache), address(address), instructionID(instructionID) {} // Constructor to initialize memory and address
+        MemOperand(Bus& bus, uint64_t address, uint64_t instructionID) : bus(bus), address(address), instructionID(instructionID) {} // Constructor to initialize memory and address
         Result<void> setValue(anydata v) override;
         Result<anydata> getValue() override;
 
     private:
-        CacheManager& cache; // Reference to the cache manager
+        Bus& bus; // Reference to the bus
         uint64_t address; // Address in memory
         bool requestSent = false; // Flag to indicate if a request has been sent to the cache
+        bool readRequestSent = false; // Flag to indicate if a read request has been sent to the cache
         uint64_t instructionID;
 };
 

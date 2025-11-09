@@ -367,7 +367,7 @@ void MoveInstruction::fetchOperands(Bus& bus) {
 void MoveInstruction::execute([[maybe_unused]] Bus& bus) 
 {
 
-    //setting the size of the operands
+    /*//setting the size of the operands
     int bit = calculating_number_of_bits();
 
     setNbit(bit);
@@ -412,7 +412,7 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
     //sourceOperand = nullptr; // set the pointer to null after deletion
     //destinationOperand = nullptr; // set the pointer to null after deletion
 
-
+*/
 }
 
 void MoveInstruction::accessMemory([[maybe_unused]] Bus& bus) 
@@ -460,8 +460,9 @@ void AddInstruction::fetchOperands(Bus& bus)
 }
 
 
-void AddInstruction::execute(Bus& bus) 
-{
+void AddInstruction::execute([[maybe_unused]] Bus& bus) 
+{   
+    /*
     //setting the size of the operands
     int bit = calculating_number_of_bits();
 
@@ -507,7 +508,7 @@ void AddInstruction::execute(Bus& bus)
     else
     {
         std::cerr << "Error: Source or destination operand is null" << std::endl;
-    }
+    }*/
 
 }
 
@@ -555,8 +556,9 @@ void SubInstruction::fetchOperands(Bus& bus)
    }
 }
 
-void SubInstruction::execute(Bus& bus) 
-{
+void SubInstruction::execute([[maybe_unused]] Bus& bus) 
+{   
+    /*
     //setting the size of the operands
     int bit = calculating_number_of_bits();
 
@@ -600,7 +602,7 @@ void SubInstruction::execute(Bus& bus)
     else
     {
         std::cerr << "Error: Source or destination operand is null" << std::endl;
-    }
+    }*/
 }
 
 void SubInstruction::accessMemory([[maybe_unused]] Bus& bus) 

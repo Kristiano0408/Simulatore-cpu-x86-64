@@ -55,7 +55,8 @@ enum class ErrorType {
     OUT_OF_BOUNDS,
     WRITE_FAIL,
     READ_FAIL,
-    UNKNOWN
+    UNKNOWN,
+    WAITING_MEMORY
 };
 
 enum class EventType {
@@ -293,6 +294,9 @@ struct CacheRequest
     int requestID = 0; // Unique ID for the request
 
     CacheRequest(): type(RequestType::NONE), address(0), data(T{}), completed(false), requestID(0) {}
+
+    CacheRequest(RequestType type, uint64_t address, const T& data, bool completed, uint64_t requestID)
+        : type(type), address(address), data(data), completed(completed), requestID(requestID) {}
 };
 
 using anydata = std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, CACHE_LINE_SIZE>, std::array<uint8_t, 15>>;
@@ -318,7 +322,21 @@ std::string to_string_hex(const T& value) {
             << std::hex << std::setw(sizeof(T)*2) << std::setfill('0') 
             << +value; // +value promuove i tipi piccoli
         return oss.str();
-    } else {
+    }
+    else if constexpr (std::is_same_v<T, std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, 64>, std::array<uint8_t, 15>>>) {
+        return std::visit([](auto&& arg) {
+            using U = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_integral_v<U>) {
+                std::ostringstream oss;
+                oss << "0x" << std::hex << +arg;
+                return oss.str();
+            } else {
+                return std::string("[array/monostate]");
+            }
+        }, value);
+    }
+    else 
+    {
         return std::to_string(value); // fallback per altri tipi
     }
 }
