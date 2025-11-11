@@ -79,7 +79,7 @@ Questo progetto è un **simulatore didattico dell’architettura x86-64**, scrit
 
 > 💡 Attualmente supportato solo su **Linux** (su windows il linker da errori)
 
-- compilazione con:  "make" opzionale "DEBUG=1" per stampa controlli di esecuzione
+- compilazione con:  "make (opzionanale -j con numero di threads)" con opzionale "DEBUG=1" per stampa degli eventi 
 
 - esecuzione: ./build/prova
 

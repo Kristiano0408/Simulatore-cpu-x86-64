@@ -2,7 +2,7 @@
 
 
 
-finito operand fecth piplien(priam di pasare ad exevcute riafre operand con anydata)
+fare pipeline execute multi ciclo(padd e move e controllare maschere)
 
 finire refacrory pipeline (ANCEH CONTROLLO SU BUFFER STALLED)
 

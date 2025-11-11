@@ -90,6 +90,8 @@ class ExecuteStage : public Stage {
         void setInstructionToExecute(std::unique_ptr<Instruction> instruction);
         std::unique_ptr<Instruction> getInstructionToExecute();
 
+        void startExecution(Bus& bus); //start execution of the instruction
+        void updateExecution(Bus& bus); //update execution (for multi-cycle instructions)
         void executeInstruction(Bus& bus); //execute the decoded instruction
 
         uint64_t getExecutionResult() const;

@@ -1,29 +1,38 @@
 CXX = g++
-CXXFLAGS = -std=c++23 -O2 -Wall -Wextra
+CXXFLAGS = -std=c++23 -O2 -Wall -Wextra -Iinclude
 
 # Attiva DEBUG se passato come variabile
 ifeq ($(DEBUG),1)
     CXXFLAGS += -DDEBUG -g
 endif
 
-SRCS = prova.cpp bus.cpp cpu.cpp memory.cpp clock.cpp addressCalculator.cpp \
-       alu.cpp cacheManager.cpp controlUnit.cpp decoder.cpp helpers.cpp \
-       instruction_code_map.cpp instruction.cpp opcode_map.cpp operands.cpp \
-       registerFile.cpp device.cpp pipeline.cpp
-
+SRCDIR = src
 OBJDIR = build
-OBJS = $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
+
+# Trova tutti i file .cpp nella cartella src e sotto-cartelle
+SOURCES = $(shell find $(SRCDIR) -name '*.cpp')
+OBJS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
 
 TARGET = $(OBJDIR)/prova
 
-all: $(TARGET)
+# Crea tutte le directory necessarie per gli .o
+DIRS = $(sort $(dir $(OBJS)))
 
+# Regola principale
+all: dirs $(TARGET)
+
+# Crea le directory prima di compilare
+dirs:
+	@mkdir -p $(DIRS)
+
+# Link finale
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-$(OBJDIR)/%.o: %.cpp
-	@mkdir -p $(OBJDIR)
+# Compilazione dei singoli .cpp
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+# Pulizia
 clean:
 	rm -rf $(OBJDIR)

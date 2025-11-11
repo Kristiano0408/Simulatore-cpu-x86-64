@@ -12,10 +12,13 @@
 #include <variant>
 #include <sstream>
 #include <iomanip>
-
+#include <array>
 
 //defined constants
 constexpr unsigned CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
+
+
+using anydata = std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, CACHE_LINE_SIZE>, std::array<uint8_t, 15>>;
 
 //farward declaration of the enum class for registers
 enum class Register;
@@ -252,7 +255,39 @@ struct InstructionInfo {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
+//enum for the type of instruction
 
+
+enum class typeofInstruction
+{
+    MOV, //move instruction
+    ADD, //add instruction
+    SUB, //sub instruction
+};
+
+//enum for the addressing mode of the instruction
+enum class AddressingMode
+{
+    I,  //move immediate to accumulator
+    OI, //move immediate to register
+    MI, //move immediate to memory/register
+    MR, //move register to R/M
+    RM, //move R/M to register
+    FD, //move from offset to Rax
+    TD, //move from Rax to offset
+
+};
+
+//struct for the instruction type and relative addressing mode
+struct InstructionType_and_addMode
+{
+    typeofInstruction type;
+    AddressingMode mode;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
 enum class CPUState {
     FETCH,
     DECODE,
@@ -267,6 +302,8 @@ enum class StageStatus {
     MEMORY_DONE,
     STALLED,
     WAITING_MEMORY,
+    WAITING_SRC_OPERAND,
+    WAITING_DEST_OPERAND,
     FLUSHED,
     EMPTY
 };
@@ -280,7 +317,20 @@ enum class RequestType
     WRITE,
     NONE // Default value
 };
+///////////////////////////////////////////////////////////////////////////////////////////////
+struct temporaryValues {
+        anydata srcValue; //value of the source operand
+        anydata destValue; //value of the destination operand
+        anydata resultValue; //result of the operation
+        bool CF; //Carry Flag
+        bool ZF; //Zero Flag
+        bool SF; //Sign Flag
+        bool OF; //Overflow Flag
+        bool PF; //Parity Flag
+        bool AF; //Auxiliary Carry Flag
+};
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 //request structure(the cache manager will use it to manage read and write requests from the cpu)
@@ -299,7 +349,7 @@ struct CacheRequest
         : type(type), address(address), data(data), completed(completed), requestID(requestID) {}
 };
 
-using anydata = std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, CACHE_LINE_SIZE>, std::array<uint8_t, 15>>;
+
 
 //for response structure we will use the Result<T> structure in a cpu map
 

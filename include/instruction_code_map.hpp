@@ -5,40 +5,16 @@
 #include <unordered_map>
 #include <functional>
 #include <memory>
+#include "helpers.hpp"
 
 
-//farward declaration of the classes
+
+
 class Instruction;
 struct InstructionInfo;
 
 
-//enum for the type of instruction
-enum class typeofInstruction
-{
-    MOV, //move instruction
-    ADD, //add instruction
-    SUB, //sub instruction
-};
 
-//enum for the addressing mode of the instruction
-enum class AddressingMode
-{
-    I,  //move immediate to accumulator
-    OI, //move immediate to register
-    MI, //move immediate to memory/register
-    MR, //move register to R/M
-    RM, //move R/M to register
-    FD, //move from offset to Rax
-    TD, //move from Rax to offset
-
-};
-
-//struct for the instruction type and relative addressing mode
-struct InstructionType_and_addMode
-{
-    typeofInstruction type;
-    AddressingMode mode;
-};
 
 
 //map for the instructions types(for every key(opcode) there is a value(type of instruction and addressing mode))

@@ -5,6 +5,8 @@
 #define ALU_HPP
 #include <cstdint>
 #include "bus.hpp"
+#include "helpers.hpp"
+
 
 class ALU {
     // Implementation of the ALU class
@@ -14,17 +16,20 @@ class ALU {
         ~ALU();
 
         //arithmetic operations
-        uint64_t add(uint64_t a, uint64_t b);
-        uint64_t sub(uint64_t a, uint64_t b);
-        uint64_t mul(uint64_t a, uint64_t b);
+        void executeOperation(temporaryValues& tempValues, typeofInstruction type); //executes the operation based on the opcode
         //etc 
     private:
         //private members if needed
         Bus& bus;
+        uint64_t add(uint64_t dest, uint64_t src);
+        uint64_t sub(uint64_t dest, uint64_t src);
+        
 
 };
 
 #endif // ALU_HPP
+
+
 
 
 /*Istruzioni Aritmetiche

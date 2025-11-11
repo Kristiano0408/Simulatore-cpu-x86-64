@@ -136,6 +136,24 @@ std::unique_ptr<Instruction> ExecuteStage::getInstructionToExecute() {
     return std::move(instruction_to_execute);
 }
 
+void ExecuteStage::startExecution(Bus& bus) {
+    // Implementation of starting execution using the bus
+    // This is a placeholder implementation and should be replaced with actual logic
+    debugLog("Starting execution of instruction...");
+    if (instruction_to_execute) {
+        instruction_to_execute->startExecution(bus);
+    }
+}
+
+void ExecuteStage::updateExecution(Bus& bus) {
+    // Implementation of updating execution using the bus
+    // This is a placeholder implementation and should be replaced with actual logic
+    debugLog("Updating execution of instruction...");
+    if (instruction_to_execute) {
+        instruction_to_execute->updateExecution(bus);
+    }
+}
+
 void ExecuteStage::executeInstruction(Bus& bus) {
     // Implementation of instruction execution using the bus
     // This is a placeholder implementation and should be replaced with actual logic
@@ -343,42 +361,51 @@ void Pipeline::execute_operation() {
     }
 
     ///////////////////////////////////////////////////////////////////////
-
+    */
     if(executeStage.isStageReady()) 
     {
-        std::cout << "EXECUTE STAGE processing..." << std::endl;
+        debugLog("EXECUTE STAGE processing...");
         if(operandFetchExecuteBuffer.valid) 
         {
+            debugLog("OperandFetch-Execute buffer has valid instruction.");
             executeStage.setInstructionToExecute(std::move(operandFetchExecuteBuffer.instructionWithOperands));
             operandFetchExecuteBuffer.valid = false;
-            executeStage.executeInstruction(bus);
-            // After execution, move instruction to Execute-Memory buffer
-            executeMemoryBuffer.executedInstruction = executeStage.getInstructionToExecute();
-            executeMemoryBuffer.valid = true;
-            executeMemoryBuffer.stalled = false;
-            executeMemoryBuffer.flushed = false;
+            executeStage.startExecution(bus);
         }
         else if (operandFetchStage.isStageReady() && operandFetchStage.getInstructionWithFetchedOperands())
         {
+            debugLog("Operand Fetch stage has valid instruction.");
             executeStage.setInstructionToExecute(operandFetchStage.getInstructionWithFetchedOperands());
-            executeStage.executeInstruction(bus);
-            // After execution, move instruction to Execute-Memory buffer
-            executeMemoryBuffer.executedInstruction = executeStage.getInstructionToExecute();
-            executeMemoryBuffer.valid = true;
-            executeMemoryBuffer.stalled = false;
-            executeMemoryBuffer.flushed = false;
+            executeStage.startExecution(bus);
         }
         else 
         {
-            std::cout << "Execute stage has no instruction to process." << std::endl;
+            debugLog("Execute stage has no instruction to process.");
         }
+    }
+    else if (executeStage.getStatus() == StageStatus::WAITING_MEMORY)
+    {
+        debugLog("EXECUTE STAGE is waiting for instruction execution to complete.");
+
+        executeStage.updateExecution(bus);
+    }
+    else if (executeStage.getStatus() == StageStatus::MEMORY_DONE)
+    {
+        debugLog("EXECUTE STAGE instruction execution completed.");
+
+        // Move instruction to Execute-Memory buffer
+        debugLog("INDEX VALUE: " + to_string_hex(index));
+        executeMemoryBuffer.executedInstruction = executeStage.getInstructionToExecute();
+        executeMemoryBuffer.valid = true;
+        executeMemoryBuffer.stalled = false;
+        executeMemoryBuffer.flushed = false;
+        executeStage.setStatus(StageStatus::READY);
     }
     else 
     {
-        std::cout << "EXECUTE STAGE is not ready." << std::endl;
+        debugLog("EXECUTE STAGE is not ready.");
     }
     ///////////////////////////////////////////////////////////////////////
-    */
     if(operandFetchStage.isStageReady()) 
     {
         debugLog("OPERAND FETCH STAGE processing...");

@@ -17,6 +17,9 @@
 
 class Bus;
 
+
+
+
 class Instruction
 {
     public:
@@ -26,7 +29,11 @@ class Instruction
         //destructor
         virtual  ~Instruction();
 
+
         //methods for pipeline stages
+
+        virtual void startExecution([[maybe_unused]] Bus& bus) = 0; //optional method to start execution (for multi-cycle instructions)
+        virtual void updateExecution([[maybe_unused]] Bus& bus) = 0; //optional method to update execution (for multi-cycle instructions)
         virtual void execute(Bus& bus) = 0;//Polimorfic method that will be implemented in the derived classes
 
         //////////////////////////////////////////////////////////////
@@ -35,10 +42,9 @@ class Instruction
 
         //////////////////////////////////////////////////
 
-        virtual void accessMemory([[maybe_unused]] Bus& bus) {} //Polimorfic method for memory access (only for load/store instructions)
+        virtual void accessMemory([[maybe_unused]] Bus& bus) = 0; //Polimorfic method for memory access (only for load/store instructions)
 
-        virtual void writeBack([[maybe_unused]]Bus& bus) {} //Polimorfic method for write-back (only for store instructions)
-
+        virtual void writeBack([[maybe_unused]]Bus& bus) = 0; //Polimorfic method for write back stage
         uint64_t castingValue(uint64_t value, int nbit); //cast the value to the number of bits of the operand (8, 16, 32, 64)
 
         //setters and getters for the instruction
@@ -113,6 +119,19 @@ class Instruction
 
         void setInstructionId(uint64_t id) { InstructionId = id; }
 
+
+        bool isWaitingSrcOperand() const { return waitingSrcOperand; }
+
+        void setWaitingSrcOperand(bool waiting) { waitingSrcOperand = waiting; }
+
+        bool isWaitingDestOperand() const { return waitingDestOperand; }
+
+        void setWaitingDestOperand(bool waiting) { waitingDestOperand = waiting; }
+
+        void setTemporaryValues(const temporaryValues& values) { tempValues = values; }
+
+        temporaryValues getTemporaryValues() const { return tempValues; }
+
     protected:
 
         // operands for the instruction
@@ -120,6 +139,8 @@ class Instruction
         std::unique_ptr<Operand> destinationOperand; //destination operand
 
         AddressingMode addressingMode; //addressing mode of the instruction
+
+        temporaryValues tempValues;
 
     private:
     //parts of the instruction
@@ -142,6 +163,9 @@ class Instruction
         bool regToReg;
         bool regToMem;
         bool memToReg;
+        
+        bool waitingSrcOperand = false;
+        bool waitingDestOperand = false;
 
         
 
@@ -164,6 +188,8 @@ class EmptyInstruction : public Instruction
         void fetchOperands([[maybe_unused]] Bus& bus) override {}
 
         //execute the instruction
+        void startExecution([[maybe_unused]] Bus& bus) override {}
+        void updateExecution([[maybe_unused]] Bus& bus) override {}
         void execute([[maybe_unused]] Bus& bus) override {}
 
         void accessMemory([[maybe_unused]] Bus& bus) override {}
@@ -172,66 +198,6 @@ class EmptyInstruction : public Instruction
 
 };
 
-
-
-//MOV instruction class
-class MoveInstruction : public Instruction
-{
-    public:
-
-        //destructor
-        ~MoveInstruction() override = default;
-
-        void fetchOperands(Bus& bus) override;
-
-        //execute the instruction
-        void execute(Bus& bus) override;
-
-        void accessMemory(Bus& bus) override;
-
-        void writeBack(Bus& bus) override;
-
-
-
-        
-};
-
-//ADD instruction class
-class AddInstruction : public Instruction
-{
-    public:
-        //destructor
-        ~AddInstruction() override = default;
-
-        void fetchOperands(Bus& bus) override;
-
-        //execute the instruction
-        void execute(Bus& bus) override;
-
-        void accessMemory(Bus& bus) override;
-
-        void writeBack(Bus& bus) override;
-
-
-};
-
-//SUB instruction class
-class SubInstruction : public Instruction
-{
-    public:
-        //destructor
-        ~SubInstruction() override = default;
-
-        void fetchOperands(Bus& bus) override;
-
-        //execute the instruction
-        void execute(Bus& bus) override;
-
-        void accessMemory(Bus& bus) override;
-
-        void writeBack(Bus& bus) override;
-
-};
 
 
 #endif // INSTRUCTION_HPP    
