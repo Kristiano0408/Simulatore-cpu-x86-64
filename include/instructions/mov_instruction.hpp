@@ -18,6 +18,8 @@ class MoveInstruction : public Instruction
         void updateExecution(Bus& bus) override;
         void execute(Bus& bus) override;
 
+        void requestMemoryAccess(Bus& bus) override;
+        void updateMemoryAccess(Bus& bus) override;
         void accessMemory(Bus& bus) override;
 
         void writeBack(Bus& bus) override;

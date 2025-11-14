@@ -1,0 +1,409 @@
+#ifndef MEMORY_HPP
+#define MEMORY_HPP
+
+#include <cstdint>
+#include <vector>
+#include <cstring>
+#include <iostream>
+#include "helpers.hpp"
+
+
+
+class Bus; // Forward declaration of Bus class
+
+// Class that represents the memory RAM of the CPU
+class Memory {
+public:
+    Memory(size_t size, Bus& bus); //constructor that takes the size of the memory and a reference to the Bus
+
+    //methods for reading and writing from memory
+    template <typename T>
+    Result<T> readGeneric(uint64_t address) 
+    {
+        Result<T> result;
+        if (address + sizeof(T) > size) //check if the address is out of bounds
+        {
+            std::cerr << "Memory access out of bounds!" << std::endl; //print error message
+            result.success = false;
+            result.errorInfo = {ComponentType::RAM, EventType::RAM_READ_ERROR, ErrorType::OUT_OF_BOUNDS, "Memory access out of bounds!"};
+            return result;
+        }
+
+        T value {};
+        std::memcpy(&value, &data[address], sizeof(T));
+        result.success = true;
+        result.data = value;
+        result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
+        return result;
+    }
+
+    
+
+
+
+    template <typename T>
+    Result<void> writeGeneric(uint64_t address, T value) 
+    {
+        Result<void> result;
+
+        if (address + sizeof(T) > size) //check if the address is out of bounds
+        {
+            std::cerr << "Memory access out of bounds!" << std::endl; //print error message
+            result.success = false;
+            result.errorInfo = {ComponentType::RAM, EventType::RAM_WRITE_ERROR, ErrorType::OUT_OF_BOUNDS, "Memory access out of bounds!"};
+            return result;
+        }
+
+        std::memcpy(&data[address], &value, sizeof(T));
+        result.success = true;
+        result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
+        return result;
+        }
+
+
+    //get the size of the memory
+    size_t getSize() const;
+
+    //get the data of the memory
+    const std::vector<uint8_t>& getData() const;
+
+    //set the data of the memory
+    void setData(const std::vector<uint8_t>& data);
+
+    //clear the memory
+    void clear();
+
+
+    //get the stack pointer
+    uint64_t getStackPointer() const;
+
+    //set the stack pointer
+    void setStackPointer(uint64_t value);
+
+    //get the base pointer
+    uint64_t getBasePointer() const;
+
+    //set the base pointer
+    void setBasePointer(uint64_t value);
+
+    //push and pop methods for the stack
+    Result<void> push(uint64_t value);
+
+    Result<uint64_t> pop();
+
+
+
+
+
+private:
+    std::vector<uint8_t> data;
+    size_t size;
+    size_t size_stack;
+    uint64_t& RSP;
+    uint64_t& RBP;
+
+
+
+
+};
+
+#endif // MEMORY_HPP
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "memory.hpp"
+#include "cpu.hpp"
+#include <cmath>
+#include "bus.hpp"
+//ricordarsi di convertire indirizzi dec per accedere al vettore e in binario per utilizzare l'indirizzo
+
+//ricordasri controllo offset e size per evitare buffer overflow
+
+//Constructor
+Memory::Memory(size_t size, Bus& bus) : size(size), RSP(bus.getCPU().getRegisters().getReg(Register::RSP).raw()),
+                                         RBP(bus.getCPU().getRegisters().getReg(Register::RBP).raw()) {
+
+
+    data.resize(size, 0); //initialize the memory with 0
+
+    size_stack = size / 4; //initialize the stack size to 1/4 of the memory size
+
+    RSP = size - 1; //initialize the stack pointer to the end of the memory
+    RBP = size - 1; //initialize the base pointer to the end of the memory
+
+
+};
+
+
+//get the size of the memory
+size_t Memory::getSize() const
+{
+    return size;
+};
+
+//get the data of the memory
+const std::vector<uint8_t>& Memory::getData() const
+{
+    return data;
+};
+
+//set the data of the memory
+void Memory::setData(const std::vector<uint8_t>& data)
+{
+    this->data = data;
+};
+
+//clear the memory
+void Memory::clear()
+{
+    data.clear();
+    data.resize(size, 0);
+};
+
+void Memory::setStackPointer(uint64_t value)
+{
+    RSP = value;
+};
+
+uint64_t Memory::getStackPointer() const
+{
+    return RSP;
+};
+
+void Memory::setBasePointer(uint64_t value)
+{
+    RBP = value;
+};
+
+uint64_t Memory::getBasePointer() const
+{
+    return RBP;
+};
+
+Result<void> Memory::push(uint64_t value)
+{
+    Result<void> result;
+    //controllo overflow
+    if (RSP - 8 < size - size_stack) //check if the stack pointer is out of bounds
+    {
+        std::cerr << "Stack overflow!" << std::endl; //print error message
+        result.success = false;
+        result.errorInfo = {ComponentType::RAM, EventType::RAM_WRITE_ERROR, ErrorType::OUT_OF_BOUNDS, "Stack overflow!"};
+        return result;
+    }
+
+    RSP -= 8; //decrement the stack pointer
+    result = writeGeneric<uint64_t>(RSP, value); //write the value to the stack
+    return result;
+};
+
+
+Result<uint64_t> Memory::pop()
+{
+    Result<uint64_t> result;
+    //controllo underflow
+    if (RSP > size - 8) //check if the stack pointer is out of bounds
+    {
+        std::cerr << "Stack underflow!" << std::endl; //print error message
+        result.success = false;
+        result.errorInfo = {ComponentType::RAM, EventType::RAM_READ_ERROR, ErrorType::OUT_OF_BOUNDS, "Stack underflow!"};
+        return result;
+    }
+
+    result = readGeneric<uint64_t>(RSP); //read the value from the stack
+    RSP += 8; //increment the stack pointer
+    return result;
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//for managing the cpu registers
+
+// registerFile.hpp
+#ifndef REGISTERFILE_HPP
+#define REGISTERFILE_HPP
+#include <cstdint>
+#include <string>
+#include <memory>
+#include <array>
+
+enum class Register {
+    RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP,
+    R8, R9, R10, R11, R12, R13, R14, R15,
+    RIP, DummyRegister
+};
+
+
+enum Flagbit{
+
+    CF = 0, //carry flag
+    PF = 2, //parity flag
+    AF = 4, //auxiliary carry flag
+    ZF = 6, //zero flag
+    SF = 7, //sign flag
+    OF = 11 //overflow flag
+};
+
+
+class Reg{
+
+    public:
+        Reg() : value(0) {};
+        Reg(uint64_t val) : value(val) {};
+
+        operator uint64_t() const { return value; } //conversion operator to uint64_t
+
+        Reg& operator=(uint64_t val) { value = val; return *this; } //assignment operator (you can assign a uint64_t to a Reg object)
+
+        uint64_t& raw() { return value; } //get the raw value of the register
+
+        const uint64_t& raw() const { return value; } //get the raw value of the register (const version)
+
+
+    private:
+        uint64_t value;
+        
+
+
+
+};
+
+
+class FlagReg : public Reg {
+    public:
+        FlagReg() : Reg() {};
+
+        bool getFlag(Flagbit flag) const {
+            return (raw() >> static_cast<int>(flag)) & 1; //get the flag bit
+        }
+
+        void setFlag(Flagbit flag, bool value) {
+            if (value) {
+                raw() |= (1 << static_cast<int>(flag)); //set the flag bit
+            } else {
+                raw() &= ~(1 << static_cast<int>(flag)); //clear the flag bit
+            }
+        }
+
+        
+
+};
+
+
+
+class RegisterFile {
+    // Implementation of the RegisterFile class
+
+    public:
+        RegisterFile();
+        ~RegisterFile();
+
+        //access to general purpose registers
+        Reg& getReg(Register reg);
+
+        //access to rflags register
+        FlagReg& getFlags();
+
+        //reset the registers
+        void reset();
+
+        void printRegisters();
+
+
+    private:
+
+        std::array<std::unique_ptr<Reg>, 17> GPregisters; //array of unique_ptrs to Reg objects
+        std::unique_ptr<FlagReg> flags; //unique_ptr to FlagReg object
+
+        //in the future we can add more registers like simmd, xmm, etc.
+
+        
+
+};
+#endif // REGISTERFILE_HPP
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include "registerFile.hpp"
+#include <string>
+#include <iostream>
+
+RegisterFile::RegisterFile()
+{
+    // Initialize all registers to 0
+   for (auto& reg : GPregisters)
+   {
+         reg = std::make_unique<Reg>();
+
+   }
+
+   //inizialized the flags register
+    flags = std::make_unique<FlagReg>();
+}
+
+
+RegisterFile::~RegisterFile()
+{
+    //nothing to do here
+}
+
+
+Reg& RegisterFile::getReg(Register reg)
+{
+    //returns the register at the index of the enum value
+    return *GPregisters[static_cast<int>(reg)];
+}
+
+
+FlagReg& RegisterFile::getFlags()
+{
+    //returns the flags register
+    return *flags;
+}
+
+
+
+
+void RegisterFile::reset()
+{
+    //resets all general purpose register to zero
+    for (auto& reg : GPregisters)
+    {
+        reg->raw() = 0; //set the raw value of the register to 0
+    }
+
+    //resets the flags register to zero
+    flags->raw() = 0;
+
+
+
+
+}
+
+
+void RegisterFile::printRegisters()
+{
+    std::cout << "RAX: " << (*GPregisters[static_cast<int>(Register::RAX)]).raw() << std::endl;
+    std::cout << "RBX: " << (*GPregisters[static_cast<int>(Register::RBX)]).raw() << std::endl;
+    std::cout << "RCX: " << (*GPregisters[static_cast<int>(Register::RCX)]).raw() << std::endl;
+    std::cout << "RDX: " << (*GPregisters[static_cast<int>(Register::RDX)]).raw() << std::endl;
+    std::cout << "RSI: " << (*GPregisters[static_cast<int>(Register::RSI)]).raw() << std::endl;
+    std::cout << "RDI: " << (*GPregisters[static_cast<int>(Register::RDI)]).raw() << std::endl;
+    std::cout << "R8: " << (*GPregisters[static_cast<int>(Register::R8)]).raw() << std::endl;
+    std::cout << "R9: " << (*GPregisters[static_cast<int>(Register::R9)]).raw() << std::endl;
+    std::cout << "R10: " << (*GPregisters[static_cast<int>(Register::R10)]).raw() << std::endl;
+    std::cout << "R11: " << (*GPregisters[static_cast<int>(Register::R11)]).raw() << std::endl;
+    std::cout << "R12: " << (*GPregisters[static_cast<int>(Register::R12)]).raw() << std::endl;
+    std::cout << "R13: " << (*GPregisters[static_cast<int>(Register::R13)]).raw() << std::endl;
+    std::cout << "R14: " << (*GPregisters[static_cast<int>(Register::R14)]).raw() << std::endl;
+    std::cout << "R15: " << (*GPregisters[static_cast<int>(Register::R15)]).raw() << std::endl;
+    std::cout << "RSP: " << (*GPregisters[static_cast<int>(Register::RSP)]).raw() << std::endl;
+    std::cout << "RBP: " << (*GPregisters[static_cast<int>(Register::RBP)]).raw() << std::endl;
+    std::cout << "RIP: " << (*GPregisters[static_cast<int>(Register::RIP)]).raw() << std::endl;
+    
+
+}
+
+

@@ -37,6 +37,7 @@ void SubInstruction::fetchOperands(Bus& bus)
    }
 }
 
+
 void SubInstruction::startExecution(Bus& bus) 
 {
     //setting the size of the operands
@@ -94,7 +95,6 @@ void SubInstruction::startExecution(Bus& bus)
 
 
 }
-
 
 void SubInstruction::updateExecution(Bus& bus) 
 {
@@ -165,10 +165,86 @@ void SubInstruction::execute([[maybe_unused]] Bus& bus)
 }
 
 
+void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus) 
+{
+    if(!getRegToMem())
+        return;
+    
+    //writing result back to memory
+    Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue);
 
+    if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
+    {
+        std::cerr << "Error writing result to destination operand: " << response.errorInfo.message << std::endl;
+        return;
+    }
+    else if(!response.success && response.errorInfo.error == ErrorType::WAITING_MEMORY)
+    {
+        std::cerr << "Warning writing result to destination operand: " << response.errorInfo.message << std::endl;
+        bus.getCPU().getPipeline().getMemoryStage().setStatus(StageStatus::WAITING_MEMORY);
+    }
+    else
+    {
+        debugLog("Result written to destination operand successfully.");
+        bus.getCPU().getPipeline().getMemoryStage().setStatus(StageStatus::MEMORY_DONE);
+    }
+}
+
+void SubInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus) 
+{
+    if(!getRegToMem())
+        return;
+
+    //serching in cache response queue for the result
+
+    auto it = bus.getCPU().cacheResponseQueue.find(getInstructionId());
+
+    if (it != bus.getCPU().cacheResponseQueue.end())
+    {
+        //request completed
+        debugLog("SubInstruction: Write request completed for instruction ID " + std::to_string(getInstructionId()) + ".");
+        
+        //extracting the result
+        Result<void> result;
+        Result<anydata>& response = *(it->second);
+
+        result.success = response.success;
+        result.errorInfo = response.errorInfo;
+        
+        if (result.success)
+        {
+            debugLog("SubInstruction: Write request successful for instruction ID " + std::to_string(getInstructionId()) + ".");
+            bus.getCPU().getPipeline().getMemoryStage().setStatus(StageStatus::MEMORY_DONE);
+            accessMemory(bus);
+        }
+        else
+        {
+            debugLog("SubInstruction: Write request failed for instruction ID " + std::to_string(getInstructionId()) + ": " + response.errorInfo.message);
+            std::cerr << "Error writing result to destination operand: " << response.errorInfo.message << std::endl;
+        }
+    }
+    else
+    {
+        //request not completed
+        debugLog("SubInstruction: Write request not completed for instruction ID " + std::to_string(getInstructionId()) + ".");
+        bus.getCPU().getPipeline().getMemoryStage().setStatus(StageStatus::WAITING_MEMORY);
+    }
+    
+
+
+
+}
+
+    
+
+    
 void SubInstruction::accessMemory([[maybe_unused]] Bus& bus) 
 {
-    //default implementation (do nothing)
+    if(!getRegToMem())
+        return;
+    
+    debugLog("Memory access for SubInstruction completed.");
+
 }
 
 void SubInstruction::writeBack([[maybe_unused]] Bus& bus) 

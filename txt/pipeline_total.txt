@@ -1,3 +1,263 @@
+#ifndef PIPELINE_HPP
+#define PIPELINE_HPP
+
+
+#include <cstdint>
+#include <array>
+#include <string>
+#include <memory>
+#include "instruction.hpp"
+#include "helpers.hpp"
+
+class Bus; // Forward declaration of Bus class
+
+class Stage
+{
+    public:
+        Stage();
+        virtual ~Stage()=default;
+        bool isStageReady() const;
+
+        StageStatus getStatus() const;
+
+        void setStatus(StageStatus newStatus);
+
+    private:
+        StageStatus status = StageStatus::READY;
+
+};
+
+class FetchStage : public Stage {
+    public:
+        FetchStage();
+        ~FetchStage();
+
+        void startFetch(Bus& bus, uint64_t instructionId, uint64_t& index); //fetch the instruction from memory
+
+        void updateFetch(Bus& bus, uint64_t instructionId); //update the fetch stage (take the instruction fetched and prepare for decode)
+
+        InstructionInfo fetchInstruction(Bus& bus, uint64_t instructionId, uint64_t& index); //fetch the instruction from memory
+
+        InstructionInfo getCurrentInstructionInfo() const;
+
+        void setCurrentInstructionInfo(InstructionInfo info);
+
+    private:
+        //any additional members specific to the fetch stage
+        InstructionInfo currentInstructionInfo; //information about the current instruction being fetched
+};
+
+class  DecodeStage : public Stage {
+    public:
+        DecodeStage();
+        ~DecodeStage();
+
+        void setInstructionToDecode(const InstructionInfo& info);
+        InstructionInfo getInstructionToDecode() const;
+
+        void decodeInstruction(Bus& bus); //decode the fetched instruction
+
+        std::unique_ptr<Instruction> getDecodedInstruction();
+
+    private:
+        //any additional members specific to the decode stage
+        InstructionInfo  instruction_info_to_decode; //information about the instruction being decoded
+
+        std::unique_ptr<Instruction> decoded_instruction; //pointer to the decoded instruction
+};
+
+class OperandFetchStage : public Stage {
+    public:
+        OperandFetchStage();
+        ~OperandFetchStage();
+
+        void fetchOperands(Bus& bus); //fetch operands for the decoded instruction
+
+        std::unique_ptr<Instruction> getInstructionWithFetchedOperands();
+        void setInstructionWithFetchedOperands(std::unique_ptr<Instruction> instruction);
+
+
+    private:
+        //any additional members specific to the operand fetch stage
+        std::unique_ptr<Instruction> instruction_with_fetched_operands; //pointer to the instruction with fetched operands
+};
+
+class ExecuteStage : public Stage {
+    public:
+        ExecuteStage();
+        ~ExecuteStage();
+
+        void setInstructionToExecute(std::unique_ptr<Instruction> instruction);
+        std::unique_ptr<Instruction> getInstructionToExecute();
+
+        void startExecution(Bus& bus); //start execution of the instruction
+        void updateExecution(Bus& bus); //update execution (for multi-cycle instructions)
+        void executeInstruction(Bus& bus); //execute the decoded instruction
+
+        uint64_t getExecutionResult() const;
+
+        bool wasExecutionSuccessful() const;
+
+    private:
+        //any additional members specific to the execute stage
+        std::unique_ptr<Instruction> instruction_to_execute; //pointer to the instruction being executed
+
+        uint64_t executionResult; //result of the instruction execution
+
+        bool executionSuccess; //flag indicating if the execution was successful
+
+
+};
+
+class MemoryStage : public Stage {
+    public:
+        MemoryStage();
+        ~MemoryStage();
+
+
+        void setInstructionToMemory(std::unique_ptr<Instruction> instruction);
+        std::unique_ptr<Instruction> getInstructionToMemory();
+
+        void accessMemory(Bus& bus); //perform memory operations if needed
+
+        uint64_t getMemoryData() const;
+
+        bool wasMemoryAccessSuccessful() const;
+
+    private:
+        //any additional members specific to the memory stage
+        std::unique_ptr<Instruction> instruction_to_memory; //pointer to the instruction being processed in memory stage
+
+        bool memoryAccessSuccess; //flag indicating if the memory access was successful
+
+};
+
+class WriteBackStage : public Stage {
+    public:
+        WriteBackStage();
+        ~WriteBackStage();
+
+          void setInstructionToWriteBack(std::unique_ptr<Instruction> instruction);
+        std::unique_ptr<Instruction> getInstructionToWriteBack();
+
+        void writeBack(Bus& bus); //final stage: write results to registers/memory
+
+        bool wasWriteBackSuccessful() const;
+
+
+    private:
+        //any additional members specific to the write-back stage
+         std::unique_ptr<Instruction> instruction_to_writeback;
+        bool writeBackSuccess;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct FetchDecodeBuffer {
+    
+    bool valid = false;
+    bool stalled = false;
+    bool flushed = false;
+    InstructionInfo instructionInfo;
+
+};
+
+struct DecodeOperandFetchBuffer {
+    
+    bool valid;
+    bool stalled;
+    bool flushed;
+    std::unique_ptr<Instruction> decodedInstruction;
+
+    DecodeOperandFetchBuffer() : valid(false), stalled(false), flushed(false), decodedInstruction(std::make_unique<EmptyInstruction>()) {}
+
+};
+
+struct OperandFetchExecuteBuffer {
+    
+    bool valid;
+    bool stalled;
+    bool flushed;
+    std::unique_ptr<Instruction> instructionWithOperands;
+
+    OperandFetchExecuteBuffer() : valid(false), stalled(false), flushed(false), instructionWithOperands(std::make_unique<EmptyInstruction>()) {}
+
+};
+
+struct ExecuteMemoryBuffer {
+    
+    bool valid;
+    bool stalled;
+    bool flushed;
+    std::unique_ptr<Instruction> executedInstruction;
+
+    ExecuteMemoryBuffer() : valid(false), stalled(false), flushed(false), executedInstruction(std::make_unique<EmptyInstruction>()) {}
+
+};
+
+struct MemoryWriteBackBuffer {
+
+    bool valid;
+    bool stalled;
+    bool flushed;
+    std::unique_ptr<Instruction> memoryAccessedInstruction;
+
+    MemoryWriteBackBuffer() : valid(false), stalled(false), flushed(false), memoryAccessedInstruction(std::make_unique<EmptyInstruction>()) {}
+
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+class Pipeline : public Device {
+    public:
+        Pipeline(Bus& bus);
+        ~Pipeline();
+
+        void execute_operation() override; //execute the operation for the current cycle
+
+        FetchStage& getFetchStage();
+        DecodeStage& getDecodeStage();
+        OperandFetchStage& getOperandFetchStage();
+        ExecuteStage& getExecuteStage();
+        MemoryStage& getMemoryStage();
+        WriteBackStage& getWriteBackStage();
+
+    private:
+        Bus& bus;
+        FetchStage fetchStage;
+        DecodeStage decodeStage;
+        OperandFetchStage operandFetchStage;
+        ExecuteStage executeStage;
+        MemoryStage memoryStage;
+        WriteBackStage writeBackStage;
+
+        //buffer between stages 
+        FetchDecodeBuffer fetchDecodeBuffer;
+        DecodeOperandFetchBuffer decodeOperandFetchBuffer;
+        OperandFetchExecuteBuffer operandFetchExecuteBuffer;
+        ExecuteMemoryBuffer executeMemoryBuffer;
+        MemoryWriteBackBuffer memoryWriteBackBuffer;
+
+        // Tracking instruction IDs in each stage
+
+        uint64_t FetchstageInstructionId {};
+        uint64_t DecodeStageInstructionId {};
+        uint64_t OperandFetchStageInstructionId {};
+        uint64_t ExecuteStageInstructionId {};
+        uint64_t MemoryStageInstructionId {};
+        uint64_t WriteBackStageInstructionId {};
+
+        //necessary varaible for fetching instruction
+        uint64_t index = 0; //index for fetching instruction from memory (in future could be part of fetch stage)
+
+};
+
+#endif // PIPELINE_HPP
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include "pipeline.hpp"
 #include "bus.hpp"
 #include "cpu.hpp"
@@ -186,37 +446,18 @@ MemoryStage::~MemoryStage() {}
 void MemoryStage::setInstructionToMemory(std::unique_ptr<Instruction> instruction) {
     instruction_to_memory = std::move(instruction);
 }
-
 std::unique_ptr<Instruction> MemoryStage::getInstructionToMemory(){
     return std::move(instruction_to_memory);
 }
 
-void MemoryStage::requestMemoryAccess(Bus& bus) {
-    // Implementation of starting memory access using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
-    debugLog("Requesting memory access for instruction...");
-    if (instruction_to_memory) {
-        instruction_to_memory->requestMemoryAccess(bus);
-    } 
-    
-}
-
-void MemoryStage::updateMemoryAccess(Bus& bus) {
-    // Implementation of updating memory access using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
-    debugLog("Updating memory access for instruction...");
-    if (instruction_to_memory) {
-        instruction_to_memory->updateMemoryAccess(bus);
-    }
-}
 void MemoryStage::accessMemory(Bus& bus) {
     if (instruction_to_memory) {
         instruction_to_memory->accessMemory(bus);
         memoryAccessSuccess = true;
-    } 
-    else {
+    } else {
         memoryAccessSuccess = false;
     }
+    
 }
 
 bool MemoryStage::wasMemoryAccessSuccessful() const {
@@ -331,45 +572,43 @@ void Pipeline::execute_operation() {
     {
         std::cout << "WRITE-BACK STAGE is not ready." << std::endl;
     }
-    */
-    ///////////////////////////////////////////////////////////////////////
 
+    ///////////////////////////////////////////////////////////////////////
+    
     if(memoryStage.isStageReady()) 
     {
-        debugLog("MEMORY STAGE processing...");
+        std::cout << "MEMORY STAGE processing..." << std::endl;
         if(executeMemoryBuffer.valid) 
         {
             memoryStage.setInstructionToMemory(std::move(executeMemoryBuffer.executedInstruction));
             executeMemoryBuffer.valid = false;
-            memoryStage.requestMemoryAccess(bus);
+            memoryStage.accessMemory(bus);
             // After memory access, move instruction to Memory-WriteBack buffer
             memoryStage.setStatus(StageStatus::WAITING_MEMORY);
-
+           
         }
         else if (executeStage.isStageReady() && executeStage.getInstructionToExecute())
         {
             memoryStage.setInstructionToMemory(executeStage.getInstructionToExecute());
-            memoryStage.requestMemoryAccess(bus);
+            memoryStage.accessMemory(bus);
             memoryStage.setStatus(StageStatus::WAITING_MEMORY);
-
+            
         }
         else 
         {
-            debugLog("Memory stage has no instruction to process.");
+            std::cout << "Memory stage has no instruction to process." << std::endl;
         }
     }
     else if (memoryStage.getStatus() == StageStatus::WAITING_MEMORY)
     {
-        debugLog("MEMORY STAGE is waiting for memory operation to complete.");
-        memoryStage.updateMemoryAccess(bus);
-
-
+        std::cout << "MEMORY STAGE is waiting for memory operation to complete." << std::endl;
+        
+        
     }
     else if (memoryStage.getStatus() == StageStatus::MEMORY_DONE)
     {
-        debugLog("MEMORY STAGE memory operation completed.");
+        std::cout << "MEMORY STAGE memory operation completed." << std::endl;
         // Move instruction to Memory-WriteBack buffer
-        memoryStage.accessMemory(bus);
         memoryWriteBackBuffer.memoryAccessedInstruction = memoryStage.getInstructionToMemory();
         memoryWriteBackBuffer.valid = true;
         memoryWriteBackBuffer.stalled = false;
@@ -378,10 +617,11 @@ void Pipeline::execute_operation() {
     }
     else 
     {
-        debugLog("MEMORY STAGE is not ready.");
+        std::cout << "MEMORY STAGE is not ready." << std::endl;
     }
-    ///////////////////////////////////////////////////////////////////////
 
+    ///////////////////////////////////////////////////////////////////////
+    */
     if(executeStage.isStageReady()) 
     {
         debugLog("EXECUTE STAGE processing...");

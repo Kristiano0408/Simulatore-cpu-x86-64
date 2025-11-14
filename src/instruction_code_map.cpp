@@ -1,7 +1,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include "instruction_code_map.hpp"
-#include "instruction.hpp"
+#include "instruction_wrapper.hpp"
 #include "decoder.hpp"
 
 

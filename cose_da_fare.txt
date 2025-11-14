@@ -1,31 +1,28 @@
 
+gestire empty instruction nei primi cicli
 
-
+//memory e writeback(SUB)
 
 fare pipeline execute multi ciclo(padd e move e controllare maschere)
 
 finire refacrory pipeline (ANCEH CONTROLLO SU BUFFER STALLED)
 
-// e controllare pipeline+ metaprogramamzione per visitor(anydata)
+// e controllare pipeline+
 
 /////refactory massivo//////
-
-classe device da cui derivano tutti gli altri componenti (fatto)-va implememnatta poi nelel altre parti(cpu,pipeline fattos)
-
-clock serio(lasciato invaraito, siccoem ho bus non serve)
-
-da fare:::(ricostruire ciclo cpu per farlo multi ciclo)
-e tutto il codice rendendolo dinamico e non statico(runna tutto smepre, con flag si decide se afre o non fare cose)
-
 pipeline(da fare, implemetare accesmemmory e writeback in instruction, finire pipeline) CONTROLLARE ERRORI(in teroia pipeline va)
 
+conclusione instruction set(controllare istruzioni)
+
+cache pazzurda pazza sgravata(suddivisioen l1 in i e d e latenze(device anche sui singoli livelli e tick di cachemanager è somma delle altre)
 
 
 
-conclusione instruction set
+///SUCCESSIVAMNETE
 
-cache pazzurda pazza sgravata
+//CALLBACK PER PIPELINE(GLI STALLI IN HW LI GETSISCE PIPELINE NON ALTRO(COEM INSTRCUITION NEL NOSTRO CASO)
 
+ metaprogramamzione per visitor(anydata)
 
 
 

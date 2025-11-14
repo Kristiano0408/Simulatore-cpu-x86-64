@@ -118,6 +118,10 @@ class MemoryStage : public Stage {
         void setInstructionToMemory(std::unique_ptr<Instruction> instruction);
         std::unique_ptr<Instruction> getInstructionToMemory();
 
+        void requestMemoryAccess(Bus& bus); //start memory access for load/store instructions
+
+        void updateMemoryAccess(Bus& bus); //update memory access (for multi-cycle memory operations)
+
         void accessMemory(Bus& bus); //perform memory operations if needed
 
         uint64_t getMemoryData() const;
