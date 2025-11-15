@@ -11,6 +11,8 @@ class MoveInstruction : public Instruction
         //destructor
         ~MoveInstruction() override = default;
 
+        bool isEmpty() const override { return false; }
+
         void fetchOperands(Bus& bus) override;
 
         //execute the instruction

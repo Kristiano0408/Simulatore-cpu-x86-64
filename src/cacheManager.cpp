@@ -5,7 +5,6 @@
 #include "cpu.hpp"
 
 
-
 /// CacheLevel class implementation
 CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, Bus& bus, CacheLevel* nextLevel)
     : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus), nextLevel(nextLevel)

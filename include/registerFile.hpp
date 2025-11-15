@@ -32,13 +32,13 @@ class Reg{
         Reg() : value(0) {};
         Reg(uint64_t val) : value(val) {};
 
-        operator uint64_t() const { return value; } //conversion operator to uint64_t
+        inline operator uint64_t() const { return value; } //conversion operator to uint64_t
 
-        Reg& operator=(uint64_t val) { value = val; return *this; } //assignment operator (you can assign a uint64_t to a Reg object)
+        inline Reg& operator=(uint64_t val) { value = val; return *this; } //assignment operator (you can assign a uint64_t to a Reg object)
 
-        uint64_t& raw() { return value; } //get the raw value of the register
+        inline uint64_t& raw() { return value; } //get the raw value of the register
 
-        const uint64_t& raw() const { return value; } //get the raw value of the register (const version)
+        inline const uint64_t& raw() const { return value; } //get the raw value of the register (const version)
 
 
     private:
@@ -54,11 +54,9 @@ class FlagReg : public Reg {
     public:
         FlagReg() : Reg() {};
 
-        bool getFlag(Flagbit flag) const {
-            return (raw() >> static_cast<int>(flag)) & 1; //get the flag bit
-        }
+        inline bool getFlag(Flagbit flag) const { return (raw() >> static_cast<int>(flag)) & 1; } //get the flag bit
 
-        void setFlag(Flagbit flag, bool value) {
+        inline void setFlag(Flagbit flag, bool value) {
             if (value) {
                 raw() |= (1 << static_cast<int>(flag)); //set the flag bit
             } else {

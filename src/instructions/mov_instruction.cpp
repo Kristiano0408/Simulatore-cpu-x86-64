@@ -74,6 +74,7 @@ void MoveInstruction::startExecution([[maybe_unused]] Bus& bus)
 {
 
 }
+
 void MoveInstruction::updateExecution([[maybe_unused]] Bus& bus) 
 {
     
@@ -130,6 +131,15 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
 */
 }
 
+
+void MoveInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
+}
+void MoveInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
+}
 void MoveInstruction::accessMemory([[maybe_unused]] Bus& bus) 
 {
     //default implementation (do nothing)

@@ -1,30 +1,27 @@
+spostando fuznioni inline in hpp
 
-gestire empty instruction nei primi cicli
 
-//memory e writeback(SUB)
-
-fare pipeline execute multi ciclo(padd e move e controllare maschere)
+//writeback(SUB)
 
 finire refacrory pipeline (ANCEH CONTROLLO SU BUFFER STALLED)
 
 // e controllare pipeline+
 
+
 /////refactory massivo//////
 pipeline(da fare, implemetare accesmemmory e writeback in instruction, finire pipeline) CONTROLLARE ERRORI(in teroia pipeline va)
 
-conclusione instruction set(controllare istruzioni)
-
 cache pazzurda pazza sgravata(suddivisioen l1 in i e d e latenze(device anche sui singoli livelli e tick di cachemanager è somma delle altre)
-
-
-
-///SUCCESSIVAMNETE
 
 //CALLBACK PER PIPELINE(GLI STALLI IN HW LI GETSISCE PIPELINE NON ALTRO(COEM INSTRCUITION NEL NOSTRO CASO)
 
  metaprogramamzione per visitor(anydata)
 
+///SUCCESSIVAMNETE
 
+
+
+conclusione instruction set(controllare istruzioni, mashere e correta esecuzione(anche di sub va controllata) + getsione lunghezza operandi
 
 
 

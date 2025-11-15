@@ -10,6 +10,8 @@ class AddInstruction : public Instruction
         //destructor
         ~AddInstruction() override = default;
 
+        bool isEmpty() const override {return false;}
+
         void fetchOperands(Bus& bus) override;
 
         //execute the instruction

@@ -18,8 +18,9 @@ class Stage
         virtual ~Stage()=default;
         bool isStageReady() const;
 
-        StageStatus getStatus() const;
+        bool isInstructionEmpty(const Instruction* instr) const;
 
+        StageStatus getStatus() const;
         void setStatus(StageStatus newStatus);
 
     private:
@@ -59,6 +60,8 @@ class  DecodeStage : public Stage {
 
         std::unique_ptr<Instruction> getDecodedInstruction();
 
+        inline Instruction* peekInstruction() const {return decoded_instruction.get();}
+
     private:
         //any additional members specific to the decode stage
         InstructionInfo  instruction_info_to_decode; //information about the instruction being decoded
@@ -74,7 +77,10 @@ class OperandFetchStage : public Stage {
         void fetchOperands(Bus& bus); //fetch operands for the decoded instruction
 
         std::unique_ptr<Instruction> getInstructionWithFetchedOperands();
+
         void setInstructionWithFetchedOperands(std::unique_ptr<Instruction> instruction);
+
+        inline Instruction* peekInstruction() const {return instruction_with_fetched_operands.get();}
 
 
     private:
@@ -89,6 +95,8 @@ class ExecuteStage : public Stage {
 
         void setInstructionToExecute(std::unique_ptr<Instruction> instruction);
         std::unique_ptr<Instruction> getInstructionToExecute();
+        
+        inline Instruction* peekInstruction() const {return instruction_to_execute.get();}
 
         void startExecution(Bus& bus); //start execution of the instruction
         void updateExecution(Bus& bus); //update execution (for multi-cycle instructions)
@@ -118,6 +126,8 @@ class MemoryStage : public Stage {
         void setInstructionToMemory(std::unique_ptr<Instruction> instruction);
         std::unique_ptr<Instruction> getInstructionToMemory();
 
+        inline Instruction* peekInstruction() const {return instruction_to_memory.get();}
+
         void requestMemoryAccess(Bus& bus); //start memory access for load/store instructions
 
         void updateMemoryAccess(Bus& bus); //update memory access (for multi-cycle memory operations)
@@ -141,8 +151,10 @@ class WriteBackStage : public Stage {
         WriteBackStage();
         ~WriteBackStage();
 
-          void setInstructionToWriteBack(std::unique_ptr<Instruction> instruction);
+        void setInstructionToWriteBack(std::unique_ptr<Instruction> instruction);
         std::unique_ptr<Instruction> getInstructionToWriteBack();
+
+        inline Instruction* peekInstruction() const {return instruction_to_writeback.get();}
 
         void writeBack(Bus& bus); //final stage: write results to registers/memory
 

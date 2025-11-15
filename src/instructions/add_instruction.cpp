@@ -37,6 +37,7 @@ void AddInstruction::fetchOperands(Bus& bus)
    }
 }
 
+
 void AddInstruction::startExecution([[maybe_unused]] Bus& bus) 
 {
 
@@ -46,6 +47,7 @@ void AddInstruction::updateExecution([[maybe_unused]] Bus& bus)
 {
     
 }
+
 void AddInstruction::execute([[maybe_unused]] Bus& bus) 
 {   
     /*
@@ -98,6 +100,14 @@ void AddInstruction::execute([[maybe_unused]] Bus& bus)
 
 }
 
+void AddInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
+}
+void AddInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus) 
+{
+    //default implementation (do nothing)
+}
 void AddInstruction::accessMemory([[maybe_unused]] Bus& bus) 
 {
     //default implementation (do nothing)

@@ -5,10 +5,18 @@
 
 
 // Implementation of Stage class methods
-Stage::Stage() {}
+
+Stage::Stage() {};
 
 bool Stage::isStageReady() const {
     return status == StageStatus::READY;
+}
+
+bool Stage::isInstructionEmpty(const Instruction* instr) const {
+    if(!instr) {
+        return true;
+    }
+    return instr->isEmpty();
 }
 
 StageStatus Stage::getStatus() const {
@@ -339,18 +347,18 @@ void Pipeline::execute_operation() {
         debugLog("MEMORY STAGE processing...");
         if(executeMemoryBuffer.valid) 
         {
+            debugLog("Execute-Memory buffer has valid instruction.");
             memoryStage.setInstructionToMemory(std::move(executeMemoryBuffer.executedInstruction));
             executeMemoryBuffer.valid = false;
             memoryStage.requestMemoryAccess(bus);
             // After memory access, move instruction to Memory-WriteBack buffer
-            memoryStage.setStatus(StageStatus::WAITING_MEMORY);
 
         }
-        else if (executeStage.isStageReady() && executeStage.getInstructionToExecute())
+        else if (executeStage.isStageReady() && !executeStage.isInstructionEmpty(executeStage.peekInstruction()))
         {
+            debugLog("Execute stage has valid instruction.");
             memoryStage.setInstructionToMemory(executeStage.getInstructionToExecute());
             memoryStage.requestMemoryAccess(bus);
-            memoryStage.setStatus(StageStatus::WAITING_MEMORY);
 
         }
         else 
@@ -392,7 +400,7 @@ void Pipeline::execute_operation() {
             operandFetchExecuteBuffer.valid = false;
             executeStage.startExecution(bus);
         }
-        else if (operandFetchStage.isStageReady() && operandFetchStage.getInstructionWithFetchedOperands())
+        else if (operandFetchStage.isStageReady() && !operandFetchStage.isInstructionEmpty(operandFetchStage.peekInstruction()))
         {
             debugLog("Operand Fetch stage has valid instruction.");
             executeStage.setInstructionToExecute(operandFetchStage.getInstructionWithFetchedOperands());
@@ -426,6 +434,7 @@ void Pipeline::execute_operation() {
         debugLog("EXECUTE STAGE is not ready.");
     }
     ///////////////////////////////////////////////////////////////////////
+
     if(operandFetchStage.isStageReady()) 
     {
         debugLog("OPERAND FETCH STAGE processing...");
@@ -443,7 +452,7 @@ void Pipeline::execute_operation() {
             operandFetchExecuteBuffer.stalled = false;
             operandFetchExecuteBuffer.flushed = false;
         }
-        else if (decodeStage.isStageReady() && decodeStage.getDecodedInstruction())
+        else if (decodeStage.isStageReady() && !decodeStage.isInstructionEmpty(decodeStage.peekInstruction()))
         {
             debugLog("Decode stage has valid instruction.");
             operandFetchStage.setInstructionWithFetchedOperands(decodeStage.getDecodedInstruction());

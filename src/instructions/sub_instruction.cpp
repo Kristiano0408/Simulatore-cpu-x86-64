@@ -4,7 +4,6 @@
 #include "../../include/bus.hpp"
 #include "../../include/registerFile.hpp"
 #include "../../include/cpu.hpp"
-
 //Sub instruction
 
 //fetch the operands
@@ -170,6 +169,7 @@ void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus)
     if(!getRegToMem())
         return;
     
+        
     //writing result back to memory
     Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue);
 

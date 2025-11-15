@@ -61,10 +61,6 @@ void CU::updateFetch(uint64_t instructionId)
 
 }
 
-
-
-    
-
 //method for fethcing the instruction from the ram
 InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
 {
@@ -74,15 +70,21 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
     // Read a line from the cache buffer_responseQueue
     auto it = bus.getCPU().cacheResponseQueue.find(instructionId);
 
+    debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
+
     
 
     Result<anydata> result = *(it->second);
+
+    debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
 
     //extarcting the correct data from the variant
     std::array<uint8_t, 15> buffer {0}; //buffer for the instruction (max length of an instruction is 15 bytes)
 
     //using the visist to extract the data
     Result<std::array<uint8_t, 15>> temp_result;
+
+    debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
 
     std::visit([&](auto&& value)
     {
@@ -104,6 +106,8 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
             temp_result.errorInfo.error = ErrorType::READ_FAIL;
         }
     }, result.data);
+
+    debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
 
     if (temp_result.success)
         std::memcpy(buffer.data(), temp_result.data.data(), 15);
