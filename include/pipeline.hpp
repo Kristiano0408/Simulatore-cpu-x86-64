@@ -11,27 +11,43 @@
 
 class Bus; // Forward declaration of Bus class
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Base Stage class
+
 class Stage
 {
     public:
-        Stage();
-        virtual ~Stage()=default;
-        bool isStageReady() const;
+
+        Stage() {};
+
+        virtual ~Stage() = default;
+
+        inline bool isStageReady() const {return status == StageStatus::READY; }
 
         bool isInstructionEmpty(const Instruction* instr) const;
 
-        StageStatus getStatus() const;
-        void setStatus(StageStatus newStatus);
+        inline StageStatus getStatus() const { return status; }
+
+        inline void setStatus(StageStatus newStatus) { status = newStatus; }
 
     private:
+
         StageStatus status = StageStatus::READY;
 
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////7  
+
+// FetchStage class
+
 class FetchStage : public Stage {
+
     public:
+
         FetchStage();
-        ~FetchStage();
+
+        ~FetchStage() {};
 
         void startFetch(Bus& bus, uint64_t instructionId, uint64_t& index); //fetch the instruction from memory
 
@@ -39,22 +55,30 @@ class FetchStage : public Stage {
 
         InstructionInfo fetchInstruction(Bus& bus, uint64_t instructionId, uint64_t& index); //fetch the instruction from memory
 
-        InstructionInfo getCurrentInstructionInfo() const;
+        inline InstructionInfo getCurrentInstructionInfo() const { return currentInstructionInfo; }
 
-        void setCurrentInstructionInfo(InstructionInfo info);
+        inline void setCurrentInstructionInfo(InstructionInfo info) { currentInstructionInfo = info; }
 
     private:
         //any additional members specific to the fetch stage
         InstructionInfo currentInstructionInfo; //information about the current instruction being fetched
 };
 
-class  DecodeStage : public Stage {
-    public:
-        DecodeStage();
-        ~DecodeStage();
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        void setInstructionToDecode(const InstructionInfo& info);
-        InstructionInfo getInstructionToDecode() const;
+// DecodeStage class
+
+class  DecodeStage : public Stage {
+
+    public:
+
+        DecodeStage();
+
+        ~DecodeStage() {};
+
+        inline void setInstructionToDecode(const InstructionInfo& info) { instruction_info_to_decode = info; }
+        
+        inline InstructionInfo getInstructionToDecode() const { return instruction_info_to_decode; }
 
         void decodeInstruction(Bus& bus); //decode the fetched instruction
 
@@ -69,10 +93,17 @@ class  DecodeStage : public Stage {
         std::unique_ptr<Instruction> decoded_instruction; //pointer to the decoded instruction
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// OperandFetchStage class
+
 class OperandFetchStage : public Stage {
+
     public:
+
         OperandFetchStage();
-        ~OperandFetchStage();
+
+        ~OperandFetchStage() {};
 
         void fetchOperands(Bus& bus); //fetch operands for the decoded instruction
 
@@ -88,10 +119,17 @@ class OperandFetchStage : public Stage {
         std::unique_ptr<Instruction> instruction_with_fetched_operands; //pointer to the instruction with fetched operands
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// ExecuteStage class
+
 class ExecuteStage : public Stage {
+
     public:
+
         ExecuteStage();
-        ~ExecuteStage();
+
+        ~ExecuteStage() {};
 
         void setInstructionToExecute(std::unique_ptr<Instruction> instruction);
         std::unique_ptr<Instruction> getInstructionToExecute();
@@ -102,26 +140,23 @@ class ExecuteStage : public Stage {
         void updateExecution(Bus& bus); //update execution (for multi-cycle instructions)
         void executeInstruction(Bus& bus); //execute the decoded instruction
 
-        uint64_t getExecutionResult() const;
-
-        bool wasExecutionSuccessful() const;
-
     private:
         //any additional members specific to the execute stage
         std::unique_ptr<Instruction> instruction_to_execute; //pointer to the instruction being executed
 
-        uint64_t executionResult; //result of the instruction execution
-
-        bool executionSuccess; //flag indicating if the execution was successful
-
-
 };
 
-class MemoryStage : public Stage {
-    public:
-        MemoryStage();
-        ~MemoryStage();
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// MemoryStage class
+
+class MemoryStage : public Stage {
+
+    public:
+
+        MemoryStage();
+
+        ~MemoryStage() {};
 
         void setInstructionToMemory(std::unique_ptr<Instruction> instruction);
         std::unique_ptr<Instruction> getInstructionToMemory();
@@ -134,37 +169,35 @@ class MemoryStage : public Stage {
 
         void accessMemory(Bus& bus); //perform memory operations if needed
 
-        uint64_t getMemoryData() const;
-
-        bool wasMemoryAccessSuccessful() const;
-
     private:
         //any additional members specific to the memory stage
         std::unique_ptr<Instruction> instruction_to_memory; //pointer to the instruction being processed in memory stage
 
-        bool memoryAccessSuccess; //flag indicating if the memory access was successful
-
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// WriteBackStage class
+
 class WriteBackStage : public Stage {
+
     public:
+
         WriteBackStage();
-        ~WriteBackStage();
+        
+        ~WriteBackStage() {};
 
         void setInstructionToWriteBack(std::unique_ptr<Instruction> instruction);
+        
         std::unique_ptr<Instruction> getInstructionToWriteBack();
 
         inline Instruction* peekInstruction() const {return instruction_to_writeback.get();}
 
         void writeBack(Bus& bus); //final stage: write results to registers/memory
 
-        bool wasWriteBackSuccessful() const;
-
-
     private:
         //any additional members specific to the write-back stage
          std::unique_ptr<Instruction> instruction_to_writeback;
-        bool writeBackSuccess;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,23 +257,27 @@ struct MemoryWriteBackBuffer {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+// Pipeline class
 
 class Pipeline : public Device {
+
     public:
+
         Pipeline(Bus& bus);
-        ~Pipeline();
+
+        ~Pipeline() {};
 
         void execute_operation() override; //execute the operation for the current cycle
 
-        FetchStage& getFetchStage();
-        DecodeStage& getDecodeStage();
-        OperandFetchStage& getOperandFetchStage();
-        ExecuteStage& getExecuteStage();
-        MemoryStage& getMemoryStage();
-        WriteBackStage& getWriteBackStage();
+        inline FetchStage& getFetchStage() { return fetchStage; }
+        inline DecodeStage& getDecodeStage() { return decodeStage; }
+        inline OperandFetchStage& getOperandFetchStage() { return operandFetchStage; }
+        inline ExecuteStage& getExecuteStage() { return executeStage; }
+        inline MemoryStage& getMemoryStage() { return memoryStage; }
+        inline WriteBackStage& getWriteBackStage() { return writeBackStage; }
 
     private:
+
         Bus& bus;
         FetchStage fetchStage;
         DecodeStage decodeStage;
@@ -256,14 +293,8 @@ class Pipeline : public Device {
         ExecuteMemoryBuffer executeMemoryBuffer;
         MemoryWriteBackBuffer memoryWriteBackBuffer;
 
-        // Tracking instruction IDs in each stage
-
+        // Tracking instruction IDs in fetch for setting it in decode and using it to track instructions
         uint64_t FetchstageInstructionId {};
-        uint64_t DecodeStageInstructionId {};
-        uint64_t OperandFetchStageInstructionId {};
-        uint64_t ExecuteStageInstructionId {};
-        uint64_t MemoryStageInstructionId {};
-        uint64_t WriteBackStageInstructionId {};
 
         //necessary varaible for fetching instruction
         uint64_t index = 0; //index for fetching instruction from memory (in future could be part of fetch stage)

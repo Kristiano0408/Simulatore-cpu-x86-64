@@ -3,6 +3,7 @@
 #include "bus.hpp"
 #include "cpu.hpp"
 #include "registerFile.hpp"
+#include "../include/pipeline.hpp"
 
 CU::CU(Bus& bus) : bus(bus)
 {

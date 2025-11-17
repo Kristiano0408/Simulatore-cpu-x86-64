@@ -5,6 +5,7 @@
 #include "../../include/bus.hpp"
 #include "../../include/registerFile.hpp"
 #include "../../include/cpu.hpp"
+#include "../../include/pipeline.hpp"
 
 // Move instruction
 

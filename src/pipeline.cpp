@@ -6,12 +6,6 @@
 
 // Implementation of Stage class methods
 
-Stage::Stage() {};
-
-bool Stage::isStageReady() const {
-    return status == StageStatus::READY;
-}
-
 bool Stage::isInstructionEmpty(const Instruction* instr) const {
     if(!instr) {
         return true;
@@ -19,24 +13,16 @@ bool Stage::isInstructionEmpty(const Instruction* instr) const {
     return instr->isEmpty();
 }
 
-StageStatus Stage::getStatus() const {
-    return status;
-}
-
-void Stage::setStatus(StageStatus newStatus) {
-    status = newStatus;
-}
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Implementation of FetchStage class methods
+
 FetchStage::FetchStage() : Stage(),currentInstructionInfo{.instructionId = 0, .totalLength = 0, .opcodeLength = 0, .prefixCount = 0,
                                                           .prefix = {0,0,0,0}, .rex = false, .rexprefix = 0, .opcode = 0, .additionalBytes = 0,
                                                           .numOperands = 0, .operandLength = 0, .src_operand_length = 0, .dest_operand_length = 0,
                                                           .bit_extension = 0, .rex_w_sensitive = false, .hasModRM = false,
                                                           .hasSIB = false, .hasDisplacement = false, .hasImmediate = false,
                                                           .instruction = {}, .description = ""} {}
-
-FetchStage::~FetchStage() {}
 
 void FetchStage::startFetch(Bus& bus, uint64_t instructionId, uint64_t& index) {
     // Implementation of instruction fetching using the bus
@@ -61,32 +47,17 @@ InstructionInfo FetchStage::fetchInstruction(Bus& bus, uint64_t instructionId, u
 
 }
 
-InstructionInfo FetchStage::getCurrentInstructionInfo() const {
-    return currentInstructionInfo;
-}
-
-void FetchStage::setCurrentInstructionInfo(InstructionInfo info) {
-    currentInstructionInfo = info;                                        //maybe it is not needed
-}
-
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Implementation of DecodeStage class methods
+
 DecodeStage::DecodeStage() : Stage(), instruction_info_to_decode{.instructionId = 0, .totalLength = 0, .opcodeLength = 0, .prefixCount = 0,
                                                           .prefix = {0,0,0,0}, .rex = false, .rexprefix = 0, .opcode = 0, .additionalBytes = 0,
                                                           .numOperands = 0, .operandLength = 0, .src_operand_length = 0, .dest_operand_length = 0,
                                                           .bit_extension = 0, .rex_w_sensitive = false, .hasModRM = false,
                                                           .hasSIB = false, .hasDisplacement = false, .hasImmediate = false,
                                                           .instruction = {}, .description = ""} , decoded_instruction(std::make_unique<EmptyInstruction>()) {}
-DecodeStage::~DecodeStage() {}
 
-void DecodeStage::setInstructionToDecode(const InstructionInfo& info) {
-    instruction_info_to_decode = info;                                     
-}
-
-InstructionInfo DecodeStage::getInstructionToDecode() const {      //maybe it is not needed
-    return instruction_info_to_decode;
-}
 
 void DecodeStage::decodeInstruction(Bus& bus) {
     // Implementation of instruction decoding using the bus
@@ -101,20 +72,15 @@ std::unique_ptr<Instruction> DecodeStage::getDecodedInstruction() {
     return std::move(decoded_instruction);
 }
 
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Implementation of OperandFetchStage class methods
-OperandFetchStage::OperandFetchStage() : Stage(), instruction_with_fetched_operands(std::make_unique<EmptyInstruction>()) {}
-OperandFetchStage::~OperandFetchStage() {}
 
-OperandFetchStage& Pipeline::getOperandFetchStage() {
-    return operandFetchStage;
-}
+OperandFetchStage::OperandFetchStage() : Stage(), instruction_with_fetched_operands(std::make_unique<EmptyInstruction>()) {}
 
 std::unique_ptr<Instruction> OperandFetchStage::getInstructionWithFetchedOperands() {
     return std::move(instruction_with_fetched_operands);
 }
-
 
 void OperandFetchStage::fetchOperands(Bus& bus) {
     // Implementation of operand fetching using the bus
@@ -129,12 +95,11 @@ void OperandFetchStage::setInstructionWithFetchedOperands(std::unique_ptr<Instru
     instruction_with_fetched_operands = std::move(instruction);
 }
 
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Implementation of ExecuteStage class methods
-ExecuteStage::ExecuteStage() : Stage(), instruction_to_execute(std::make_unique<EmptyInstruction>()) {}
 
-ExecuteStage::~ExecuteStage() {}
+ExecuteStage::ExecuteStage() : Stage(), instruction_to_execute(std::make_unique<EmptyInstruction>()) {}
 
 void ExecuteStage::setInstructionToExecute(std::unique_ptr<Instruction> instruction) {
     instruction_to_execute = std::move(instruction);
@@ -143,6 +108,7 @@ void ExecuteStage::setInstructionToExecute(std::unique_ptr<Instruction> instruct
 std::unique_ptr<Instruction> ExecuteStage::getInstructionToExecute() {
     return std::move(instruction_to_execute);
 }
+
 
 void ExecuteStage::startExecution(Bus& bus) {
     // Implementation of starting execution using the bus
@@ -166,30 +132,18 @@ void ExecuteStage::executeInstruction(Bus& bus) {
     // Implementation of instruction execution using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Executing instruction...");
-    if (instruction_to_execute) {
+    if (instruction_to_execute) 
         instruction_to_execute->execute(bus);
-        executionSuccess = true;
-    } else {
-        executionSuccess = false;
-    }
+   
    
 }
 
-
-uint64_t ExecuteStage::getExecutionResult() const {
-    return executionResult;
-}
-
-bool ExecuteStage::wasExecutionSuccessful() const {
-    return executionSuccess;
-}
-
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Implementation of MemoryStage class methods
-MemoryStage::MemoryStage() : Stage(), instruction_to_memory(std::make_unique<EmptyInstruction>()), memoryAccessSuccess(false) {}
 
-MemoryStage::~MemoryStage() {}
+MemoryStage::MemoryStage() : Stage(), instruction_to_memory(std::make_unique<EmptyInstruction>()){}
+
 
 void MemoryStage::setInstructionToMemory(std::unique_ptr<Instruction> instruction) {
     instruction_to_memory = std::move(instruction);
@@ -198,6 +152,7 @@ void MemoryStage::setInstructionToMemory(std::unique_ptr<Instruction> instructio
 std::unique_ptr<Instruction> MemoryStage::getInstructionToMemory(){
     return std::move(instruction_to_memory);
 }
+
 
 void MemoryStage::requestMemoryAccess(Bus& bus) {
     // Implementation of starting memory access using the bus
@@ -217,28 +172,17 @@ void MemoryStage::updateMemoryAccess(Bus& bus) {
         instruction_to_memory->updateMemoryAccess(bus);
     }
 }
+
 void MemoryStage::accessMemory(Bus& bus) {
-    if (instruction_to_memory) {
+    if (instruction_to_memory)
         instruction_to_memory->accessMemory(bus);
-        memoryAccessSuccess = true;
-    } 
-    else {
-        memoryAccessSuccess = false;
-    }
 }
 
-bool MemoryStage::wasMemoryAccessSuccessful() const {
-    return memoryAccessSuccess;
-}
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Implementation of WriteBackStage class methods
 
-
-WriteBackStage::WriteBackStage() : Stage(), instruction_to_writeback(std::make_unique<EmptyInstruction>()), writeBackSuccess(false) {}
-
-WriteBackStage::~WriteBackStage() {}
+WriteBackStage::WriteBackStage() : Stage(), instruction_to_writeback(std::make_unique<EmptyInstruction>()) {}
 
 void WriteBackStage::setInstructionToWriteBack(std::unique_ptr<Instruction> instruction) {
     instruction_to_writeback = std::move(instruction);
@@ -254,19 +198,14 @@ void WriteBackStage::writeBack(Bus& bus) {
     if (instruction_to_writeback) {
         debugLog("Writing back instruction results...");
         instruction_to_writeback->writeBack(bus);
-        writeBackSuccess = true;
         debugLog("Write-Back completed successfully.");
     } else {
-        writeBackSuccess = false;
         debugLog("No instruction to write back.");
     }
     
   
 }
 
-bool WriteBackStage::wasWriteBackSuccessful() const {
-    return writeBackSuccess;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -276,32 +215,6 @@ Pipeline::Pipeline(Bus& bus) : bus(bus),fetchStage(), decodeStage(), executeStag
     
 }
                                
-
-Pipeline::~Pipeline() {
-    // Clean up resources if needed
-}
-
-
-FetchStage& Pipeline::getFetchStage() {
-    return fetchStage;
-}
-
-DecodeStage& Pipeline::getDecodeStage() {
-    return decodeStage;
-}
-
-ExecuteStage& Pipeline::getExecuteStage() {
-    return executeStage;
-}
-
-MemoryStage& Pipeline::getMemoryStage() {
-    return memoryStage;
-}
-
-WriteBackStage& Pipeline::getWriteBackStage() {
-    return writeBackStage;
-}
-
 void Pipeline::execute_operation() {
     // Implementation of pipeline operation execution for the current cycle
     
