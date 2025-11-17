@@ -224,35 +224,34 @@ void Pipeline::execute_operation() {
 
     //index value for fetching instruction
     
-
-    /*
-
-   
     if(writeBackStage.isStageReady()) 
     {
-        std::cout << "WRITE-BACK STAGE processing..." << std::endl;
-        if(memoryWriteBackBuffer.valid && !memoryWriteBackBuffer.stalled)
+        debugLog("WRITEBACK STAGE processing...");
+        if(memoryWriteBackBuffer.valid) 
         {
+            debugLog("Memory-WriteBack buffer has valid instruction.");
             writeBackStage.setInstructionToWriteBack(std::move(memoryWriteBackBuffer.memoryAccessedInstruction));
             memoryWriteBackBuffer.valid = false;
             writeBackStage.writeBack(bus);
+            // After memory access, move instruction to Memory-WriteBack buffer
+
         }
-        else if (memoryStage.isStageReady() && memoryStage.getInstructionToMemory())
+        else if (memoryStage.isStageReady() && !memoryStage.isInstructionEmpty(memoryStage.peekInstruction()))
         {
+            debugLog("Memory stage has valid instruction.");
             writeBackStage.setInstructionToWriteBack(memoryStage.getInstructionToMemory());
             writeBackStage.writeBack(bus);
+
         }
         else 
         {
-            std::cout << "Write-Back stage has no instruction to process." << std::endl;
-            writeBackStage.setStatus(StageStatus::EMPTY);
+            debugLog("WriteBack stage has no instruction to process.");
         }
     }
     else 
     {
-        std::cout << "WRITE-BACK STAGE is not ready." << std::endl;
+        debugLog("WRITEBACK STAGE is not ready.");
     }
-    */
     ///////////////////////////////////////////////////////////////////////
 
     if(memoryStage.isStageReady()) 

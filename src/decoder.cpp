@@ -193,7 +193,7 @@ void Decoder::decodeInstructionOI(Instruction* instruction, const InstructionInf
     //decode the immediate value
     decodeImmediateValue(instructionInfo, instruction, position);
     instruction->setHasImmediate(true);
-
+    instruction->setRegToReg(true); //immediate to register (the flag is reused implicitly for this purpose for simplicity)
     
 }
 
@@ -233,6 +233,7 @@ void Decoder::decodeInstructionTD(Instruction* instruction, const InstructionInf
 void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
 {
     instruction->setHasImmediate(true);
+    instruction->setRegToReg(true);  //immediate to register (the flag is reused implicitly for this purpose for simplicity)
     decodeImmediateValue(instructionInfo, instruction, position);
     
 }

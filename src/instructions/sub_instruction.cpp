@@ -169,8 +169,10 @@ void SubInstruction::execute([[maybe_unused]] Bus& bus)
 void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus) 
 {
     if(!getRegToMem())
+    {
+        debugLog("No memory access needed for SubInstruction (not register to memory).");
         return;
-    
+    }
         
     //writing result back to memory
     Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue);
@@ -221,7 +223,7 @@ void SubInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus)
         }
         else
         {
-            debugLog("SubInstruction: Write request failed for instruction ID " + std::to_string(getInstructionId()) + ": " + response.errorInfo.message);
+            debugLog("SubInstruction: Write rexecutionequest failed for instruction ID " + std::to_string(getInstructionId()) + ": " + response.errorInfo.message);
             std::cerr << "Error writing result to destination operand: " << response.errorInfo.message << std::endl;
         }
     }
@@ -237,9 +239,6 @@ void SubInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus)
 
 }
 
-    
-
-    
 void SubInstruction::accessMemory([[maybe_unused]] Bus& bus) 
 {
     if(!getRegToMem())
@@ -249,9 +248,47 @@ void SubInstruction::accessMemory([[maybe_unused]] Bus& bus)
 
 }
 
+
+
+
 void SubInstruction::writeBack([[maybe_unused]] Bus& bus) 
 {
-    //default implementation (do nothing)
+    //writing back the result to destination operand if it's register
+    if(!getRegToReg() && !getMemToReg())
+    {
+        debugLog("getRegToReg(): " + std::to_string(getRegToReg()));
+        debugLog("getMemToReg(): " + std::to_string(getMemToReg()));
+        debugLog("getRegToMem(): " + std::to_string(getRegToMem()));
+        debugLog("No write-back needed for SubInstruction (not register to register or memory to register).");
+        return;
+    }
+
+    debugLog("Writing back result for SubInstruction.");
+
+    Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue);
+
+    if(!response.success)
+    {
+        std::cerr << "Error writing back result to destination operand: " << response.errorInfo.message << std::endl;
+        return;
+    }
+    else
+    {
+        debugLog("Result written back to destination operand successfully.");
+    }
+
+
+    //ubdate flags in CPU
+    FlagReg& flags = bus.getCPU().getRegisters().getFlags();
+
+    flags.setFlag(Flagbit::ZF, tempValues.ZF);
+    flags.setFlag(Flagbit::SF, tempValues.SF);
+    flags.setFlag(Flagbit::OF, tempValues.OF);
+    flags.setFlag(Flagbit::CF, tempValues.CF);
+    flags.setFlag(Flagbit::PF, tempValues.PF);
+    flags.setFlag(Flagbit::AF, tempValues.AF);  
+
+
 }
 
 

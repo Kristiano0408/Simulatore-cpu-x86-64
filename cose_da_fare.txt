@@ -1,8 +1,6 @@
 spostando fuznioni inline in hpp
 
 
-//writeback(SUB)
-
 finire refacrory pipeline (ANCEH CONTROLLO SU BUFFER STALLED)
 
 // e controllare pipeline+
