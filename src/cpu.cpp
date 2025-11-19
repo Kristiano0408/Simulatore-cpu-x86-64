@@ -35,7 +35,16 @@ Pipeline& CPU::getPipeline()
 //cpu operations
 void CPU::cpuStart()
 {
+    setTicksNeeded(1); //set ticks needed to 1 for starting the CPU
+    cpuStep(); //advance the CPU by one clock cycle
     
+    
+}
+
+void CPU::cpuStep()
+{
+    debugLog("CPU Step Start");
+    tick(); //advance the CPU by one clock cycle
 }
 
 void CPU::cpuReset()
@@ -45,56 +54,6 @@ void CPU::cpuReset()
     //memory->reset();
 }
 
-void CPU::cpuStep()
-{
-    //we non use this anymorre because we have the pipeline
-
-    /*switch (state) {
-        case CPUState::FETCH:
-            // Fetch the instruction
-            current_instruction = controlUnit.fetchInstruction();
-            state = CPUState::DECODE;
-            break;
-        
-        case CPUState::DECODE:
-            // Decode the instruction
-            decodedInstruction = controlUnit.decodeInstruction(current_instruction);
-            state = CPUState::OPERAND_FETCH;
-            break;
-
-        case CPUState::OPERAND_FETCH:
-            // Fetch operands for the instruction
-            controlUnit.OperandFetch(decodedInstruction);
-            state = CPUState::EXECUTE;
-            break;
-
-        case CPUState::EXECUTE:
-            // Execute the instruction
-            controlUnit.executeInstruction(decodedInstruction);
-            state = CPUState::FETCH; // Go back to fetch state
-            delete decodedInstruction; // Clean up the decoded instruction
-            decodedInstruction = nullptr; // Reset the pointer
-            break;
-        
-
-        default:
-            throw std::runtime_error("Invalid CPU state");
-    }
-
-    //fetch the instruction
-    InstructionInfo  instruction = controlUnit.fetchInstruction();
-    //decode the instruction
-    Instruction* decodedInstruction = controlUnit.decodeInstruction(instruction);
-
-    //operand fetch
-    controlUnit.OperandFetch(decodedInstruction);
-
-    //execute the instruction
-    controlUnit.executeInstruction(decodedInstruction);
-    
-    //delete the instruction
-    delete decodedInstruction;*/
-}
 
 void CPU::execute_operation()
 {

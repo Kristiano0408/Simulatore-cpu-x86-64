@@ -1,38 +1,69 @@
+# Compilatore
 CXX = g++
-CXXFLAGS = -std=c++23 -O2 -Wall -Wextra -Iinclude
+CXXFLAGS = -std=c++23 -O2 -Wall -Wextra -Iinclude -fPIC
 
-# Attiva DEBUG se passato come variabile
+# Debug
 ifeq ($(DEBUG),1)
     CXXFLAGS += -DDEBUG -g
 endif
 
+# Directory
 SRCDIR = src
 OBJDIR = build
+GUI_SRCDIR = GUI
 
-# Trova tutti i file .cpp nella cartella src e sotto-cartelle
-SOURCES = $(shell find $(SRCDIR) -name '*.cpp')
-OBJS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
+# Core sources excluding prova.cpp
+CORE_SOURCES = $(filter-out $(SRCDIR)/prova.cpp, $(shell find $(SRCDIR) -name '*.cpp'))
+CORE_OBJS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(CORE_SOURCES))
 
-TARGET = $(OBJDIR)/prova
+# Prova obj
+PROVA_OBJ = $(OBJDIR)/prova.o
 
-# Crea tutte le directory necessarie per gli .o
-DIRS = $(sort $(dir $(OBJS)))
+# Pybind11 (CLONATO LOCALMENTE) + include Python del venv
+PYBIND11_INCLUDES = -Ipybind11/include $(shell python3-config --includes)
 
-# Regola principale
-all: dirs $(TARGET)
+# Binding file
+PYBIND_CPP = $(GUI_SRCDIR)/bindings.cpp
+PYBIND_OBJ = $(OBJDIR)/bindings.o
 
-# Crea le directory prima di compilare
+# Python module
+PYTHON_MODULE = $(GUI_SRCDIR)/simulator$(shell python3-config --extension-suffix)
+PYTHON_LDFLAGS := $(shell python3-config --ldflags)
+
+# Executable
+EXEC = $(OBJDIR)/prova
+
+# Build dirs
+DIRS = $(sort $(dir $(CORE_OBJS) $(PROVA_OBJ)))
+
+# -----------------------
+# Target principali
+# -----------------------
+all: dirs $(CORE_OBJS) $(PROVA_OBJ) $(PYBIND_OBJ) $(PYTHON_MODULE) $(EXEC)
+
 dirs:
 	@mkdir -p $(DIRS)
 
-# Link finale
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
-
-# Compilazione dei singoli .cpp
+# Core C++
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Pybind11 wrapper
+$(PYBIND_OBJ): $(PYBIND_CPP)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(PYBIND11_INCLUDES) -c $< -o $@
+
+# Python module
+$(PYTHON_MODULE): $(CORE_OBJS) $(PYBIND_OBJ)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(PYTHON_LDFLAGS)
+
+# Executable prova (versione senza GUI)
+$(EXEC): $(CORE_OBJS) $(PROVA_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 # Pulizia
 clean:
-	rm -rf $(OBJDIR)
+	rm -rf $(OBJDIR) $(GUI_SRCDIR)/*.o $(PYTHON_MODULE)
+
+.PHONY: all clean dirs

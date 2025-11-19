@@ -23,6 +23,10 @@ public:
     CPU& getCPU() { return *cpu; }
     Memory& getMemory() { return *memory; }
     Clock& getClock() { return *clock; }
+
+    void resetClock();
+
+    void memoryReset();
 };
 
 #endif // BUS_HPP

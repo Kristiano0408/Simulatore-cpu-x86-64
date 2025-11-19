@@ -10,6 +10,7 @@ private:
 public:
     void tick();
     uint64_t getCycles() const;
+    inline void reset() { cycles = 0; }
 };
 
 #endif // CLOCK_HPP

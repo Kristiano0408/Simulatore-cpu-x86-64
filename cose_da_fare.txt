@@ -1,3 +1,8 @@
+
+///GUI (FINIRE pybind, suddividere in piu moduli con vari file per organizzazione)
+
+
+
 spostando fuznioni inline in hpp
 
 

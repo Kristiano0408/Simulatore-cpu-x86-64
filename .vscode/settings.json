@@ -35,9 +35,19 @@
   ],
   "C_Cpp_Runner.enableWarnings": true,
   "C_Cpp_Runner.warningsAsError": false,
-  "C_Cpp_Runner.compilerArgs": [],
+  "C_Cpp_Runner.compilerArgs": [
+    "-Iinclude",
+    "-I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/venv/lib/python3.12/site-packages/pybind11/include",
+    "-I/usr/include/python3.12"
+  ],
   "C_Cpp_Runner.linkerArgs": [],
-  "C_Cpp_Runner.includePaths": [],
+  "C_Cpp_Runner.includePaths": [
+    "include",
+    "src",
+    "GUI",
+    "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/venv/lib/python3.12/site-packages/pybind11/include",
+    "/usr/include/python3.12"
+  ],
   "C_Cpp_Runner.includeSearch": [
     "*",
     "**/*"

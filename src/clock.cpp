@@ -1,4 +1,6 @@
 #include "clock.hpp"
+#include "cpu.hpp"
+
 
 void Clock::tick() {
     cycles++;

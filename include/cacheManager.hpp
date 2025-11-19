@@ -93,6 +93,9 @@ class CacheManager : public Device
         CacheManager(Bus& bus,uint64_t l1Size, uint64_t l2Size, uint64_t l3Size, uint64_t l1Assoc, uint64_t l2Assoc, uint64_t l3Assoc);
         ~CacheManager();
 
+        CacheManager(const CacheManager&) = delete;
+        CacheManager& operator=(const CacheManager&) = delete;
+
         void execute_operation() override; // Override of the pure virtual function from Device class
 
         void processRequest(); // Function to process cache requests
