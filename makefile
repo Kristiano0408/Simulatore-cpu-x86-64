@@ -11,6 +11,7 @@ endif
 SRCDIR = src
 OBJDIR = build
 GUI_SRCDIR = GUI
+BINDINGS_DIR = $(GUI_SRCDIR)/bindings
 
 # Core sources excluding prova.cpp
 CORE_SOURCES = $(filter-out $(SRCDIR)/prova.cpp, $(shell find $(SRCDIR) -name '*.cpp'))
@@ -19,14 +20,14 @@ CORE_OBJS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(CORE_SOURCES))
 # Prova obj
 PROVA_OBJ = $(OBJDIR)/prova.o
 
-# Pybind11 (CLONATO LOCALMENTE) + include Python del venv
+# Pybind11 + includes Python
 PYBIND11_INCLUDES = -Ipybind11/include $(shell python3-config --includes)
 
-# Binding file
-PYBIND_CPP = $(GUI_SRCDIR)/bindings.cpp
-PYBIND_OBJ = $(OBJDIR)/bindings.o
+# All binding .cpp files in GUI/bindings/
+BINDINGS_SOURCES = $(shell find $(BINDINGS_DIR) -name '*.cpp')
+BINDINGS_OBJS = $(patsubst $(GUI_SRCDIR)/bindings/%.cpp,$(OBJDIR)/bindings/%.o,$(BINDINGS_SOURCES))
 
-# Python module
+# Python module target
 PYTHON_MODULE = $(GUI_SRCDIR)/simulator$(shell python3-config --extension-suffix)
 PYTHON_LDFLAGS := $(shell python3-config --ldflags)
 
@@ -34,12 +35,12 @@ PYTHON_LDFLAGS := $(shell python3-config --ldflags)
 EXEC = $(OBJDIR)/prova
 
 # Build dirs
-DIRS = $(sort $(dir $(CORE_OBJS) $(PROVA_OBJ)))
+DIRS = $(sort $(dir $(CORE_OBJS) $(PROVA_OBJ) $(BINDINGS_OBJS)))
 
 # -----------------------
 # Target principali
 # -----------------------
-all: dirs $(CORE_OBJS) $(PROVA_OBJ) $(PYBIND_OBJ) $(PYTHON_MODULE) $(EXEC)
+all: dirs $(CORE_OBJS) $(PROVA_OBJ) $(BINDINGS_OBJS) $(PYTHON_MODULE) $(EXEC)
 
 dirs:
 	@mkdir -p $(DIRS)
@@ -49,21 +50,21 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Pybind11 wrapper
-$(PYBIND_OBJ): $(PYBIND_CPP)
+# Bindings C++
+$(OBJDIR)/bindings/%.o: $(BINDINGS_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(PYBIND11_INCLUDES) -c $< -o $@
 
 # Python module
-$(PYTHON_MODULE): $(CORE_OBJS) $(PYBIND_OBJ)
+$(PYTHON_MODULE): $(CORE_OBJS) $(BINDINGS_OBJS)
 	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(PYTHON_LDFLAGS)
 
-# Executable prova (versione senza GUI)
+# Executable prova
 $(EXEC): $(CORE_OBJS) $(PROVA_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 # Pulizia
 clean:
-	rm -rf $(OBJDIR) $(GUI_SRCDIR)/*.o $(PYTHON_MODULE)
+	rm -rf $(OBJDIR) $(GUI_SRCDIR)/*.so $(GUI_SRCDIR)/*.o
 
 .PHONY: all clean dirs

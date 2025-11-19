@@ -150,6 +150,12 @@ void CacheLevel::printCacheState() const
         for (const CacheLine& line : set.lines) // Loop through the lines in the set
         {
             debugLog("  Line Tag: " + std::to_string(line.tag) + ", Valid: " + std::to_string(line.valid) + ", Dirty: " + std::to_string(line.dirty));
+            for(int i = 0; i < 8; ++i)
+            {
+                std::ostringstream oss;
+                oss << std::hex << std::setw(2) << std::setfill('0') << +line.data[i];
+                debugLog("    Data[" + std::to_string(i) + "]: 0x" + oss.str());
+            }
         }
     }
 }
