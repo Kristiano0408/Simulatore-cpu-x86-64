@@ -57,8 +57,9 @@ PYBIND11_MODULE(simulator, m) {
     // ------------------------------
     py::class_<Memory>(m, "Memory")
         .def("getSize", &Memory::getSize)
-        .def("getData", &Memory::getData)
+        .def("getData", &Memory::getData, py::return_value_policy::reference_internal)
         .def("setData", &Memory::setData)
+        .def("setDataPartial", &Memory::setDataPartial)
         .def("clear", &Memory::clear)
         .def("getStackPointer", &Memory::getStackPointer)
         .def("setStackPointer", &Memory::setStackPointer)

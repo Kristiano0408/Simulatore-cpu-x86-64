@@ -40,6 +40,11 @@ void Memory::setData(const std::vector<uint8_t>& data)
     this->data = data;
 };
 
+void Memory::setDataPartial(const std::vector<uint8_t>& newData, size_t offset) {
+    std::copy(newData.begin(), newData.end(), data.begin() + offset);
+}
+
+
 //clear the memory
 void Memory::clear()
 {

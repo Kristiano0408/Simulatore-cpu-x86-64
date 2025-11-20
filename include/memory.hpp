@@ -70,6 +70,8 @@ public:
     //set the data of the memory
     void setData(const std::vector<uint8_t>& data);
 
+    void setDataPartial(const std::vector<uint8_t>& newData, size_t offset);
+
     //clear the memory
     void clear();
 
