@@ -20,6 +20,9 @@ namespace py = pybind11;
 void bind_cpu(py::module &m);
 void bind_registerFile(py::module &m);
 void bind_cacheManager(py::module &m);
+void bind_pipeline(py::module &m);
+void bind_instruction(py::module &m);
+void bind_operands(py::module &m);
 
 PYBIND11_MODULE(simulator, m) {
     m.doc() = "Bindings PyBind11 per il simulatore x86-64";
@@ -29,17 +32,16 @@ PYBIND11_MODULE(simulator, m) {
     bind_cpu(m);
     bind_registerFile(m);
     bind_cacheManager(m);
-
+    bind_pipeline(m);
+    bind_instruction(m);
+    bind_operands(m);
 
     // ------------------------------
     // ALU
     // ------------------------------
     py::class_<ALU>(m, "ALU");
 
-    // ------------------------------
-    // PIPELINE
-    // ------------------------------
-    py::class_<Pipeline>(m, "Pipeline");
+
 
     //.def(py::init<>());  
 

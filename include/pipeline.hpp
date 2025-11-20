@@ -217,6 +217,7 @@ struct DecodeOperandFetchBuffer {
     bool stalled;
     bool flushed;
     std::unique_ptr<Instruction> decodedInstruction;
+    Instruction* peekInstruction() const {return decodedInstruction.get();}
 
     DecodeOperandFetchBuffer() : valid(false), stalled(false), flushed(false), decodedInstruction(std::make_unique<EmptyInstruction>()) {}
 
@@ -228,6 +229,7 @@ struct OperandFetchExecuteBuffer {
     bool stalled;
     bool flushed;
     std::unique_ptr<Instruction> instructionWithOperands;
+    Instruction* peekInstruction() const {return instructionWithOperands.get();}
 
     OperandFetchExecuteBuffer() : valid(false), stalled(false), flushed(false), instructionWithOperands(std::make_unique<EmptyInstruction>()) {}
 
@@ -239,6 +241,7 @@ struct ExecuteMemoryBuffer {
     bool stalled;
     bool flushed;
     std::unique_ptr<Instruction> executedInstruction;
+    Instruction* peekInstruction() const {return executedInstruction.get();}
 
     ExecuteMemoryBuffer() : valid(false), stalled(false), flushed(false), executedInstruction(std::make_unique<EmptyInstruction>()) {}
 
@@ -250,6 +253,7 @@ struct MemoryWriteBackBuffer {
     bool stalled;
     bool flushed;
     std::unique_ptr<Instruction> memoryAccessedInstruction;
+    Instruction* peekInstruction() const {return memoryAccessedInstruction.get();}
 
     MemoryWriteBackBuffer() : valid(false), stalled(false), flushed(false), memoryAccessedInstruction(std::make_unique<EmptyInstruction>()) {}
 
@@ -275,6 +279,12 @@ class Pipeline : public Device {
         inline ExecuteStage& getExecuteStage() { return executeStage; }
         inline MemoryStage& getMemoryStage() { return memoryStage; }
         inline WriteBackStage& getWriteBackStage() { return writeBackStage; }
+
+        inline FetchDecodeBuffer& getFetchDecodeBuffer() { return fetchDecodeBuffer; }
+        inline DecodeOperandFetchBuffer& getDecodeOperandFetchBuffer() { return decodeOperandFetchBuffer; }
+        inline OperandFetchExecuteBuffer& getOperandFetchExecuteBuffer() { return operandFetchExecuteBuffer; }
+        inline ExecuteMemoryBuffer& getExecuteMemoryBuffer() { return executeMemoryBuffer; }
+        inline MemoryWriteBackBuffer& getMemoryWriteBackBuffer() { return memoryWriteBackBuffer; }
 
     private:
 
