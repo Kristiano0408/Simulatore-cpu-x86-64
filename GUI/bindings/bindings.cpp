@@ -23,18 +23,23 @@ void bind_cacheManager(py::module &m);
 void bind_pipeline(py::module &m);
 void bind_instruction(py::module &m);
 void bind_operands(py::module &m);
+void bind_helpers(py::module &m);
+void bind_result_info(py::module &m);
 
 PYBIND11_MODULE(simulator, m) {
     m.doc() = "Bindings PyBind11 per il simulatore x86-64";
 
 
     //call binding functions
+    bind_helpers(m);
+    bind_result_info(m);
     bind_cpu(m);
     bind_registerFile(m);
     bind_cacheManager(m);
     bind_pipeline(m);
     bind_instruction(m);
     bind_operands(m);
+    
 
     // ------------------------------
     // ALU
