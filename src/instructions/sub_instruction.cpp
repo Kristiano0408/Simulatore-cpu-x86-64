@@ -92,6 +92,10 @@ void SubInstruction::startExecution(Bus& bus)
     {
         //both operands are ready, we can proceed to execute( non multi-cycle instruction only for non-memory operands)
         execute(bus);
+        bus.getCPU().getPipeline().getExecuteMemoryBuffer().executedInstruction = bus.getCPU().getPipeline().getExecuteStage().getInstructionToExecute();
+        bus.getCPU().getPipeline().getExecuteMemoryBuffer().valid = true;
+        bus.getCPU().getPipeline().getExecuteMemoryBuffer().stalled = false;
+        bus.getCPU().getPipeline().getExecuteMemoryBuffer().flushed = false;
     }
 
 

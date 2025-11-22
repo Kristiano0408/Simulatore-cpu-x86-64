@@ -1,24 +1,22 @@
 
-///GUI (FINIRE pybind, suddividere in piu moduli con vari file per organizzazione), sistemare pipeline gui e core
+//refactory massivo
 
 
+PILEINE CONTROLLER PER STALL GUI E callbakc(cosi risolvioamo la maggiorparet dei probelmi gui)
 
-spostando fuznioni inline in hpp
+
+///GUI (FINIRE pybind, suddividere in piu moduli con vari file per organizzazione), sistemare pipeline e visualizzazioen cahce
+
+cache pazzurda pazza sgravata(suddivisioen l1 in i e d e latenze(device anche sui singoli livelli e tick di cachemanager è somma delle altre)
+
+
 
 
 finire refacrory pipeline (ANCEH CONTROLLO SU BUFFER STALLED)
 
 // e controllare pipeline+
 
-
-/////refactory massivo//////
-pipeline(da fare, implemetare accesmemmory e writeback in instruction, finire pipeline) CONTROLLARE ERRORI(in teroia pipeline va)
-
-cache pazzurda pazza sgravata(suddivisioen l1 in i e d e latenze(device anche sui singoli livelli e tick di cachemanager è somma delle altre)
-
-//CALLBACK PER PIPELINE(GLI STALLI IN HW LI GETSISCE PIPELINE NON ALTRO(COEM INSTRCUITION NEL NOSTRO CASO)
-
- metaprogramamzione per visitor(anydata)
+ metaprogramamzione per visitor(anydata) + inlien in hpp e pulizia codice
 
 ///SUCCESSIVAMNETE
 
@@ -26,6 +24,8 @@ cache pazzurda pazza sgravata(suddivisioen l1 in i e d e latenze(device anche su
 
 conclusione instruction set(controllare istruzioni, mashere e correta esecuzione(anche di sub va controllata) + getsione lunghezza operandi
 
+
+//gui finale e controlli generali
 
 
 ////////////////////////////////////////////////

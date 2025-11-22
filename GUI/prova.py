@@ -233,7 +233,7 @@ class SimulatorGUI:
             elif hasattr(stage, "getInstructionToDecode"):
                 instr_info = stage.getInstructionToDecode() 
                 if instr_info is not None:
-                    instr_id = instr_info.instructionId
+                    instr_id = instr_info.instructionId if instr_info.instructionId != 0 else "(empty)"
             elif hasattr(stage, "getCurrentInstructionInfo"):
                 instr_id = ("fetching ...")
             
@@ -251,12 +251,9 @@ class SimulatorGUI:
                 if instr is not None:
                     instr_id = instr.getInstructionId()
             elif hasattr(buf, "instructionInfo"):
-                print("Getting instruction info from buffer")
-                
                 instr_info = buf.instructionInfo
                 if instr_info is not None:
-                    instr_id = instr_info.instructionId
-                    print(f"Buffer {name} has instruction ID: {instr_id}")
+                    instr_id = instr_info.instructionId if instr_info.instructionId != "0" else "(empty)"
 
             self.buffer_labels[name].configure(text=instr_id)
 

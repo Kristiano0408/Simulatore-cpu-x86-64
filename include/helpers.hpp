@@ -251,6 +251,13 @@ struct InstructionInfo {
     std::vector<uint8_t> instruction;
     const char* description; // Descrizione dell'istruzione (opzionale)
 
+    // Costruttore di default
+    InstructionInfo() : instructionId(0), totalLength(0), opcodeLength(0), prefixCount(0), rex(false),
+                        rexprefix(0), opcode(0), additionalBytes(0), numOperands(0), operandLength(0),
+                        src_operand_length(0), dest_operand_length(0), bit_extension(0), rex_w_sensitive(false),
+                        hasModRM(false), hasSIB(false), hasDisplacement(false), hasImmediate(false),
+                        instruction(), description("") {}
+
 };
 
 

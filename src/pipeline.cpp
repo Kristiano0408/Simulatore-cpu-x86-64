@@ -17,12 +17,7 @@ bool Stage::isInstructionEmpty(const Instruction* instr) const {
 
 // Implementation of FetchStage class methods
 
-FetchStage::FetchStage() : Stage(),currentInstructionInfo{.instructionId = 0, .totalLength = 0, .opcodeLength = 0, .prefixCount = 0,
-                                                          .prefix = {0,0,0,0}, .rex = false, .rexprefix = 0, .opcode = 0, .additionalBytes = 0,
-                                                          .numOperands = 0, .operandLength = 0, .src_operand_length = 0, .dest_operand_length = 0,
-                                                          .bit_extension = 0, .rex_w_sensitive = false, .hasModRM = false,
-                                                          .hasSIB = false, .hasDisplacement = false, .hasImmediate = false,
-                                                          .instruction = {}, .description = ""} {}
+FetchStage::FetchStage() : Stage(),currentInstructionInfo() {}
 
 void FetchStage::startFetch(Bus& bus, uint64_t instructionId, uint64_t& index) {
     // Implementation of instruction fetching using the bus
@@ -51,12 +46,7 @@ InstructionInfo FetchStage::fetchInstruction(Bus& bus, uint64_t instructionId, u
 
 // Implementation of DecodeStage class methods
 
-DecodeStage::DecodeStage() : Stage(), instruction_info_to_decode{.instructionId = 0, .totalLength = 0, .opcodeLength = 0, .prefixCount = 0,
-                                                          .prefix = {0,0,0,0}, .rex = false, .rexprefix = 0, .opcode = 0, .additionalBytes = 0,
-                                                          .numOperands = 0, .operandLength = 0, .src_operand_length = 0, .dest_operand_length = 0,
-                                                          .bit_extension = 0, .rex_w_sensitive = false, .hasModRM = false,
-                                                          .hasSIB = false, .hasDisplacement = false, .hasImmediate = false,
-                                                          .instruction = {}, .description = ""} , decoded_instruction(std::make_unique<EmptyInstruction>()) {}
+DecodeStage::DecodeStage() : Stage(), instruction_info_to_decode(), decoded_instruction(std::make_unique<EmptyInstruction>()) {}
 
 
 void DecodeStage::decodeInstruction(Bus& bus) {
@@ -337,6 +327,7 @@ void Pipeline::execute_operation() {
         debugLog("INDEX VALUE: " + to_string_hex(index));
         executeMemoryBuffer.executedInstruction = executeStage.getInstructionToExecute();
         executeMemoryBuffer.valid = true;
+        debugLog("Setting Execute-Memory buffer valid.");
         executeMemoryBuffer.stalled = false;
         executeMemoryBuffer.flushed = false;
         executeStage.setStatus(StageStatus::READY);
@@ -403,6 +394,7 @@ void Pipeline::execute_operation() {
             decodeOperandFetchBuffer.valid = true;
             decodeOperandFetchBuffer.stalled = false;
             decodeOperandFetchBuffer.flushed = false;
+            //reset the istruictioninfo of decode stage
         }
         else if (fetchStage.isStageReady() && fetchStage.getCurrentInstructionInfo().instruction.size() > 0)
         {
@@ -413,6 +405,7 @@ void Pipeline::execute_operation() {
             decodeOperandFetchBuffer.valid = true;
             decodeOperandFetchBuffer.stalled = false;
             decodeOperandFetchBuffer.flushed = false;
+            //reset the istruictioninfo of decode stage
         }
         else 
         {
@@ -427,9 +420,10 @@ void Pipeline::execute_operation() {
     if(fetchStage.isStageReady()) 
     {
         debugLog("FETCH STAGE processing...");
+        bus.getCPU().incrementInstructionIdCounter();
         FetchstageInstructionId = bus.getCPU().getInstructionIdCounter();
         debugLog("FetchstageInstructionId: " + std::to_string(FetchstageInstructionId));
-        bus.getCPU().incrementInstructionIdCounter();
+        
         fetchStage.startFetch(bus, FetchstageInstructionId, index);
         fetchStage.setStatus(StageStatus::WAITING_MEMORY);
     }
@@ -451,6 +445,8 @@ void Pipeline::execute_operation() {
         fetchDecodeBuffer.stalled = false;
         fetchDecodeBuffer.flushed = false;
         fetchStage.setStatus(StageStatus::READY);
+        //reset the instructionInfo of fetch stage
+        fetchStage.setCurrentInstructionInfo(InstructionInfo());
     }
     else 
     {
