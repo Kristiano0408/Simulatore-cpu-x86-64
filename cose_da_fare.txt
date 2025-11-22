@@ -1,5 +1,5 @@
 
-///GUI (FINIRE pybind, suddividere in piu moduli con vari file per organizzazione) + almeo finire importazioen instructioninfo,etc per aevre minima gui per debug
+///GUI (FINIRE pybind, suddividere in piu moduli con vari file per organizzazione), sistemare pipeline gui e core
 
 
 

@@ -126,6 +126,7 @@ class SimulatorGUI:
         print("STEP CPU")
         self.cpu.cpuStep()
         self.update_register_labels()
+        self.update_pipeline_view()
         # (non aggiorniamo la memoria qui: lagga!)
 
     # --- MEMORY VIEWER UPDATE ---
@@ -221,14 +222,43 @@ class SimulatorGUI:
             buffers = [""] * len(self.pipeline_buffers)
 
         # update stages
-        for name, value in zip(self.pipeline_stages, stages):
-            value = value if value else "(empty)"
+        for name, stage in zip(self.pipeline_stages, stages):
+            status_name = stage.getStatus().name
+            instr_id = "(empty)"  # default se vuoto
+
+            if hasattr(stage, "peekInstruction") and not isinstance(stage, simulator.DecodeStage):
+                instr = stage.peekInstruction()
+                if instr is not None and not stage.isInstructionEmpty(instr):
+                    instr_id = instr.getInstructionId()
+            elif hasattr(stage, "getInstructionToDecode"):
+                instr_info = stage.getInstructionToDecode() 
+                if instr_info is not None:
+                    instr_id = instr_info.instructionId
+            elif hasattr(stage, "getCurrentInstructionInfo"):
+                instr_id = ("fetching ...")
+            
+
+            value = f"{status_name} --- {instr_id}"
             self.stage_labels[name].configure(text=value)
 
         # update buffers
-        for name, value in zip(self.pipeline_buffers, buffers):
-            value = value if value else "(empty)"
-            self.buffer_labels[name].configure(text=value)
+        for name,  buf in zip(self.pipeline_buffers, buffers):
+            instr_id = "(empty)"  # default se vuoto
+            if buf.valid == False:
+                pass
+            elif hasattr(buf, "peekInstruction"):
+                instr = buf.peekInstruction()
+                if instr is not None:
+                    instr_id = instr.getInstructionId()
+            elif hasattr(buf, "instructionInfo"):
+                print("Getting instruction info from buffer")
+                
+                instr_info = buf.instructionInfo
+                if instr_info is not None:
+                    instr_id = instr_info.instructionId
+                    print(f"Buffer {name} has instruction ID: {instr_id}")
+
+            self.buffer_labels[name].configure(text=instr_id)
 
         # next update
         if hasattr(self, "pipeline_window") and self.pipeline_window.winfo_exists():

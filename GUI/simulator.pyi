@@ -174,7 +174,6 @@ class DecodeOperandFetchBuffer:
     flushed: bool
     stalled: bool
     valid: bool
-    @property
     def peekInstruction(self) -> Instruction:
         ...
 class DecodeStage(Stage):
@@ -314,7 +313,6 @@ class ExecuteMemoryBuffer:
     flushed: bool
     stalled: bool
     valid: bool
-    @property
     def peekInstruction(self) -> Instruction:
         ...
 class ExecuteStage(Stage):
@@ -577,7 +575,6 @@ class MemoryWriteBackBuffer:
     flushed: bool
     stalled: bool
     valid: bool
-    @property
     def peekInstruction(self) -> Instruction:
         ...
 class Operand:
@@ -593,7 +590,6 @@ class OperandFetchExecuteBuffer:
     flushed: bool
     stalled: bool
     valid: bool
-    @property
     def peekInstruction(self) -> Instruction:
         ...
 class OperandFetchStage(Stage):
@@ -877,6 +873,8 @@ class SIB:
         ...
 class Stage:
     def getStatus(self) -> stageStatus:
+        ...
+    def isInstructionEmpty(self, arg0: Instruction) -> bool:
         ...
     def isStageReady(self) -> bool:
         ...

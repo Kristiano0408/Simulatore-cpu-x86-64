@@ -394,6 +394,7 @@ void Pipeline::execute_operation() {
         debugLog("DECODE STAGE processing...");
         if(fetchDecodeBuffer.valid) 
         {
+            debugLog("Fetch-Decode buffer has valid instruction.");
             decodeStage.setInstructionToDecode(fetchDecodeBuffer.instructionInfo);
             fetchDecodeBuffer.valid = false;
             decodeStage.decodeInstruction(bus);
@@ -445,6 +446,7 @@ void Pipeline::execute_operation() {
         // Move instruction to Fetch-Decode buffer
         debugLog("INDEX VALUE: " + to_string_hex(index));
         fetchDecodeBuffer.instructionInfo = fetchStage.fetchInstruction(bus, FetchstageInstructionId, index);
+        debugLog("Fetched Instruction ID: " + std::to_string(fetchDecodeBuffer.instructionInfo.instructionId));
         fetchDecodeBuffer.valid = true;
         fetchDecodeBuffer.stalled = false;
         fetchDecodeBuffer.flushed = false;
