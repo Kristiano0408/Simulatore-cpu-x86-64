@@ -295,14 +295,6 @@ struct InstructionType_and_addMode
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-enum class CPUState {
-    FETCH,
-    DECODE,
-    OPERAND_FETCH,
-    EXECUTE,
-    COMPLETE
-};
-
 
 enum class StageStatus {
     READY,
@@ -320,6 +312,14 @@ enum class StageStatus {
     
 };
 
+enum class StageType {
+    FETCH,
+    DECODE,
+    OPERAND_FETCH,
+    EXECUTE,
+    MEMORY,
+    WRITEBACK
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Request type enumeration 

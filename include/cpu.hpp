@@ -69,6 +69,7 @@ class CPU: public Device
 
         CacheManager& getCacheManager();
 
+        
         Pipeline& getPipeline();
 
         void sendCacheRequest(std::unique_ptr<CacheRequest<anydata>> request); //send a cache request
