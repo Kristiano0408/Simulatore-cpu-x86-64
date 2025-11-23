@@ -312,7 +312,12 @@ enum class StageStatus {
     WAITING_SRC_OPERAND,
     WAITING_DEST_OPERAND,
     FLUSHED,
-    EMPTY
+    EMPTY,
+    WAITING_GUI,
+    EXECUTING,
+    FETCHING_OPERANDS,
+    DECODED
+    
 };
 
 
