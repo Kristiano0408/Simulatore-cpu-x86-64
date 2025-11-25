@@ -315,7 +315,7 @@ void Pipeline::execute_operation() {
     }
     else if (executeStage.getStatus() == StageStatus::WAITING_MEMORY)
     {
-        debugLog("EXECUTE STAGE is waiting for instruction execution to complete.");
+        debugLog("EXECUTE STAGE is waiinline Stage* getStage(StageType stageType) {return stageMap.at(stageType);}ting for instruction execution to complete.");
 
         executeStage.updateExecution(bus);
     }

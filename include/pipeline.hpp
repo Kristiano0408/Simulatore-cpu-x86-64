@@ -280,21 +280,37 @@ class Pipeline : public Device {
         inline MemoryStage& getMemoryStage() { return memoryStage; }
         inline WriteBackStage& getWriteBackStage() { return writeBackStage; }
 
+        inline Stage* getStage(StageType stageType) {return stageMap.at(stageType);}
+
         inline FetchDecodeBuffer& getFetchDecodeBuffer() { return fetchDecodeBuffer; }
         inline DecodeOperandFetchBuffer& getDecodeOperandFetchBuffer() { return decodeOperandFetchBuffer; }
         inline OperandFetchExecuteBuffer& getOperandFetchExecuteBuffer() { return operandFetchExecuteBuffer; }
         inline ExecuteMemoryBuffer& getExecuteMemoryBuffer() { return executeMemoryBuffer; }
         inline MemoryWriteBackBuffer& getMemoryWriteBackBuffer() { return memoryWriteBackBuffer; }
 
+        inline bool isWaitingGUI() const { return waitingGUI; }
+        inline void setWaitingGUI(bool wait) { waitingGUI = wait; }
+        
+
     private:
 
         Bus& bus;
+        bool waitingGUI = false;
         FetchStage fetchStage;
         DecodeStage decodeStage;
         OperandFetchStage operandFetchStage;
         ExecuteStage executeStage;
         MemoryStage memoryStage;
         WriteBackStage writeBackStage;
+
+        std::unordered_map<StageType, Stage*> stageMap {
+            {StageType::FETCH, &fetchStage},
+            {StageType::DECODE, &decodeStage},
+            {StageType::OPERAND_FETCH, &operandFetchStage},
+            {StageType::EXECUTE, &executeStage},
+            {StageType::MEMORY, &memoryStage},
+            {StageType::WRITE_BACK, &writeBackStage}
+        };
 
         //buffer between stages 
         FetchDecodeBuffer fetchDecodeBuffer;
