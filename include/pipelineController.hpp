@@ -26,6 +26,8 @@ class PipelineController
 
         void stallForGUI();
 
+        inline EventHandler& getEventHandler() { return eventHandler; }
+
 
     private:
         Pipeline& pipeline;

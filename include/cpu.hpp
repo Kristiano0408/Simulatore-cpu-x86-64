@@ -13,6 +13,7 @@
 #include "registerFile.hpp"
 #include "cacheManager.hpp"
 #include "pipeline.hpp"
+#include "pipelineController.hpp"
 
 
 class CPU: public Device
@@ -40,6 +41,8 @@ class CPU: public Device
         CacheManager cacheManager;
 
         Pipeline pipeline; //pipeline of the CPU
+
+        PipelineController pipelineController; //controller for managing pipeline events
 
 
 
@@ -71,6 +74,8 @@ class CPU: public Device
 
         
         Pipeline& getPipeline();
+
+        PipelineController& getPipelineController();
 
         void sendCacheRequest(std::unique_ptr<CacheRequest<anydata>> request); //send a cache request
 

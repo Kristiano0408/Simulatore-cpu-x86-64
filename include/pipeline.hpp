@@ -8,6 +8,7 @@
 #include <memory>
 #include "instruction.hpp"
 #include "helpers.hpp"
+#include "eventHandler.hpp"
 
 class Bus; // Forward declaration of Bus class
 
@@ -267,7 +268,7 @@ class Pipeline : public Device {
 
     public:
 
-        Pipeline(Bus& bus);
+        Pipeline(Bus& bus, EventHandler& eventHandler);
 
         ~Pipeline() {};
 
@@ -311,6 +312,9 @@ class Pipeline : public Device {
             {StageType::MEMORY, &memoryStage},
             {StageType::WRITE_BACK, &writeBackStage}
         };
+
+        //event handler for pipeline events with callbacks from pipeline controller
+        EventHandler& eventHandler;
 
         //buffer between stages 
         FetchDecodeBuffer fetchDecodeBuffer;

@@ -201,7 +201,7 @@ void WriteBackStage::writeBack(Bus& bus) {
 
 //implementation of the pipeline class
 
-Pipeline::Pipeline(Bus& bus) : bus(bus),fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage() {
+Pipeline::Pipeline(Bus& bus, EventHandler& eventHandler) : bus(bus),fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage(), eventHandler(eventHandler) {
     
 }
                                
