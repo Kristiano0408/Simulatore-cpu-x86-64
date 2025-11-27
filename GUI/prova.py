@@ -48,6 +48,7 @@ class SimulatorGUI:
             "DECODE",
             "OPERAND FETCH",
             "EXECUTE",
+
             "MEMORY",
             "WRITEBACK"
         ]

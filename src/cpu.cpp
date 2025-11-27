@@ -1,9 +1,9 @@
 #include "cpu.hpp"
 
 //constructor for the CPU
-CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(bus), registers(), cacheManager(bus, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc), pipelineController(pipeline), pipeline(bus, pipelineController.getEventHandler())
+CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(bus), registers(), cacheManager(bus, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc), pipeline(bus, nullptr), pipelineController(pipeline)
  {
-    //initialization if needed
+    pipeline.setEventHandler(pipelineController.getEventHandler());
   
  }
 

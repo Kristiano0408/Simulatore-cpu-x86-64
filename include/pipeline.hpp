@@ -50,9 +50,9 @@ class FetchStage : public Stage {
 
         ~FetchStage() {};
 
-        void startFetch(Bus& bus, uint64_t instructionId, uint64_t& index); //fetch the instruction from memory
+        void startFetch(Bus& bus, uint64_t instructionId, uint64_t& index, EventHandler& eventHandler); //fetch the instruction from memory
 
-        void updateFetch(Bus& bus, uint64_t instructionId); //update the fetch stage (take the instruction fetched and prepare for decode)
+        void updateFetch(Bus& bus, uint64_t instructionId, EventHandler& eventHandler); //update the fetch stage (take the instruction fetched and prepare for decode)
 
         InstructionInfo fetchInstruction(Bus& bus, uint64_t instructionId, uint64_t& index); //fetch the instruction from memory
 
@@ -268,7 +268,7 @@ class Pipeline : public Device {
 
     public:
 
-        Pipeline(Bus& bus, EventHandler& eventHandler);
+        Pipeline(Bus& bus, EventHandler* eventHandler);
 
         ~Pipeline() {};
 
@@ -291,6 +291,8 @@ class Pipeline : public Device {
 
         inline bool isWaitingGUI() const { return waitingGUI; }
         inline void setWaitingGUI(bool wait) { waitingGUI = wait; }
+
+        inline void setEventHandler(EventHandler& handler) { eventHandler = &handler; }
         
 
     private:
@@ -314,7 +316,7 @@ class Pipeline : public Device {
         };
 
         //event handler for pipeline events with callbacks from pipeline controller
-        EventHandler& eventHandler;
+        EventHandler* eventHandler;
 
         //buffer between stages 
         FetchDecodeBuffer fetchDecodeBuffer;

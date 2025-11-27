@@ -19,18 +19,18 @@ bool Stage::isInstructionEmpty(const Instruction* instr) const {
 
 FetchStage::FetchStage() : Stage(),currentInstructionInfo() {}
 
-void FetchStage::startFetch(Bus& bus, uint64_t instructionId, uint64_t& index) {
+void FetchStage::startFetch(Bus& bus, uint64_t instructionId, uint64_t& index, EventHandler& eventHandler) {
     // Implementation of instruction fetching using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Fetching in struction from memory...");
-    bus.getCPU().getControlUnit().startFetch(instructionId, index);
+    bus.getCPU().getControlUnit().startFetch(instructionId, index, eventHandler);
 }
 
-void FetchStage::updateFetch(Bus& bus, uint64_t instructionId) {
+void FetchStage::updateFetch(Bus& bus, uint64_t instructionId, EventHandler& eventHandler) {
     // Implementation of updating fetch stage using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Updating fetch stage...");
-    bus.getCPU().getControlUnit().updateFetch(instructionId);
+    bus.getCPU().getControlUnit().updateFetch(instructionId, eventHandler);
 
 }
 
@@ -39,7 +39,6 @@ InstructionInfo FetchStage::fetchInstruction(Bus& bus, uint64_t instructionId, u
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Fetching instruction from memory...");
     return bus.getCPU().getControlUnit().fetchInstruction(instructionId, index);
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,7 +200,7 @@ void WriteBackStage::writeBack(Bus& bus) {
 
 //implementation of the pipeline class
 
-Pipeline::Pipeline(Bus& bus, EventHandler& eventHandler) : bus(bus),fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage(), eventHandler(eventHandler) {
+Pipeline::Pipeline(Bus& bus, EventHandler* eventHandler) : bus(bus),fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage(), eventHandler(eventHandler) {
     
 }
                                
@@ -213,7 +212,7 @@ void Pipeline::execute_operation() {
     debugLog("Executing pipeline operation for the current cycle...");
 
     //index value for fetching instruction
-    
+    /*
     if(writeBackStage.isStageReady()) 
     {
         debugLog("WRITEBACK STAGE processing...");
@@ -416,7 +415,7 @@ void Pipeline::execute_operation() {
         debugLog("DECODE STAGE is not ready.");
  
     //////////////////////////////////////////////////////////////////////////////// 
-
+    */
     if(fetchStage.isStageReady()) 
     {
         debugLog("FETCH STAGE processing...");
@@ -424,14 +423,15 @@ void Pipeline::execute_operation() {
         FetchstageInstructionId = bus.getCPU().getInstructionIdCounter();
         debugLog("FetchstageInstructionId: " + std::to_string(FetchstageInstructionId));
         
-        fetchStage.startFetch(bus, FetchstageInstructionId, index);
-        fetchStage.setStatus(StageStatus::WAITING_MEMORY);
+        fetchStage.startFetch(bus, FetchstageInstructionId, index, *eventHandler); //the event handler pointer is tranformed to reference for the function call
+        debugLog("FETCH STAGE fetch started.");
+        
     }
     else if (fetchStage.getStatus() == StageStatus::WAITING_MEMORY)
     {
         debugLog("FETCH STAGE is waiting for instruction fetch to complete.");
 
-        fetchStage.updateFetch(bus, FetchstageInstructionId);
+        fetchStage.updateFetch(bus, FetchstageInstructionId, *eventHandler);
     }
     else if (fetchStage.getStatus() == StageStatus::MEMORY_DONE)
     {

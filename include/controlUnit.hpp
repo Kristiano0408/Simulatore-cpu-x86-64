@@ -7,7 +7,7 @@
 class Bus;   // forward declaration
 class CPU;   // forward declaration
 class RegisterFile;   // forward declaration
-
+class EventHandler; // forward declaration
 
 class CU
 {
@@ -17,9 +17,9 @@ class CU
         //RegisterFile& getRegisters();
 
 
-        void startFetch(uint64_t instructionId, uint64_t& index);
+        void startFetch(uint64_t instructionId, uint64_t& index, EventHandler& eventHandler);
 
-        void updateFetch(uint64_t instructionId);
+        void updateFetch(uint64_t instructionId, EventHandler& eventHandler);
         InstructionInfo fetchInstruction(uint64_t instructionID, uint64_t index);
         Instruction* decodeInstruction(InstructionInfo instruction);
         void OperandFetch(Instruction* instruction);

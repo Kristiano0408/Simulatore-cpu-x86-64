@@ -349,7 +349,7 @@ void CacheManager::execute_operation()
 
 void CacheManager::processRequest()
 {   
-
+    debugLog("Processing cache requests...");
 
     // Process cache requests from the request queue
     while (!requestQueue.empty())
@@ -371,6 +371,7 @@ void CacheManager::processRequest()
                     response.success = readResult.success;
                     response.errorInfo = readResult.errorInfo;
                     response.data = readResult.data;
+                    debugLog("Read request processed for address: " + to_string_hex(request.address) + ", success: " + std::to_string(response.success));
 
                     break;
                 }
@@ -380,6 +381,7 @@ void CacheManager::processRequest()
                     bus.getCPU().cacheResponseQueue.erase(request.requestID); // For write operations, we can just erase the request ID as no data is returned
                     response.success = writeResult.success;
                     response.errorInfo = writeResult.errorInfo;
+                    debugLog("Write request processed for address: " + to_string_hex(request.address) + ", success: " + std::to_string(response.success));
 
                     break;
                 }
@@ -395,6 +397,7 @@ void CacheManager::processRequest()
 
         requestQueue.pop(); // Remove the processed request from the queue
     }
+    debugLog("Finished processing cache requests.");
 }
 
 

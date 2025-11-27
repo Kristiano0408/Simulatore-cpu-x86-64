@@ -15,7 +15,7 @@ CU::~CU()
 {
 }
 
-void CU::startFetch(uint64_t instructionId, uint64_t& index)
+void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler& eventHandler)
 {
     // Implementation of instruction fetching using the bus
     // This is a placeholder implementation and should be replaced with actual logic
@@ -38,10 +38,13 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index)
 
     bus.getCPU().getCacheManager().setRequest(std::move(cacheRequest));
 
+    // Trigger an event to notify that a cache request has been sent
+    eventHandler.triggerEvent("MEMORY_WAITING_FETCH");
+
     debugLog("Cache request sent for instruction fetch.");
 }
 
-void CU::updateFetch(uint64_t instructionId)
+void CU::updateFetch(uint64_t instructionId, EventHandler& eventHandler)
 {
     // Implementation of updating fetch stage using the bus
     // This is a placeholder implementation and should be replaced with actual logic
@@ -58,7 +61,8 @@ void CU::updateFetch(uint64_t instructionId)
         debugLog("No cache response found for instruction ID: " + std::to_string(instructionId));
     }
 
-    bus.getCPU().getPipeline().getFetchStage().setStatus(StageStatus::MEMORY_DONE);
+    // Trigger an event to notify that the instruction has been fetched
+    eventHandler.triggerEvent("MEMORY_DONE_FETCH");
 
 }
 

@@ -44,6 +44,10 @@ class CPU: public Device
 
         PipelineController pipelineController; //controller for managing pipeline events
 
+        
+
+       
+
 
 
 
