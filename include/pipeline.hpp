@@ -137,8 +137,8 @@ class ExecuteStage : public Stage {
         
         inline Instruction* peekInstruction() const {return instruction_to_execute.get();}
 
-        void startExecution(Bus& bus); //start execution of the instruction
-        void updateExecution(Bus& bus); //update execution (for multi-cycle instructions)
+        void startExecution(Bus& bus, EventHandler& eventHandler); //start execution of the instruction
+        void updateExecution(Bus& bus, EventHandler& eventHandler); //update execution (for multi-cycle instructions)
         void executeInstruction(Bus& bus); //execute the decoded instruction
 
     private:
@@ -164,9 +164,9 @@ class MemoryStage : public Stage {
 
         inline Instruction* peekInstruction() const {return instruction_to_memory.get();}
 
-        void requestMemoryAccess(Bus& bus); //start memory access for load/store instructions
+        void requestMemoryAccess(Bus& bus, EventHandler& eventHandler); //start memory access for load/store instructions
 
-        void updateMemoryAccess(Bus& bus); //update memory access (for multi-cycle memory operations)
+        void updateMemoryAccess(Bus& bus, EventHandler& eventHandler); //update memory access (for multi-cycle memory operations)
 
         void accessMemory(Bus& bus); //perform memory operations if needed
 

@@ -5,6 +5,7 @@
 #include "../../include/registerFile.hpp"
 #include "../../include/cpu.hpp"
 #include "../../include/pipeline.hpp"
+#include "../../include/eventHandler.hpp"
 
 //Sub instruction
 
@@ -39,7 +40,7 @@ void SubInstruction::fetchOperands(Bus& bus)
 }
 
 
-void SubInstruction::startExecution(Bus& bus) 
+void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
 {
     //setting the size of the operands
     int bit = calculating_number_of_bits();
@@ -61,7 +62,8 @@ void SubInstruction::startExecution(Bus& bus)
     else if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
     {
         std::cerr << "Warning getting source operand value: " << response.errorInfo.message << std::endl;
-        bus.getCPU().getPipeline().getExecuteStage().setStatus(StageStatus::WAITING_MEMORY);
+        //set the stage to waiting memory using the callback to the pipeline
+        eventHandler.triggerEvent("MEMORY_WAITING_EXECUTE");
         setWaitingSrcOperand(true);
     }
     else
@@ -80,7 +82,7 @@ void SubInstruction::startExecution(Bus& bus)
     else if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
     {
         std::cerr << "Warning getting destination operand value: " << response.errorInfo.message << std::endl;
-        bus.getCPU().getPipeline().getExecuteStage().setStatus(StageStatus::WAITING_MEMORY);
+        eventHandler.triggerEvent("MEMORY_WAITING_EXECUTE");
         setWaitingDestOperand(true);
     }
     else
@@ -101,7 +103,7 @@ void SubInstruction::startExecution(Bus& bus)
 
 }
 
-void SubInstruction::updateExecution(Bus& bus) 
+void SubInstruction::updateExecution(Bus& bus, EventHandler& eventHandler)
 {
     Result<anydata> response;
 
@@ -114,10 +116,10 @@ void SubInstruction::updateExecution(Bus& bus)
             std::cerr << "Error getting source operand value: " << response.errorInfo.message << std::endl;
             return;
         }
-        else if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
+        else if(!response.success && response.errorInfo.error == ErrorType::WAITING_MEMORY)
         {
-            std::cerr << "Warning getting source operand value: " << response.errorInfo.message << std::endl;
-            bus.getCPU().getPipeline().getExecuteStage().setStatus(StageStatus::WAITING_MEMORY);
+            std::cerr << "getting source operand value: " << response.errorInfo.message << std::endl;
+            eventHandler.triggerEvent("MEMORY_WAITING_EXECUTE");
             return;
         }
         else
@@ -136,10 +138,10 @@ void SubInstruction::updateExecution(Bus& bus)
             std::cerr << "Error getting destination operand value: " << response.errorInfo.message << std::endl;
             return;
         }
-        else if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
+        else if(!response.success && response.errorInfo.error == ErrorType::WAITING_MEMORY)
         {
-            std::cerr << "Warning getting destination operand value: " << response.errorInfo.message << std::endl;
-            bus.getCPU().getPipeline().getExecuteStage().setStatus(StageStatus::WAITING_MEMORY);
+            std::cerr << "getting destination operand value: " << response.errorInfo.message << std::endl;
+            eventHandler.triggerEvent("MEMORY_WAITING_EXECUTE");
             return;
         }
         else
@@ -170,7 +172,7 @@ void SubInstruction::execute([[maybe_unused]] Bus& bus)
 }
 
 
-void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus) 
+void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, EventHandler& eventHandler) 
 {
     if(!getRegToMem())
     {
@@ -189,16 +191,15 @@ void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus)
     else if(!response.success && response.errorInfo.error == ErrorType::WAITING_MEMORY)
     {
         std::cerr << "Warning writing result to destination operand: " << response.errorInfo.message << std::endl;
-        bus.getCPU().getPipeline().getMemoryStage().setStatus(StageStatus::WAITING_MEMORY);
+        eventHandler.triggerEvent("MEMORY_WAITING");
     }
     else
     {
         debugLog("Result written to destination operand successfully.");
-        bus.getCPU().getPipeline().getMemoryStage().setStatus(StageStatus::MEMORY_DONE);
     }
 }
 
-void SubInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus) 
+void SubInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus, EventHandler& eventHandler) 
 {
     if(!getRegToMem())
         return;
@@ -222,8 +223,9 @@ void SubInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus)
         if (result.success)
         {
             debugLog("SubInstruction: Write request successful for instruction ID " + std::to_string(getInstructionId()) + ".");
-            bus.getCPU().getPipeline().getMemoryStage().setStatus(StageStatus::MEMORY_DONE);
-            accessMemory(bus);
+            //removing from the queue
+            bus.getCPU().cacheResponseQueue.erase(it);
+            eventHandler.triggerEvent("MEMORY_DONE");
         }
         else
         {
@@ -235,7 +237,7 @@ void SubInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus)
     {
         //request not completed
         debugLog("SubInstruction: Write request not completed for instruction ID " + std::to_string(getInstructionId()) + ".");
-        bus.getCPU().getPipeline().getMemoryStage().setStatus(StageStatus::WAITING_MEMORY);
+        eventHandler.triggerEvent("MEMORY_WAITING");
     }
     
 

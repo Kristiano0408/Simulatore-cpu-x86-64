@@ -6,6 +6,7 @@
 #include "../../include/registerFile.hpp"
 #include "../../include/cpu.hpp"
 #include "../../include/pipeline.hpp"
+#include "../../include/eventHandler.hpp"   
 
 // Move instruction
 
@@ -71,12 +72,12 @@ void MoveInstruction::fetchOperands(Bus& bus) {
 
 }
 
-void MoveInstruction::startExecution([[maybe_unused]] Bus& bus) 
+void MoveInstruction::startExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
 {
 
 }
 
-void MoveInstruction::updateExecution([[maybe_unused]] Bus& bus) 
+void MoveInstruction::updateExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
 {
     
 }
@@ -133,11 +134,11 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
 }
 
 
-void MoveInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus) 
+void MoveInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
 {
     //default implementation (do nothing)
 }
-void MoveInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus) 
+void MoveInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
 {
     //default implementation (do nothing)
 }

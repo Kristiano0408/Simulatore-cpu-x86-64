@@ -99,21 +99,21 @@ std::unique_ptr<Instruction> ExecuteStage::getInstructionToExecute() {
 }
 
 
-void ExecuteStage::startExecution(Bus& bus) {
+void ExecuteStage::startExecution(Bus& bus, EventHandler& eventHandler) {
     // Implementation of starting execution using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Starting execution of instruction...");
     if (instruction_to_execute) {
-        instruction_to_execute->startExecution(bus);
+        instruction_to_execute->startExecution(bus, eventHandler);
     }
 }
 
-void ExecuteStage::updateExecution(Bus& bus) {
+void ExecuteStage::updateExecution(Bus& bus, EventHandler& eventHandler) {
     // Implementation of updating execution using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Updating execution of instruction...");
     if (instruction_to_execute) {
-        instruction_to_execute->updateExecution(bus);
+        instruction_to_execute->updateExecution(bus, eventHandler);
     }
 }
 
@@ -143,22 +143,22 @@ std::unique_ptr<Instruction> MemoryStage::getInstructionToMemory(){
 }
 
 
-void MemoryStage::requestMemoryAccess(Bus& bus) {
+void MemoryStage::requestMemoryAccess(Bus& bus, EventHandler& eventHandler) {
     // Implementation of starting memory access using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Requesting memory access for instruction...");
     if (instruction_to_memory) {
-        instruction_to_memory->requestMemoryAccess(bus);
+        instruction_to_memory->requestMemoryAccess(bus, eventHandler);
     } 
     
 }
 
-void MemoryStage::updateMemoryAccess(Bus& bus) {
+void MemoryStage::updateMemoryAccess(Bus& bus, EventHandler& eventHandler) {
     // Implementation of updating memory access using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Updating memory access for instruction...");
     if (instruction_to_memory) {
-        instruction_to_memory->updateMemoryAccess(bus);
+        instruction_to_memory->updateMemoryAccess(bus, eventHandler);
     }
 }
 
@@ -212,7 +212,6 @@ void Pipeline::execute_operation() {
     debugLog("Executing pipeline operation for the current cycle...");
 
     //index value for fetching instruction
-    /*
     if(writeBackStage.isStageReady()) 
     {
         debugLog("WRITEBACK STAGE processing...");
@@ -251,7 +250,7 @@ void Pipeline::execute_operation() {
             debugLog("Execute-Memory buffer has valid instruction.");
             memoryStage.setInstructionToMemory(std::move(executeMemoryBuffer.executedInstruction));
             executeMemoryBuffer.valid = false;
-            memoryStage.requestMemoryAccess(bus);
+            memoryStage.requestMemoryAccess(bus, *eventHandler);
             // After memory access, move instruction to Memory-WriteBack buffer
 
         }
@@ -259,7 +258,7 @@ void Pipeline::execute_operation() {
         {
             debugLog("Execute stage has valid instruction.");
             memoryStage.setInstructionToMemory(executeStage.getInstructionToExecute());
-            memoryStage.requestMemoryAccess(bus);
+            memoryStage.requestMemoryAccess(bus, *eventHandler);
 
         }
         else 
@@ -270,7 +269,7 @@ void Pipeline::execute_operation() {
     else if (memoryStage.getStatus() == StageStatus::WAITING_MEMORY)
     {
         debugLog("MEMORY STAGE is waiting for memory operation to complete.");
-        memoryStage.updateMemoryAccess(bus);
+        memoryStage.updateMemoryAccess(bus, *eventHandler);
 
 
     }
@@ -290,7 +289,7 @@ void Pipeline::execute_operation() {
         debugLog("MEMORY STAGE is not ready.");
     }
     ///////////////////////////////////////////////////////////////////////
-
+   
     if(executeStage.isStageReady()) 
     {
         debugLog("EXECUTE STAGE processing...");
@@ -299,13 +298,13 @@ void Pipeline::execute_operation() {
             debugLog("OperandFetch-Execute buffer has valid instruction.");
             executeStage.setInstructionToExecute(std::move(operandFetchExecuteBuffer.instructionWithOperands));
             operandFetchExecuteBuffer.valid = false;
-            executeStage.startExecution(bus);
+            executeStage.startExecution(bus, *eventHandler);
         }
         else if (operandFetchStage.isStageReady() && !operandFetchStage.isInstructionEmpty(operandFetchStage.peekInstruction()))
         {
             debugLog("Operand Fetch stage has valid instruction.");
             executeStage.setInstructionToExecute(operandFetchStage.getInstructionWithFetchedOperands());
-            executeStage.startExecution(bus);
+            executeStage.startExecution(bus, *eventHandler);
         }
         else 
         {
@@ -316,10 +315,11 @@ void Pipeline::execute_operation() {
     {
         debugLog("EXECUTE STAGE is waiinline Stage* getStage(StageType stageType) {return stageMap.at(stageType);}ting for instruction execution to complete.");
 
-        executeStage.updateExecution(bus);
+        executeStage.updateExecution(bus, *eventHandler);
     }
     else if (executeStage.getStatus() == StageStatus::MEMORY_DONE)
     {
+        executeStage.executeInstruction(bus);
         debugLog("EXECUTE STAGE instruction execution completed.");
 
         // Move instruction to Execute-Memory buffer
@@ -415,7 +415,7 @@ void Pipeline::execute_operation() {
         debugLog("DECODE STAGE is not ready.");
  
     //////////////////////////////////////////////////////////////////////////////// 
-    */
+
     if(fetchStage.isStageReady()) 
     {
         debugLog("FETCH STAGE processing...");

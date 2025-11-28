@@ -5,7 +5,7 @@
 #include "../../include/registerFile.hpp"
 #include "../../include/cpu.hpp"
 #include "../../include/pipeline.hpp"
-
+#include "../../include/eventHandler.hpp"
 //Add instruction
 
 //fetch the operands
@@ -39,12 +39,12 @@ void AddInstruction::fetchOperands(Bus& bus)
 }
 
 
-void AddInstruction::startExecution([[maybe_unused]] Bus& bus) 
+void AddInstruction::startExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
 {
 
 }
 
-void AddInstruction::updateExecution([[maybe_unused]] Bus& bus) 
+void AddInstruction::updateExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
 {
     
 }
@@ -101,11 +101,11 @@ void AddInstruction::execute([[maybe_unused]] Bus& bus)
 
 }
 
-void AddInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus) 
+void AddInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
 {
     //default implementation (do nothing)
 }
-void AddInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus) 
+void AddInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
 {
     //default implementation (do nothing)
 }
