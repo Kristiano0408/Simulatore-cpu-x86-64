@@ -35,6 +35,8 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler& event
     cacheRequest->address = index;
     cacheRequest->data = Datavariant;
     cacheRequest->requestID = instructionId;
+    cacheRequest->callback = eventHandler.getCallback("MEMORY_DONE_FETCH");
+
 
     bus.getCPU().getCacheManager().setRequest(std::move(cacheRequest));
 

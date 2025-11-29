@@ -13,6 +13,7 @@
 #include <sstream>
 #include <iomanip>
 #include <array>
+#include <functional>
 
 //defined constants
 constexpr unsigned CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
@@ -156,28 +157,7 @@ std::ostream& operator<<(std::ostream& os, const Result<std::array<T, N>>& resul
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool isPrefix(unsigned char byte); // Dichiarazione della funzione
-
-bool isMoveInstruction(uint32_t opcode);
-
-bool isMoveInstructionIO(uint32_t opcode);
-
-bool isMoveInstructionIO_8bit(uint32_t opcode);
-
-bool isMoveInstructionIO_mem(uint32_t opcode);
-
-bool isMoveInstructionOffset(uint32_t opcode);
-
-bool isMoveInstructionOffsetRAX_mem(uint32_t opcode);
-
-bool isMoveInstructionOffsetMem_RAx(uint32_t opcode);
-
-bool isMoveInstructionR_M(uint32_t opcode);
-
-bool isMoveR_M_reg_mem(uint32_t opcode);
-
-bool isMoveR_M_mem_reg(uint32_t opcode);
-
+bool isPrefix(uint8_t byte);
 
 Register decodeRegisterReg(uint8_t reg, uint8_t rexprefix);
 
@@ -354,11 +334,12 @@ struct CacheRequest
     T data{}; // Data to be written (only for WRITE requests)
     bool completed = false; // Indicates if the request has been completed
     int requestID = 0; // Unique ID for the request
+    std::function<void()> callback; // Callback function to be called when the request is completed
 
-    CacheRequest(): type(RequestType::NONE), address(0), data(T{}), completed(false), requestID(0) {}
+    CacheRequest(): type(RequestType::NONE), address(0), data(T{}), completed(false), requestID(0), callback(nullptr) {}
 
     CacheRequest(RequestType type, uint64_t address, const T& data, bool completed, uint64_t requestID)
-        : type(type), address(address), data(data), completed(completed), requestID(requestID) {}
+        : type(type), address(address), data(data), completed(completed), requestID(requestID), callback(nullptr) {}
 };
 
 

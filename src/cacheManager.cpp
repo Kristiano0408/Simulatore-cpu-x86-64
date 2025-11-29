@@ -332,7 +332,7 @@ bool offset_cache(EventType event, ErrorType error, Result<std::array<uint8_t, C
 CacheManager::CacheManager(Bus& bus, uint64_t l1Size, uint64_t l2Size, uint64_t l3Size,uint64_t l1Associativity, uint64_t l2Associativity, uint64_t l3Associativity) 
                          :L1Cache(l1Size, l1Associativity, bus, &L2Cache), L2Cache(l2Size, l2Associativity, bus, &L3Cache), L3Cache(l3Size, l3Associativity, bus, nullptr), bus(bus)
 {
-    //nothing to do here
+    setTicksNeeded(2); //prova
 
 }
 
@@ -396,6 +396,9 @@ void CacheManager::processRequest()
         }, request.data);
 
         requestQueue.pop(); // Remove the processed request from the queue
+        // Call the callback function if it exists
+        if (request.callback)
+            request.callback();
     }
     debugLog("Finished processing cache requests.");
 }

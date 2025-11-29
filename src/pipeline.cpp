@@ -210,7 +210,7 @@ void Pipeline::execute_operation() {
 
     //controllare se buffer inetrmedi sono validi e non stalled prima di spostare le istruzioni tra le stage
     debugLog("Executing pipeline operation for the current cycle...");
-
+    /*
     //index value for fetching instruction
     if(writeBackStage.isStageReady()) 
     {
@@ -335,6 +335,7 @@ void Pipeline::execute_operation() {
     {
         debugLog("EXECUTE STAGE is not ready.");
     }
+ 
     ///////////////////////////////////////////////////////////////////////
 
     if(operandFetchStage.isStageReady()) 
@@ -413,7 +414,7 @@ void Pipeline::execute_operation() {
     }
     else 
         debugLog("DECODE STAGE is not ready.");
- 
+    */
     //////////////////////////////////////////////////////////////////////////////// 
 
     if(fetchStage.isStageReady()) 
@@ -431,10 +432,10 @@ void Pipeline::execute_operation() {
     {
         debugLog("FETCH STAGE is waiting for instruction fetch to complete.");
 
-        fetchStage.updateFetch(bus, FetchstageInstructionId, *eventHandler);
+        //fetchStage.updateFetch(bus, FetchstageInstructionId, *eventHandler);
     }
     else if (fetchStage.getStatus() == StageStatus::MEMORY_DONE)
-    {
+    { 
         debugLog("FETCH STAGE instruction fetch completed.");
 
         // Move instruction to Fetch-Decode buffer
