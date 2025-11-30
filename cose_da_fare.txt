@@ -2,7 +2,7 @@
 //refactory massivo
 
 
-PILEINE CONTROLLER PER STALL GUI E callback cache(per callback setstatus gia implemenatato)
+PILEINE CONTROLLER PER STALL GUI E callback cache(per callback setstatus gia implemenatato) + memory+writebakc e capire cosa fare con gui
 
 
 ///GUI (FINIRE pybind, suddividere in piu moduli con vari file per organizzazione), sistemare pipeline e visualizzazioen cahce

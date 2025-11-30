@@ -117,15 +117,7 @@ void ExecuteStage::updateExecution(Bus& bus, EventHandler& eventHandler) {
     }
 }
 
-void ExecuteStage::executeInstruction(Bus& bus) {
-    // Implementation of instruction execution using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
-    debugLog("Executing instruction...");
-    if (instruction_to_execute) 
-        instruction_to_execute->execute(bus);
-   
-   
-}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -289,7 +281,7 @@ void Pipeline::execute_operation() {
         debugLog("MEMORY STAGE is not ready.");
     }
     ///////////////////////////////////////////////////////////////////////
-   
+     */
     if(executeStage.isStageReady()) 
     {
         debugLog("EXECUTE STAGE processing...");
@@ -315,11 +307,10 @@ void Pipeline::execute_operation() {
     {
         debugLog("EXECUTE STAGE is waiinline Stage* getStage(StageType stageType) {return stageMap.at(stageType);}ting for instruction execution to complete.");
 
-        executeStage.updateExecution(bus, *eventHandler);
     }
     else if (executeStage.getStatus() == StageStatus::MEMORY_DONE)
     {
-        executeStage.executeInstruction(bus);
+        executeStage.updateExecution(bus, *eventHandler);
         debugLog("EXECUTE STAGE instruction execution completed.");
 
         // Move instruction to Execute-Memory buffer
@@ -335,7 +326,7 @@ void Pipeline::execute_operation() {
     {
         debugLog("EXECUTE STAGE is not ready.");
     }
- 
+
     ///////////////////////////////////////////////////////////////////////
 
     if(operandFetchStage.isStageReady()) 
@@ -414,7 +405,7 @@ void Pipeline::execute_operation() {
     }
     else 
         debugLog("DECODE STAGE is not ready.");
-    */
+   
     //////////////////////////////////////////////////////////////////////////////// 
 
     if(fetchStage.isStageReady()) 

@@ -338,8 +338,8 @@ struct CacheRequest
 
     CacheRequest(): type(RequestType::NONE), address(0), data(T{}), completed(false), requestID(0), callback(nullptr) {}
 
-    CacheRequest(RequestType type, uint64_t address, const T& data, bool completed, uint64_t requestID)
-        : type(type), address(address), data(data), completed(completed), requestID(requestID), callback(nullptr) {}
+    CacheRequest(RequestType type, uint64_t address, const T& data, bool completed, uint64_t requestID, std::function<void()> callback)
+        : type(type), address(address), data(data), completed(completed), requestID(requestID), callback(callback) {}
 };
 
 

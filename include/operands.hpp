@@ -7,7 +7,7 @@
 #include <memory>
 #include "helpers.hpp"
 #include "cacheManager.hpp"
-
+#include <functional>
 
 class Bus;
 class Memory;
@@ -30,8 +30,8 @@ class Operand
         Operand() : size(0) {} // Default constructor initializing size to 0
         void setSize(int s);
         int getSize() const;
-        virtual Result<void> setValue(anydata v) = 0; // Pure virtual function
-        virtual Result<anydata> getValue() = 0; // Pure virtual function
+        virtual Result<void> setValue(anydata v, std::function<void()> callback) = 0; // Pure virtual function
+        virtual Result<anydata> getValue(std::function<void()> callback) = 0; // Pure virtual function
 
 
 
@@ -52,16 +52,16 @@ class EmptyOperand : public Operand {
     public:
         EmptyOperand() = default;
 
-        Result<void> setValue([[maybe_unused]] anydata v) override { return {}; }
-        Result<anydata> getValue() override { return {}; }
+        Result<void> setValue([[maybe_unused]] anydata v, [[maybe_unused]] std::function<void()> callback) override { return {}; }
+        Result<anydata> getValue([[maybe_unused]] std::function<void()> callback) override { return {}; }
 };
 
 class RegOperand : public Operand 
 {
     public:
         RegOperand(uint64_t& reg) : reg(reg) {} // Constructor to initialize register reference
-        Result<void> setValue(anydata v) override;
-        Result<anydata> getValue() override;
+        Result<void> setValue(anydata v, [[maybe_unused]] std::function<void()> callback) override;
+        Result<anydata> getValue([[maybe_unused]] std::function<void()> callback) override;
 
     private:
         uint64_t& reg; // Reference to the register value
@@ -72,8 +72,8 @@ class MemOperand : public Operand
 {
     public:
         MemOperand(Bus& bus, uint64_t address, uint64_t instructionID) : bus(bus), address(address), instructionID(instructionID) {} // Constructor to initialize memory and address
-        Result<void> setValue(anydata v) override;
-        Result<anydata> getValue() override;
+        Result<void> setValue(anydata v, std::function<void()> callback) override;
+        Result<anydata> getValue(std::function<void()> callback) override;
 
     private:
         Bus& bus; // Reference to the bus
@@ -87,8 +87,8 @@ class ImmediateOperand : public Operand
 {
     public:
         ImmediateOperand(anydata value) : value(value) {} // Constructor to initialize immediate value
-        Result<void> setValue(anydata v) override;
-        Result<anydata> getValue() override;
+        Result<void> setValue(anydata v, [[maybe_unused]] std::function<void()> callback) override;
+        Result<anydata> getValue([[maybe_unused]] std::function<void()> callback) override;
 
     private:
         anydata value; // Immediate value

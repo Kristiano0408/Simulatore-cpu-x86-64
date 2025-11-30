@@ -52,26 +52,25 @@ void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
 
     Result<anydata> response;
 
-    response = getSourceOperand()->getValue();
+    response = getSourceOperand()->getValue(eventHandler.getCallback("MEMORY_DONE_EXECUTE"));
 
     if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
     {
         std::cerr << "Error getting source operand value: " << response.errorInfo.message << std::endl;
         return;
     }
-    else if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
+    else if(!response.success && response.errorInfo.error == ErrorType::WAITING_MEMORY)
     {
         std::cerr << "Warning getting source operand value: " << response.errorInfo.message << std::endl;
         //set the stage to waiting memory using the callback to the pipeline
         eventHandler.triggerEvent("MEMORY_WAITING_EXECUTE");
-        setWaitingSrcOperand(true);
     }
     else
     {
         tempValues.srcValue = response.data;
     }
 
-    response = getDestinationOperand()->getValue();
+    response = getDestinationOperand()->getValue(eventHandler.getCallback("MEMORY_DONE_EXECUTE"));
 
 
     if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
@@ -79,11 +78,10 @@ void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
         std::cerr << "Error getting destination operand value: " << response.errorInfo.message << std::endl;
         return;
     }
-    else if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
+    else if(!response.success && response.errorInfo.error == ErrorType::WAITING_MEMORY)
     {
         std::cerr << "Warning getting destination operand value: " << response.errorInfo.message << std::endl;
         eventHandler.triggerEvent("MEMORY_WAITING_EXECUTE");
-        setWaitingDestOperand(true);
     }
     else
     {
@@ -107,55 +105,35 @@ void SubInstruction::updateExecution(Bus& bus, EventHandler& eventHandler)
 {
     Result<anydata> response;
 
-    if(isWaitingSrcOperand())
-    {
-        response = getSourceOperand()->getValue();
+    response = getSourceOperand()->getValue(nullptr);
 
-        if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
-        {
-            std::cerr << "Error getting source operand value: " << response.errorInfo.message << std::endl;
-            return;
-        }
-        else if(!response.success && response.errorInfo.error == ErrorType::WAITING_MEMORY)
-        {
-            std::cerr << "getting source operand value: " << response.errorInfo.message << std::endl;
-            eventHandler.triggerEvent("MEMORY_WAITING_EXECUTE");
-            return;
-        }
-        else
-        {
-            tempValues.srcValue = response.data;
-            setWaitingSrcOperand(false);
-        }
+    if(response.success)
+    {
+        tempValues.srcValue = response.data;
+        
+    }
+    else 
+    {
+        std::cerr << "Error getting source operand value: " << response.errorInfo.message << std::endl;
+        return;
+    }
+    
+
+    response = getDestinationOperand()->getValue(nullptr);
+
+    if(response.success)
+    {
+        tempValues.destValue = response.data;
+        
+    }
+    else 
+    {
+        std::cerr << "Error getting destination operand value: " << response.errorInfo.message << std::endl;
+        return;
     }
 
-    if(isWaitingDestOperand())
-    {
-        response = getDestinationOperand()->getValue();
-
-        if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
-        {
-            std::cerr << "Error getting destination operand value: " << response.errorInfo.message << std::endl;
-            return;
-        }
-        else if(!response.success && response.errorInfo.error == ErrorType::WAITING_MEMORY)
-        {
-            std::cerr << "getting destination operand value: " << response.errorInfo.message << std::endl;
-            eventHandler.triggerEvent("MEMORY_WAITING_EXECUTE");
-            return;
-        }
-        else
-        {
-            tempValues.destValue = response.data;
-            setWaitingDestOperand(false);
-        }
-    }
-
-    if(!isWaitingSrcOperand() && !isWaitingDestOperand())
-    {
-        //both operands are ready, we can proceed to execute
-        bus.getCPU().getPipeline().getExecuteStage().setStatus(StageStatus::MEMORY_DONE);
-    }
+    execute(bus);
+    
 }
 
 void SubInstruction::execute([[maybe_unused]] Bus& bus) 
@@ -181,7 +159,7 @@ void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, EventHandler
     }
         
     //writing result back to memory
-    Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue);
+    Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue, eventHandler.getCallback("MEMORY_DONE"));
 
     if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
     {
@@ -271,7 +249,7 @@ void SubInstruction::writeBack([[maybe_unused]] Bus& bus)
 
     debugLog("Writing back result for SubInstruction.");
 
-    Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue);
+    Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue, nullptr);
 
     if(!response.success)
     {

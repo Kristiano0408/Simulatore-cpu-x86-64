@@ -299,7 +299,7 @@ int Operand::getSize() const {
 
 
 
-Result<void> RegOperand::setValue(anydata v) 
+Result<void> RegOperand::setValue(anydata v, [[maybe_unused]] std::function<void()> callback)
 {
     // Using std::visit to handle the variant type 
 
@@ -322,7 +322,7 @@ Result<void> RegOperand::setValue(anydata v)
     return Result<void>{true, {}};
 }
 
-Result<anydata> RegOperand::getValue() 
+Result<anydata> RegOperand::getValue([[maybe_unused]] std::function<void()> callback) 
 {
     anydata result;
     int64_t mask;
@@ -339,7 +339,7 @@ Result<anydata> RegOperand::getValue()
 }
 
 
-Result<void> MemOperand::setValue(anydata v) {
+Result<void> MemOperand::setValue(anydata v, std::function<void()> callback) {
     
     if (this->size == 0)
         return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot set value."}};
@@ -351,7 +351,7 @@ Result<void> MemOperand::setValue(anydata v) {
         debugLog("MemOperand: Sending write request to address " + to_string_hex(this->address) + " with value " + to_string_hex(v) + " and size " + std::to_string(this->size) + " bytes.");
         requestSent = true;
 
-        bus.getCPU().getCacheManager().setRequest(std::make_unique<CacheRequest<anydata>>(RequestType::WRITE, this->address, v,false, instructionID));
+        bus.getCPU().getCacheManager().setRequest(std::make_unique<CacheRequest<anydata>>(RequestType::WRITE, this->address, v,false, instructionID, callback));
 
         return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Write request sent. Waiting for completion."}};
     }
@@ -400,7 +400,7 @@ Result<void> MemOperand::setValue(anydata v) {
     }
 }
 
-Result<anydata> MemOperand::getValue() {
+Result<anydata> MemOperand::getValue(std::function<void()> callback) {
     
 
     if (this->size == 0)
@@ -418,7 +418,7 @@ Result<anydata> MemOperand::getValue() {
         debugLog("MemOperand: Sending read request to address " + to_string_hex(this->address) + " with size " + std::to_string(this->size) + " bytes.");
         readRequestSent = true;
 
-        bus.getCPU().getCacheManager().setRequest(std::make_unique<CacheRequest<anydata>>(RequestType::READ, this->address, anydata{}, false, instructionID));
+        bus.getCPU().getCacheManager().setRequest(std::make_unique<CacheRequest<anydata>>(RequestType::READ, this->address, anydata{}, false, instructionID, callback));
 
         return Result<anydata>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request sent. Waiting for completion."}};
     }
@@ -468,11 +468,11 @@ Result<anydata> MemOperand::getValue() {
 
 }
 
-Result<void> ImmediateOperand::setValue(anydata v) {
+Result<void> ImmediateOperand::setValue(anydata v, [[maybe_unused]] std::function<void()> callback) {
     this->value = v;
     return Result<void>{true, {ComponentType::OPERAND, EventType::NONE, ErrorType::NONE, ""}};
 }
 
-Result<anydata> ImmediateOperand::getValue() {
+Result<anydata> ImmediateOperand::getValue([[maybe_unused]] std::function<void()> callback) {
     return Result<anydata>{this->value, true, {ComponentType::OPERAND, EventType::NONE, ErrorType::NONE, ""}};
 }
