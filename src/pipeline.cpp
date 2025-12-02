@@ -145,15 +145,6 @@ void MemoryStage::requestMemoryAccess(Bus& bus, EventHandler& eventHandler) {
     
 }
 
-void MemoryStage::updateMemoryAccess(Bus& bus, EventHandler& eventHandler) {
-    // Implementation of updating memory access using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
-    debugLog("Updating memory access for instruction...");
-    if (instruction_to_memory) {
-        instruction_to_memory->updateMemoryAccess(bus, eventHandler);
-    }
-}
-
 void MemoryStage::accessMemory(Bus& bus) {
     if (instruction_to_memory)
         instruction_to_memory->accessMemory(bus);
@@ -202,7 +193,6 @@ void Pipeline::execute_operation() {
 
     //controllare se buffer inetrmedi sono validi e non stalled prima di spostare le istruzioni tra le stage
     debugLog("Executing pipeline operation for the current cycle...");
-    /*
     //index value for fetching instruction
     if(writeBackStage.isStageReady()) 
     {
@@ -261,7 +251,6 @@ void Pipeline::execute_operation() {
     else if (memoryStage.getStatus() == StageStatus::WAITING_MEMORY)
     {
         debugLog("MEMORY STAGE is waiting for memory operation to complete.");
-        memoryStage.updateMemoryAccess(bus, *eventHandler);
 
 
     }
@@ -281,7 +270,6 @@ void Pipeline::execute_operation() {
         debugLog("MEMORY STAGE is not ready.");
     }
     ///////////////////////////////////////////////////////////////////////
-     */
     if(executeStage.isStageReady()) 
     {
         debugLog("EXECUTE STAGE processing...");
@@ -305,7 +293,7 @@ void Pipeline::execute_operation() {
     }
     else if (executeStage.getStatus() == StageStatus::WAITING_MEMORY)
     {
-        debugLog("EXECUTE STAGE is waiinline Stage* getStage(StageType stageType) {return stageMap.at(stageType);}ting for instruction execution to complete.");
+        debugLog("EXECUTE STAGE is waiting for instruction execution to complete.");
 
     }
     else if (executeStage.getStatus() == StageStatus::MEMORY_DONE)

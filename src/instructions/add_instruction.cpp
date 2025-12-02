@@ -105,10 +105,6 @@ void AddInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unus
 {
     //default implementation (do nothing)
 }
-void AddInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
-{
-    //default implementation (do nothing)
-}
 void AddInstruction::accessMemory([[maybe_unused]] Bus& bus) 
 {
     //default implementation (do nothing)

@@ -43,7 +43,6 @@ class Instruction
         //////////////////////////////////////////////////
 
         virtual void requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) = 0; //Polimorfic method to request memory access (only for load/store instructions)
-        virtual void updateMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) = 0; //Polimorfic method to update memory access (only for load/store instructions)
         virtual void accessMemory([[maybe_unused]] Bus& bus) = 0; //Polimorfic method for memory access (only for load/store instructions)
 
         virtual void writeBack([[maybe_unused]]Bus& bus) = 0; //Polimorfic method for write back stage
@@ -197,7 +196,7 @@ class EmptyInstruction : public Instruction
         void execute([[maybe_unused]] Bus& bus) override {}
 
         void requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) override {}
-        void updateMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) override {}
+
         void accessMemory([[maybe_unused]] Bus& bus) override {}
 
         void writeBack([[maybe_unused]] Bus& bus) override {debugLog("EmptyInstruction writeBack called");}

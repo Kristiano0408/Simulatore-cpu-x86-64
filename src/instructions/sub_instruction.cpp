@@ -101,7 +101,7 @@ void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
 
 }
 
-void SubInstruction::updateExecution(Bus& bus, EventHandler& eventHandler)
+void SubInstruction::updateExecution(Bus& bus, [[maybe_unused]] EventHandler& eventHandler)
 {
     Result<anydata> response;
 
@@ -177,11 +177,11 @@ void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, EventHandler
     }
 }
 
-void SubInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus, EventHandler& eventHandler) 
+void SubInstruction::accessMemory([[maybe_unused]] Bus& bus) 
 {
     if(!getRegToMem())
         return;
-
+    
     //serching in cache response queue for the result
 
     auto it = bus.getCPU().cacheResponseQueue.find(getInstructionId());
@@ -203,30 +203,20 @@ void SubInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus, EventHandler&
             debugLog("SubInstruction: Write request successful for instruction ID " + std::to_string(getInstructionId()) + ".");
             //removing from the queue
             bus.getCPU().cacheResponseQueue.erase(it);
-            eventHandler.triggerEvent("MEMORY_DONE");
         }
         else
         {
-            debugLog("SubInstruction: Write rexecutionequest failed for instruction ID " + std::to_string(getInstructionId()) + ": " + response.errorInfo.message);
-            std::cerr << "Error writing result to destination operand: " << response.errorInfo.message << std::endl;
+            debugLog("SubInstruction: Write request failed for instruction ID " + std::to_string(getInstructionId()) + ": " + response.errorInfo.message);
         }
     }
     else
     {
-        //request not completed
+        //request not completed //impossible to reach here but for safety
         debugLog("SubInstruction: Write request not completed for instruction ID " + std::to_string(getInstructionId()) + ".");
-        eventHandler.triggerEvent("MEMORY_WAITING");
     }
     
 
 
-
-}
-
-void SubInstruction::accessMemory([[maybe_unused]] Bus& bus) 
-{
-    if(!getRegToMem())
-        return;
     
     debugLog("Memory access for SubInstruction completed.");
 

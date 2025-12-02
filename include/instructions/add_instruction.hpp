@@ -20,7 +20,6 @@ class AddInstruction : public Instruction
         void execute(Bus& bus) override;
 
         void requestMemoryAccess(Bus& bus, EventHandler& eventHandler) override;
-        void updateMemoryAccess(Bus& bus, EventHandler& eventHandler) override;
         void accessMemory(Bus& bus) override;
 
         void writeBack(Bus& bus) override;

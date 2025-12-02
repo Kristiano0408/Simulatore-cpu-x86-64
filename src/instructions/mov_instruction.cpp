@@ -138,10 +138,6 @@ void MoveInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unu
 {
     //default implementation (do nothing)
 }
-void MoveInstruction::updateMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
-{
-    //default implementation (do nothing)
-}
 void MoveInstruction::accessMemory([[maybe_unused]] Bus& bus) 
 {
     //default implementation (do nothing)
