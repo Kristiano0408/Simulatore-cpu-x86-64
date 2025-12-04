@@ -36,7 +36,7 @@ struct CacheSet
 
 /// Cache level structure(L1, L2, L3)
 /// Contains multiple cache sets and manages the cache operations
-class CacheLevel
+class CacheLevel : public Device
 {
     private:
         std::vector<CacheSet> sets; // Cache sets
@@ -54,6 +54,8 @@ class CacheLevel
         template <typename T>
         Result<void> write(uint64_t address, const T& data); // Write data to the cache
         void load(uint64_t setIndex, uint64_t tag, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t freePosition);
+
+        void execute_operation() override {}; // Override of the pure virtual function from Device class, does nothing here 
 
 
 
@@ -116,14 +118,19 @@ class CacheManager : public Device
 
         void setRequest(std::unique_ptr<CacheRequest<anydata>>&& request) { requestQueue.push(std::move(request)); } // Set the request queue
 
+        int getTicksNeeded() const override { return L1Cache.getTicksNeeded() + L2Cache.getTicksNeeded() + L3Cache.getTicksNeeded(); } // Get the number of ticks needed for the current operation
 
+        CacheLevel& getL1Cache() { return L1Cache; }
+        CacheLevel& getL2Cache() { return L2Cache; }
+        CacheLevel& getL3Cache() { return L3Cache; }
 
-    private:
+    protected:
         CacheLevel L1Cache;
         CacheLevel L2Cache;
         CacheLevel L3Cache;
-        Bus& bus; // Reference to the bus
 
+    private:
+        Bus& bus; // Reference to the bus
         // Queue to hold cache requests
         std::queue<std::unique_ptr<CacheRequest<anydata>>> requestQueue;
 
@@ -486,4 +493,5 @@ Result<void> CacheManager::writeCrossLines(uint64_t address, const T& data)
     result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
     return result;
 }
+
 #endif //CACHEMANAGER_HPP

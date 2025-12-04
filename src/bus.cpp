@@ -15,7 +15,9 @@ Bus::Bus() {
 void Bus::tick() {
     debugLog("Bus Tick Start");
     cpu->getPipeline().tick();
+    debugLog("Pipeline ticked");
     cpu->getCacheManager().tick();
+    debugLog("CacheManager ticked");
     clock->tick();
 }
 

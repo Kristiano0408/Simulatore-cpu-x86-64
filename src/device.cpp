@@ -1,8 +1,11 @@
 #include "device.hpp"
+#include "helpers.hpp"
 
 void Device::tick() {
+    
     ticks_progress++;
-    if (ticks_progress >= ticks_needed) {
+    debugLog("Device ticked, progress: " + std::to_string(ticks_progress) + "/" + std::to_string(getTicksNeeded()));
+    if (ticks_progress >= getTicksNeeded()) {
         execute_operation();
         ticks_progress = 0; // Reset progress after operation is executed
     }

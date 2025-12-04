@@ -2,13 +2,13 @@
 //refactory massivo
 
 
-PILEINE CONTROLLER PER STALL GUI E callback cache(per callback setstatus gia implemenatato) + memory+writebakc e capire cosa fare con gui
-
-
-///GUI (FINIRE pybind, suddividere in piu moduli con vari file per organizzazione), sistemare pipeline e visualizzazioen cahce
 
 cache pazzurda pazza sgravata(suddivisioen l1 in i e d e latenze(device anche sui singoli livelli e tick di cachemanager è somma delle altre)
 
+
+
+
+///GUI (FINIRE pybind, suddividere in piu moduli con vari file per organizzazione), sistemare pipeline(gestione microstep per gui) e visualizzazioen cahce
 
 
 
