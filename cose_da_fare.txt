@@ -1,7 +1,7 @@
 
 //refactory massivo
 
-
+//cambiare caherequets e variant, quando spossto lienne devo spostare tutta la srtuct non solo il payload
 
 cache pazzurda pazza sgravata(suddivisioen l1 in i e d e latenze(device anche sui singoli livelli e tick di cachemanager è somma delle altre)
 

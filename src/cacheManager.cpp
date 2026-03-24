@@ -6,8 +6,8 @@
 
 
 /// CacheLevel class implementation
-CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, Bus& bus, CacheLevel* nextLevel)
-    : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus), nextLevel(nextLevel)
+CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, uint64_t latency, Bus& bus, CacheLevel* nextLevel)
+    : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus), nextLevel(nextLevel), latency_cycles(latency)
 {
     //resizing the vector of sets
     sets.resize(numSets);
@@ -33,17 +33,15 @@ CacheLevel::~CacheLevel()
 }
 
 /// Function to LOAD an entire cache line into the cache
-void CacheLevel::load(uint64_t setIndex, uint64_t tag, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t freePosition)
+void CacheLevel::load(uint64_t setIndex, uint64_t tag, const CacheLine& data, uint64_t freePosition)
 {
     // Load data into the cache line at the specified set index and tag
     CacheSet& set = sets[setIndex]; // Get the cache set
 
     CacheLine& line = set.lines[freePosition]; // Get the cache line at the free position
 
-    line.valid = true; // Mark the line as valid
-    line.dirty = false; // Mark the line as not dirty
-    line.tag = tag; // Set the tag
-    line.data = data; // Load the data into the cache line
+    line = data;
+
     line.lastAccessTime = bus.getClock().getCycles(); // Update the last access time
 
     debugLog("Loaded data into cache at set index: " + std::to_string(setIndex) + ", tag: " + std::to_string(tag));
@@ -51,7 +49,6 @@ void CacheLevel::load(uint64_t setIndex, uint64_t tag, const std::array<uint8_t,
 
 
 }
-
 
 /// Function to find a cache line in a set(for read and write operations or managing replacement policy)
 CacheLine* CacheLevel::findLine(const CacheSet& set , uint64_t tag)
@@ -78,14 +75,16 @@ void CacheLevel::invalidate(uint64_t address)
 
     for (CacheLine& line : set.lines) // Loop through the lines in the set
     {
-        //check if the line is dirty
-        if (line.dirty)
-        {
-            bus.getMemory().writeGeneric( (line.tag * numSets + setIndex) * CACHE_LINE_SIZE, line.data);
-        }
+        
 
         if (line.valid && line.tag == tag) // Check if the line is valid and the tag matches
         {
+            //check if the line is dirty
+            if (line.dirty)
+            {
+                bus.getMemory().writeGeneric( (line.tag * numSets + setIndex) * CACHE_LINE_SIZE, line.data);
+            }
+            
             line.valid = false; // Invalidate the line
             line.dirty = false; // Mark the line as not dirty
             debugLog("Invalidated cache line at set index: " + std::to_string(setIndex) + ", tag: " + std::to_string(tag));
@@ -214,10 +213,10 @@ uint64_t CacheLevel::manageReplacementPolicy(CacheSet& set)
 }
 
 /// Function to read data from the cache
-Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
+Result<CacheLine> CacheLevel::read(uint64_t address)
 {
     //craetion of the structure for the result
-    Result<std::array<uint8_t, CACHE_LINE_SIZE>> result;
+    Result<CacheLine> result;
 
     debugLog("Reading from cache at address: " + to_string_hex(address));
     //bitwise index/tag calculation
@@ -255,7 +254,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
         // Cache hit
 
         // Read the data from the cache line
-        std::memcpy(&result.data, &line->data, sizeof(std::array<uint8_t, CACHE_LINE_SIZE>)); // Copy the data from the cache line to the result
+        std::memcpy(&result.data, &line->data, sizeof(CacheLine)); // Copy the data from the cache line to the result
 
         line->lastAccessTime = bus.getClock().getCycles(); // Update the last access time
 
@@ -293,6 +292,22 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address)
     
 }
 
+void CacheLevel::execute_operation()
+{
+   processRequest(); // Process cache requests
+}
+
+void CacheLevel::processRequest()
+{
+    debugLog("Processing cache requests...");
+
+    // Process cache requests from the request queue
+    while (0)
+    {
+        
+    }
+    debugLog("Finished processing cache requests.");
+}
 
 //helpers functions specializations for offset_cache
 template<>
@@ -329,13 +344,11 @@ bool offset_cache(EventType event, ErrorType error, Result<std::array<uint8_t, C
 
 
 // CacheManager class implementation
-CacheManager::CacheManager(Bus& bus, uint64_t l1Size, uint64_t l2Size, uint64_t l3Size,uint64_t l1Associativity, uint64_t l2Associativity, uint64_t l3Associativity) 
-                         :L1Cache(l1Size, l1Associativity, bus, &L2Cache), L2Cache(l2Size, l2Associativity, bus, &L3Cache), L3Cache(l3Size, l3Associativity, bus, nullptr), bus(bus)
+CacheManager::CacheManager(Bus& bus, uint64_t l1Size, uint64_t l2Size, uint64_t l3Size,uint64_t l1Associativity, uint64_t l2Associativity, uint64_t l3Associativity, uint64_t l1Latency, uint64_t l2Latency, uint64_t l3Latency) 
+                         :L1Cache(l1Size, l1Associativity, l1Latency, bus, &L2Cache), L2Cache(l2Size, l2Associativity, l2Latency, bus, &L3Cache), L3Cache(l3Size, l3Associativity, l3Latency, bus, nullptr), bus(bus)
 {
-    L1Cache.setTicksNeeded(5); // Set ticks needed for L1 cache operations (for the others two levels  we will use the default value of 1, when miss we will add them up)
-    L2Cache.setTicksNeeded(0);
-    L3Cache.setTicksNeeded(0);
-    debugLog(std::to_string(getTicksNeeded()));
+    setTicksNeeded(5);
+    
 }
 
 CacheManager::~CacheManager()
@@ -351,58 +364,40 @@ void CacheManager::execute_operation()
 
 void CacheManager::processRequest()
 {   
-    debugLog("Processing cache requests...");
 
-    // Process cache requests from the request queue
-    while (!requestQueue.empty())
+    CacheRequest<anydata>* request;
+    //getting the request in L1 queue
+    if(!requestQueue.empty() && !L1Cache.busy)
     {
-        auto& request = *(requestQueue.front()); // Get the front request(unique_ptr dereferenced)
 
-        std::visit([&](auto&& value)
-        {
-            using T = std::decay_t<decltype(value)>;
-
-            Result<anydata> response;
-
-            switch (request.type)
-            {
-                case RequestType::READ:
-                {
-                    auto readResult = read<T>(request.address);
-                    bus.getCPU().cacheResponseQueue.erase(request.requestID); // Remove the request ID from the response queue
-                    response.success = readResult.success;
-                    response.errorInfo = readResult.errorInfo;
-                    response.data = readResult.data;
-                    debugLog("Read request processed for address: " + to_string_hex(request.address) + ", success: " + std::to_string(response.success));
-
-                    break;
-                }
-                case RequestType::WRITE:
-                {
-                    auto writeResult = write(request.address, request.data);
-                    bus.getCPU().cacheResponseQueue.erase(request.requestID); // For write operations, we can just erase the request ID as no data is returned
-                    response.success = writeResult.success;
-                    response.errorInfo = writeResult.errorInfo;
-                    debugLog("Write request processed for address: " + to_string_hex(request.address) + ", success: " + std::to_string(response.success));
-
-                    break;
-                }
-                default:
-                    std::cerr << "Unknown request type" << std::endl;
-                    break;
-            }
-
-            // Store the response in the CPU's cache response queue
-            bus.getCPU().cacheResponseQueue[request.requestID] = std::make_unique<Result<anydata>>(response);
-
-        }, request.data);
-
-        requestQueue.pop(); // Remove the processed request from the queue
-        // Call the callback function if it exists
-        if (request.callback)
-            request.callback();
     }
-    debugLog("Finished processing cache requests.");
+
+    if(memory_latency!=0)
+    {
+        memory_latency --;
+
+    }
+    else if (!requestQueueMemory.empty())
+    {
+        request = requestQueueMemory.front().get();
+
+
+        switch(request->type)
+        {
+            case RequestType::READ:
+                // Process read request
+                break;
+            case RequestType::WRITE:
+                // Process write request
+                break;
+        }
+    }
+    else
+    {
+        memory_latency = 10;
+    }
+    
+    
 }
 
 
@@ -439,15 +434,21 @@ void CacheManager::printCacheState() const
     L3Cache.printCacheState(); // Print L3 cache state
 }
 
+/*
 //function to read data that is contained in a single cache line
 Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64_t address, uint64_t l1SetIndex, uint64_t l1Tag, uint64_t l2SetIndex, uint64_t l2Tag, uint64_t l3SetIndex, uint64_t l3Tag, uint64_t offset)
 {
     //temporary result that holds the line read from cache
     Result<std::array<uint8_t, CACHE_LINE_SIZE>> temporary_result;
+    Result<CacheLine> line_result;
 
     //trying to read from L1 cache
     debugLog("Trying to read line from L1 cache at address: " + to_string_hex(address));
-    temporary_result = L1Cache.read(address); // Read from L1 cache
+    line_result = L1Cache.read(address);
+
+    temporary_result.errorInfo = line_result.errorInfo; // Propagate error info
+    temporary_result.success = line_result.success; // Propagate success status
+    temporary_result.data = line_result.data.data; // Copy the data
 
 
      if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
@@ -466,7 +467,11 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
     {
         debugLog("Cache miss in L1, trying L2 cache at address: " + to_string_hex(address));
         // Cache miss in L1, try L2 cache
-        temporary_result = L2Cache.read(address); // Read from L2 cache
+        line_result = L2Cache.read(address); // Read from L2 cache
+
+        temporary_result.errorInfo = line_result.errorInfo; // Propagate error info
+        temporary_result.success = line_result.success; // Propagate success status
+        temporary_result.data = line_result.data.data; // Copy the data
 
         if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
         {
@@ -485,7 +490,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
             uint64_t freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
 
             // Load the data into L1 cache
-            L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+            L1Cache.load(l1SetIndex, l1Tag, line_result.data, freePosition); // Load the data into L1 cache
 
             return temporary_result; // Return the result
 
@@ -494,7 +499,11 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
         {
             // Cache miss in L2, try L3 cache
             debugLog("Cache miss in L2, trying L3 cache at address: " + to_string_hex(address));
-            temporary_result = L3Cache.read(address); // Read from L3 cache
+            line_result = L3Cache.read(address); // Read from L3 cache
+
+            temporary_result.errorInfo = line_result.errorInfo; // Propagate error info
+            temporary_result.success = line_result.success; // Propagate success status
+            temporary_result.data = line_result.data.data; // Copy the data
 
             if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
             {
@@ -513,7 +522,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
                 uint64_t freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
 
                 // Load the data into L2 cache
-                L2Cache.load(l2SetIndex, l2Tag, temporary_result.data, freePosition); // Load the data into L2 cache
+                L2Cache.load(l2SetIndex, l2Tag, line_result.data, freePosition); // Load the data into L2 cache
 
                 //load the data into L1 cache
 
@@ -521,7 +530,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
                 freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
 
                 // Load the data into L1 cache
-                L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+                L1Cache.load(l1SetIndex, l1Tag, line_result.data, freePosition); // Load the data into L1 cache
 
                 return temporary_result; // Return the result
 
@@ -542,11 +551,17 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
                 {
                     //load the data into L3 cache
 
+                    //creating the cache line structure to load into cache
+                    line_result.data.valid = true;
+                    line_result.data.dirty = false;
+                    line_result.data.tag = l3Tag;
+                    line_result.data.data = temporary_result.data;
+
                     // Find a free line in L3 cache
                     uint64_t freePosition = L3Cache.findFreeLineIndex(L3Cache.getSets()[l3SetIndex]); 
 
                     // Load the data into L3 cache
-                    L3Cache.load(l3SetIndex, l3Tag, temporary_result.data, freePosition); // Load the data into L3 cache
+                    L3Cache.load(l3SetIndex, l3Tag, line_result.data, freePosition); // Load the data into L3 cache
 
                     //load the data into L2 cache
 
@@ -554,7 +569,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
                     freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
 
                     // Load the data into L2 cache
-                    L2Cache.load(l2SetIndex, l2Tag, temporary_result.data, freePosition); // Load the data into L2 cache
+                    L2Cache.load(l2SetIndex, l2Tag, line_result.data, freePosition); // Load the data into L2 cache
 
                     //load the data into L1 cache
 
@@ -562,7 +577,7 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64
                     freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
 
                     // Load the data into L1 cache
-                    L1Cache.load(l1SetIndex, l1Tag, temporary_result.data, freePosition); // Load the data into L1 cache
+                    L1Cache.load(l1SetIndex, l1Tag, line_result.data, freePosition); // Load the data into L1 cache
 
                     return temporary_result; // Return the result
 
@@ -654,4 +669,4 @@ Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> CacheManager::readCrossLines(ui
     result.success = true;
     return result;
 }
-
+*/

@@ -308,6 +308,20 @@ enum class RequestType
     WRITE,
     NONE // Default value
 };
+
+////////////////////////////////////////////////////////////////////////////7
+
+//RequestState enum class RequestState
+
+enum class RequestState
+{
+    IDLE,
+    PROCESSING,
+    HIT_READY,
+    MISS_PENDING,
+    DONE
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 struct temporaryValues {
         anydata srcValue; //value of the source operand
@@ -340,6 +354,7 @@ struct CacheRequest
     CacheRequest(RequestType type, uint64_t address, const T& data, bool completed, uint64_t requestID, std::function<void()> callback)
         : type(type), address(address), data(data), completed(completed), requestID(requestID), callback(callback) {}
 };
+
 
 
 

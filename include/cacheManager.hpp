@@ -20,10 +20,11 @@ struct CacheLine
     bool dirty; // Indicates if the line has been modified
     uint64_t tag;
     std::array<uint8_t, CACHE_LINE_SIZE> data;  // Data stored in the cache line
-    uint64_t lastAccessTime; // Since we have not a cloack yet, we use it as a counter for replacement policy
+    uint64_t lastAccessTime; // use it as a counter for replacement policy, syncronized with clock when access
 
 
 };
+
 
 /// Cache set structure
 /// Contains multiple cache lines and the set index
@@ -45,19 +46,25 @@ class CacheLevel : public Device
         uint64_t numSets;
         Bus &bus; // Reference to the bus for memory access
         CacheLevel* nextLevel = nullptr; // Pointer to the next cache level (L2 or L3)
-        
-
+    
     public:
-        CacheLevel(uint64_t size, uint64_t associativity, Bus& bus, CacheLevel* nextLevel);
+        CacheLevel(uint64_t size, uint64_t associativity, uint64_t latency, Bus& bus, CacheLevel* nextLevel);
         ~CacheLevel();
-        Result<std::array<uint8_t, CACHE_LINE_SIZE>> read(uint64_t address);
+        Result<CacheLine> read(uint64_t address); // Read data from the cache also with metadata
         template <typename T>
         Result<void> write(uint64_t address, const T& data); // Write data to the cache
-        void load(uint64_t setIndex, uint64_t tag, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t freePosition);
 
-        void execute_operation() override {}; // Override of the pure virtual function from Device class, does nothing here 
+        void load(uint64_t setIndex, uint64_t tag, const CacheLine& data, uint64_t freePosition); // Load an entire cache line into the cache with metadata
 
+        void execute_operation() override;
 
+        void processRequest();
+
+        bool busy= false;
+
+        std::vector<PendingRequest> pendingRequests; // Vector to hold pending requests being processed by the cache
+
+        uint64_t latency_cycles;
 
 
         // Function to find a cache line in a set
@@ -92,7 +99,7 @@ class CacheLevel : public Device
 class CacheManager : public Device
 {   
     public:
-        CacheManager(Bus& bus,uint64_t l1Size, uint64_t l2Size, uint64_t l3Size, uint64_t l1Assoc, uint64_t l2Assoc, uint64_t l3Assoc);
+        CacheManager(Bus& bus,uint64_t l1Size, uint64_t l2Size, uint64_t l3Size, uint64_t l1Assoc, uint64_t l2Assoc, uint64_t l3Assoc, uint64_t l1Latency, uint64_t l2Latency, uint64_t l3Latency);
         ~CacheManager();
 
         CacheManager(const CacheManager&) = delete;
@@ -102,7 +109,7 @@ class CacheManager : public Device
 
         void processRequest(); // Function to process cache requests
 
-        template <typename T>
+        /*template <typename T>
         Result<T> read(uint64_t address);
         template <typename T>
         Result<void> write(uint64_t address, const T& data); // Write data to the cache
@@ -112,17 +119,18 @@ class CacheManager : public Device
         Result<void> writeCrossLines(uint64_t address, const T& data);
         Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> readCrossLines(uint64_t address);
         Result<std::array<uint8_t, CACHE_LINE_SIZE>> readSingleLine(uint64_t address, uint64_t l1SetIndex, uint64_t l1Tag, uint64_t l2SetIndex, uint64_t l2Tag, uint64_t l3SetIndex, uint64_t l3Tag, uint64_t offset);
+        */
         void flushAllCaches();
         void invalidateAllCaches();
         void printCacheState() const; // For debugging purposes
 
         void setRequest(std::unique_ptr<CacheRequest<anydata>>&& request) { requestQueue.push(std::move(request)); } // Set the request queue
 
-        int getTicksNeeded() const override { return L1Cache.getTicksNeeded() + L2Cache.getTicksNeeded() + L3Cache.getTicksNeeded(); } // Get the number of ticks needed for the current operation
-
         CacheLevel& getL1Cache() { return L1Cache; }
         CacheLevel& getL2Cache() { return L2Cache; }
         CacheLevel& getL3Cache() { return L3Cache; }
+
+        int memory_latency = 10;
 
     protected:
         CacheLevel L1Cache;
@@ -133,9 +141,23 @@ class CacheManager : public Device
         Bus& bus; // Reference to the bus
         // Queue to hold cache requests
         std::queue<std::unique_ptr<CacheRequest<anydata>>> requestQueue;
+        std::queue<std::unique_ptr<CacheRequest<anydata>>> requestQueueMemory;
+
 
 };
 
+struct PendingRequest
+{
+    std::unique_ptr<CacheRequest<anydata>> request;
+    RequestState state = RequestState::IDLE;
+    int remainingLatency; // Remaining latency in ticks
+    CacheLine* result = nullptr; // Pointer to hold the result of the request (for read requests)
+
+    PendingRequest(std::unique_ptr<CacheRequest<anydata>> req, int latency)
+        : request(std::move(req)), remainingLatency(latency) {}
+
+    PendingRequest() = default;
+};
 
 /// Function to manage cache offset errors
 template<typename T>
@@ -233,6 +255,8 @@ Result<void> CacheLevel::write(uint64_t address, const T& data)
     
 }
 
+
+/*
 template <typename T>
 Result<T> CacheManager::read(uint64_t address)
 {
@@ -335,7 +359,8 @@ Result<void> CacheManager::writeSingleLine(uint64_t address, const T& data, uint
 {
 
     //temporary result that holds the line read from cache(it is used to load the line from lower levels or RAM)
-    Result<std::array<uint8_t, CACHE_LINE_SIZE>> read_result;
+    Result<CacheLine> read_result;
+    
 
     // Try to write to L1 cache
     Result<void>result = L1Cache.write(address, data); // Write to L1 cache
@@ -394,8 +419,16 @@ Result<void> CacheManager::writeSingleLine(uint64_t address, const T& data, uint
                 //calculating the start of the line
                 uint64_t lineStart = address - offset;
 
+                Result<std::array<uint8_t, CACHE_LINE_SIZE>> ram_result;
                 //reading the line from RAM
-                read_result = bus.getMemory().template readGeneric<std::array<uint8_t, CACHE_LINE_SIZE>>(lineStart); // Read from RAM
+                ram_result = bus.getMemory().template readGeneric<std::array<uint8_t, CACHE_LINE_SIZE>>(lineStart); // Read from RAM
+
+                read_result.success = ram_result.success;
+                read_result.errorInfo = ram_result.errorInfo;
+                read_result.data.data = ram_result.data;
+                read_result.data.valid = true;
+                read_result.data.dirty = false;
+                read_result.data.tag = l3Tag;
 
                 if(read_result.success)
                 {
@@ -493,5 +526,6 @@ Result<void> CacheManager::writeCrossLines(uint64_t address, const T& data)
     result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
     return result;
 }
+*/
 
 #endif //CACHEMANAGER_HPP
