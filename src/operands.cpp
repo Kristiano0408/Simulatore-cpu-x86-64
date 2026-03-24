@@ -418,7 +418,27 @@ Result<anydata> MemOperand::getValue(std::function<void()> callback) {
         debugLog("MemOperand: Sending read request to address " + to_string_hex(this->address) + " with size " + std::to_string(this->size) + " bytes.");
         readRequestSent = true;
 
-        bus.getCPU().getCacheManager().setRequest(std::make_unique<CacheRequest<anydata>>(RequestType::READ, this->address, anydata{}, false, instructionID, callback));
+        anydata readPlaceholder = std::monostate{};
+        switch (this->size)
+        {
+            case 8:
+                readPlaceholder = uint8_t{};
+                break;
+            case 16:
+                readPlaceholder = uint16_t{};
+                break;
+            case 32:
+                readPlaceholder = uint32_t{};
+                break;
+            case 64:
+                readPlaceholder = uint64_t{};
+                break;
+            default:
+                readPlaceholder = uint64_t{};
+                break;
+        }
+
+        bus.getCPU().getCacheManager().setRequest(std::make_unique<CacheRequest<anydata>>(RequestType::READ, this->address, readPlaceholder, false, instructionID, callback));
 
         return Result<anydata>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request sent. Waiting for completion."}};
     }

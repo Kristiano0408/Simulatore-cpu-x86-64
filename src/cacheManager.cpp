@@ -41,6 +41,8 @@ void CacheLevel::load(uint64_t setIndex, uint64_t tag, const CacheLine& data, ui
     CacheLine& line = set.lines[freePosition]; // Get the cache line at the free position
 
     line = data;
+    line.tag = tag;
+    line.valid = true;
 
     line.lastAccessTime = bus.getClock().getCycles(); // Update the last access time
 
@@ -254,7 +256,7 @@ Result<CacheLine> CacheLevel::read(uint64_t address)
         // Cache hit
 
         // Read the data from the cache line
-        std::memcpy(&result.data, &line->data, sizeof(CacheLine)); // Copy the data from the cache line to the result
+        result.data = *line;
 
         line->lastAccessTime = bus.getClock().getCycles(); // Update the last access time
 
@@ -365,39 +367,8 @@ void CacheManager::execute_operation()
 void CacheManager::processRequest()
 {   
 
-    CacheRequest<anydata>* request;
-    //getting the request in L1 queue
-    if(!requestQueue.empty() && !L1Cache.busy)
-    {
-
-    }
-
-    if(memory_latency!=0)
-    {
-        memory_latency --;
-
-    }
-    else if (!requestQueueMemory.empty())
-    {
-        request = requestQueueMemory.front().get();
-
-
-        switch(request->type)
-        {
-            case RequestType::READ:
-                // Process read request
-                break;
-            case RequestType::WRITE:
-                // Process write request
-                break;
-        }
-    }
-    else
-    {
-        memory_latency = 10;
-    }
-    
-    
+   
+  
 }
 
 

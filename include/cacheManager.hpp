@@ -10,7 +10,23 @@
 #include "memory.hpp"
 #include <variant>
 #include <queue>
+#include <memory>
 // 
+
+struct CacheLine;
+
+struct PendingRequest
+{
+    std::unique_ptr<CacheRequest<anydata>> request;
+    RequestState state = RequestState::IDLE;
+    int remainingLatency; // Remaining latency in ticks
+    CacheLine* result = nullptr; // Pointer to hold the result of the request (for read requests)
+
+    PendingRequest(std::unique_ptr<CacheRequest<anydata>> req, int latency)
+        : request(std::move(req)), remainingLatency(latency) {}
+
+    PendingRequest() = default;
+};
 
 //basic structure for the cache line
 //it contains the data, the tag, the valid bit and the dirty bit
@@ -99,7 +115,7 @@ class CacheLevel : public Device
 class CacheManager : public Device
 {   
     public:
-        CacheManager(Bus& bus,uint64_t l1Size, uint64_t l2Size, uint64_t l3Size, uint64_t l1Assoc, uint64_t l2Assoc, uint64_t l3Assoc, uint64_t l1Latency, uint64_t l2Latency, uint64_t l3Latency);
+        CacheManager(Bus& bus,uint64_t l1Size, uint64_t l2Size, uint64_t l3Size, uint64_t l1Assoc, uint64_t l2Assoc, uint64_t l3Assoc, uint64_t l1Latency = 1, uint64_t l2Latency = 4, uint64_t l3Latency = 10);
         ~CacheManager();
 
         CacheManager(const CacheManager&) = delete;
@@ -144,19 +160,6 @@ class CacheManager : public Device
         std::queue<std::unique_ptr<CacheRequest<anydata>>> requestQueueMemory;
 
 
-};
-
-struct PendingRequest
-{
-    std::unique_ptr<CacheRequest<anydata>> request;
-    RequestState state = RequestState::IDLE;
-    int remainingLatency; // Remaining latency in ticks
-    CacheLine* result = nullptr; // Pointer to hold the result of the request (for read requests)
-
-    PendingRequest(std::unique_ptr<CacheRequest<anydata>> req, int latency)
-        : request(std::move(req)), remainingLatency(latency) {}
-
-    PendingRequest() = default;
 };
 
 /// Function to manage cache offset errors
