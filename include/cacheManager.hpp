@@ -15,18 +15,7 @@
 
 struct CacheLine;
 
-struct PendingRequest
-{
-    std::unique_ptr<CacheRequest<anydata>> request;
-    RequestState state = RequestState::IDLE;
-    int remainingLatency; // Remaining latency in ticks
-    CacheLine* result = nullptr; // Pointer to hold the result of the request (for read requests)
 
-    PendingRequest(std::unique_ptr<CacheRequest<anydata>> req, int latency)
-        : request(std::move(req)), remainingLatency(latency) {}
-
-    PendingRequest() = default;
-};
 
 //basic structure for the cache line
 //it contains the data, the tag, the valid bit and the dirty bit
@@ -37,6 +26,8 @@ struct CacheLine
     uint64_t tag;
     std::array<uint8_t, CACHE_LINE_SIZE> data;  // Data stored in the cache line
     uint64_t lastAccessTime; // use it as a counter for replacement policy, syncronized with clock when access
+
+    CacheLine() : valid(false), dirty(false), tag(0), data{}, lastAccessTime(0) {}
 
 
 };
@@ -50,6 +41,20 @@ struct CacheSet
     uint64_t setIndex;
 };
 
+struct PendingRequest
+{
+    std::unique_ptr<CacheRequest> request;
+    RequestState state = RequestState::IDLE;
+    int remainingLatency; // Remaining latency in ticks
+    CacheLine line= CacheLine{}; // Pointer to hold the result of the request (for read requests)
+
+    PendingRequest(std::unique_ptr<CacheRequest> req, int latency)
+        : request(std::move(req)), remainingLatency(latency) {}
+
+    PendingRequest(std::unique_ptr<CacheRequest> req, int latency, CacheLine res)
+        : request(std::move(req)), remainingLatency(latency), line(res) {}
+    PendingRequest() = default;
+};
 
 /// Cache level structure(L1, L2, L3)
 /// Contains multiple cache sets and manages the cache operations
@@ -62,13 +67,23 @@ class CacheLevel : public Device
         uint64_t numSets;
         Bus &bus; // Reference to the bus for memory access
         CacheLevel* nextLevel = nullptr; // Pointer to the next cache level (L2 or L3)
+        CacheLevel* parentLevel = nullptr; // Pointer to the upper cache level (L1 or L2)
+
     
     public:
         CacheLevel(uint64_t size, uint64_t associativity, uint64_t latency, Bus& bus, CacheLevel* nextLevel);
         ~CacheLevel();
-        Result<CacheLine> read(uint64_t address); // Read data from the cache also with metadata
-        template <typename T>
-        Result<void> write(uint64_t address, const T& data); // Write data to the cache
+        Result<CacheLine> readSingle(uint64_t address); // Read data from the cache also with metadata
+
+        Result<std::array<uint8_t, 2*CACHE_LINE_SIZE>> read(uint64_t address, uint64_t size); // Read data from the cache based on a cache request
+
+        Result<std::array<uint8_t, 2*CACHE_LINE_SIZE>> readCrossLines(uint64_t address, uint64_t size); // Read data that spans across two cache lines
+
+        Result<void> write(uint64_t address, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t size); // Write data to the cache
+
+        Result<void> writeSingleLine(uint64_t address, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t size); // Write data to a single cache line
+
+        Result<void> writeCrossLines(uint64_t address, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t size); // Write data that spans across two cache lines
 
         void load(uint64_t setIndex, uint64_t tag, const CacheLine& data, uint64_t freePosition); // Load an entire cache line into the cache with metadata
 
@@ -84,7 +99,7 @@ class CacheLevel : public Device
 
 
         // Function to find a cache line in a set
-        CacheLine* findLine(const CacheSet& set, uint64_t tag);
+        CacheLine* findLine(CacheSet& set, uint64_t tag);
 
         uint64_t manageReplacementPolicy(CacheSet& set);
         
@@ -106,6 +121,9 @@ class CacheLevel : public Device
         void setAssociativity(uint64_t assoc) { associativity = assoc; }
         void setNumSets(uint64_t sets) { numSets = sets; };
 
+        void setParentLevel(CacheLevel* parent) { parentLevel = parent; }
+        CacheLevel* getParentLevel() const { return parentLevel; }
+
   
 
 
@@ -115,7 +133,7 @@ class CacheLevel : public Device
 class CacheManager : public Device
 {   
     public:
-        CacheManager(Bus& bus,uint64_t l1Size, uint64_t l2Size, uint64_t l3Size, uint64_t l1Assoc, uint64_t l2Assoc, uint64_t l3Assoc, uint64_t l1Latency = 1, uint64_t l2Latency = 4, uint64_t l3Latency = 10);
+        CacheManager(Bus& bus,uint64_t l1Size, uint64_t l2Size, uint64_t l3Size, uint64_t l1Assoc, uint64_t l2Assoc, uint64_t l3Assoc, uint64_t l1Latency = 1, uint64_t l2Latency = 2, uint64_t l3Latency = 3);
         ~CacheManager();
 
         CacheManager(const CacheManager&) = delete;
@@ -124,6 +142,8 @@ class CacheManager : public Device
         void execute_operation() override; // Override of the pure virtual function from Device class
 
         void processRequest(); // Function to process cache requests
+
+        void enqueueMemoryRequest(std::unique_ptr<CacheRequest>&& request) { requestQueueMemory.push(std::move(request)); }
 
         /*template <typename T>
         Result<T> read(uint64_t address);
@@ -140,13 +160,13 @@ class CacheManager : public Device
         void invalidateAllCaches();
         void printCacheState() const; // For debugging purposes
 
-        void setRequest(std::unique_ptr<CacheRequest<anydata>>&& request) { requestQueue.push(std::move(request)); } // Set the request queue
+        void setRequest(std::unique_ptr<CacheRequest>&& request) { requestQueue.push(std::move(request)); } // Set the request queue
 
         CacheLevel& getL1Cache() { return L1Cache; }
         CacheLevel& getL2Cache() { return L2Cache; }
         CacheLevel& getL3Cache() { return L3Cache; }
 
-        int memory_latency = 10;
+        int memory_latency = 0;
 
     protected:
         CacheLevel L1Cache;
@@ -156,8 +176,9 @@ class CacheManager : public Device
     private:
         Bus& bus; // Reference to the bus
         // Queue to hold cache requests
-        std::queue<std::unique_ptr<CacheRequest<anydata>>> requestQueue;
-        std::queue<std::unique_ptr<CacheRequest<anydata>>> requestQueueMemory;
+        std::queue<std::unique_ptr<CacheRequest>> requestQueue;
+        std::queue<std::unique_ptr<CacheRequest>> requestQueueMemory;
+        std::vector<PendingRequest> pendingMemoryRequests;
 
 
 };
@@ -186,77 +207,15 @@ bool offset_cache(EventType event, ErrorType error, Result<void>& result, uint64
 template<>
 bool offset_cache(EventType event, ErrorType error, Result<std::array<uint8_t, CACHE_LINE_SIZE>>& result, uint64_t offset, uint64_t address);
 
+template<>
+bool offset_cache(EventType event, ErrorType error, Result<CacheLine>& result, uint64_t offset, uint64_t address);
 
 
 
-//tempalte functions implementation (cachelevel:read is the only one that dont need it,cus it always read an entire line)
-
-template <typename T>
-Result<void> CacheLevel::write(uint64_t address, const T& data)
-{
-    // Create a result structure for the write operation
-    Result<void> result;
-
-    constexpr unsigned offsetBits = ilog2_constexpr(CACHE_LINE_SIZE); // Calculate the number of bits for the offset
-    unsigned indexBits = ilog2(numSets); // Calculate the number of bits for the index
-
-    uint64_t offset = address & ((1ULL << offsetBits) - 1); // Calculate the offset within the cache line
-
-    //manage the offset for the write operation
-    if (offset_cache(EventType::CACHE_WRITE_ERROR, ErrorType::WRITE_FAIL, result, offset, address))
-    {
-        return result;
-    }
-
-    uint64_t setIndex = (address >> offsetBits) & ((1ULL << indexBits) - 1); // Calculate the set index
-    uint64_t tag = address >> (offsetBits + indexBits); // Calculate the tag
 
 
-    
-    CacheSet& set = sets[setIndex]; // Get the cache set
 
-    auto* line = findLine(set, tag); // Check if the line is in the cache
 
-    if(line != nullptr)
-    {
-        
-        // Cache hit
-        line->dirty = true; // Mark the line as dirty
-        line->lastAccessTime = bus.getClock().getCycles(); // Update the last access time
-
-        // Write the data to the cache line
-        std::memcpy(&line->data[offset], &data, sizeof(T)); 
-
-        result.success = true; // Set success to true
-
-        // Set the event type to CACHE_HIT
-        result.errorInfo.event = EventType::CACHE_HIT; // Set the event type to CACHE_HIT
-        result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
-        result.errorInfo.message = "Cache hit at address: " + to_string_hex(address); // Set the message for debugging
-        result.errorInfo.error = ErrorType::NONE; // Set the error type to NONE
-
-        debugLog("Cache hit at address: " + to_string_hex(address));
-
-        return result; // Return the result
-
-    }
-    else
-    {
-        // Cache miss
-        result.success = false; // Set success to false
-
-        // Set the event type to CACHE_MISS
-        result.errorInfo.event = EventType::CACHE_MISS; // Set the event type to CACHE_MISS
-        result.errorInfo.source = ComponentType::CACHE; // Set the source to CACHE
-        result.errorInfo.message = "Cache miss at address: " + to_string_hex(address); // Set the message for debugging
-        result.errorInfo.error = ErrorType::NONE;
-
-        debugLog("Cache miss at address: " + to_string_hex(address));
-
-        return result; // Return the result
-    }
-    
-}
 
 
 /*

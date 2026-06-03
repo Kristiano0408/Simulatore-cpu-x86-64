@@ -29,11 +29,10 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler& event
 
     debugLog("Fetching instruction at address: " + to_string_hex(index));
 
-    anydata Datavariant = std::array<uint8_t, 15>{};
-    auto cacheRequest = std::make_unique<CacheRequest<anydata>>();
+    auto cacheRequest = std::make_unique<CacheRequest>();
     cacheRequest->type = RequestType::READ;
     cacheRequest->address = index;
-    cacheRequest->data = Datavariant;
+    cacheRequest->dataType = TypeofData::ARRAY_16B;
     cacheRequest->requestID = instructionId;
     cacheRequest->callback = eventHandler.getCallback("MEMORY_DONE_FETCH");
 
@@ -57,14 +56,15 @@ void CU::updateFetch(uint64_t instructionId, EventHandler& eventHandler)
     if (it != bus.getCPU().cacheResponseQueue.end())
     {
         debugLog("memory/cache response found for instruction ID: " + std::to_string(instructionId));
+        // Trigger an event to notify that the instruction has been fetched
+        eventHandler.triggerEvent("MEMORY_DONE_FETCH");
     }
     else
     {
         debugLog("No cache response found for instruction ID: " + std::to_string(instructionId));
     }
 
-    // Trigger an event to notify that the instruction has been fetched
-    eventHandler.triggerEvent("MEMORY_DONE_FETCH");
+    
 
 }
 
@@ -86,10 +86,10 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
     debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
 
     //extarcting the correct data from the variant
-    std::array<uint8_t, 15> buffer {0}; //buffer for the instruction (max length of an instruction is 15 bytes)
+    std::array<uint8_t, 16> buffer {0}; //buffer for the instruction (max length of an instruction is 16 bytes)
 
     //using the visist to extract the data
-    Result<std::array<uint8_t, 15>> temp_result;
+    Result<std::array<uint8_t, 16>> temp_result;
 
     debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
 
@@ -97,7 +97,7 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
     {
         using T = std::decay_t<decltype(value)>;
 
-        if constexpr (std::is_same_v<T, std::array<uint8_t, 15>>)
+        if constexpr (std::is_same_v<T, std::array<uint8_t, 16>>)
         {
             temp_result.data = value;
             temp_result.success = result.success;
@@ -117,14 +117,14 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
     debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
 
     if (temp_result.success)
-        std::memcpy(buffer.data(), temp_result.data.data(), 15);
+        std::memcpy(buffer.data(), temp_result.data.data(), 16);
     else 
     {
         debugLog("Error fetching instruction: " + temp_result.errorInfo.message);
         // Handle the error appropriately (e.g., throw an exception, return an error code, etc.)
     }
 
-    for(int i=0; i<15; i++)
+    for(int i=0; i<16; i++)
     {
         debugLog("Byte " + std::to_string(i) + ": " + to_string_hex(static_cast<int>(buffer[i])));
     }
@@ -273,7 +273,7 @@ void CU::writeBack(Instruction* instruction)
 
 //helpers function for making the code more readable
 
-void CU::fetchRemainingBytes(std::array<uint8_t, 15>& buffer, std::vector<uint8_t>& bytes, int& byteCounter, int bytesToFetch)
+void CU::fetchRemainingBytes(std::array<uint8_t, 16>& buffer, std::vector<uint8_t>& bytes, int& byteCounter, int bytesToFetch)
 {
     //fetch the remaining bytes (the immediate value or the rest of the instruction) from the buffer
     for (int i = 0; i < bytesToFetch; i++)
@@ -288,7 +288,7 @@ void CU::fetchRemainingBytes(std::array<uint8_t, 15>& buffer, std::vector<uint8_
 }
 
 //function for searching the SIB and displacement
-void CU::searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm) 
+void CU::searchingSIB_Displacement(std::array<uint8_t, 16>& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm) 
 {
     
     
@@ -384,7 +384,7 @@ void CU::searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<
 }
 
 //function for fetching the opcode
-void CU::fetchOpcode(std::array<uint8_t, 15>& buffer, uint32_t& opcode, int& byteCounter, std::vector<uint8_t>& bytes)
+void CU::fetchOpcode(std::array<uint8_t, 16>& buffer, uint32_t& opcode, int& byteCounter, std::vector<uint8_t>& bytes)
 {
     uint8_t byte; //byte fetched from buffer
 
@@ -456,7 +456,7 @@ void CU::fetchOpcode(std::array<uint8_t, 15>& buffer, uint32_t& opcode, int& byt
 }
 
 //function for fetching the prefix
-void CU::fetchPrefix(std::array<uint8_t, 15>& buffer, uint8_t prefix[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes, int& byteCounter)
+void CU::fetchPrefix(std::array<uint8_t, 16>& buffer, uint8_t prefix[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes, int& byteCounter)
 {
     int i = 0; //index for the buffer
 

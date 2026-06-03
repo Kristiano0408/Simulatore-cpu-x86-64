@@ -38,12 +38,12 @@ class CU
         
 
         //helpers function for making the code more readable
-        void searchingSIB_Displacement(std::array<uint8_t, 15>& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm);
-        void fetchOpcode(std::array<uint8_t, 15>& buffer, uint32_t& opcode, int& byteCounter, std::vector<uint8_t>& bytes);
+        void searchingSIB_Displacement(std::array<uint8_t, 16>& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm);
+        void fetchOpcode(std::array<uint8_t, 16>& buffer, uint32_t& opcode, int& byteCounter, std::vector<uint8_t>& bytes);
 
-        void fetchPrefix(std::array<uint8_t, 15>& buffer, uint8_t prefix[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes, int& byteCounter);
+        void fetchPrefix(std::array<uint8_t, 16>& buffer, uint8_t prefix[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes, int& byteCounter);
         void fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter, std::vector<uint8_t>& bytes);
-        void fetchRemainingBytes(std::array<uint8_t, 15>& buffer, std::vector<uint8_t>& bytes, int& byteCounter, int bytesToFetch);
+        void fetchRemainingBytes(std::array<uint8_t, 16>& buffer, std::vector<uint8_t>& bytes, int& byteCounter, int bytesToFetch);
         
 
 };

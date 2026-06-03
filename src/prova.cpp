@@ -137,6 +137,8 @@ int main()
 
     };
 
+    printf("Loading data into memory...\n");
+
     bus.getMemory().setData(data); // Set the data in memory
 
     std::vector<uint8_t> memoryData = bus.getMemory().getData();
@@ -147,7 +149,8 @@ int main()
 
     int i = 0;
     while(true)
-    {
+    {   
+        printf("Press space to execute a clock cycle, or 'q' to quit...\n");
         char c = getchar();
         if (c == 'q') {
             break; // Esci dal ciclo se l'utente preme 'q'

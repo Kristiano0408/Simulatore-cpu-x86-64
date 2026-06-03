@@ -70,7 +70,7 @@ void CPU::execute_operation()
 }
 
 
-void CPU::sendCacheRequest(std::unique_ptr<CacheRequest<anydata>> request)
+void CPU::sendCacheRequest(std::unique_ptr<CacheRequest> request)
 {
     cacheManager.setRequest(std::move(request));
 }

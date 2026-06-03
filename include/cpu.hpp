@@ -81,7 +81,7 @@ class CPU: public Device
 
         PipelineController& getPipelineController();
 
-        void sendCacheRequest(std::unique_ptr<CacheRequest<anydata>> request); //send a cache request
+        void sendCacheRequest(std::unique_ptr<CacheRequest> request); //send a cache request
 
         void processCacheResponse(std::unique_ptr<Result<anydata>> response); //process a cache response
 

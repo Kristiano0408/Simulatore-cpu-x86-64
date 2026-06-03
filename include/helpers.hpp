@@ -19,7 +19,7 @@
 constexpr unsigned CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
 
 
-using anydata = std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, CACHE_LINE_SIZE>, std::array<uint8_t, 15>>;
+using anydata = std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, CACHE_LINE_SIZE>,  std::array<uint8_t,2*CACHE_LINE_SIZE>, std::array<uint8_t, 16>>;
 
 //farward declaration of the enum class for registers
 enum class Register;
@@ -306,7 +306,9 @@ enum class RequestType
 {
     READ,
     WRITE,
-    NONE // Default value
+    FILL, // For filling cache lines during a miss
+    PREFETCH, // For prefetching cache lines
+    NONE
 };
 
 ////////////////////////////////////////////////////////////////////////////7
@@ -320,6 +322,18 @@ enum class RequestState
     HIT_READY,
     MISS_PENDING,
     DONE
+};
+
+enum class TypeofData
+{
+    UINT_8T = 1,
+    UINT_16T = 2,
+    UINT_32T = 4,
+    UINT_64T = 8,
+    ARRAY_16B = 16,
+    ARRAY_64B = 64,
+    ARRAY_128B = 128,
+    UNKNOWN = 0
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -339,20 +353,20 @@ struct temporaryValues {
 
 
 //request structure(the cache manager will use it to manage read and write requests from the cpu)
-template<typename T>
 struct CacheRequest
 {
     RequestType type = RequestType::NONE; // Type of request (READ or WRITE)
+    TypeofData dataType = TypeofData::UNKNOWN; // Type of data for the request
     uint64_t address = 0; // Memory address
-    T data{}; // Data to be written (only for WRITE requests)
+    std::array<uint8_t, 16> data{}; // Data for write requests (up to 15 bytes, maximun size for an instruction with prefixes and opcode, 16 bytes to align)
     bool completed = false; // Indicates if the request has been completed
     int requestID = 0; // Unique ID for the request
     std::function<void()> callback; // Callback function to be called when the request is completed
 
-    CacheRequest(): type(RequestType::NONE), address(0), data(T{}), completed(false), requestID(0), callback(nullptr) {}
+    CacheRequest(): type(RequestType::NONE), dataType(TypeofData::UNKNOWN), address(0), data{}, completed(false), requestID(0), callback(nullptr) {}
 
-    CacheRequest(RequestType type, uint64_t address, const T& data, bool completed, uint64_t requestID, std::function<void()> callback)
-        : type(type), address(address), data(data), completed(completed), requestID(requestID), callback(callback) {}
+    CacheRequest(RequestType type, TypeofData dataType, uint64_t address, const std::array<uint8_t, 16>& data, bool completed, uint64_t requestID, std::function<void()> callback)
+        : type(type), dataType(dataType), address(address), data(data), completed(completed), requestID(requestID), callback(callback) {}
 };
 
 
@@ -380,7 +394,7 @@ std::string to_string_hex(const T& value) {
             << +value; // +value promuove i tipi piccoli
         return oss.str();
     }
-    else if constexpr (std::is_same_v<T, std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, 64>, std::array<uint8_t, 15>>>) {
+    else if constexpr (std::is_same_v<T, std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, 64>, std::array<uint8_t, 15>, std::array<uint8_t, 128>>>) {
         return std::visit([](auto&& arg) {
             using U = std::decay_t<decltype(arg)>;
             if constexpr (std::is_integral_v<U>) {
