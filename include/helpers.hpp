@@ -394,7 +394,7 @@ std::string to_string_hex(const T& value) {
             << +value; // +value promuove i tipi piccoli
         return oss.str();
     }
-    else if constexpr (std::is_same_v<T, std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, 64>, std::array<uint8_t, 15>, std::array<uint8_t, 128>>>) {
+    else if constexpr (std::is_same_v<T, std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, 64>, std::array<uint8_t, 16>, std::array<uint8_t, 128>>>) {
         return std::visit([](auto&& arg) {
             using U = std::decay_t<decltype(arg)>;
             if constexpr (std::is_integral_v<U>) {
