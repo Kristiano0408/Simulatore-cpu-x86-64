@@ -108,7 +108,7 @@ int main()
         0x03, 0x14, 0x8E,                            // ADD EDX, [RSI+RCX*4]
         */
        // 0x2C : SUB AL, imm8
-        0x2C, 0x03,         // sub al, 0x03
+        0x2C, 0x03,          // sub al, 0x03
 
         // 0x2D : SUB EAX, imm32
         0x2D, 0x05,0x00,0x00,0x00, // sub eax, 5
