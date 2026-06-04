@@ -5,11 +5,85 @@
 #include "cpu.hpp"
 
 
+
+
+
+
+LRUReplacementPolicy::LRUReplacementPolicy(const uint64_t& numSets, const uint64_t& associativity)
+{
+    for (uint64_t i = 0; i < numSets; ++i)
+    {
+        initializeSet(i, associativity); // Initialize the LRU state for each cache set based on the number of sets and associativity
+    }
+}
+
+LRUReplacementPolicy::~LRUReplacementPolicy() = default;
+
+
+void LRUReplacementPolicy::initializeSet(uint64_t setIndex, uint64_t associativity)
+{
+    LRUState state;
+    for (uint64_t i = 0; i < associativity; ++i)
+    {
+        state.lineIndices.push_back(i); // Initialize the list with line indices in order of recency (initially all are equally recent)
+        state.indexMap[i] = std::prev(state.lineIndices.end(), 1); // Map each line index to its position in the list
+    }
+    lruMap[setIndex] = state; // Store the LRU state for the cache set
+}
+
+uint64_t LRUReplacementPolicy::selectLineToReplace(CacheSet& set)
+{
+    // Select the line to replace based on LRU policy
+    uint64_t index = 0; // Initialize the index to 0
+
+    uint64_t oldestTime = set.lines[0].lastAccessTime; // Initialize the oldest time to the first line's last access time
+
+    for (uint64_t i = 1; i < set.lines.size(); ++i) // Loop through the lines in the set
+    {
+        if (!set.lines[i].valid) return i; // If there's an invalid line, return its index immediately
+    }
+
+    return lruMap[set.setIndex].lineIndices.front(); // Get the least recently used line index (the front of the list)
+
+}
+
+void LRUReplacementPolicy::updateOnAccess(CacheSet& set, uint64_t lineIndex)  
+{
+    LRUState& state = lruMap[set.setIndex]; // Get the LRU state for the cache set
+
+    std::list<uint64_t>::iterator it = state.indexMap[lineIndex]; // Get the iterator for the accessed line index
+
+    state.lineIndices.erase(it); // Remove the line index from its current position in the list
+
+    state.lineIndices.push_back(lineIndex); // Move the accessed line index to the back of the list (most recently used)
+
+    state.indexMap[lineIndex] = std::prev(state.lineIndices.end(), 1); // Update the index map with the new position of the line index
+
+}
+
+void LRUReplacementPolicy::onLineLoaded(CacheSet& set, uint64_t lineIndex) 
+{
+    LRUState& state = lruMap[set.setIndex]; // Get the LRU state for the cache set
+
+    std::list<uint64_t>::iterator it = state.indexMap[lineIndex]; // Get the iterator for the loaded line index
+
+    state.lineIndices.erase(it); // Remove the line index from its current position in the list
+
+    state.lineIndices.push_back(lineIndex); // Move the loaded line index to the back of the list (most recently used)
+
+    state.indexMap[lineIndex] = std::prev(state.lineIndices.end(), 1); // Update the index map with the new position of the line index
+
+}
+
+
+
+/*
 /// CacheLevel class implementation
-CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, uint64_t latency, Bus& bus, CacheLevel* nextLevel)
-    : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus), nextLevel(nextLevel), latency_cycles(latency)
+CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, uint64_t latency, Bus& bus, CacheLevel* nextLevel, CacheLevel* parentLevel)
+    : cacheSize(size), associativity(associativity), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus), nextLevel(nextLevel), parentLevel(parentLevel), latency_cycles(latency), controller(numSets, associativity)
 {
     //resizing the vector of sets
+    std::vector<CacheSet>& sets = controller.getSets();
     sets.resize(numSets);
 
     for (uint64_t i = 0; i < numSets; ++i)
@@ -25,7 +99,6 @@ CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, uint64_t latency, 
         }
     }
 
-    setTicksNeeded(latency); // Set the ticks needed for the cache operation based on the latency
 }
 
 CacheLevel::~CacheLevel()
@@ -38,7 +111,7 @@ CacheLevel::~CacheLevel()
 void CacheLevel::load(uint64_t setIndex, uint64_t tag, const CacheLine& data, uint64_t freePosition)
 {
     // Load data into the cache line at the specified set index and tag
-    CacheSet& set = sets[setIndex]; // Get the cache set
+    CacheSet& set = controller.getSets()[setIndex]; // Get the cache set based on the set index
 
     CacheLine& line = set.lines[freePosition]; // Get the cache line at the free position
 
@@ -75,7 +148,7 @@ void CacheLevel::invalidate(uint64_t address)
     uint64_t setIndex = (address / CACHE_LINE_SIZE) % numSets; // Calculate the set index
     uint64_t tag = address / (CACHE_LINE_SIZE * numSets); // Calculate the tag
 
-    CacheSet& set = sets[setIndex]; // Get the cache set
+    CacheSet& set = controller.getSets()[setIndex]; // Get the cache set based on the set index
 
     for (CacheLine& line : set.lines) // Loop through the lines in the set
     {
@@ -199,7 +272,7 @@ uint64_t CacheLevel::manageReplacementPolicy(CacheSet& set)
         if(nextLevel != nullptr)
         {
             // Write back the dirty line to the next cache level
-            nextLevel->write( (set.lines[index].tag * numSets + set.setIndex) * CACHE_LINE_SIZE, set.lines[index].data, CACHE_LINE_SIZE);
+            nextLevel->write( (set.lines[index].tag * numSets + set.setIndex) * CACHE_LINE_SIZE, set.lines[index].data, CACHE_LINE_SIZE, nullptr);
             set.lines[index].dirty = false; // Mark the line as not dirty after writing back
         }
         else
@@ -326,7 +399,7 @@ Result<std::array<uint8_t, 2*CACHE_LINE_SIZE>> CacheLevel::readCrossLines(uint64
     return result; // Return the result
 }
 
-Result<std::array<uint8_t, 2*CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address, uint64_t size)
+Result<std::array<uint8_t, 2*CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address, uint64_t size, bool* twoLines)
 {
     // Read data from the cache based on a cache request
     Result<std::array<uint8_t, 2*CACHE_LINE_SIZE>> result;
@@ -336,10 +409,12 @@ Result<std::array<uint8_t, 2*CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address
 
     if(offset + size > CACHE_LINE_SIZE)
     {
+        *twoLines = true;
         result = readCrossLines(address, size); // Read from the cache handling the case of crossing cache lines
     }
     else
     {
+        *twoLines = false;
         // The read is within a single cache line
         singleLineResult = readSingle(address); // Read from the cache
 
@@ -376,7 +451,7 @@ Result<std::array<uint8_t, 2*CACHE_LINE_SIZE>> CacheLevel::read(uint64_t address
    
 }
 
-Result<void> CacheLevel::write(uint64_t address, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t size)
+Result<void> CacheLevel::write(uint64_t address, const std::array<uint8_t, CACHE_LINE_SIZE>& data, uint64_t size, bool* twoLines)
 {
     // Create a result structure for the write operation
     Result<void> result;
@@ -394,10 +469,12 @@ Result<void> CacheLevel::write(uint64_t address, const std::array<uint8_t, CACHE
     if(offset + size > CACHE_LINE_SIZE)
     {
        result = writeCrossLines(address, data, size); // Write to the cache handling the case of crossing cache lines
+       *twoLines = true;
     }
     else
     {
         result = writeSingleLine(address, data, size); // Write to a single line
+        *twoLines = false;
     }
 
     return result; // Return the result of the write operation
@@ -551,6 +628,10 @@ void CacheLevel::processRequest()
 
         CacheSet& set = sets[setIndex];
         CacheLine* line = findLine(set, tag);
+        uint64_t startSecondLineAddress = request.address + (CACHE_LINE_SIZE - offset);
+        uint64_t setIndexSecondLine = (startSecondLineAddress / CACHE_LINE_SIZE) % numSets;
+        uint64_t tagSecondLine = startSecondLineAddress / (CACHE_LINE_SIZE * numSets);
+        CacheLine* secondLine = findLine(sets[setIndexSecondLine], tagSecondLine);
 
         debugLog("Cache line found: " + std::to_string(line != nullptr) + " for set index: " + std::to_string(setIndex) + ", tag: " + std::to_string(tag));
 
@@ -581,17 +662,18 @@ void CacheLevel::processRequest()
             it = pendingRequests.erase(it);
             continue;
         }
-
+        bool fill_next_level = false; // Flag to determine if the request should be forwarded to the next cache level
+        bool twoLines = false;
         TypeofData dataTypeSize = request.dataType; // Get the data type for the request
+
         if (request.type == RequestType::READ)
         {   
 
             debugLog("Processing read request at address: " + to_string_hex(request.address) + " with offset: " + std::to_string(offset));
             std::unique_ptr<Result<anydata>> response = std::make_unique<Result<anydata>>();
-            bool fill_next_level = false;
             debugLog("a");
 
-            Result<std::array<uint8_t, 2*CACHE_LINE_SIZE>> readResult= read(request.address, uint64_t(dataTypeSize)); // Read from the cache based on the request data type size 
+            Result<std::array<uint8_t, 2*CACHE_LINE_SIZE>> readResult= read(request.address, uint64_t(dataTypeSize), &twoLines); // Read from the cache based on the request data type size 
            
             response->success = readResult.success;
             response->errorInfo = readResult.errorInfo;
@@ -667,6 +749,16 @@ void CacheLevel::processRequest()
                         fillRequest->requestID = 0;
                         fillRequest->callback = nullptr;
                         level->pendingRequests.emplace_back(std::move(fillRequest), static_cast<int>(level->latency_cycles), *line);
+
+                        if(twoLines)
+                        {
+                            auto fillRequest2 = std::make_unique<CacheRequest>();
+                            fillRequest2->type = RequestType::FILL;
+                            fillRequest2->address = request.address + CACHE_LINE_SIZE; // Address for the second line
+                            fillRequest2->requestID = 0;
+                            fillRequest2->callback = nullptr;
+                            level->pendingRequests.emplace_back(std::move(fillRequest2), static_cast<int>(level->latency_cycles), *secondLine);
+                        }
                     }
                 }
 
@@ -680,7 +772,7 @@ void CacheLevel::processRequest()
             else
             {
                 debugLog("Read request resulted in cache miss for address: " + to_string_hex(request.address));
-                if (response->errorInfo.event == EventType::CACHE_MISS)
+                if (fill_next_level)
                 {
                     if (nextLevel)
                     {
@@ -705,17 +797,45 @@ void CacheLevel::processRequest()
         if (request.type == RequestType::WRITE)
         {
             std::unique_ptr<Result<anydata>> response = std::make_unique<Result<anydata>>();
-            bool write_next_level = false;
 
             
-            Result<void> writeResult = write(request.address, reinterpret_cast<const std::array<uint8_t, CACHE_LINE_SIZE>&>(request.data), uint64_t(request.dataType)); // Write to the cache based on the request data type size
+            Result<void> writeResult = write(request.address, reinterpret_cast<const std::array<uint8_t, CACHE_LINE_SIZE>&>(request.data), uint64_t(request.dataType),&twoLines); // Write to the cache based on the request data type size
             response->success = writeResult.success;
             response->errorInfo = writeResult.errorInfo;
             response->data = std::monostate{};
-            write_next_level = writeResult.errorInfo.event == EventType::CACHE_MISS;
+            fill_next_level = writeResult.errorInfo.event == EventType::CACHE_MISS;
 
             if (response->success)
             {
+                CacheLevel* topLevel = this;
+                while (topLevel->getParentLevel())
+                {
+                    topLevel = topLevel->getParentLevel();
+                }
+
+                if (line)
+                {
+
+                    for (CacheLevel* level = getParentLevel(); level && level != topLevel; level = level->getParentLevel())
+                    {
+                        auto fillRequest = std::make_unique<CacheRequest>();
+                        fillRequest->type = RequestType::FILL;
+                        fillRequest->address = request.address;
+                        fillRequest->requestID = 0;
+                        fillRequest->callback = nullptr;
+                        level->pendingRequests.emplace_back(std::move(fillRequest), static_cast<int>(level->latency_cycles), *line);
+
+                        if(twoLines)
+                        {
+                            auto fillRequest2 = std::make_unique<CacheRequest>();
+                            fillRequest2->type = RequestType::FILL;
+                            fillRequest2->address = request.address + CACHE_LINE_SIZE; // Address for the second line
+                            fillRequest2->requestID = 0;
+                            fillRequest2->callback = nullptr;
+                            level->pendingRequests.emplace_back(std::move(fillRequest2), static_cast<int>(level->latency_cycles), *secondLine);
+                        }
+                    }
+                }
                 bus.getCPU().cacheResponseQueue[request.requestID] = std::move(response);
                 if (request.callback)
                 {
@@ -723,7 +843,7 @@ void CacheLevel::processRequest()
                     request.callback();
                 }
             }
-            else if (write_next_level)
+            else if (fill_next_level)
             {
                 if (nextLevel)
                 {
@@ -792,8 +912,8 @@ bool offset_cache(EventType event, ErrorType error, Result<CacheLine>& result, u
 
 // CacheManager class implementation
 CacheManager::CacheManager(Bus& bus, uint64_t l1Size, uint64_t l2Size, uint64_t l3Size,uint64_t l1Associativity, uint64_t l2Associativity, uint64_t l3Associativity, uint64_t  l1Latency, uint64_t l2Latency, uint64_t l3Latency) 
-                         :L1Cache(l1Size, l1Associativity, l1Latency, bus, &L2Cache), L2Cache(l2Size, l2Associativity, l2Latency, bus, &L3Cache), L3Cache(l3Size, l3Associativity, l3Latency, bus, nullptr), bus(bus)
-{
+                         :L1Cache(l1Size, l1Associativity, l1Latency, bus, &L2Cache), L2Cache(l2Size, l2Associativity, l2Latency, bus, &L3Cache), L3Cache(l3Size, l3Associativity, l3Latency, bus, nullptr), bus(bus), memoryScheduler(memory_latency)
+{   
     L2Cache.setParentLevel(&L1Cache);
     L3Cache.setParentLevel(&L2Cache);
     debugLog("CacheManager initialized with L1 size: " + std::to_string(l1Size) + " bytes, L2 size: " + std::to_string(l2Size) + " bytes, L3 size: " + std::to_string(l3Size) + " bytes");
@@ -815,14 +935,13 @@ void CacheManager::execute_operation()
 
 void CacheManager::processRequest()
 {   
-    std::cout << "Processing cache manager requests..." << std::endl;
-    debugLog("L1 latency: " + std::to_string(L1Cache.getTicksNeeded()) + " cycles, L2 latency: " + std::to_string(L2Cache.getTicksNeeded()) + " cycles, L3 latency: " + std::to_string(L3Cache.getTicksNeeded()) + " cycles");
+    
     if(!requestQueue.empty())
     {
         debugLog("Enqueuing request to L1 cache. Remaining requests in queue: " + std::to_string(requestQueue.size()));
         auto request = std::move(requestQueue.front());
         requestQueue.pop();
-        L1Cache.pendingRequests.emplace_back(std::move(request), static_cast<int>(L1Cache.latency_cycles));
+        L1Cache.pendingRequests.emplace_back(std::move(request), static_cast<int>(L1Cache.getLatency()));
     }
 
     if (!requestQueueMemory.empty())
@@ -871,7 +990,7 @@ void CacheManager::processRequest()
                 fillRequest->address = lineStart;
                 fillRequest->requestID = 0;
                 fillRequest->callback = nullptr;
-                level.pendingRequests.emplace_back(std::move(fillRequest), static_cast<int>(level.latency_cycles), fillLine);
+                level.pendingRequests.emplace_back(std::move(fillRequest), static_cast<int>(level.getLatency()), fillLine);
             };
         
         debugLog("a");
@@ -1072,240 +1191,5 @@ void CacheManager::printCacheState() const
     L2Cache.printCacheState(); // Print L2 cache state
     L3Cache.printCacheState(); // Print L3 cache state
 }
+    */
 
-/*
-//function to read data that is contained in a single cache line
-Result<std::array<uint8_t, CACHE_LINE_SIZE>> CacheManager::readSingleLine(uint64_t address, uint64_t l1SetIndex, uint64_t l1Tag, uint64_t l2SetIndex, uint64_t l2Tag, uint64_t l3SetIndex, uint64_t l3Tag, uint64_t offset)
-{
-    //temporary result that holds the line read from cache
-    Result<std::array<uint8_t, CACHE_LINE_SIZE>> temporary_result;
-    Result<CacheLine> line_result;
-
-    //trying to read from L1 cache
-    debugLog("Trying to read line from L1 cache at address: " + to_string_hex(address));
-    line_result = L1Cache.read(address);
-
-    temporary_result.errorInfo = line_result.errorInfo; // Propagate error info
-    temporary_result.success = line_result.success; // Propagate success status
-    temporary_result.data = line_result.data.data; // Copy the data
-
-
-     if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
-    {
-        return temporary_result;
-    }
-
-    if (temporary_result.success) // Check if the read was successful
-    {
-        //changing the event type from generic cache to l1 cache
-        temporary_result.errorInfo.source = ComponentType::CACHE_L1; // Set the source to CACHE_L1
-
-        return temporary_result; // Return the result
-    }
-    else
-    {
-        debugLog("Cache miss in L1, trying L2 cache at address: " + to_string_hex(address));
-        // Cache miss in L1, try L2 cache
-        line_result = L2Cache.read(address); // Read from L2 cache
-
-        temporary_result.errorInfo = line_result.errorInfo; // Propagate error info
-        temporary_result.success = line_result.success; // Propagate success status
-        temporary_result.data = line_result.data.data; // Copy the data
-
-        if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
-        {
-            return temporary_result;
-        }
-
-        // Check if the read was successful
-        if(temporary_result.success)
-        {
-            //changing the event type from generic cache to l2 cache
-            temporary_result.errorInfo.source = ComponentType::CACHE_L2; // Set the source to CACHE_L2
-
-            //load the data into L1 cache
-
-            // Find a free line in L1 cache
-            uint64_t freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
-
-            // Load the data into L1 cache
-            L1Cache.load(l1SetIndex, l1Tag, line_result.data, freePosition); // Load the data into L1 cache
-
-            return temporary_result; // Return the result
-
-        }
-        else
-        {
-            // Cache miss in L2, try L3 cache
-            debugLog("Cache miss in L2, trying L3 cache at address: " + to_string_hex(address));
-            line_result = L3Cache.read(address); // Read from L3 cache
-
-            temporary_result.errorInfo = line_result.errorInfo; // Propagate error info
-            temporary_result.success = line_result.success; // Propagate success status
-            temporary_result.data = line_result.data.data; // Copy the data
-
-            if(temporary_result.errorInfo.error == ErrorType::READ_FAIL)
-            {
-                return temporary_result;
-            }
-
-            // Check if the read was successful
-            if(temporary_result.success)
-            {
-                //changing the event type from generic cache to l3 cache
-                temporary_result.errorInfo.source = ComponentType::CACHE_L3; // Set the source to CACHE_L3
-
-                //load the data into L2 cache
-
-                // Find a free line in L2 cache
-                uint64_t freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
-
-                // Load the data into L2 cache
-                L2Cache.load(l2SetIndex, l2Tag, line_result.data, freePosition); // Load the data into L2 cache
-
-                //load the data into L1 cache
-
-                // Find a free line in L1 cache
-                freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
-
-                // Load the data into L1 cache
-                L1Cache.load(l1SetIndex, l1Tag, line_result.data, freePosition); // Load the data into L1 cache
-
-                return temporary_result; // Return the result
-
-            }
-            else
-            {
-                //calculating the start of the line
-                uint64_t lineStart = address - offset;
-
-                debugLog("Cache miss in L3, reading from RAM at address: " + std::to_string(lineStart));
-                // Cache miss in L3, read from RAM
-                temporary_result = bus.getMemory().template readGeneric<std::array<uint8_t, CACHE_LINE_SIZE>>(lineStart); // Read from RAM
-
-                debugLog("Read from RAM at address: " + std::to_string(lineStart));
-
-                // Check if the read was successful
-                if(temporary_result.success)
-                {
-                    //load the data into L3 cache
-
-                    //creating the cache line structure to load into cache
-                    line_result.data.valid = true;
-                    line_result.data.dirty = false;
-                    line_result.data.tag = l3Tag;
-                    line_result.data.data = temporary_result.data;
-
-                    // Find a free line in L3 cache
-                    uint64_t freePosition = L3Cache.findFreeLineIndex(L3Cache.getSets()[l3SetIndex]); 
-
-                    // Load the data into L3 cache
-                    L3Cache.load(l3SetIndex, l3Tag, line_result.data, freePosition); // Load the data into L3 cache
-
-                    //load the data into L2 cache
-
-                    // Find a free line in L2 cache
-                    freePosition = L2Cache.findFreeLineIndex(L2Cache.getSets()[l2SetIndex]); 
-
-                    // Load the data into L2 cache
-                    L2Cache.load(l2SetIndex, l2Tag, line_result.data, freePosition); // Load the data into L2 cache
-
-                    //load the data into L1 cache
-
-                    // Find a free line in L1 cache
-                    freePosition = L1Cache.findFreeLineIndex(L1Cache.getSets()[l1SetIndex]); 
-
-                    // Load the data into L1 cache
-                    L1Cache.load(l1SetIndex, l1Tag, line_result.data, freePosition); // Load the data into L1 cache
-
-                    return temporary_result; // Return the result
-
-                }
-                else
-                {
-                    // Cache miss in RAM, return error
-                    temporary_result.success = false; // Set success to false
-
-                    // Set the event type to RAM_ACCESS
-                    temporary_result.errorInfo.event = EventType::RAM_ACCESS; // Set the event type to RAM_ACCESS
-                    temporary_result.errorInfo.source = ComponentType::RAM; // Set the source to RAM
-                    temporary_result.errorInfo.message = "RAM access failed at address: " + to_string_hex(address); // Set the message for debugging
-                    temporary_result.errorInfo.error = ErrorType::READ_FAIL; // Set the error type to READ_FAIL
-
-                    return temporary_result; // Return the result
-
-                }
-
-                
-            }
-
-        }
-    }  
-   
-}
-
-//function for reading data that is contained in two cache lines
-Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> CacheManager::readCrossLines(uint64_t address)
-{
-    debugLog("Reading cross lines at address: " + to_string_hex(address));
-    // Read data spanning two cache lines
-    Result<std::array<uint8_t, CACHE_LINE_SIZE * 2>> result;
-
-    uint64_t l1SetIndex = (address / CACHE_LINE_SIZE) % L1Cache.getNumSets(); // Calculate the L1 set index
-    uint64_t l1Tag = address / (CACHE_LINE_SIZE * L1Cache.getNumSets()); // Calculate the L1 tag
-
-    uint64_t l2SetIndex = (address / CACHE_LINE_SIZE) % L2Cache.getNumSets(); // Calculate the L2 set index
-    uint64_t l2Tag = address / (CACHE_LINE_SIZE * L2Cache.getNumSets()); // Calculate the L2 tag
-
-    uint64_t l3SetIndex = (address / CACHE_LINE_SIZE) % L3Cache.getNumSets(); // Calculate the L3 set index
-    uint64_t l3Tag = address / (CACHE_LINE_SIZE * L3Cache.getNumSets()); // Calculate the L3 tag
-
-    uint64_t offset = address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
-
-    // Read the first cache line
-    auto result1 = readSingleLine(address, l1SetIndex, l1Tag, l2SetIndex, l2Tag, l3SetIndex, l3Tag, offset);
-    if (!result1.success)
-    {
-        result.success = false;
-        result.errorInfo = result1.errorInfo;
-        return result;
-    }
-
-    debugLog("First line read successfully at address: " + to_string_hex(address));
-
-    uint64_t new_address = address + (CACHE_LINE_SIZE - offset);
-    l1SetIndex = (new_address / CACHE_LINE_SIZE) % L1Cache.getNumSets(); // Calculate the L1 set index
-    l1Tag = new_address / (CACHE_LINE_SIZE * L1Cache.getNumSets()); // Calculate the L1 tag
-
-    l2SetIndex = (new_address / CACHE_LINE_SIZE) % L2Cache.getNumSets(); // Calculate the L2 set index
-    l2Tag = new_address / (CACHE_LINE_SIZE * L2Cache.getNumSets());
-
-    l3SetIndex = (new_address / CACHE_LINE_SIZE) % L3Cache.getNumSets(); // Calculate the L3 set index
-    l3Tag = new_address / (CACHE_LINE_SIZE * L3Cache.getNumSets());
-
-    offset = new_address % CACHE_LINE_SIZE; // Calculate the offset within the cache line
-
-
-
-
-
-    // Read the second cache line
-    auto result2 = readSingleLine(new_address, l1SetIndex, l1Tag, l2SetIndex, l2Tag, l3SetIndex, l3Tag, offset);
-    if (!result2.success)
-    {
-        result.success = false;
-        result.errorInfo = result2.errorInfo;
-        return result;
-    }
-
-    debugLog("Successfully read cross lines at address: " + to_string_hex(address));
-
-    // Copy the data from both lines into the result
-    std::memcpy(result.data.data(), result1.data.data(), CACHE_LINE_SIZE);
-    std::memcpy(result.data.data() + CACHE_LINE_SIZE, result2.data.data(), CACHE_LINE_SIZE);
-
-
-    result.success = true;
-    return result;
-}
-*/
