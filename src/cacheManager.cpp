@@ -3,80 +3,267 @@
 #include "memory.hpp"
 #include <iostream>
 #include "cpu.hpp"
+#include <random>
 
 
 
 
-
-
-LRUReplacementPolicy::LRUReplacementPolicy(const uint64_t& numSets, const uint64_t& associativity)
+LRUReplacementPolicy::LRUReplacementPolicy(const uint8_t& numSets, const uint8_t& associativity)
 {
-    for (uint64_t i = 0; i < numSets; ++i)
+    for (uint8_t i = 0; i < numSets; ++i)
     {
         initializeSet(i, associativity); // Initialize the LRU state for each cache set based on the number of sets and associativity
     }
 }
 
-LRUReplacementPolicy::~LRUReplacementPolicy() = default;
-
-
-void LRUReplacementPolicy::initializeSet(uint64_t setIndex, uint64_t associativity)
+void LRUReplacementPolicy::initializeSet(uint8_t setIndex, uint8_t associativity)
 {
     LRUState state;
     for (uint64_t i = 0; i < associativity; ++i)
     {
         state.lineIndices.push_back(i); // Initialize the list with line indices in order of recency (initially all are equally recent)
-        state.indexMap[i] = std::prev(state.lineIndices.end(), 1); // Map each line index to its position in the list
+        state.indexMap[i] =uint8_t(state.lineIndices.size() - 1); // Map each line index to its position in the list for O(1) access
     }
     lruMap[setIndex] = state; // Store the LRU state for the cache set
 }
 
-uint64_t LRUReplacementPolicy::selectLineToReplace(CacheSet& set)
-{
-    // Select the line to replace based on LRU policy
-    uint64_t index = 0; // Initialize the index to 0
-
-    uint64_t oldestTime = set.lines[0].lastAccessTime; // Initialize the oldest time to the first line's last access time
-
-    for (uint64_t i = 1; i < set.lines.size(); ++i) // Loop through the lines in the set
-    {
-        if (!set.lines[i].valid) return i; // If there's an invalid line, return its index immediately
-    }
-
-    return lruMap[set.setIndex].lineIndices.front(); // Get the least recently used line index (the front of the list)
-
-}
-
-void LRUReplacementPolicy::updateOnAccess(CacheSet& set, uint64_t lineIndex)  
+uint8_t LRUReplacementPolicy::selectLineToReplace(CacheSet& set)
 {
     LRUState& state = lruMap[set.setIndex]; // Get the LRU state for the cache set
 
-    std::list<uint64_t>::iterator it = state.indexMap[lineIndex]; // Get the iterator for the accessed line index
+    if (state.validLines < set.lines.size()) // If there are still invalid lines in the set
+       return state.validLines++; // Return the next free line index and increment the count of valid lines
 
-    state.lineIndices.erase(it); // Remove the line index from its current position in the list
+    
+
+    return state.lineIndices.front(); // Get the least recently used line index (the front of the vector)
+
+}
+
+void LRUReplacementPolicy::updateOnAccess(CacheSet& set, uint8_t lineIndex)  
+{
+    LRUState& state = lruMap[set.setIndex]; // Get the LRU state for the cache set
+
+    uint8_t lineIdxInVector = state.indexMap[lineIndex]; // Get the position of the accessed line index in the vector
+
+    std::swap(state.lineIndices[lineIdxInVector], state.lineIndices.back()); // Swap the accessed line index with the last element in the vector (most recently used)
+    state.lineIndices.pop_back(); // Remove the last element (the accessed line index) from its current position in the vector
 
     state.lineIndices.push_back(lineIndex); // Move the accessed line index to the back of the list (most recently used)
 
-    state.indexMap[lineIndex] = std::prev(state.lineIndices.end(), 1); // Update the index map with the new position of the line index
-
+    state.indexMap[lineIndex] = uint8_t(state.lineIndices.size() - 1); // Update the index map with the new position of the accessed line index
 }
 
-void LRUReplacementPolicy::onLineLoaded(CacheSet& set, uint64_t lineIndex) 
+void LRUReplacementPolicy::onLineLoaded(CacheSet& set, uint8_t lineIndex) 
 {
     LRUState& state = lruMap[set.setIndex]; // Get the LRU state for the cache set
 
-    std::list<uint64_t>::iterator it = state.indexMap[lineIndex]; // Get the iterator for the loaded line index
+    uint8_t lineIdxInVector = state.indexMap[lineIndex]; // Get the position of the loaded line index in the vector
 
-    state.lineIndices.erase(it); // Remove the line index from its current position in the list
+    std::swap(state.lineIndices[lineIdxInVector], state.lineIndices.back()); // Swap the loaded line index with the last element in the vector (most recently used)
+    state.lineIndices.pop_back(); // Remove the last element (the loaded line index) from its current position in the vector
 
     state.lineIndices.push_back(lineIndex); // Move the loaded line index to the back of the list (most recently used)
 
-    state.indexMap[lineIndex] = std::prev(state.lineIndices.end(), 1); // Update the index map with the new position of the line index
+    state.indexMap[lineIndex] = uint8_t(state.lineIndices.size() - 1); // Update the index map with the new position of the loaded line index
 
 }
 
 
+uint8_t PLRUTree::selectLineToReplace()
+{
+    uint8_t node = 0; // Start at the root of the PLRU tree
 
+    while (node < bits.size()) // Traverse the tree until reaching a leaf node
+    {
+        node = bits[node] ? (2 * node + 2) : (2 * node + 1); // Move left or right based on the bit value at the current node( 1 for right, 0 for left)
+    }
+
+    return node - bits.size(); // Return the line index corresponding to the leaf node reached
+}
+
+void PLRUTree::updateLine(uint8_t lineIndex)
+{
+    uint8_t node = lineIndex + bits.size(); // Start at the leaf node corresponding to the accessed line index
+
+    while (node > 0) // Traverse the tree until reaching a leaf node
+    {
+        uint8_t parent = (node - 1) / 2; // Calculate the parent node index
+        bits[parent] = node = 2 * parent + 1 ? 0 : 1; // Update the bit at the parent node to indicate the direction taken (1 for right, 0 for left) and move up to the parent node
+        node = parent;
+    }
+}
+
+
+PLRUReplacementPolicy::PLRUReplacementPolicy(const uint8_t& numSets, const uint8_t& associativity)
+{
+    for (uint8_t i = 0; i < numSets; ++i)
+    {
+        initializeSet(i, associativity); // Initialize the PLRU state for each cache set based on the number of sets and associativity
+    }
+}
+
+void PLRUReplacementPolicy::initializeSet(uint8_t setIndex, uint8_t associativity)
+{
+    plruMap[setIndex] = PLRUTree(associativity); // Initialize the PLRU tree for the cache set based on the associativity
+}
+
+uint8_t PLRUReplacementPolicy::selectLineToReplace(CacheSet& set)
+{
+    PLRUTree& tree = plruMap[set.setIndex]; // Get the PLRU tree for the cache set
+    if (tree.validLines < set.lines.size()) // If there are still invalid lines in the set
+    {
+        return tree.validLines++; // Return the next free line index and increment the count of valid lines
+    }
+
+    return tree.selectLineToReplace(); // Select the line to replace based on the PLRU tree for the cache set
+}
+
+void PLRUReplacementPolicy::updateOnAccess(CacheSet& set, uint8_t lineIndex)
+{
+    PLRUTree& tree = plruMap[set.setIndex]; // Get the PLRU tree for the cache set
+    tree.updateLine(lineIndex); // Update the PLRU tree on cache access to reflect the most recently used line
+}
+
+void PLRUReplacementPolicy::onLineLoaded(CacheSet& set, uint8_t lineIndex)
+{
+    PLRUTree& tree = plruMap[set.setIndex]; // Get the PLRU tree for the cache set
+    tree.updateLine(lineIndex); // Update the PLRU tree when a line is loaded into the cache to reflect the most recently used line
+}
+
+
+uint8_t RandomReplacementPolicy::selectLineToReplace(CacheSet& set)
+{
+    std::random_device rd; // Obtain a seeder for the random number engine
+    std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> dis(0, set.lines.size() - 1); // Uniform distribution to select a random line index from the set
+
+    return dis(gen); // Return a randomly selected line index from the set
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+CacheStorage::CacheStorage(uint8_t numSets, uint8_t associativity)
+{
+    sets.resize(numSets); // Resize the vector of cache sets based on the number of sets
+
+    for (uint8_t i = 0; i < numSets; ++i)
+    {
+        sets[i].setIndex = i; // Initialize the set index for each cache set
+        sets[i].lines.resize(associativity); // Resize the vector of cache lines in each set based on the associativity
+
+        for (uint8_t j = 0; j < associativity; ++j)
+        {
+            sets[i].lines[j].valid = false; // Initialize all lines as invalid
+            sets[i].lines[j].dirty = false; // Initialize all lines as not dirty
+            sets[i].lines[j].tag = 0;
+            sets[i].lines[j].lastAccessTime = 0; // Initialize last access time to 0
+        }
+    }
+}
+
+CacheLine* CacheStorage::findLine(uint8_t setIndex, uint64_t tag)
+{
+    CacheSet& set = sets[setIndex]; // Get the cache set based on the set index
+
+    for (CacheLine& line : set.lines) // Loop through the lines in the set
+    {
+        if (line.valid && line.tag == tag) // Check if the line is valid and the tag matches
+        {
+            return &line; // Return a pointer to the matching cache line
+        }
+    }
+
+    return nullptr; // Return nullptr if no matching line is found
+}
+
+uint8_t CacheStorage::findLineIndex(uint8_t setIndex, uint64_t tag)
+{
+    CacheSet& set = sets[setIndex];
+    for (uint8_t i = 0; i < set.lines.size(); ++i)
+        if (set.lines[i].valid && set.lines[i].tag == tag)
+            return i;
+
+    return -1; // miss
+}
+
+void CacheStorage::invalidateLine(uint8_t setIndex, uint8_t lineIndex)
+{
+    CacheSet& set = sets[setIndex]; // Get the cache set based on the set index
+    CacheLine& line = set.lines[lineIndex]; // Get the cache line based on the line index
+
+    if (line.valid) // Check if the line is valid before invalidating
+    {
+        line.valid = false; // Invalidate the line
+        line.dirty = false; // Mark the line as not dirty
+    }
+}
+
+void CacheStorage::invalidateAllLines()
+{
+    for (uint8_t i = 0; i < sets.size(); ++i) // Loop through all cache sets
+    {
+        for (uint8_t j = 0; j < sets[i].lines.size(); ++j) // Loop through all lines in the cache set
+        {
+            invalidateLine(i, j); // Invalidate each line in the cache set
+        }
+    }
+}
+
+
+void CacheStorage::invalidateLineByAddress(AddressInfo addressInfo)
+{
+    uint8_t lineIndex = findLineIndex(addressInfo.setIndex, addressInfo.tag); // Find the line index based on the set index and tag from the address information
+
+    if (lineIndex < 0) [[unlikely]] // If no matching line is found, return without invalidating
+        return;
+
+    invalidateLine(addressInfo.setIndex, lineIndex); // Invalidate the specific cache line based on the set index and line index
+}
+
+void CacheStorage::flush(auto&& memoryWriteFunction)
+{
+    for (CacheSet& set : sets) // Loop through all cache sets
+    {
+        for (CacheLine& line : set.lines) // Loop through all lines in the cache set
+        {
+            if (line.valid && line.dirty) // Check if the line is valid and dirty before flushing
+            {
+                memoryWriteFunction(set, line);
+                // Example: memory.write(line.tag * CACHE_LINE_SIZE, line.data);
+                line.dirty = false; // Mark the line as not dirty after flushing
+            }
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void RequestScheduler::tick()
+{
+    for (auto it = pendingRequests.begin(); it != pendingRequests.end(); )
+    {
+        if (it->state == RequestState::WAITING_LATENCY) // Check if the request is in WAITING state
+        {
+            --(it->remainingLatency); // Decrement the remaining latency for the request
+
+            if (it->remainingLatency <= 0) // If the request is ready to be processed
+            {
+                it->state = RequestState::READY_TO_PROCESS; // Update the state to READY_TO_PROCESS
+                cacheControllerCallback(*(it->request)); // Call the cache controller callback function to process the request
+                it = pendingRequests.erase(it); // Remove the request from the pending requests vector after processing
+            }
+            else
+            {
+                ++it; // Move to the next request in the vector
+            }
+        }
+        else
+        {
+            ++it; // Move to the next request in the vector if it's not in WAITING state
+        }
+    }
+}
 /*
 /// CacheLevel class implementation
 CacheLevel::CacheLevel(uint64_t size, uint64_t associativity, uint64_t latency, Bus& bus, CacheLevel* nextLevel, CacheLevel* parentLevel)

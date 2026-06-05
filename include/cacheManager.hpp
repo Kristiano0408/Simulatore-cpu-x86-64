@@ -18,15 +18,16 @@
 
 //basic structure for the cache line
 //it contains the data, the tag, the valid bit and the dirty bit
-struct CacheLine
+struct alignas(CACHE_LINE_SIZE) CacheLine
 {
-    bool valid;
-    bool dirty; // Indicates if the line has been modified
+    std::array<uint8_t, CACHE_LINE_SIZE> data;  // Data stored in the cache line
 
     uint64_t tag;
-    std::array<uint8_t, CACHE_LINE_SIZE> data;  // Data stored in the cache line
-    
     uint64_t lastAccessTime; // use it as a counter for replacement policy, syncronized with clock when access
+
+    bool valid;
+    bool dirty; // Indicates if the line has been modified
+   
 
     CacheLine() : valid(false), dirty(false), tag(0), data{}, lastAccessTime(0) {}
 
@@ -44,11 +45,12 @@ struct CacheSet
 
 
 struct PendingRequest
-{
-    std::unique_ptr<CacheRequest> request;
-    RequestState state = RequestState::IDLE;
-    int remainingLatency; // Remaining latency in ticks
+{   
     CacheLine line= CacheLine{}; //copy of the line 
+    std::unique_ptr<CacheRequest> request;
+    int remainingLatency; // Remaining latency in ticks
+    RequestState state = RequestState::IDLE;
+    
 
     PendingRequest(std::unique_ptr<CacheRequest> req, int latency)
         : request(std::move(req)), remainingLatency(latency) {}
@@ -57,7 +59,7 @@ struct PendingRequest
         : request(std::move(req)), remainingLatency(latency), line(res) {}
     PendingRequest() = default;
 };
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct AddressInfo
 {
@@ -70,64 +72,74 @@ struct AddressInfo
         : address(addr), setIndex(setIdx), tag(tg), offset(off) {}
 };
 
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class ReplacementPolicy
 {
     public:
-        virtual uint64_t selectLineToReplace(CacheSet& set) = 0; // Pure virtual function to select a line to replace based on the replacement policy
-        virtual void updateOnAccess(CacheSet& set, uint64_t lineIndex) = 0; // Pure virtual function to update the replacement policy state on cache access
-        virtual void onLineLoaded(CacheSet& set, uint64_t lineIndex) = 0; // Pure virtual function to update the replacement policy state when a line is loaded into the cache
+        virtual uint8_t selectLineToReplace(CacheSet& set) = 0; // Pure virtual function to select a line to replace based on the replacement policy
+        virtual void updateOnAccess(CacheSet& set, uint8_t lineIndex) = 0; // Pure virtual function to update the replacement policy state on cache access
+        virtual void onLineLoaded(CacheSet& set, uint8_t lineIndex) = 0; // Pure virtual function to update the replacement policy state when a line is loaded into the cache
+        virtual void initializeSet(uint8_t setIndex, uint8_t associativity) = 0; // Pure virtual function to initialize the replacement policy state for a cache set
         virtual ~ReplacementPolicy() = default; // Virtual destructor for proper cleanup of derived classes
 };
 
+
+
 struct LRUState
 {
-   std::list<uint64_t> lineIndices; // List to maintain the order of line indices based on recency of access (least recently accessed at the front)
-   std::unordered_map<uint64_t, std::list<uint64_t>::iterator> indexMap; // Map to quickly access the position of a line index in the list for O(1) updates
-
+   std::vector<uint8_t> lineIndices; // Vector to maintain the order of line indices based on recency of access (least recently accessed at the front)
+   std::unordered_map<uint8_t, uint8_t> indexMap; // Map to quickly access the position of a line index in the vector for O(1) updates
+   uint8_t validLines = 0; // Counter to keep track of the number of valid lines in the cache set, used for optimization to quickly find free lines without searching through the vector
 };
 //LRU replacement policy implementation
 class LRUReplacementPolicy : public ReplacementPolicy
 {
     private:
-        std::unordered_map<uint64_t, LRUState> lruMap; // Map to hold the LRU state for each cache set (set index mapped to a vector of line indices ordered by recency of access)
+        std::unordered_map<uint8_t, LRUState> lruMap; // Map to hold the LRU state for each cache set (set index mapped to a vector of line indices ordered by recency of access)
     public:
-        LRUReplacementPolicy(const uint64_t& numSets, const uint64_t& associativity); // Constructor to initialize the LRU state for all cache sets based on the number of sets and associativity
-        void initializeSet(uint64_t setIndex, uint64_t associativity); // Function to initialize the LRU state for a cache set
-        uint64_t selectLineToReplace(CacheSet& set) override; // Override of the function to select a line to replace based on LRU policy
-        void updateOnAccess(CacheSet& set, uint64_t lineIndex) override; // Override of the function to update the LRU state on cache access
-        void onLineLoaded(CacheSet& set, uint64_t lineIndex) override; // Override of the function to update the LRU state when a line is loaded into the cache
+        LRUReplacementPolicy(const uint8_t& numSets, const uint8_t& associativity); // Constructor to initialize the LRU state for all cache sets based on the number of sets and associativity
+        void initializeSet(uint8_t setIndex, uint8_t associativity) override; // Function to initialize the LRU state for a cache set
+        uint8_t selectLineToReplace(CacheSet& set) override; // Override of the function to select a line to replace based on LRU policy
+        void updateOnAccess(CacheSet& set, uint8_t lineIndex) override; // Override of the function to update the LRU state on cache access
+        void onLineLoaded(CacheSet& set, uint8_t lineIndex) override; // Override of the function to update the LRU state when a line is loaded into the cache
 };
 
 
 struct PLRUTree
 {
     std::vector<bool> bits; // Vector to hold the bits of the PLRU tree, where each bit indicates the direction to take for replacement (0 for left, 1 for right)
+    uint8_t validLines = 0; // Counter to keep track of the number of valid lines in the cache set, used for optimization to quickly find free lines without traversing the tree
+    PLRUTree(uint8_t associativity) : bits(associativity - 1, false) {} // Constructor to initialize the PLRU tree based on the associativity of the cache set
+    uint8_t selectLineToReplace(); // Function to select a line to replace based on the PLRU tree
+    void updateLine(uint8_t lineIndex); // Function to update the PLRU tree on cache access to reflect the most recently used line
 
-    PLRUTree(uint64_t associativity) : bits(associativity - 1, false) {} // Constructor to initialize the PLRU tree based on the associativity of the cache set
 };
 //PLRU replacement policy implementation    
 class PLRUReplacementPolicy : public ReplacementPolicy
 {
     private:
-        std::unordered_map<uint64_t, PLRUTree> plruMap; // Map to hold the PLRU state for each cache set (set index mapped to a vector of bits representing the PLRU tree)
+        std::unordered_map<uint8_t, PLRUTree> plruMap; // Map to hold the PLRU state for each cache set (set index mapped to a vector of bits representing the PLRU tree)
     public:
-        PLRUReplacementPolicy(const uint64_t& numSets, const uint64_t& associativity); // Constructor to initialize the PLRU state for all cache sets based on the number of sets and associativity
-        uint64_t selectLineToReplace(CacheSet& set) override; // Override of the function to select a line to replace based on PLRU policy
-        void updateOnAccess(CacheSet& set, uint64_t lineIndex) override; // Override of the function to update the PLRU state on cache access
-        void onLineLoaded(CacheSet& set, uint64_t lineIndex) override; // Override of the function to update the PLRU state when a line is loaded into the cache
+        PLRUReplacementPolicy(const uint8_t& numSets, const uint8_t& associativity); // Constructor to initialize the PLRU state for all cache sets based on the number of sets and associativity
+        void initializeSet(uint8_t setIndex, uint8_t associativity) override; // Function to initialize the PLRU state for a cache set
+        uint8_t selectLineToReplace(CacheSet& set) override; // Override of the function to select a line to replace based on PLRU policy
+        void updateOnAccess(CacheSet& set, uint8_t lineIndex) override; // Override of the function to update the PLRU state on cache access
+        void onLineLoaded(CacheSet& set, uint8_t lineIndex) override; // Override of the function to update the PLRU state when a line is loaded into the cache
 
 };
+
 
 //random replacement policy implementation
 class RandomReplacementPolicy : public ReplacementPolicy
 {
     public:
-        uint64_t selectLineToReplace(CacheSet& set) override; // Override of the function to select a line to replace based on random policy
-        void updateOnAccess(CacheSet& set, uint64_t lineIndex) override {} // No state to update for random replacement policy
-        void onLineLoaded(CacheSet& set, uint64_t lineIndex) override {} // No state to update when a line is loaded for random replacement policy
+        uint8_t selectLineToReplace(CacheSet& set) override; // Override of the function to select a line to replace based on random policy
+        void updateOnAccess(CacheSet& set, uint8_t lineIndex) override {} // No state to update on access for random replacement policy
+        void onLineLoaded(CacheSet& set, uint8_t lineIndex) override {} // No state to update when a line is loaded for random replacement policy
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class WritePolicy
 {
@@ -165,7 +177,7 @@ class WriteBackAllocate : public WritePolicy
         bool writeAllocateOnMiss() const override { return true; } // Override to indicate that this policy is write-allocate on miss
 };
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 class CacheStorage
@@ -174,15 +186,15 @@ class CacheStorage
         std::vector<CacheSet> sets; // Cache sets
 
     public:
-        CacheStorage(uint64_t numSets, uint64_t associativity); // Constructor to initialize the cache storage with the specified number of sets and associativity
-        CacheSet& getSet(uint64_t setIndex);
+        CacheStorage(uint8_t numSets, uint8_t associativity); // Constructor to initialize the cache storage with the specified number of sets and associativity
+        CacheSet& getSet(uint8_t setIndex) { return sets[setIndex]; } // Function to get a reference to a cache set based on the set index
         std::vector<CacheSet>& getSets() { return sets; }
-        CacheLine* findLine(uint64_t setIndex, uint64_t tag); // Function to find a cache line based on set index and tag
-        uint64_t findFreeLineIndex(uint64_t setIndex); // Function to find a free line index in a set
-        void invalidateLine(uint64_t setIndex, uint64_t lineIndex); // Function to invalidate a specific cache line
+        CacheLine* findLine(uint8_t setIndex, uint64_t tag); // Function to find a cache line based on set index and tag
+        uint8_t findLineIndex(uint8_t setIndex, uint64_t tag); // Function to find the index of a cache line based on set index and tag
+        void invalidateLine(uint8_t setIndex, uint8_t lineIndex); // Function to invalidate a specific cache line
         void invalidateAllLines(); // Function to invalidate all cache lines in the cache storage
         void invalidateLineByAddress(AddressInfo addressInfo); // Function to invalidate a specific cache line based on address information
-        void flush();
+        void flush(auto&& memoryWriteFunction); // Function to flush the cache by writing back all dirty lines to memory using the provided memory write function
 
 };
 
@@ -190,9 +202,9 @@ class RequestScheduler
 {
     private:
         std::vector<PendingRequest> pendingRequests; // Vector to hold pending requests being processed by the cache scheduler
-        EventHandler& controllerEventHandler; // Reference to the event handler for managing cache events and callbacks
+        std::function<void(CacheRequest&)> cacheControllerCallback; // Callback function to be called when a cache request is ready to be processed by the cache controller
     public:
-        RequestScheduler(EventHandler& handler) : controllerEventHandler(handler) {}
+        RequestScheduler(std::function<void(CacheRequest&)> cacheControllerCallback) : cacheControllerCallback(std::move(cacheControllerCallback)) {} // Constructor to initialize the request scheduler with a callback function for processing cache requests
         void tick(); // Function to be called every clock tick to process pending requests
         void scheduleRequest(std::unique_ptr<CacheRequest>&& request); // Function to schedule a cache request
         void processRequests(); // Function to process scheduled cache requests
@@ -202,9 +214,8 @@ class CacheController
 {
     private:
         EventHandler& cacheEventHandler; // Event handler for managing cache events and callbacks
-        EventHandler  controllerEventHandler; // Event handler for managing controller-specific events and callbacks
     public:
-    CacheController(EventHandler& eventHandler) : cacheEventHandler(eventHandler) {}
+    CacheController(EventHandler& eventHandler);
     void lookupCache(const AddressInfo& addressInfo); // Function to perform cache lookup based on address information
     void handleRequest(CacheRequest& request); // Function to handle incoming cache requests and coordinate the cache operations
     

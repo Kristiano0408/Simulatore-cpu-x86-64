@@ -317,6 +317,8 @@ enum class RequestType
 
 enum class RequestState
 {
+    WAITING_LATENCY,
+    READY_TO_PROCESS,
     IDLE,
     PROCESSING,
     HIT_READY,
