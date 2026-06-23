@@ -713,35 +713,12 @@ void CacheLevel::propagateWriteToNextLevel(CacheRequest& request, bool propagate
 
 void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& request)
 {
-    Result<anydata> response;
-    std::array<uint8_t, 16> dataBuffer; // Buffer to hold the data read from the cache line
+    Result<std::array<uint8_t,16>> response {};
     CacheLine* line = storage.findLine(addressInfo.setIndex, addressInfo.tag); // Find the cache line based on the set index and tag from the address informatio
     if (line != nullptr) // If a matching cache line is found
     {
 
-        std::memcpy(dataBuffer.data(), line->data.data() + addressInfo.offset, size_t(request.dataType)); // Copy the requested data from the cache line to the request's data buffer based on the offset and data type
-
-       
-        switch (request.dataType)
-        {
-            case TypeofData::UINT8_T:
-                response.data = extractValueFromBuffer<uint8_t>(dataBuffer); // Extract the uint8_t value from the data buffer based on the specified data type
-                break;
-            case TypeofData::UINT16_T:
-                response.data = extractValueFromBuffer<uint16_t>(dataBuffer); // Extract the uint16_t value from the data buffer based on the specified data type
-                break;
-            case TypeofData::UINT32_T:
-                response.data = extractValueFromBuffer<uint32_t>(dataBuffer); // Extract the uint32_t value from the data buffer based on the specified data type
-                break;
-            case TypeofData::UINT64_T:
-                response.data = extractValueFromBuffer<uint64_t>(dataBuffer); // Extract the uint64_t value from the data buffer based on the specified data type
-                break;
-            case TypeofData::ARRAY_16B:
-                response.data = dataBuffer; // Return the entire 16-byte array from the data buffer for the ARRAY_16B data type
-                break;
-            default:
-                break;
-        }
+        std::memcpy(response.data.data(), line->data.data() + addressInfo.offset, size_t(request.dataType)); // Copy the requested data from the cache line to the request's data buffer based on the offset and data type
 
         response.success = true; // Indicate that the request was successful if a matching cache line is found and the data is extracted successfully
         response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if a matching cache line is found and the data is extracted successfully
@@ -751,7 +728,7 @@ void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& re
     }
     else
     {
-            response.data = std::monostate{}; // Return an empty value if there is no callback function for the request
+            response.data = {};
             response.success = false; // Indicate that the request was not successful if there is no callback function for the request
             response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if there is no callback function for the request
             response.errorInfo.event = EventType::CACHE_READ_ERROR; // Set the error event type to ERROR if there is no callback function for the request
@@ -762,7 +739,7 @@ void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& re
 
     bool success = response.success; // Store the success status of the request in a local variable for use in the callback function
 
-    bus.getCPU().cacheResponseQueue[request.requestID] = std::make_unique<Result<anydata>>(std::move(response)); // Add the completed request to the CPU's cache response queue for further processing by the CPU
+    bus.getCPU().cacheResponseQueue[request.requestID] =std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
     
     if(success && request.callback) // If the request was successful and there is a callback function defined for the request
     {
@@ -772,37 +749,16 @@ void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& re
 
 void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressInfo& addressInfo2, CacheRequest& request)
 {
-    Result<anydata> response;
-    std::array<uint8_t, 16> dataBuffer; // Buffer to hold the data read from the cache lines
+    Result<std::array<uint8_t, 16>> response {};
     CacheLine* line1 = storage.findLine(addressInfo1.setIndex, addressInfo1.tag); // Find the first cache line based on the set index and tag from the address information
     CacheLine* line2 = storage.findLine(addressInfo2.setIndex, addressInfo2.tag); // Find the second cache line based on the set index and tag from the address information
 
 
     if(line1 != nullptr && line2 != nullptr) // If both cache lines are found for the cross-line access
     {
-        std::memcpy(dataBuffer.data(), line1->data.data() + addressInfo1.offset, (CACHE_LINE_SIZE - addressInfo1.offset)); // Copy the requested data from the first cache line to the data buffer based on the offset and data type
-        std::memcpy(dataBuffer.data() + (CACHE_LINE_SIZE - addressInfo1.offset), line2->data.data(), size_t(request.dataType) - (CACHE_LINE_SIZE - addressInfo1.offset)); // Copy the remaining data from the second cache line to the data buffer based on the offset and data type
+        std::memcpy(response.data.data(), line1->data.data() + addressInfo1.offset, (CACHE_LINE_SIZE - addressInfo1.offset)); // Copy the requested data from the first cache line to the data buffer based on the offset and data type
+        std::memcpy(response.data.data() + (CACHE_LINE_SIZE - addressInfo1.offset), line2->data.data(), size_t(request.dataType) - (CACHE_LINE_SIZE - addressInfo1.offset)); // Copy the remaining data from the second cache line to the data buffer based on the offset and data type
 
-        switch (request.dataType)
-        {
-            case TypeofData::UINT8_T:
-                response.data = extractValueFromBuffer<uint8_t>(dataBuffer); // Extract the uint8_t value from the data buffer based on the specified data type
-                break;
-            case TypeofData::UINT16_T:
-                response.data = extractValueFromBuffer<uint16_t>(dataBuffer); // Extract the uint16_t value from the data buffer based on the specified data type
-                break;
-            case TypeofData::UINT32_T:
-                response.data = extractValueFromBuffer<uint32_t>(dataBuffer); // Extract the uint32_t value from the data buffer based on the specified data type
-                break;
-            case TypeofData::UINT64_T:
-                response.data = extractValueFromBuffer<uint64_t>(dataBuffer); // Extract the uint64_t value from the data buffer based on the specified data type
-                break;
-            case TypeofData::ARRAY_16B:
-                response.data = dataBuffer; // Return the entire 16-byte array from the data buffer for the ARRAY_16B data type
-                break;
-            default:
-                break;
-        }
 
         response.success = true; // Indicate that the request was successful if both cache lines are found and the data is extracted successfully
         response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if both cache lines are found and the data is extracted successfully
@@ -814,7 +770,7 @@ void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressIn
     }
     else
     {
-        response.data = std::monostate{}; // Return an empty value if there is no callback function for the request
+        response.data = {};
         response.success = false; // Indicate that the request was not successful if there is no callback function for the request
         response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if there is no callback function for the request
         response.errorInfo.event = EventType::CACHE_READ_ERROR; // Set the error event type to ERROR if there is no callback function for the request
@@ -823,7 +779,7 @@ void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressIn
 
     bool success = response.success; // Store the success status of the request in a local variable for use in the callback function
 
-    bus.getCPU().cacheResponseQueue[request.requestID] = std::make_unique<Result<anydata>>(std::move(response)); // Add the completed request to the CPU's cache response queue for further processing by the CPU
+    bus.getCPU().cacheResponseQueue[request.requestID] =std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
 
     if(success && request.callback) // If the request was successful and there is a callback function defined for the request
     {
@@ -834,7 +790,7 @@ void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressIn
 void CacheLevel::writeSingleLine(const AddressInfo& addressInfo, CacheRequest& request)
 {
     CacheLine* line = storage.findLine(addressInfo.setIndex, addressInfo.tag); // Find the cache line based on the set index and tag from the address information
-    Result<anydata> response;
+    Result<std::array<uint8_t,16>> response {};
 
     if (line != nullptr) // If a matching cache line is found
     {
@@ -868,7 +824,7 @@ void CacheLevel::writeSingleLine(const AddressInfo& addressInfo, CacheRequest& r
 
     bool success = response.success; // Store the success status of the request in a local variable for use in the callback function
 
-    bus.getCPU().cacheResponseQueue[request.requestID] = std::make_unique<Result<anydata>>(std::move(response)); // Add the completed request to the CPU's cache response queue for further processing by the CPU
+    bus.getCPU().cacheResponseQueue[request.requestID] = std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
 
     if(success && request.callback) // If the request was successful and there is a callback function defined for the request
     {
@@ -880,7 +836,7 @@ void CacheLevel::writeCrossLines(const AddressInfo& addressInfo1, const AddressI
 {
     CacheLine* line1 = storage.findLine(addressInfo1.setIndex, addressInfo1.tag); // Find the first cache line based on the set index and tag from the address information
     CacheLine* line2 = storage.findLine(addressInfo2.setIndex, addressInfo2.tag); // Find the second cache line based on the set index and tag from the address information
-    Result<anydata> response;
+    Result<std::array<uint8_t,16>> response {};
 
     if (line1 != nullptr && line2 != nullptr) // If both cache lines are found for the cross-line access
     {
@@ -915,7 +871,7 @@ void CacheLevel::writeCrossLines(const AddressInfo& addressInfo1, const AddressI
 
     bool success = response.success; // Store the success status of the request in a local variable for use in the callback function
 
-    bus.getCPU().cacheResponseQueue[request.requestID] = std::make_unique<Result<anydata>>(std::move(response)); // Add the completed request to the CPU's cache response queue for further processing by the CPU
+    bus.getCPU().cacheResponseQueue[request.requestID] = std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
 
     if(success && request.callback) // If the request was successful and there is a callback function defined for the request
     {

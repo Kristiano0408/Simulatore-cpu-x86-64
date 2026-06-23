@@ -82,11 +82,9 @@ class CPU: public Device
 
         PipelineController& getPipelineController();
 
-        void sendCacheRequest(std::unique_ptr<CacheRequest> request); //send a cache request
+        void sendCacheRequest(CacheRequest&& request); //send a cache request
 
-        void processCacheResponse(std::unique_ptr<Result<anydata>> response); //process a cache response
-
-        std::unordered_map<int, std::unique_ptr<Result<anydata>>> cacheResponseQueue; //map for cache responses
+        std::unordered_map<int, Result<std::array<uint8_t,16>>> cacheResponseQueue; //map for cache responses
 
         void incrementInstructionIdCounter() { instructionIdCounter++; }
 

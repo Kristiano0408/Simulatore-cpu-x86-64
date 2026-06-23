@@ -81,46 +81,21 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
 
     
 
-    Result<anydata> result = *(it->second);
+    Result<std::array<uint8_t,16>> result = (it->second);
 
     debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
 
     //extarcting the correct data from the variant
-    std::array<uint8_t, 16> buffer {0}; //buffer for the instruction (max length of an instruction is 16 bytes)
+    std::array<uint8_t, 16> buffer {}; //buffer for the instruction (max length of an instruction is 16 bytes)
 
-    //using the visist to extract the data
-    Result<std::array<uint8_t, 16>> temp_result;
 
     debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
 
-    std::visit([&](auto&& value)
-    {
-        using T = std::decay_t<decltype(value)>;
-
-        if constexpr (std::is_same_v<T, std::array<uint8_t, 16>>)
-        {
-            temp_result.data = value;
-            temp_result.success = result.success;
-            temp_result.errorInfo = result.errorInfo;
-        }
-        else
-        {
-            // Handle unexpected type
-            temp_result.success = false;
-            temp_result.errorInfo.event = EventType::CACHE_READ_ERROR;
-            temp_result.errorInfo.source = ComponentType::CACHE;
-            temp_result.errorInfo.message = "Unexpected data type in cache response";
-            temp_result.errorInfo.error = ErrorType::READ_FAIL;
-        }
-    }, result.data);
-
-    debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
-
-    if (temp_result.success)
-        std::memcpy(buffer.data(), temp_result.data.data(), 16);
+    if (result.success)
+        std::memcpy(buffer.data(), result.data.data(), 16);
     else 
     {
-        debugLog("Error fetching instruction: " + temp_result.errorInfo.message);
+        debugLog("Error fetching instruction: " + result.errorInfo.message);
         // Handle the error appropriately (e.g., throw an exception, return an error code, etc.)
     }
 

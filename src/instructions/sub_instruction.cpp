@@ -50,7 +50,7 @@ void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
     getSourceOperand()->setSize(bit);
     getDestinationOperand()->setSize(bit);
 
-    Result<anydata> response;
+    Result<uint64_t> response;
 
     response = getSourceOperand()->getValue(eventHandler.getCallback("MEMORY_DONE_EXECUTE"));
 
@@ -104,7 +104,7 @@ void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
 
 void SubInstruction::updateExecution(Bus& bus, [[maybe_unused]] EventHandler& eventHandler)
 {
-    Result<anydata> response;
+    Result<uint64_t> response;
 
     response = getSourceOperand()->getValue(nullptr);
 
@@ -146,7 +146,7 @@ void SubInstruction::execute([[maybe_unused]] Bus& bus)
     }
     
     debugLog("Subtraction executed");
-    debugLog("Result: " + to_string_hex(std::get<uint64_t>(tempValues.resultValue)));
+    debugLog("Result: " + to_string_hex(tempValues.resultValue));
     
 }
 
@@ -194,7 +194,7 @@ void SubInstruction::accessMemory([[maybe_unused]] Bus& bus)
         
         //extracting the result
         Result<void> result;
-        Result<anydata>& response = *(it->second);
+        Result<std::array<uint8_t,16>>& response =(it->second);
 
         result.success = response.success;
         result.errorInfo = response.errorInfo;

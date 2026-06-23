@@ -71,7 +71,7 @@ void CPU::execute_operation()
 }
 
 
-void CPU::sendCacheRequest(std::unique_ptr<CacheRequest> request)
+void CPU::sendCacheRequest(CacheRequest&& request)
 {
-    cacheManager.enqueRequest(std::move(*request));
+    cacheManager.enqueRequest(std::move(request));
 }

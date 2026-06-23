@@ -367,9 +367,9 @@ enum class TypeofData
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 struct temporaryValues {
-        anydata srcValue; //value of the source operand
-        anydata destValue; //value of the destination operand
-        anydata resultValue; //result of the operation
+        uint64_t srcValue; //value of the source operand
+        uint64_t destValue; //value of the destination operand
+        uint64_t resultValue; //result of the operation
         bool CF; //Carry Flag
         bool ZF; //Zero Flag
         bool SF; //Sign Flag

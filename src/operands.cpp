@@ -299,32 +299,23 @@ int Operand::getSize() const {
 
 
 
-Result<void> RegOperand::setValue(anydata v, [[maybe_unused]] std::function<void()> callback)
+Result<void> RegOperand::setValue(uint64_t v, [[maybe_unused]] std::function<void()> callback)
 {
-    // Using std::visit to handle the variant type 
-    std::visit([this](auto&& arg) {
-        using T = std::decay_t<decltype(arg)>;
+    
+    uint64_t bitCount = this->size * 8;
+    const uint64_t mask = (bitCount == 64) ? ~0ULL : ((1ULL << bitCount) - 1);
 
-        //assingning the value to the register based on the type(8 bit will modify only the lower 8 bit of the register, 16 bit the lower 16 bit and so on)
-        if constexpr (std::is_integral_v<T>) {
+    // Applica la maschera coerente alla size del tipo
+    const uint64_t value = v & mask;
+    this->reg = (this->reg & ~mask) | value;
             
-            constexpr uint64_t bitCount = sizeof(T) * 8;
-            const uint64_t mask = (bitCount == 64) ? ~0ULL : ((1ULL << bitCount) - 1);
-
-            // Applica la maschera coerente alla size del tipo
-            const uint64_t value = static_cast<uint64_t>(arg) & mask;
-            this->reg = (this->reg & ~mask) | value;
-            
-        }
-    }, v);
-
     return Result<void>{true, {}};
 }
 
-Result<anydata> RegOperand::getValue([[maybe_unused]] std::function<void()> callback) 
+Result<uint64_t> RegOperand::getValue([[maybe_unused]] std::function<void()> callback) 
 {
-    anydata result;
-    int64_t mask;
+    uint64_t result {};
+    int64_t mask {};
 
     if(this->size == 64)
         mask = 0xFFFFFFFFFFFFFFFF;
@@ -334,11 +325,11 @@ Result<anydata> RegOperand::getValue([[maybe_unused]] std::function<void()> call
     result = this->reg & mask;
 
 
-    return Result<anydata>{result, true, {}};
+    return Result<uint64_t>{result, true, {}};
 }
 
 
-Result<void> MemOperand::setValue(anydata v, std::function<void()> callback) {
+Result<void> MemOperand::setValue(uint64_t v, std::function<void()> callback) {
     
     if (this->size == 0)
         return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot set value."}};
@@ -346,33 +337,25 @@ Result<void> MemOperand::setValue(anydata v, std::function<void()> callback) {
     TypeofData dataTypeSize = TypeofData::UNKNOWN;
     std::array<uint8_t, 16> out{}; // Buffer per i dati da scrivere, dimensione massima di 16 byte
     
-    std::visit([&](auto&& val)
+    
+    switch(size)
     {
-        using T = std::decay_t<decltype(val)>;
-
-        if constexpr (!std::is_same_v<T, std::monostate> && !std::is_same_v<T,std::array<uint8_t,64>> && !std::is_same_v<T,std::array<uint8_t,128>>)
-        {
-            std::memcpy(out.data(), &val, sizeof(T)); // Copia i dati nel buffer
-            switch(sizeof(T))
-            {
-                case 1:
-                    dataTypeSize = TypeofData::UINT8_T;
-                    break;
-                case 2:
-                    dataTypeSize = TypeofData::UINT16_T;
-                    break;
-                case 4:
-                    dataTypeSize = TypeofData::UINT32_T;
-                    break;
-                case 8:
-                    dataTypeSize = TypeofData::UINT64_T;
-                    break;
-                default:
-                    dataTypeSize = TypeofData::UNKNOWN;
-                    break;
-            }
-        }
-    }, v);
+        case 1:
+            dataTypeSize = TypeofData::UINT8_T;
+            break;
+        case 2:
+            dataTypeSize = TypeofData::UINT16_T;
+            break;
+        case 4:
+            dataTypeSize = TypeofData::UINT32_T;
+            break;
+        case 8:
+            dataTypeSize = TypeofData::UINT64_T;
+            break;
+        default:
+            dataTypeSize = TypeofData::UNKNOWN;
+            break;
+    }
 
     if(!requestSent)
     {
@@ -401,7 +384,7 @@ Result<void> MemOperand::setValue(anydata v, std::function<void()> callback) {
             
             //extracting the result
             Result<void> result;
-            Result<anydata>& response = *(it->second);
+            Result<std::array<uint8_t,16>>& response =(it->second);
 
             result.success = response.success;
             result.errorInfo = response.errorInfo;
@@ -430,16 +413,16 @@ Result<void> MemOperand::setValue(anydata v, std::function<void()> callback) {
     }
 }
 
-Result<anydata> MemOperand::getValue(std::function<void()> callback) {
+Result<uint64_t> MemOperand::getValue(std::function<void()> callback) {
     
 
     if (this->size == 0)
     {
-        return Result<anydata>{{},false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot get value."}};
+        return Result<uint64_t>{{},false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot get value."}};
     }
 
     //extracting value first from cache, then from memory if necessary
-    Result<anydata> result;
+    Result<uint64_t> result;
 
     if(!readRequestSent)
     {
@@ -469,7 +452,7 @@ Result<anydata> MemOperand::getValue(std::function<void()> callback) {
 
         bus.getCPU().getCacheManager().enqueRequest(CacheRequest(RequestType::READ, dataTypeSize, this->address,std::array<uint8_t, 16>{}, false, instructionID, callback));
 
-        return Result<anydata>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request sent. Waiting for completion."}};
+        return Result<uint64_t>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request sent. Waiting for completion."}};
     }
     else
     {
@@ -486,7 +469,7 @@ Result<anydata> MemOperand::getValue(std::function<void()> callback) {
             debugLog("MemOperand: Read request completed for address " + to_string_hex(this->address) + ".");
             
             //extracting the result
-            Result<anydata>& response = *(it->second);
+            Result<std::array<uint8_t,16>>& response =(it->second);
 
             result.success = response.success;
             result.errorInfo = response.errorInfo;
@@ -495,7 +478,7 @@ Result<anydata> MemOperand::getValue(std::function<void()> callback) {
             {
                 debugLog("MemOperand: Read request successful for address " + to_string_hex(this->address) + ".");
                 //getting the value based on the size
-                std::memcpy(&result.data, &response.data, sizeof(response.data));
+                std::memcpy(&result.data, &response.data, this->size);
             }
             else
             {
@@ -511,17 +494,17 @@ Result<anydata> MemOperand::getValue(std::function<void()> callback) {
         {
             //request not completed dhdhhdhd
             debugLog("MemOperand: Read request not completed for address " + to_string_hex(this->address) + ".");
-            return Result<anydata>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request not completed yet."}};
+            return Result<uint64_t>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request not completed yet."}};
         }
     }
 
 }
 
-Result<void> ImmediateOperand::setValue(anydata v, [[maybe_unused]] std::function<void()> callback) {
+Result<void> ImmediateOperand::setValue(uint64_t v, [[maybe_unused]] std::function<void()> callback) {
     this->value = v;
     return Result<void>{true, {ComponentType::OPERAND, EventType::NONE, ErrorType::NONE, ""}};
 }
 
-Result<anydata> ImmediateOperand::getValue([[maybe_unused]] std::function<void()> callback) {
-    return Result<anydata>{this->value, true, {ComponentType::OPERAND, EventType::NONE, ErrorType::NONE, ""}};
+Result<uint64_t> ImmediateOperand::getValue([[maybe_unused]] std::function<void()> callback) {
+    return Result<uint64_t>{this->value, true, {ComponentType::OPERAND, EventType::NONE, ErrorType::NONE, ""}};
 }

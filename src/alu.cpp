@@ -16,18 +16,10 @@ ALU::~ALU()
 
 void ALU::executeOperation(temporaryValues& tempValues, typeofInstruction type)
 {
-    auto getIntegralValue = [](const auto& v) -> uint64_t {
-        return std::visit([](auto&& value) -> uint64_t {
-            using T = std::decay_t<decltype(value)>;
-            if constexpr (std::is_integral_v<T>)
-                return static_cast<uint64_t>(value);
-            else
-                throw std::runtime_error("ALU: operando non integrale");
-        }, v);
-    };
+    
 
-    uint64_t dest = getIntegralValue(tempValues.destValue);
-    uint64_t src  = getIntegralValue(tempValues.srcValue);
+    uint64_t dest = tempValues.destValue;
+    uint64_t src  = tempValues.srcValue;
     uint64_t tmp  = 0;
 
     // Esegui le operazioni normalmente
