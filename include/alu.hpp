@@ -4,9 +4,10 @@
 #ifndef ALU_HPP
 #define ALU_HPP
 #include <cstdint>
-#include "bus.hpp"
+
 #include "helpers.hpp"
 
+class Bus;
 
 class ALU {
     // Implementation of the ALU class

@@ -7,7 +7,7 @@
 #include <iostream>
 #include "helpers.hpp"
 
-
+using LineData = std::array<uint8_t,CACHE_LINE_SIZE>;
 
 class Bus; // Forward declaration of Bus class
 
@@ -17,48 +17,10 @@ public:
     Memory(size_t size, Bus& bus); //constructor that takes the size of the memory and a reference to the Bus
 
     //methods for reading and writing from memory
-    template <typename T>
-    Result<T> readGeneric(uint64_t address) 
-    {
-        Result<T> result;
-        if (address + sizeof(T) > size) //check if the address is out of bounds
-        {
-            std::cerr << "Memory access out of bounds!" << std::endl; //print error message
-            result.success = false;
-            result.errorInfo = {ComponentType::RAM, EventType::RAM_READ_ERROR, ErrorType::OUT_OF_BOUNDS, "Memory access out of bounds!"};
-            return result;
-        }
+    Result<std::array<uint8_t,CACHE_LINE_SIZE>>read(uint64_t address);
+   
 
-        T value {};
-        std::memcpy(&value, &data[address], sizeof(T));
-        result.success = true;
-        result.data = value;
-        result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
-        return result;
-    }
-
-    
-
-
-
-    template <typename T>
-    Result<void> writeGeneric(uint64_t address, T value) 
-    {
-        Result<void> result;
-
-        if (address + sizeof(T) > size) //check if the address is out of bounds
-        {
-            std::cerr << "Memory access out of bounds!" << std::endl; //print error message
-            result.success = false;
-            result.errorInfo = {ComponentType::RAM, EventType::RAM_WRITE_ERROR, ErrorType::OUT_OF_BOUNDS, "Memory access out of bounds!"};
-            return result;
-        }
-
-        std::memcpy(&data[address], &value, sizeof(T));
-        result.success = true;
-        result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
-        return result;
-        }
+    Result<void> write(uint64_t address, LineData line);
 
 
     //get the size of the memory
@@ -89,7 +51,7 @@ public:
     void setBasePointer(uint64_t value);
 
     //push and pop methods for the stack
-    Result<void> push(uint64_t value);
+    Result<void> push([[maybe_unused]] uint64_t value);
 
     Result<uint64_t> pop();
 
@@ -99,10 +61,11 @@ public:
 
 private:
     std::vector<uint8_t> data;
-    size_t size;
-    size_t size_stack;
     uint64_t& RSP;
     uint64_t& RBP;
+    size_t size;
+    size_t size_stack;
+    
 
 
 

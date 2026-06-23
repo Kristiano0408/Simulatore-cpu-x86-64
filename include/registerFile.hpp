@@ -91,8 +91,8 @@ class RegisterFile {
 
     private:
 
-        std::array<std::unique_ptr<Reg>, 17> GPregisters; //array of unique_ptrs to Reg objects
-        std::unique_ptr<FlagReg> flags; //unique_ptr to FlagReg object
+        std::array<Reg,17> GPregisters; //array of unique_ptrs to Reg objects
+        FlagReg flags; //unique_ptr to FlagReg object
 
         //in the future we can add more registers like simmd, xmm, etc.
 

@@ -1,7 +1,10 @@
 
 //refactory massivo
 
-//finire refactory cache(per ora fermo a PLRU)
+//refactory caceh completo, prima fill e poi dato (sistemare latenze fill)
+//finire refactory cache(writeback dirty+ sistemazioni varie (LRu valid lines porcheria, logica cross debole) + cachemanager
+//namespaec variabili globalei per mask,etc..
+//fixare eventHandler(enum class template al posto di string) + fixare Result + capire se usare anydata e visit oppure no + vedere vector pending request
 
 cache pazzurda pazza sgravata(suddivisioen l1 in i e d)
 
@@ -16,7 +19,6 @@ finire refacrory pipeline (ANCEH CONTROLLO SU BUFFER STALLED)
 
 // e controllare pipeline+
 
- metaprogramamzione per visitor(anydata) + inlien in hpp e pulizia codice
 
 ///SUCCESSIVAMNETE
 
@@ -59,13 +61,11 @@ di result si ferma al fetch in cu e nell istruction!!!
 
 //controllo big indian 
 
-//CAPIRE COSA FARE CON BUS E pipeline
 
 //controllare i prefissi sbagliati (ad esempio 0x66 quando ho 8 bit)
 
 //capire cosa fare con prefisso 0x67
 
-//alto livello: separazione tra instruction e visitor
 
 
 

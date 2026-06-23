@@ -1,4 +1,5 @@
 #include "cpu.hpp"
+#include "bus.hpp"
 
 //constructor for the CPU
 CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(bus), registers(), cacheManager(bus, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc), pipeline(bus, nullptr), pipelineController(pipeline)
@@ -72,5 +73,5 @@ void CPU::execute_operation()
 
 void CPU::sendCacheRequest(std::unique_ptr<CacheRequest> request)
 {
-    cacheManager.setRequest(std::move(request));
+    cacheManager.enqueRequest(std::move(*request));
 }

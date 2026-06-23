@@ -7,16 +7,17 @@
 //ricordasri controllo offset e size per evitare buffer overflow
 
 //Constructor
-Memory::Memory(size_t size, Bus& bus) : size(size), RSP(bus.getCPU().getRegisters().getReg(Register::RSP).raw()),
-                                         RBP(bus.getCPU().getRegisters().getReg(Register::RBP).raw()) {
+Memory::Memory(size_t size, Bus& bus): data{}, RSP(bus.getCPU().getRegisters().getReg(Register::RSP).raw()), RBP(bus.getCPU().getRegisters().getReg(Register::RBP).raw())
+{
 
 
     data.resize(size, 0); //initialize the memory with 0
 
+    this->size = size;
     size_stack = size / 4; //initialize the stack size to 1/4 of the memory size
 
-    RSP = size - 1; //initialize the stack pointer to the end of the memory
-    RBP = size - 1; //initialize the base pointer to the end of the memory
+    RSP = this->size - 1; //initialize the stack pointer to the end of the memory
+    RBP = this->size - 1; //initialize the base pointer to the end of the memory
 
 
 };
@@ -72,7 +73,10 @@ uint64_t Memory::getBasePointer() const
     return RBP;
 };
 
-Result<void> Memory::push(uint64_t value)
+
+
+//da sistemare
+Result<void> Memory::push([[maybe_unused]] uint64_t value)
 {
     Result<void> result;
     //controllo overflow
@@ -85,11 +89,13 @@ Result<void> Memory::push(uint64_t value)
     }
 
     RSP -= 8; //decrement the stack pointer
-    result = writeGeneric<uint64_t>(RSP, value); //write the value to the stack
+    ///result = writeGeneric<uint64_t>(RSP, value); //write the value to the stack
     return result;
 };
 
 
+
+///da sistemare
 Result<uint64_t> Memory::pop()
 {
     Result<uint64_t> result;
@@ -102,8 +108,42 @@ Result<uint64_t> Memory::pop()
         return result;
     }
 
-    result = readGeneric<uint64_t>(RSP); //read the value from the stack
+    //result = readGeneric<uint64_t>(RSP); //read the value from the stack
     RSP += 8; //increment the stack pointer
     return result;
 };
 
+
+
+Result<std::array<uint8_t,CACHE_LINE_SIZE>> Memory::read(uint64_t address) 
+{
+    Result<LineData> result {};
+    if (address + sizeof(LineData) > size) //check if the address is out of bounds
+    {
+        result.success = false;
+        result.errorInfo = {ComponentType::RAM, EventType::RAM_READ_ERROR, ErrorType::OUT_OF_BOUNDS, "Memory access out of bounds!"};
+        return result;
+    }
+
+    std::memcpy(&result.data, &data[address], sizeof(LineData));
+    result.success = true;
+    result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
+    return result;
+}
+
+Result<void> Memory::write(uint64_t address, LineData line)
+{
+        Result<void> result;
+
+    if (address + sizeof(LineData) > size) //check if the address is out of bounds
+    {
+        result.success = false;
+        result.errorInfo = {ComponentType::RAM, EventType::RAM_WRITE_ERROR, ErrorType::OUT_OF_BOUNDS, "Memory access out of bounds!"};
+        return result;
+    }
+
+    std::memcpy(&data[address], &line, sizeof(LineData));
+    result.success = true;
+    result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
+    return result;
+}

@@ -19,6 +19,28 @@
 constexpr unsigned CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
 
 
+struct Index
+{
+    std::ptrdiff_t value {};
+
+    constexpr Index() = default;
+    constexpr explicit Index(std::ptrdiff_t v) : value(v) {}
+
+    constexpr Index operator+(std::ptrdiff_t offset) const { return Index(value + offset); }
+    constexpr Index operator-(std::ptrdiff_t offset) const { return Index(value - offset); }
+    constexpr Index& operator++() { ++value; return *this; }
+    constexpr Index& operator--() { --value; return *this; }
+    constexpr Index operator++(int) { Index temp = *this; ++value; return temp; }
+    constexpr Index operator--(int) { Index temp = *this; --value; return temp; }
+    constexpr auto operator<=>(const Index& other) const = default;
+
+
+    constexpr  explicit operator std::ptrdiff_t() const { return value; }
+    constexpr explicit operator std::size_t() const { return static_cast<std::size_t>(value); }
+
+};
+
+
 using anydata = std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, CACHE_LINE_SIZE>,  std::array<uint8_t,2*CACHE_LINE_SIZE>, std::array<uint8_t, 16>>;
 
 //farward declaration of the enum class for registers
@@ -305,10 +327,15 @@ enum class StageType {
 enum class RequestType
 {
     READ,
+    READ_MEMORY_FOR_WRITE_MISS,
     WRITE,
     FILL, // For filling cache lines during a miss
+    READ_AFTER_FILL,
+    WRITE_AFTER_FILL,
     PREFETCH, // For prefetching cache lines
-    NONE
+    NONE,
+    WRITE_BACK, // For writing back dirty cache lines to lower levels or RAM
+    //LINE_FROM_RAM // For getting lines on l3 misses
 };
 
 ////////////////////////////////////////////////////////////////////////////7
@@ -328,10 +355,10 @@ enum class RequestState
 
 enum class TypeofData
 {
-    UINT_8T = 1,
-    UINT_16T = 2,
-    UINT_32T = 4,
-    UINT_64T = 8,
+    UINT8_T = 1,
+    UINT16_T = 2,
+    UINT32_T = 4,
+    UINT64_T = 8,
     ARRAY_16B = 16,
     ARRAY_64B = 64,
     ARRAY_128B = 128,
@@ -413,5 +440,26 @@ std::string to_string_hex(const T& value) {
         return std::to_string(value); // fallback per altri tipi
     }
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+enum class LookUpResult 
+{
+    HIT,
+    MISS,
+    HIT_CROSS_LINES,
+    ERROR
+};
+
+
+
+template<typename T>
+T extractValueFromBuffer(const std::array<uint8_t, 16>& buffer)
+{
+    std::array<uint8_t, sizeof(T)> tempBuffer{}; // Temporary buffer to hold the bytes for the value
+    std::memcpy(tempBuffer.data(), buffer.data(), sizeof(T)); // Copy the bytes from the buffer to the temporary buffer
+    return std::bit_cast<T>(tempBuffer); // Cast the bytes to the desired type T and return the value
+}
+
+
 
 #endif // HELPERS_HPP

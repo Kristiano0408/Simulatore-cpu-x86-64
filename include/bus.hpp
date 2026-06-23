@@ -6,23 +6,25 @@
 #include "helpers.hpp"
 #include "clock.hpp"
 #include "device.hpp"
+#include "cpu.hpp"
+#include "memory.hpp"
 
-class CPU;
-class Memory;
 
 
 class Bus {
 private:
-    std::unique_ptr<CPU> cpu;
-    std::unique_ptr<Memory> memory;
-    std::unique_ptr<Clock> clock;
+    CPU cpu;
+    Memory memory;
+    Clock clock;
 
 public:
+
+
     Bus();
     void tick(); // esegue un ciclo di clock
-    CPU& getCPU() { return *cpu; }
-    Memory& getMemory() { return *memory; }
-    Clock& getClock() { return *clock; }
+    CPU& getCPU() { return cpu; }
+    Memory& getMemory() { return memory; }
+    Clock& getClock() { return clock; }
 
     void resetClock();
 

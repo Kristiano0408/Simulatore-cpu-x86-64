@@ -302,7 +302,6 @@ int Operand::getSize() const {
 Result<void> RegOperand::setValue(anydata v, [[maybe_unused]] std::function<void()> callback)
 {
     // Using std::visit to handle the variant type 
-
     std::visit([this](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
 
@@ -344,29 +343,29 @@ Result<void> MemOperand::setValue(anydata v, std::function<void()> callback) {
     if (this->size == 0)
         return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot set value."}};
 
-    TypeofData dataTypeSize;
-    std::array<uint8_t, 15> out{}; // Buffer per i dati da scrivere, dimensione massima di 15 byte
+    TypeofData dataTypeSize = TypeofData::UNKNOWN;
+    std::array<uint8_t, 16> out{}; // Buffer per i dati da scrivere, dimensione massima di 16 byte
     
     std::visit([&](auto&& val)
     {
         using T = std::decay_t<decltype(val)>;
 
-        if constexpr (!std::is_same_v<T, std::monostate>)
+        if constexpr (!std::is_same_v<T, std::monostate> && !std::is_same_v<T,std::array<uint8_t,64>> && !std::is_same_v<T,std::array<uint8_t,128>>)
         {
             std::memcpy(out.data(), &val, sizeof(T)); // Copia i dati nel buffer
             switch(sizeof(T))
             {
                 case 1:
-                    dataTypeSize = TypeofData::UINT_8T;
+                    dataTypeSize = TypeofData::UINT8_T;
                     break;
                 case 2:
-                    dataTypeSize = TypeofData::UINT_16T;
+                    dataTypeSize = TypeofData::UINT16_T;
                     break;
                 case 4:
-                    dataTypeSize = TypeofData::UINT_32T;
+                    dataTypeSize = TypeofData::UINT32_T;
                     break;
                 case 8:
-                    dataTypeSize = TypeofData::UINT_64T;
+                    dataTypeSize = TypeofData::UINT64_T;
                     break;
                 default:
                     dataTypeSize = TypeofData::UNKNOWN;
@@ -382,7 +381,7 @@ Result<void> MemOperand::setValue(anydata v, std::function<void()> callback) {
         //debugLog("MemOperand: Sending write request to address " + to_string_hex(this->address) + " with value " + to_string_hex(v) + " and size " + std::to_string(this->size) + " bytes.");
         requestSent = true;
 
-        bus.getCPU().getCacheManager().setRequest(std::make_unique<CacheRequest>(RequestType::WRITE, dataTypeSize, this->address, out, false, instructionID, callback));
+        bus.getCPU().getCacheManager().enqueRequest(CacheRequest(RequestType::WRITE, dataTypeSize, this->address, out, false, instructionID, callback));
 
         return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Write request sent. Waiting for completion."}};
     }
@@ -452,23 +451,23 @@ Result<anydata> MemOperand::getValue(std::function<void()> callback) {
         switch (this->size)
         {
             case 8:
-                dataTypeSize = TypeofData::UINT_8T;
+                dataTypeSize = TypeofData::UINT8_T;
                 break;
             case 16:
-                dataTypeSize = TypeofData::UINT_16T;
+                dataTypeSize = TypeofData::UINT16_T;
                 break;
             case 32:
-                dataTypeSize = TypeofData::UINT_32T;
+                dataTypeSize = TypeofData::UINT32_T;
                 break;
             case 64:
-                dataTypeSize = TypeofData::UINT_64T;
+                dataTypeSize = TypeofData::UINT64_T;
                 break;
             default:
                 dataTypeSize = TypeofData::UNKNOWN;
                 break;
         }
 
-        bus.getCPU().getCacheManager().setRequest(std::make_unique<CacheRequest>(RequestType::READ, dataTypeSize, this->address,std::array<uint8_t, 15>{}, false, instructionID, callback));
+        bus.getCPU().getCacheManager().enqueRequest(CacheRequest(RequestType::READ, dataTypeSize, this->address,std::array<uint8_t, 16>{}, false, instructionID, callback));
 
         return Result<anydata>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request sent. Waiting for completion."}};
     }
@@ -510,7 +509,7 @@ Result<anydata> MemOperand::getValue(std::function<void()> callback) {
         }
         else
         {
-            //request not completed
+            //request not completed dhdhhdhd
             debugLog("MemOperand: Read request not completed for address " + to_string_hex(this->address) + ".");
             return Result<anydata>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request not completed yet."}};
         }

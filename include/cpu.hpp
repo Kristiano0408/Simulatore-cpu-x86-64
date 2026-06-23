@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <array>
 #include <string>
-#include "bus.hpp"
+
 #include "controlUnit.hpp"
 #include "alu.hpp"
 #include "registerFile.hpp"
@@ -15,6 +15,7 @@
 #include "pipeline.hpp"
 #include "pipelineController.hpp"
 
+class Bus;
 
 class CPU: public Device
 {

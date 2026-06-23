@@ -92,6 +92,7 @@ void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
     {
         //both operands are ready, we can proceed to execute( non multi-cycle instruction only for non-memory operands)
         execute(bus);
+        debugLog("esecuzioen diretta");
         bus.getCPU().getPipeline().getExecuteMemoryBuffer().executedInstruction = bus.getCPU().getPipeline().getExecuteStage().getInstructionToExecute();
         bus.getCPU().getPipeline().getExecuteMemoryBuffer().valid = true;
         bus.getCPU().getPipeline().getExecuteMemoryBuffer().stalled = false;
@@ -238,6 +239,10 @@ void SubInstruction::writeBack([[maybe_unused]] Bus& bus)
     }
 
     debugLog("Writing back result for SubInstruction.");
+
+    auto a = getDestinationOperand();
+
+    //std::cout<< std::is_same_v(*a, RegOperand);
 
     Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue, nullptr);
 

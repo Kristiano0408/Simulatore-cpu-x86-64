@@ -1,7 +1,7 @@
 #include "alu.hpp"
 #include "cpu.hpp"
 #include "registerFile.hpp"
-
+#include "bus.hpp"
 
 ALU::ALU(Bus& bus) : bus(bus)
 {

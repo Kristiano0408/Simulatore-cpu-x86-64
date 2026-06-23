@@ -400,6 +400,7 @@ void Pipeline::execute_operation() {
     {
         debugLog("FETCH STAGE processing...");
         bus.getCPU().incrementInstructionIdCounter();
+        debugLog("incementing counter");
         FetchstageInstructionId = bus.getCPU().getInstructionIdCounter();
         debugLog("FetchstageInstructionId: " + std::to_string(FetchstageInstructionId));
         

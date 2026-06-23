@@ -29,15 +29,15 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler& event
 
     debugLog("Fetching instruction at address: " + to_string_hex(index));
 
-    auto cacheRequest = std::make_unique<CacheRequest>();
-    cacheRequest->type = RequestType::READ;
-    cacheRequest->address = index;
-    cacheRequest->dataType = TypeofData::ARRAY_16B;
-    cacheRequest->requestID = instructionId;
-    cacheRequest->callback = eventHandler.getCallback("MEMORY_DONE_FETCH");
+    auto cacheRequest =CacheRequest();
+    cacheRequest.type = RequestType::READ;
+    cacheRequest.address = index;
+    cacheRequest.dataType = TypeofData::ARRAY_16B;
+    cacheRequest.requestID = instructionId;
+    cacheRequest.callback = eventHandler.getCallback("MEMORY_DONE_FETCH");
 
 
-    bus.getCPU().getCacheManager().setRequest(std::move(cacheRequest));
+    bus.getCPU().getCacheManager().enqueRequest(std::move(cacheRequest));
 
     // Trigger an event to notify that a cache request has been sent
     eventHandler.triggerEvent("MEMORY_WAITING_FETCH");

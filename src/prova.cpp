@@ -141,6 +141,8 @@ int main()
 
     bus.getMemory().setData(data); // Set the data in memory
 
+    printf("data loaded into memory\n");
+
     std::vector<uint8_t> memoryData = bus.getMemory().getData();
 
     for (size_t i = 0; i < memoryData.size(); i++) {
