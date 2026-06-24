@@ -115,7 +115,7 @@ Result<uint64_t> Memory::pop()
 
 
 
-Result<std::array<uint8_t,CACHE_LINE_SIZE>> Memory::read(uint64_t address) 
+Result<LineData> Memory::read(uint64_t address) 
 {
     Result<LineData> result {};
     if (address + sizeof(LineData) > size) //check if the address is out of bounds

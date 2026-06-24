@@ -14,34 +14,19 @@
 #include <iomanip>
 #include <array>
 #include <functional>
-
+#include <compare>
+#include "types.hpp"
 //defined constants
 constexpr unsigned CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
 
-
-struct Index
-{
-    std::ptrdiff_t value {};
-
-    constexpr Index() = default;
-    constexpr explicit Index(std::ptrdiff_t v) : value(v) {}
-
-    constexpr Index operator+(std::ptrdiff_t offset) const { return Index(value + offset); }
-    constexpr Index operator-(std::ptrdiff_t offset) const { return Index(value - offset); }
-    constexpr Index& operator++() { ++value; return *this; }
-    constexpr Index& operator--() { --value; return *this; }
-    constexpr Index operator++(int) { Index temp = *this; ++value; return temp; }
-    constexpr Index operator--(int) { Index temp = *this; --value; return temp; }
-    constexpr auto operator<=>(const Index& other) const = default;
+using LineData = std::array<std::byte, CACHE_LINE_SIZE>; // Type alias for cache line data
+using MaxCPUInstructionLength = std::array<std::byte, 16>; // Type alias for maximum CPU instruction length (16 bytes)
 
 
-    constexpr  explicit operator std::ptrdiff_t() const { return value; }
-    constexpr explicit operator std::size_t() const { return static_cast<std::size_t>(value); }
-
-};
 
 
-using anydata = std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, CACHE_LINE_SIZE>,  std::array<uint8_t,2*CACHE_LINE_SIZE>, std::array<uint8_t, 16>>;
+
+
 
 //farward declaration of the enum class for registers
 enum class Register;
@@ -108,6 +93,8 @@ template<typename T>
 struct Result {
     T data;
     bool success;
+   
+
     Error_Event_Info errorInfo; // Error information if any
 
     // operator= solo per std::array
@@ -127,13 +114,6 @@ struct Result<void> {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-template <size_t N, size_t M>
-void copyPartial(Result<std::array<uint8_t, N>>& dest, const Result<std::array<uint8_t, M>>& src) {
-    size_t bytesToCopy = std::min(N, M);
-    std::memcpy(dest.data.data(), src.data.data(), bytesToCopy);
-    dest.success = src.success;
-    dest.errorInfo = src.errorInfo;
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -387,7 +367,7 @@ struct CacheRequest
     RequestType type = RequestType::NONE; // Type of request (READ or WRITE)
     TypeofData dataType = TypeofData::UNKNOWN; // Type of data for the request
     uint64_t address = 0; // Memory address
-    std::array<uint8_t, 16> data{}; // Data for write requests (up to 15 bytes, maximun size for an instruction with prefixes and opcode, 16 bytes to align)
+    MaxCPUInstructionLength data{}; // Data for write requests (up to 15 bytes, maximun size for an instruction with prefixes and opcode, 16 bytes to align)
     bool completed = false; // Indicates if the request has been completed
     int requestID = 0; // Unique ID for the request
     std::function<void()> callback; // Callback function to be called when the request is completed
@@ -422,18 +402,6 @@ std::string to_string_hex(const T& value) {
             << std::hex << std::setw(sizeof(T)*2) << std::setfill('0') 
             << +value; // +value promuove i tipi piccoli
         return oss.str();
-    }
-    else if constexpr (std::is_same_v<T, std::variant<std::monostate, uint8_t, uint16_t, uint32_t, uint64_t, std::array<uint8_t, 64>, std::array<uint8_t, 16>, std::array<uint8_t, 128>>>) {
-        return std::visit([](auto&& arg) {
-            using U = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_integral_v<U>) {
-                std::ostringstream oss;
-                oss << "0x" << std::hex << +arg;
-                return oss.str();
-            } else {
-                return std::string("[array/monostate]");
-            }
-        }, value);
     }
     else 
     {

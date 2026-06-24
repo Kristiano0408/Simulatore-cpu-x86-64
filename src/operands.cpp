@@ -335,8 +335,8 @@ Result<void> MemOperand::setValue(uint64_t v, std::function<void()> callback) {
         return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot set value."}};
 
     TypeofData dataTypeSize = TypeofData::UNKNOWN;
-    std::array<uint8_t, 16> out{}; // Buffer per i dati da scrivere, dimensione massima di 16 byte
-    
+    MaxCPUInstructionLength out{}; // Buffer per i dati da scrivere, dimensione massima di 16 byte
+    std::memcpy(out.data(), &v, this->size); // Copia i dati in out, rispettando la size dell'operando
     
     switch(size)
     {
@@ -384,7 +384,7 @@ Result<void> MemOperand::setValue(uint64_t v, std::function<void()> callback) {
             
             //extracting the result
             Result<void> result;
-            Result<std::array<uint8_t,16>>& response =(it->second);
+            Result<MaxCPUInstructionLength>& response =(it->second);
 
             result.success = response.success;
             result.errorInfo = response.errorInfo;
@@ -450,7 +450,7 @@ Result<uint64_t> MemOperand::getValue(std::function<void()> callback) {
                 break;
         }
 
-        bus.getCPU().getCacheManager().enqueRequest(CacheRequest(RequestType::READ, dataTypeSize, this->address,std::array<uint8_t, 16>{}, false, instructionID, callback));
+        bus.getCPU().getCacheManager().enqueRequest(CacheRequest(RequestType::READ, dataTypeSize, this->address,MaxCPUInstructionLength{}, false, instructionID, callback));
 
         return Result<uint64_t>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request sent. Waiting for completion."}};
     }
@@ -469,7 +469,7 @@ Result<uint64_t> MemOperand::getValue(std::function<void()> callback) {
             debugLog("MemOperand: Read request completed for address " + to_string_hex(this->address) + ".");
             
             //extracting the result
-            Result<std::array<uint8_t,16>>& response =(it->second);
+            Result<MaxCPUInstructionLength>& response =(it->second);
 
             result.success = response.success;
             result.errorInfo = response.errorInfo;

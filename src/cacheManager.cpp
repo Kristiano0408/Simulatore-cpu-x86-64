@@ -310,8 +310,8 @@ void RequestScheduler::schedulePendingRequest(PendingRequest&& pendingRequest)
 
 AddressInfo CacheController::decodeAddress(uint64_t address)
 {
-    uint64_t offsetBits = log2(CACHE_LINE_SIZE); // Calculate the number of bits for the offset based on the cache line size
-    uint64_t setIndexBits = log2(numSets); // Calculate the number of bits for the set index based on the number of cache sets
+    uint8_t offsetBits = log2(CACHE_LINE_SIZE); // Calculate the number of bits for the offset based on the cache line size
+    uint8_t setIndexBits = log2(numSets); // Calculate the number of bits for the set index based on the number of cache sets
 
     uint64_t offset = address & ((1ULL << offsetBits) - 1); // Extract the offset from the address using bitwise operations
     uint64_t setIndex = (address >> offsetBits) & ((1ULL << setIndexBits) - 1); // Extract the set index from the address using bitwise operations
@@ -713,7 +713,7 @@ void CacheLevel::propagateWriteToNextLevel(CacheRequest& request, bool propagate
 
 void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& request)
 {
-    Result<std::array<uint8_t,16>> response {};
+    Result<MaxCPUInstructionLength> response {};
     CacheLine* line = storage.findLine(addressInfo.setIndex, addressInfo.tag); // Find the cache line based on the set index and tag from the address informatio
     if (line != nullptr) // If a matching cache line is found
     {
@@ -749,7 +749,7 @@ void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& re
 
 void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressInfo& addressInfo2, CacheRequest& request)
 {
-    Result<std::array<uint8_t, 16>> response {};
+    Result<MaxCPUInstructionLength> response {};
     CacheLine* line1 = storage.findLine(addressInfo1.setIndex, addressInfo1.tag); // Find the first cache line based on the set index and tag from the address information
     CacheLine* line2 = storage.findLine(addressInfo2.setIndex, addressInfo2.tag); // Find the second cache line based on the set index and tag from the address information
 
@@ -790,7 +790,7 @@ void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressIn
 void CacheLevel::writeSingleLine(const AddressInfo& addressInfo, CacheRequest& request)
 {
     CacheLine* line = storage.findLine(addressInfo.setIndex, addressInfo.tag); // Find the cache line based on the set index and tag from the address information
-    Result<std::array<uint8_t,16>> response {};
+    Result<MaxCPUInstructionLength> response {};
 
     if (line != nullptr) // If a matching cache line is found
     {
@@ -836,7 +836,7 @@ void CacheLevel::writeCrossLines(const AddressInfo& addressInfo1, const AddressI
 {
     CacheLine* line1 = storage.findLine(addressInfo1.setIndex, addressInfo1.tag); // Find the first cache line based on the set index and tag from the address information
     CacheLine* line2 = storage.findLine(addressInfo2.setIndex, addressInfo2.tag); // Find the second cache line based on the set index and tag from the address information
-    Result<std::array<uint8_t,16>> response {};
+    Result<MaxCPUInstructionLength> response {};
 
     if (line1 != nullptr && line2 != nullptr) // If both cache lines are found for the cross-line access
     {
@@ -981,7 +981,7 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
 {
     debugLog("esecuzione ram richeista:" + std::to_string(pendingRequest.request.requestID));
     CacheRequest& originalRequest = pendingRequest.request; // Get the cache request from the pending request to be processed by the memory scheduler
-    Result<std::array<uint8_t, CACHE_LINE_SIZE>> readResponse;
+    Result<LineData> readResponse;
     Result<void> writeResponse;
     //calculating the adress for the start of the line
     uint64_t lineAddress = originalRequest.address & ~(CACHE_LINE_SIZE - 1); //BITMASK FOR REMOVING 6BITS FINALS TAHT RAPPRESENTS THE OFFSET
@@ -1124,7 +1124,7 @@ void CacheManager::execute_operation()
 
 void CacheManager::flushAllCaches()
 {
-    L3Cache.getStorage().flush([&](uint64_t address, const std::array<uint8_t,CACHE_LINE_SIZE>& line){bus.getMemory().write(address, line);});
-    L2Cache.getStorage().flush([&](uint64_t address, const std::array<uint8_t,CACHE_LINE_SIZE>& line){bus.getMemory().write(address, line);});
-    L1Cache.getStorage().flush([&](uint64_t address, const std::array<uint8_t,CACHE_LINE_SIZE>& line){bus.getMemory().write(address, line);});
+    L3Cache.getStorage().flush([&](uint64_t address, const LineData& line){bus.getMemory().write(address, line);});
+    L2Cache.getStorage().flush([&](uint64_t address, const LineData& line){bus.getMemory().write(address, line);});
+    L1Cache.getStorage().flush([&](uint64_t address, const LineData& line){bus.getMemory().write(address, line);});
 }

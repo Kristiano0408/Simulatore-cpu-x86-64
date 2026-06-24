@@ -31,7 +31,7 @@ enum class CacheLevelType
 //it contains the data, the tag, the valid bit and the dirty bit
 struct alignas(CACHE_LINE_SIZE) CacheLine
 {
-    std::array<uint8_t, CACHE_LINE_SIZE> data;  // Data stored in the cache line
+    LineData data;  // Data stored in the cache line
 
     uint64_t tag;
     uint64_t lastAccessTime; // use it as a counter for replacement policy, syncronized with clock when access
@@ -263,9 +263,9 @@ class CacheController
 {
     private:
         EventHandler& cacheEventHandler; // Event handler for managing cache events and callbacks
-        uint8_t numSets; // Number of cache sets in the cache level
+        uint32_t numSets; // Number of cache sets in the cache level
     public:
-        CacheController(EventHandler& eventHandler, uint8_t numSets) : cacheEventHandler(eventHandler), numSets(numSets) {} // Constructor to initialize the cache controller with an event handler and number of cache sets
+        CacheController(EventHandler& eventHandler, uint32_t numSets) : cacheEventHandler(eventHandler), numSets(numSets) {} // Constructor to initialize the cache controller with an event handler and number of cache sets
         
         AddressInfo decodeAddress(uint64_t address); // Function to calculate the set index, tag and offset from a memory address
 

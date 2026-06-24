@@ -194,7 +194,7 @@ void SubInstruction::accessMemory([[maybe_unused]] Bus& bus)
         
         //extracting the result
         Result<void> result;
-        Result<std::array<uint8_t,16>>& response =(it->second);
+        Result<MaxCPUInstructionLength>& response =(it->second);
 
         result.success = response.success;
         result.errorInfo = response.errorInfo;

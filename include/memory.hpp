@@ -7,7 +7,6 @@
 #include <iostream>
 #include "helpers.hpp"
 
-using LineData = std::array<uint8_t,CACHE_LINE_SIZE>;
 
 class Bus; // Forward declaration of Bus class
 
@@ -17,7 +16,7 @@ public:
     Memory(size_t size, Bus& bus); //constructor that takes the size of the memory and a reference to the Bus
 
     //methods for reading and writing from memory
-    Result<std::array<uint8_t,CACHE_LINE_SIZE>>read(uint64_t address);
+    Result<LineData> read(uint64_t address);
    
 
     Result<void> write(uint64_t address, LineData line);

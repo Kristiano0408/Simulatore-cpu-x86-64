@@ -84,7 +84,7 @@ class CPU: public Device
 
         void sendCacheRequest(CacheRequest&& request); //send a cache request
 
-        std::unordered_map<int, Result<std::array<uint8_t,16>>> cacheResponseQueue; //map for cache responses
+        std::unordered_map<int, Result<MaxCPUInstructionLength>> cacheResponseQueue; //map for cache responses
 
         void incrementInstructionIdCounter() { instructionIdCounter++; }
 
