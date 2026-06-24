@@ -311,6 +311,7 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
         if (rm.mod == 0b01)
         {
             //there is a displacement of 8 bit
+            byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
             byteCounter++; //increment the byte counter
             bytes.push_back(byte);
             info.hasDisplacement = true;
