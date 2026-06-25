@@ -72,12 +72,12 @@ void MoveInstruction::fetchOperands(Bus& bus) {
 
 }
 
-void MoveInstruction::startExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
+void MoveInstruction::startExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) 
 {
 
 }
 
-void MoveInstruction::updateExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
+void MoveInstruction::updateExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) 
 {
     
 }
@@ -134,7 +134,7 @@ void MoveInstruction::execute([[maybe_unused]] Bus& bus)
 }
 
 
-void MoveInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
+void MoveInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) 
 {
     //default implementation (do nothing)
 }

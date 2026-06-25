@@ -26,12 +26,12 @@ class PipelineController
 
         void stallForGUI();
 
-        inline EventHandler& getEventHandler() { return eventHandler; }
+        inline EventHandler<EventHandlerPipelineEventType>& getEventHandler() { return eventHandler; }
 
 
     private:
         Pipeline& pipeline;
-        EventHandler eventHandler;
+        EventHandler<EventHandlerPipelineEventType> eventHandler;
 
 };
 #endif // PIPELINECONTROLLER_HPP

@@ -1,10 +1,8 @@
 
 //refactory massivo
 
-//refactory caceh completo, prima fill e poi dato (sistemare latenze fill)
-//finire refactory cache(writeback dirty+ sistemazioni varie (LRu valid lines porcheria, logica cross debole) + cachemanager
+
 //namespaec variabili globalei per mask,etc..
-//fixare eventHandler(enum class template al posto di string) + fixare Result + capire se usare anydata e visit oppure no + vedere vector pending request
 
 cache pazzurda pazza sgravata(suddivisioen l1 in i e d)
 

@@ -262,10 +262,10 @@ class RequestScheduler
 class CacheController
 {
     private:
-        EventHandler& cacheEventHandler; // Event handler for managing cache events and callbacks
+        EventHandler<EventHandlerCacheEventType>& cacheEventHandler; // Event handler for managing cache events and callbacks
         uint32_t numSets; // Number of cache sets in the cache level
     public:
-        CacheController(EventHandler& eventHandler, uint32_t numSets) : cacheEventHandler(eventHandler), numSets(numSets) {} // Constructor to initialize the cache controller with an event handler and number of cache sets
+        CacheController(EventHandler<EventHandlerCacheEventType>& eventHandler, uint32_t numSets) : cacheEventHandler(eventHandler), numSets(numSets) {} // Constructor to initialize the cache controller with an event handler and number of cache sets
         
         AddressInfo decodeAddress(uint64_t address); // Function to calculate the set index, tag and offset from a memory address
 
@@ -299,7 +299,7 @@ class CacheLevel: public Device
         std::unique_ptr<ReplacementPolicy> replacementPolicy; // Unique pointer to the replacement policy used by the cache level
         std::unique_ptr<WritePolicy> writePolicy; // Unique pointer to the write policy used by the cache level
 
-        EventHandler eventHandler;
+        EventHandler<EventHandlerCacheEventType> eventHandler;
 
         //void read(const AddressInfo& addressInfo, CacheRequest& request); // Function to read data from the cache based on address information and cache request
         void readSingleLine(const AddressInfo& addressInfo, CacheRequest& request); // Function to read data from a single cache line based on address information and cache request

@@ -4,6 +4,8 @@
 #include "cpu.hpp"
 #include "registerFile.hpp"
 #include "../include/pipeline.hpp"
+#include "../include/helpers.hpp"
+
 
 CU::CU(Bus& bus) : bus(bus)
 {
@@ -15,7 +17,7 @@ CU::~CU()
 {
 }
 
-void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler& eventHandler)
+void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler)
 {
     // Implementation of instruction fetching using the bus
     // This is a placeholder implementation and should be replaced with actual logic
@@ -34,18 +36,18 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler& event
     cacheRequest.address = index;
     cacheRequest.dataType = TypeofData::ARRAY_16B;
     cacheRequest.requestID = instructionId;
-    cacheRequest.callback = eventHandler.getCallback("MEMORY_DONE_FETCH");
+    cacheRequest.callback = eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_FETCH);
 
 
     bus.getCPU().getCacheManager().enqueRequest(std::move(cacheRequest));
 
     // Trigger an event to notify that a cache request has been sent
-    eventHandler.triggerEvent("MEMORY_WAITING_FETCH");
+    eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_WAITING_FETCH);
 
     debugLog("Cache request sent for instruction fetch.");
 }
 
-void CU::updateFetch(uint64_t instructionId, EventHandler& eventHandler)
+void CU::updateFetch(uint64_t instructionId, EventHandler<EventHandlerPipelineEventType>& eventHandler)
 {
     // Implementation of updating fetch stage using the bus
     // This is a placeholder implementation and should be replaced with actual logic
@@ -57,7 +59,7 @@ void CU::updateFetch(uint64_t instructionId, EventHandler& eventHandler)
     {
         debugLog("memory/cache response found for instruction ID: " + std::to_string(instructionId));
         // Trigger an event to notify that the instruction has been fetched
-        eventHandler.triggerEvent("MEMORY_DONE_FETCH");
+        eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_DONE_FETCH);
     }
     else
     {

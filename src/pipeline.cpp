@@ -19,14 +19,14 @@ bool Stage::isInstructionEmpty(const Instruction* instr) const {
 
 FetchStage::FetchStage() : Stage(),currentInstructionInfo() {}
 
-void FetchStage::startFetch(Bus& bus, uint64_t instructionId, uint64_t& index, EventHandler& eventHandler) {
+void FetchStage::startFetch(Bus& bus, uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
     // Implementation of instruction fetching using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Fetching in struction from memory...");
     bus.getCPU().getControlUnit().startFetch(instructionId, index, eventHandler);
 }
 
-void FetchStage::updateFetch(Bus& bus, uint64_t instructionId, EventHandler& eventHandler) {
+void FetchStage::updateFetch(Bus& bus, uint64_t instructionId, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
     // Implementation of updating fetch stage using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Updating fetch stage...");
@@ -99,7 +99,7 @@ std::unique_ptr<Instruction> ExecuteStage::getInstructionToExecute() {
 }
 
 
-void ExecuteStage::startExecution(Bus& bus, EventHandler& eventHandler) {
+void ExecuteStage::startExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
     // Implementation of starting execution using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Starting execution of instruction...");
@@ -108,7 +108,7 @@ void ExecuteStage::startExecution(Bus& bus, EventHandler& eventHandler) {
     }
 }
 
-void ExecuteStage::updateExecution(Bus& bus, EventHandler& eventHandler) {
+void ExecuteStage::updateExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
     // Implementation of updating execution using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Updating execution of instruction...");
@@ -135,7 +135,7 @@ std::unique_ptr<Instruction> MemoryStage::getInstructionToMemory(){
 }
 
 
-void MemoryStage::requestMemoryAccess(Bus& bus, EventHandler& eventHandler) {
+void MemoryStage::requestMemoryAccess(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
     // Implementation of starting memory access using the bus
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Requesting memory access for instruction...");
@@ -183,7 +183,7 @@ void WriteBackStage::writeBack(Bus& bus) {
 
 //implementation of the pipeline class
 
-Pipeline::Pipeline(Bus& bus, EventHandler* eventHandler) : bus(bus),fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage(), eventHandler(eventHandler) {
+Pipeline::Pipeline(Bus& bus, EventHandler<EventHandlerPipelineEventType>* eventHandler) : bus(bus),fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage(), eventHandler(eventHandler) {
     
 }
                                

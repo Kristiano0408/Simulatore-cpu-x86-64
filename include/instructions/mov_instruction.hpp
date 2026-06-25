@@ -16,11 +16,11 @@ class MoveInstruction : public Instruction
         void fetchOperands(Bus& bus) override;
 
         //execute the instruction
-        void startExecution(Bus& bus, EventHandler& eventHandler) override;
-        void updateExecution(Bus& bus, EventHandler& eventHandler) override;
+        void startExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler) override;
+        void updateExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler) override;
         void execute(Bus& bus) override;
 
-        void requestMemoryAccess(Bus& bus, EventHandler& eventHandler) override;
+        void requestMemoryAccess(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler) override;
         void accessMemory(Bus& bus) override;
 
         void writeBack(Bus& bus) override;

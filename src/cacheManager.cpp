@@ -335,13 +335,13 @@ void CacheController::handleRequest(PendingRequest& request)
     {
         debugLog("fill request ricevuta");
         CacheEventPayload payloadFill = CacheEventPayload(addressInfo, cacheRequest, &(request.line)); // Create a payload for the fill event with the address information and cache request
-        cacheEventHandler.triggerEvent<CacheEventPayload, void>("CACHE_FILL", payloadFill); // Trigger a cache fill hit event for logging or debugging purposes
+        cacheEventHandler.triggerEvent<CacheEventPayload, void>(EventHandlerCacheEventType::CACHE_FILL, payloadFill); // Trigger a cache fill hit event for logging or debugging purposes
 
         return;
     }
     else if (cacheRequest.type == RequestType::READ_AFTER_FILL || cacheRequest.type == RequestType::WRITE_AFTER_FILL)
     {
-        cacheEventHandler.triggerEvent<CacheEventPayload, void>("CACHE_HIT", payload);
+        cacheEventHandler.triggerEvent<CacheEventPayload, void>(EventHandlerCacheEventType::CACHE_HIT, payload);
 
         return;
 
@@ -353,16 +353,16 @@ void CacheController::handleRequest(PendingRequest& request)
     {
         case LookUpResult::HIT:
         debugLog("hit cache");
-            cacheEventHandler.triggerEvent<CacheEventPayload, void>("CACHE_HIT", payload); // Trigger a cache hit event for logging or debugging purposes
+            cacheEventHandler.triggerEvent<CacheEventPayload, void>(EventHandlerCacheEventType::CACHE_HIT, payload); // Trigger a cache hit event for logging or debugging purposes
             break;
         case LookUpResult::MISS:
         debugLog("miss_cache");
-            cacheEventHandler.triggerEvent<CacheEventPayload, void>("CACHE_MISS", payload); // Trigger a cache miss event for logging or debugging purposes
+            cacheEventHandler.triggerEvent<CacheEventPayload, void>(EventHandlerCacheEventType::CACHE_MISS, payload); // Trigger a cache miss event for logging or debugging purposes
             break;
         case LookUpResult::HIT_CROSS_LINES:
         debugLog("hit cross cache");
             payload.addressInfo2 = decodeAddress(cacheRequest.address + (CACHE_LINE_SIZE - addressInfo.offset)); // Decode the address of the second cache line for cross-line access
-            cacheEventHandler.triggerEvent<CacheEventPayload, void>("CACHE_HIT_CROSS_LINES", payload); // Trigger a cache hit cross lines event for logging or debugging purposes
+            cacheEventHandler.triggerEvent<CacheEventPayload, void>(EventHandlerCacheEventType::CACHE_HIT_CROSS_LINES, payload); // Trigger a cache hit cross lines event for logging or debugging purposes
             break;
         case LookUpResult::ERROR:
             break;
@@ -375,7 +375,7 @@ LookUpResult CacheController::lookupCache(const AddressInfo& addressInfo, Typeof
 {
     // Perform a cache lookup based on the decoded address information to determine if it's a hit or miss
     LookUpResult result = LookUpResult::ERROR; // Initialize the result to error
-    result = cacheEventHandler.triggerEvent<CacheLookupPayload,LookUpResult>("CACHE_LOOKUP", CacheLookupPayload(addressInfo, dataType)); // Trigger a cache lookup event for logging or debugging purposes
+    result = cacheEventHandler.triggerEvent<CacheLookupPayload,LookUpResult>(EventHandlerCacheEventType::CACHE_LOOKUP, CacheLookupPayload(addressInfo, dataType)); // Trigger a cache lookup event for logging or debugging purposes
     return result;
 }
 
@@ -388,23 +388,23 @@ CacheLevel::CacheLevel(uint32_t size, uint8_t associativity, uint8_t latency, ui
     replacementPolicy = std::make_unique<LRUReplacementPolicy>(numSets, associativity);
     writePolicy = std::make_unique<WriteThroughAllocate>();
 
-    eventHandler.registerEvent<CacheLookupPayload, LookUpResult>("CACHE_LOOKUP", [this](const CacheLookupPayload& payload) {
+    eventHandler.registerEvent<CacheLookupPayload, LookUpResult>(EventHandlerCacheEventType::CACHE_LOOKUP, [this](const CacheLookupPayload& payload) {
         return lookupCache(payload.addressInfo, payload.dataType); // Call the cache controller's lookupCache function to perform the cache lookup and return the result
     });
 
-    eventHandler.registerEvent<CacheEventPayload, void>("CACHE_HIT", [this](const CacheEventPayload& payload) {
+    eventHandler.registerEvent<CacheEventPayload, void>(EventHandlerCacheEventType::CACHE_HIT, [this](const CacheEventPayload& payload) {
         onHit(payload.addressInfo1, payload.request); // Call the onHit function to handle cache hit events
     });
 
-    eventHandler.registerEvent<CacheEventPayload, void>("CACHE_MISS", [this](const CacheEventPayload& payload) {
+    eventHandler.registerEvent<CacheEventPayload, void>(EventHandlerCacheEventType::CACHE_MISS, [this](const CacheEventPayload& payload) {
         onMiss(payload.request); // Call the onMiss function to handle cache miss events
     });
 
-    eventHandler.registerEvent<CacheEventPayload, void>("CACHE_HIT_CROSS_LINES", [this](const CacheEventPayload& payload) {
+    eventHandler.registerEvent<CacheEventPayload, void>(EventHandlerCacheEventType::CACHE_HIT_CROSS_LINES, [this](const CacheEventPayload& payload) {
         onHitCrossLines(payload.addressInfo1, payload.addressInfo2, payload.request); // Call the onHitCrossLines function to handle cache hit cross lines events
     });
 
-    eventHandler.registerEvent<CacheEventPayload, void>("CACHE_FILL", [this](const CacheEventPayload& payload) {
+    eventHandler.registerEvent<CacheEventPayload, void>(EventHandlerCacheEventType::CACHE_FILL, [this](const CacheEventPayload& payload) {
         onFill(payload.addressInfo1, payload.request, *(payload.line)); // Call the onFill function to handle filling a cache line with data from the next level or memory based on the cache request and address information
     });
 

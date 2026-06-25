@@ -50,9 +50,9 @@ class FetchStage : public Stage {
 
         ~FetchStage() {};
 
-        void startFetch(Bus& bus, uint64_t instructionId, uint64_t& index, EventHandler& eventHandler); //fetch the instruction from memory
+        void startFetch(Bus& bus, uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler); //fetch the instruction from memory
 
-        void updateFetch(Bus& bus, uint64_t instructionId, EventHandler& eventHandler); //update the fetch stage (take the instruction fetched and prepare for decode)
+        void updateFetch(Bus& bus, uint64_t instructionId, EventHandler<EventHandlerPipelineEventType>& eventHandler); //update the fetch stage (take the instruction fetched and prepare for decode)
 
         InstructionInfo fetchInstruction(Bus& bus, uint64_t instructionId, uint64_t& index); //fetch the instruction from memory
 
@@ -137,8 +137,8 @@ class ExecuteStage : public Stage {
         
         inline Instruction* peekInstruction() const {return instruction_to_execute.get();}
 
-        void startExecution(Bus& bus, EventHandler& eventHandler); //start execution of the instruction
-        void updateExecution(Bus& bus, EventHandler& eventHandler); //update execution (for multi-cycle instructions)
+        void startExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler); //start execution of the instruction
+        void updateExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler); //update execution (for multi-cycle instructions)
         void executeInstruction(Bus& bus); //execute the decoded instruction
 
     private:
@@ -164,9 +164,9 @@ class MemoryStage : public Stage {
 
         inline Instruction* peekInstruction() const {return instruction_to_memory.get();}
 
-        void requestMemoryAccess(Bus& bus, EventHandler& eventHandler); //start memory access for load/store instructions
+        void requestMemoryAccess(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler); //start memory access for load/store instructions
 
-        void updateMemoryAccess(Bus& bus, EventHandler& eventHandler); //update memory access (for multi-cycle memory operations)
+        void updateMemoryAccess(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler); //update memory access (for multi-cycle memory operations)
 
         void accessMemory(Bus& bus); //perform memory operations if needed
 
@@ -268,7 +268,7 @@ class Pipeline : public Device {
 
     public:
 
-        Pipeline(Bus& bus, EventHandler* eventHandler);
+        Pipeline(Bus& bus, EventHandler<EventHandlerPipelineEventType>* eventHandler);
 
         ~Pipeline() {};
 
@@ -292,7 +292,7 @@ class Pipeline : public Device {
         inline bool isWaitingGUI() const { return waitingGUI; }
         inline void setWaitingGUI(bool wait) { waitingGUI = wait; }
 
-        inline void setEventHandler(EventHandler& handler) { eventHandler = &handler; }
+        inline void setEventHandler(EventHandler<EventHandlerPipelineEventType>& handler) { eventHandler = &handler; }
         
 
     private:
@@ -316,7 +316,7 @@ class Pipeline : public Device {
         };
 
         //event handler for pipeline events with callbacks from pipeline controller
-        EventHandler* eventHandler;
+        EventHandler<EventHandlerPipelineEventType>* eventHandler;
 
         //buffer between stages 
         FetchDecodeBuffer fetchDecodeBuffer;

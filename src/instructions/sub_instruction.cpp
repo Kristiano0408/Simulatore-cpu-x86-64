@@ -7,6 +7,8 @@
 #include "../../include/pipeline.hpp"
 #include "../../include/eventHandler.hpp"
 
+
+
 //Sub instruction
 
 //fetch the operands
@@ -40,7 +42,7 @@ void SubInstruction::fetchOperands(Bus& bus)
 }
 
 
-void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
+void SubInstruction::startExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler)
 {
     //setting the size of the operands
     int bit = calculating_number_of_bits();
@@ -52,7 +54,7 @@ void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
 
     Result<uint64_t> response;
 
-    response = getSourceOperand()->getValue(eventHandler.getCallback("MEMORY_DONE_EXECUTE"));
+    response = getSourceOperand()->getValue(eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE));
 
     if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
     {
@@ -63,14 +65,14 @@ void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
     {
         std::cerr << "Warning getting source operand value: " << response.errorInfo.message << std::endl;
         //set the stage to waiting memory using the callback to the pipeline
-        eventHandler.triggerEvent("MEMORY_WAITING_EXECUTE");
+        eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE);
     }
     else
     {
         tempValues.srcValue = response.data;
     }
 
-    response = getDestinationOperand()->getValue(eventHandler.getCallback("MEMORY_DONE_EXECUTE"));
+    response = getDestinationOperand()->getValue(eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE));
 
 
     if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
@@ -81,7 +83,7 @@ void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
     else if(!response.success && response.errorInfo.error == ErrorType::WAITING_MEMORY)
     {
         std::cerr << "Warning getting destination operand value: " << response.errorInfo.message << std::endl;
-        eventHandler.triggerEvent("MEMORY_WAITING_EXECUTE");
+        eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE);
     }
     else
     {
@@ -102,7 +104,7 @@ void SubInstruction::startExecution(Bus& bus, EventHandler& eventHandler)
 
 }
 
-void SubInstruction::updateExecution(Bus& bus, [[maybe_unused]] EventHandler& eventHandler)
+void SubInstruction::updateExecution(Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler)
 {
     Result<uint64_t> response;
 
@@ -151,7 +153,7 @@ void SubInstruction::execute([[maybe_unused]] Bus& bus)
 }
 
 
-void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, EventHandler& eventHandler) 
+void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
 {
     if(!getRegToMem())
     {
@@ -160,7 +162,7 @@ void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, EventHandler
     }
         
     //writing result back to memory
-    Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue, eventHandler.getCallback("MEMORY_DONE"));
+    Result<void> response = getDestinationOperand()->setValue(tempValues.resultValue, eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE));
 
     if(!response.success && response.errorInfo.error != ErrorType::WAITING_MEMORY)
     {
@@ -170,7 +172,7 @@ void SubInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, EventHandler
     else if(!response.success && response.errorInfo.error == ErrorType::WAITING_MEMORY)
     {
         std::cerr << "Warning writing result to destination operand: " << response.errorInfo.message << std::endl;
-        eventHandler.triggerEvent("MEMORY_WAITING");
+        eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_WAITING);
     }
     else
     {
@@ -240,7 +242,6 @@ void SubInstruction::writeBack([[maybe_unused]] Bus& bus)
 
     debugLog("Writing back result for SubInstruction.");
 
-    auto a = getDestinationOperand();
 
     //std::cout<< std::is_same_v(*a, RegOperand);
 

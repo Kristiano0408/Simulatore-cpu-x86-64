@@ -39,12 +39,12 @@ void AddInstruction::fetchOperands(Bus& bus)
 }
 
 
-void AddInstruction::startExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
+void AddInstruction::startExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) 
 {
 
 }
 
-void AddInstruction::updateExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
+void AddInstruction::updateExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) 
 {
     
 }
@@ -101,7 +101,7 @@ void AddInstruction::execute([[maybe_unused]] Bus& bus)
 
 }
 
-void AddInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler& eventHandler) 
+void AddInstruction::requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) 
 {
     //default implementation (do nothing)
 }

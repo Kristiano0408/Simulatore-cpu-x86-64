@@ -374,7 +374,7 @@ struct CacheRequest
 
     CacheRequest(): type(RequestType::NONE), dataType(TypeofData::UNKNOWN), address(0), data{}, completed(false), requestID(0), callback(nullptr) {}
 
-    CacheRequest(RequestType type, TypeofData dataType, uint64_t address, const std::array<uint8_t, 16>& data, bool completed, uint64_t requestID, std::function<void()> callback)
+    CacheRequest(RequestType type, TypeofData dataType, uint64_t address, const MaxCPUInstructionLength& data, bool completed, uint64_t requestID, std::function<void()> callback)
         : type(type), dataType(dataType), address(address), data(data), completed(completed), requestID(requestID), callback(callback) {}
 };
 
@@ -428,6 +428,33 @@ T extractValueFromBuffer(const std::array<uint8_t, 16>& buffer)
     return std::bit_cast<T>(tempBuffer); // Cast the bytes to the desired type T and return the value
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+enum class EventHandlerCacheEventType {
+    CACHE_HIT,
+    CACHE_HIT_CROSS_LINES,
+    CACHE_MISS,
+    CACHE_FILL,
+    CACHE_LOOKUP,
+};
+
+enum class EventHandlerPipelineEventType {
+    FETCH_COMPLETE,
+    DECODE_COMPLETE,
+    OPERAND_FETCH_COMPLETE,
+    EXECUTE_COMPLETE,
+    MEMORY_COMPLETE,
+    WRITE_BACK_COMPLETE,
+    
+    MEMORY_WAITING,
+    MEMORY_DONE,
+    MEMORY_WAITING_EXECUTE,
+    MEMORY_DONE_EXECUTE,
+    MEMORY_WAITING_FETCH,
+    MEMORY_DONE_FETCH,
+    STALL_FOR_GUI,
+    
+};
 
 
 #endif // HELPERS_HPP
