@@ -42,7 +42,7 @@ class Decoder {
     private:
 
         //decode the instruction
-        Instruction* ConstructorCreation(typeofInstruction type_instruction);
+        Instruction* ConstructorCreation(TypeofInstruction type_instruction);
     
 
         //decode immediate value

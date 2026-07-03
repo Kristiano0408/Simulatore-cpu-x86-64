@@ -97,10 +97,10 @@ void bind_helpers(py::module &m)
 
 
     // typeofInstruction enum
-    py::enum_<typeofInstruction>(m, "typeofInstruction")
-        .value("ADD", typeofInstruction::ADD)
-        .value("MOV", typeofInstruction::MOV)
-        .value("SUB", typeofInstruction::SUB)
+    py::enum_<TypeofInstruction>(m, "typeofInstruction")
+        .value("ADD", TypeofInstruction::ADD)
+        .value("MOV", TypeofInstruction::MOV)
+        .value("SUB", TypeofInstruction::SUB)
         .export_values();
 
     // AddressingMode enum

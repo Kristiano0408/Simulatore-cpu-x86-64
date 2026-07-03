@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <any>
+#include <variant>
 #include "helpers.hpp"
 
 //in futuro sostituire stringhe con enum class (se possibile far in modo eh ne psoos inserie diversi)

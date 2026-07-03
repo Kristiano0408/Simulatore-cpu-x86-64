@@ -1,7 +1,6 @@
 #include "pipeline.hpp"
-#include "bus.hpp"
 #include "cpu.hpp"
-#include <iostream>
+#include "executeEngine.hpp"
 
 
 // Implementation of Stage class methods
@@ -19,26 +18,23 @@ bool Stage::isInstructionEmpty(const Instruction* instr) const {
 
 FetchStage::FetchStage() : Stage(),currentInstructionInfo() {}
 
-void FetchStage::startFetch(Bus& bus, uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
-    // Implementation of instruction fetching using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
+void FetchStage::startFetch(CPU& cpu, uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+{
     debugLog("Fetching in struction from memory...");
-    bus.getCPU().getControlUnit().startFetch(instructionId, index, eventHandler);
+    cpu.getControlUnit().startFetch(instructionId, index, eventHandler);
 }
 
-void FetchStage::updateFetch(Bus& bus, uint64_t instructionId, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
-    // Implementation of updating fetch stage using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
+void FetchStage::updateFetch(CPU& cpu, uint64_t instructionId, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+{
     debugLog("Updating fetch stage...");
-    bus.getCPU().getControlUnit().updateFetch(instructionId, eventHandler);
+    cpu.getControlUnit().updateFetch(instructionId, eventHandler);
 
 }
 
-InstructionInfo FetchStage::fetchInstruction(Bus& bus, uint64_t instructionId, uint64_t& index) {
-    // Implementation of instruction fetching using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
+InstructionInfo FetchStage::fetchInstruction(CPU& cpu, uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+{
     debugLog("Fetching instruction from memory...");
-    return bus.getCPU().getControlUnit().fetchInstruction(instructionId, index);
+    return cpu.getControlUnit().fetchInstruction(instructionId, index, eventHandler);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,16 +44,15 @@ InstructionInfo FetchStage::fetchInstruction(Bus& bus, uint64_t instructionId, u
 DecodeStage::DecodeStage() : Stage(), instruction_info_to_decode(), decoded_instruction(std::make_unique<EmptyInstruction>()) {}
 
 
-void DecodeStage::decodeInstruction(Bus& bus) {
-    // Implementation of instruction decoding using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
-    debugLog("Decoding instruction...");
-    decoded_instruction.reset(bus.getCPU().getControlUnit().decodeInstruction(instruction_info_to_decode));
+void DecodeStage::decodeInstruction(CPU& cpu, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+{
 
-    debugLog("Decoded instruction"); 
+    debugLog("Decoding instruction...");
+    cpu.getControlUnit().decodeInstruction(instruction_info_to_decode, decoded_instruction, eventHandler);
 }
 
-std::unique_ptr<Instruction> DecodeStage::getDecodedInstruction() {
+std::unique_ptr<Instruction> DecodeStage::getDecodedInstruction() 
+{
     return std::move(decoded_instruction);
 }
 
@@ -67,20 +62,21 @@ std::unique_ptr<Instruction> DecodeStage::getDecodedInstruction() {
 
 OperandFetchStage::OperandFetchStage() : Stage(), instruction_with_fetched_operands(std::make_unique<EmptyInstruction>()) {}
 
-std::unique_ptr<Instruction> OperandFetchStage::getInstructionWithFetchedOperands() {
+std::unique_ptr<Instruction> OperandFetchStage::getInstructionWithFetchedOperands() 
+{
     return std::move(instruction_with_fetched_operands);
 }
 
-void OperandFetchStage::fetchOperands(Bus& bus) {
-    // Implementation of operand fetching using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
+void OperandFetchStage::fetchOperands(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+{
     debugLog("Fetching operands for the instruction...");
     if (instruction_with_fetched_operands) {
-        instruction_with_fetched_operands->fetchOperands(bus);
+        executeEngine.fetchOperands(peekInstruction(), eventHandler);
     }
 }
 
-void OperandFetchStage::setInstructionWithFetchedOperands(std::unique_ptr<Instruction> instruction) {
+void OperandFetchStage::setInstructionWithFetchedOperands(std::unique_ptr<Instruction> instruction) 
+{
     instruction_with_fetched_operands = std::move(instruction);
 }
 
@@ -99,24 +95,22 @@ std::unique_ptr<Instruction> ExecuteStage::getInstructionToExecute() {
 }
 
 
-void ExecuteStage::startExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
-    // Implementation of starting execution using the bus
+void ExecuteStage::startExecution(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+{
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Starting execution of instruction...");
     if (instruction_to_execute) {
-        instruction_to_execute->startExecution(bus, eventHandler);
+        executeEngine.startExecution(peekInstruction(), eventHandler);
     }
 }
 
-void ExecuteStage::updateExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
-    // Implementation of updating execution using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
+void ExecuteStage::updateExecution(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+{
     debugLog("Updating execution of instruction...");
     if (instruction_to_execute) {
-        instruction_to_execute->updateExecution(bus, eventHandler);
+        executeEngine.updateExecution(peekInstruction(), eventHandler);
     }
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,28 +120,31 @@ void ExecuteStage::updateExecution(Bus& bus, EventHandler<EventHandlerPipelineEv
 MemoryStage::MemoryStage() : Stage(), instruction_to_memory(std::make_unique<EmptyInstruction>()){}
 
 
-void MemoryStage::setInstructionToMemory(std::unique_ptr<Instruction> instruction) {
+void MemoryStage::setInstructionToMemory(std::unique_ptr<Instruction> instruction) 
+{
     instruction_to_memory = std::move(instruction);
 }
 
-std::unique_ptr<Instruction> MemoryStage::getInstructionToMemory(){
+std::unique_ptr<Instruction> MemoryStage::getInstructionToMemory()
+{
     return std::move(instruction_to_memory);
 }
 
 
-void MemoryStage::requestMemoryAccess(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
-    // Implementation of starting memory access using the bus
-    // This is a placeholder implementation and should be replaced with actual logic
+void MemoryStage::requestMemoryAccess(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+{
     debugLog("Requesting memory access for instruction...");
-    if (instruction_to_memory) {
-        instruction_to_memory->requestMemoryAccess(bus, eventHandler);
+    if (instruction_to_memory) 
+    {
+        executeEngine.requestMemoryAccess(peekInstruction(), eventHandler);
     } 
     
 }
 
-void MemoryStage::accessMemory(Bus& bus) {
+void MemoryStage::accessMemory(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+{
     if (instruction_to_memory)
-        instruction_to_memory->accessMemory(bus);
+        executeEngine.accessMemory(peekInstruction(), eventHandler);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -156,26 +153,24 @@ void MemoryStage::accessMemory(Bus& bus) {
 
 WriteBackStage::WriteBackStage() : Stage(), instruction_to_writeback(std::make_unique<EmptyInstruction>()) {}
 
-void WriteBackStage::setInstructionToWriteBack(std::unique_ptr<Instruction> instruction) {
+void WriteBackStage::setInstructionToWriteBack(std::unique_ptr<Instruction> instruction) 
+{
     instruction_to_writeback = std::move(instruction);
 }
 
-std::unique_ptr<Instruction> WriteBackStage::getInstructionToWriteBack() {
+std::unique_ptr<Instruction> WriteBackStage::getInstructionToWriteBack() 
+{
     return std::move(instruction_to_writeback);
 }
 
-void WriteBackStage::writeBack(Bus& bus) {
-
+void WriteBackStage::writeBack(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+{
     debugLog("Write-Back stage processing...");
     if (instruction_to_writeback) {
-        debugLog("Writing back instruction results...");
-        instruction_to_writeback->writeBack(bus);
-        debugLog("Write-Back completed successfully.");
+        executeEngine.writeBackInstruction(peekInstruction(), eventHandler);
     } else {
         debugLog("No instruction to write back.");
     }
-    
-  
 }
 
 
@@ -183,17 +178,36 @@ void WriteBackStage::writeBack(Bus& bus) {
 
 //implementation of the pipeline class
 
-Pipeline::Pipeline(Bus& bus, EventHandler<EventHandlerPipelineEventType>* eventHandler) : bus(bus),fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage(), eventHandler(eventHandler) {
+Pipeline::Pipeline(CPU& cpu, EventHandler<EventHandlerPipelineEventType>* eventHandler) : cpu(cpu), executeEngine(cpu, cpu.getRegisters(), cpu.getALU(), cpu.getCacheManager()), fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage(), eventHandler(eventHandler) 
+{
     
 }
                                
-void Pipeline::execute_operation() {
+void Pipeline::execute_operation() 
+{
     // Implementation of pipeline operation execution for the current cycle
     
-
     //controllare se buffer inetrmedi sono validi e non stalled prima di spostare le istruzioni tra le stage
     debugLog("Executing pipeline operation for the current cycle...");
-    //index value for fetching instruction
+
+    processWriteBackStage();
+
+    processMemoryStage();
+
+    processExecuteStage();
+
+    processOperandFetchStage();
+
+    processDecodeStage();
+
+    processFetchStage();
+    
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::processWriteBackStage() 
+{
     if(writeBackStage.isStageReady()) 
     {
         debugLog("WRITEBACK STAGE processing...");
@@ -202,15 +216,14 @@ void Pipeline::execute_operation() {
             debugLog("Memory-WriteBack buffer has valid instruction.");
             writeBackStage.setInstructionToWriteBack(std::move(memoryWriteBackBuffer.memoryAccessedInstruction));
             memoryWriteBackBuffer.valid = false;
-            writeBackStage.writeBack(bus);
-            // After memory access, move instruction to Memory-WriteBack buffer
+            writeBackStage.writeBack(executeEngine, *eventHandler);
 
         }
         else if (memoryStage.isStageReady() && !memoryStage.isInstructionEmpty(memoryStage.peekInstruction()))
         {
             debugLog("Memory stage has valid instruction.");
             writeBackStage.setInstructionToWriteBack(memoryStage.getInstructionToMemory());
-            writeBackStage.writeBack(bus);
+            writeBackStage.writeBack(executeEngine, *eventHandler);
 
         }
         else 
@@ -222,9 +235,13 @@ void Pipeline::execute_operation() {
     {
         debugLog("WRITEBACK STAGE is not ready.");
     }
-    ///////////////////////////////////////////////////////////////////////
+}
 
-    if(memoryStage.isStageReady()) 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
+
+void Pipeline::processMemoryStage() 
+{
+     if(memoryStage.isStageReady()) 
     {
         debugLog("MEMORY STAGE processing...");
         if(executeMemoryBuffer.valid) 
@@ -232,15 +249,13 @@ void Pipeline::execute_operation() {
             debugLog("Execute-Memory buffer has valid instruction.");
             memoryStage.setInstructionToMemory(std::move(executeMemoryBuffer.executedInstruction));
             executeMemoryBuffer.valid = false;
-            memoryStage.requestMemoryAccess(bus, *eventHandler);
-            // After memory access, move instruction to Memory-WriteBack buffer
-
+            memoryStage.requestMemoryAccess(executeEngine, *eventHandler);
         }
         else if (executeStage.isStageReady() && !executeStage.isInstructionEmpty(executeStage.peekInstruction()))
         {
             debugLog("Execute stage has valid instruction.");
             memoryStage.setInstructionToMemory(executeStage.getInstructionToExecute());
-            memoryStage.requestMemoryAccess(bus, *eventHandler);
+            memoryStage.requestMemoryAccess(executeEngine, *eventHandler);
 
         }
         else 
@@ -258,19 +273,19 @@ void Pipeline::execute_operation() {
     {
         debugLog("MEMORY STAGE memory operation completed.");
         // Move instruction to Memory-WriteBack buffer
-        memoryStage.accessMemory(bus);
-        memoryWriteBackBuffer.memoryAccessedInstruction = memoryStage.getInstructionToMemory();
-        memoryWriteBackBuffer.valid = true;
-        memoryWriteBackBuffer.stalled = false;
-        memoryWriteBackBuffer.flushed = false;
-        memoryStage.setStatus(StageStatus::READY);
+        memoryStage.accessMemory(executeEngine, *eventHandler);
     }
     else 
     {
         debugLog("MEMORY STAGE is not ready.");
     }
-    ///////////////////////////////////////////////////////////////////////
-    if(executeStage.isStageReady()) 
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::processExecuteStage()
+{
+      if(executeStage.isStageReady()) 
     {
         debugLog("EXECUTE STAGE processing...");
         if(operandFetchExecuteBuffer.valid) 
@@ -278,13 +293,13 @@ void Pipeline::execute_operation() {
             debugLog("OperandFetch-Execute buffer has valid instruction.");
             executeStage.setInstructionToExecute(std::move(operandFetchExecuteBuffer.instructionWithOperands));
             operandFetchExecuteBuffer.valid = false;
-            executeStage.startExecution(bus, *eventHandler);
+            executeStage.startExecution(executeEngine,*eventHandler);
         }
         else if (operandFetchStage.isStageReady() && !operandFetchStage.isInstructionEmpty(operandFetchStage.peekInstruction()))
         {
             debugLog("Operand Fetch stage has valid instruction.");
             executeStage.setInstructionToExecute(operandFetchStage.getInstructionWithFetchedOperands());
-            executeStage.startExecution(bus, *eventHandler);
+            executeStage.startExecution(executeEngine, *eventHandler);
         }
         else 
         {
@@ -298,25 +313,25 @@ void Pipeline::execute_operation() {
     }
     else if (executeStage.getStatus() == StageStatus::MEMORY_DONE)
     {
-        executeStage.updateExecution(bus, *eventHandler);
+        executeStage.updateExecution(executeEngine, *eventHandler);
         debugLog("EXECUTE STAGE instruction execution completed.");
 
         // Move instruction to Execute-Memory buffer
         debugLog("INDEX VALUE: " + to_string_hex(index));
-        executeMemoryBuffer.executedInstruction = executeStage.getInstructionToExecute();
-        executeMemoryBuffer.valid = true;
-        debugLog("Setting Execute-Memory buffer valid.");
-        executeMemoryBuffer.stalled = false;
-        executeMemoryBuffer.flushed = false;
-        executeStage.setStatus(StageStatus::READY);
+        
     }
     else 
     {
         debugLog("EXECUTE STAGE is not ready.");
     }
 
-    ///////////////////////////////////////////////////////////////////////
 
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::processOperandFetchStage()
+{
     if(operandFetchStage.isStageReady()) 
     {
         debugLog("OPERAND FETCH STAGE processing...");
@@ -325,26 +340,17 @@ void Pipeline::execute_operation() {
             debugLog("Decoding-OperandFetch buffer has valid instruction.");
             operandFetchStage.setInstructionWithFetchedOperands(std::move(decodeOperandFetchBuffer.decodedInstruction));
             decodeOperandFetchBuffer.valid = false;
-            operandFetchStage.fetchOperands(bus);
+            operandFetchStage.fetchOperands(executeEngine, *eventHandler);
             
             // After fetching operands, move instruction to OperandFetch-Execute buffer
 
-            operandFetchExecuteBuffer.instructionWithOperands = operandFetchStage.getInstructionWithFetchedOperands();
-            operandFetchExecuteBuffer.valid = true;
-            operandFetchExecuteBuffer.stalled = false;
-            operandFetchExecuteBuffer.flushed = false;
+            
         }
         else if (decodeStage.isStageReady() && !decodeStage.isInstructionEmpty(decodeStage.peekInstruction()))
         {
             debugLog("Decode stage has valid instruction.");
             operandFetchStage.setInstructionWithFetchedOperands(decodeStage.getDecodedInstruction());
-            operandFetchStage.fetchOperands(bus);
-            
-            // After fetching operands, move instruction to OperandFetch-Execute buffer
-            operandFetchExecuteBuffer.instructionWithOperands = operandFetchStage.getInstructionWithFetchedOperands();
-            operandFetchExecuteBuffer.valid = true;
-            operandFetchExecuteBuffer.stalled = false;
-            operandFetchExecuteBuffer.flushed = false;
+            operandFetchStage.fetchOperands(executeEngine, *eventHandler);
         }
         else 
         {
@@ -355,10 +361,13 @@ void Pipeline::execute_operation() {
     {
         std::cout << "OPERAND FETCH STAGE is not ready." << std::endl;
     }
-    
 
-    ///////////////////////////////////////////////////////////////////////////////
+}
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::processDecodeStage()
+{
     if(decodeStage.isStageReady()) 
     {
         debugLog("DECODE STAGE processing...");
@@ -367,23 +376,14 @@ void Pipeline::execute_operation() {
             debugLog("Fetch-Decode buffer has valid instruction.");
             decodeStage.setInstructionToDecode(fetchDecodeBuffer.instructionInfo);
             fetchDecodeBuffer.valid = false;
-            decodeStage.decodeInstruction(bus);
-            // After decoding, move instruction to Decode-OperandFetch buffer
-            decodeOperandFetchBuffer.decodedInstruction = decodeStage.getDecodedInstruction();
-            decodeOperandFetchBuffer.valid = true;
-            decodeOperandFetchBuffer.stalled = false;
-            decodeOperandFetchBuffer.flushed = false;
+            decodeStage.decodeInstruction(cpu, *eventHandler);
             //reset the istruictioninfo of decode stage
         }
         else if (fetchStage.isStageReady() && fetchStage.getCurrentInstructionInfo().instruction.size() > 0)
         {
             decodeStage.setInstructionToDecode(fetchStage.getCurrentInstructionInfo());
-            decodeStage.decodeInstruction(bus);
+            decodeStage.decodeInstruction(cpu, *eventHandler);
             // After decoding, move instruction to Decode-OperandFetch buffer
-            decodeOperandFetchBuffer.decodedInstruction = decodeStage.getDecodedInstruction();
-            decodeOperandFetchBuffer.valid = true;
-            decodeOperandFetchBuffer.stalled = false;
-            decodeOperandFetchBuffer.flushed = false;
             //reset the istruictioninfo of decode stage
         }
         else 
@@ -393,18 +393,22 @@ void Pipeline::execute_operation() {
     }
     else 
         debugLog("DECODE STAGE is not ready.");
-   
-    //////////////////////////////////////////////////////////////////////////////// 
 
-    if(fetchStage.isStageReady()) 
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Pipeline::processFetchStage()
+{
+      if(fetchStage.isStageReady()) 
     {
         debugLog("FETCH STAGE processing...");
-        bus.getCPU().incrementInstructionIdCounter();
+        cpu.incrementInstructionIdCounter();
         debugLog("incementing counter");
-        FetchstageInstructionId = bus.getCPU().getInstructionIdCounter();
+        FetchstageInstructionId = cpu.getInstructionIdCounter();
         debugLog("FetchstageInstructionId: " + std::to_string(FetchstageInstructionId));
         
-        fetchStage.startFetch(bus, FetchstageInstructionId, index, *eventHandler); //the event handler pointer is tranformed to reference for the function call
+        fetchStage.startFetch(cpu, FetchstageInstructionId, index, *eventHandler); //the event handler pointer is tranformed to reference for the function call
         debugLog("FETCH STAGE fetch started.");
         
     }
@@ -412,26 +416,20 @@ void Pipeline::execute_operation() {
     {
         debugLog("FETCH STAGE is waiting for instruction fetch to complete.");
 
-        //fetchStage.updateFetch(bus, FetchstageInstructionId, *eventHandler);
+        fetchStage.updateFetch(cpu, FetchstageInstructionId, *eventHandler);
     }
     else if (fetchStage.getStatus() == StageStatus::MEMORY_DONE)
     { 
         debugLog("FETCH STAGE instruction fetch completed.");
 
         // Move instruction to Fetch-Decode buffer
-        debugLog("INDEX VALUE: " + to_string_hex(index));
-        fetchDecodeBuffer.instructionInfo = fetchStage.fetchInstruction(bus, FetchstageInstructionId, index);
-        debugLog("Fetched Instruction ID: " + std::to_string(fetchDecodeBuffer.instructionInfo.instructionId));
-        fetchDecodeBuffer.valid = true;
-        fetchDecodeBuffer.stalled = false;
-        fetchDecodeBuffer.flushed = false;
-        fetchStage.setStatus(StageStatus::READY);
-        //reset the instructionInfo of fetch stage
-        fetchStage.setCurrentInstructionInfo(InstructionInfo());
+        fetchDecodeBuffer.instructionInfo = fetchStage.fetchInstruction(cpu, FetchstageInstructionId, index, *eventHandler);
+        
     }
     else 
     {
         debugLog("FETCH STAGE is not ready.");
     }
-    
+
 }
+

@@ -1,58 +1,57 @@
 #include "addressCalculator.hpp"
 #include "cpu.hpp"
 #include "registerFile.hpp"
-#include "bus.hpp"
 
 namespace  AddressCalculator
 {
-    uint64_t indirectAddressing(Bus& bus, Register reg_address) 
+    uint64_t indirectAddressing(RegisterFile& registers, Register reg_address) 
     {
-        return bus.getCPU().getRegisters().getReg(reg_address).raw();
+        return registers.getReg(reg_address).raw();
     }
 
-    uint64_t registerAddressing(Bus& bus, Register reg_value) 
+    uint64_t registerAddressing(RegisterFile& registers, Register reg_value) 
     {
-        return bus.getCPU().getRegisters().getReg(reg_value).raw();
+        return registers.getReg(reg_value).raw();
     }
 
-    uint64_t BaseAddressing(Bus& bus, Register base)
+    uint64_t BaseAddressing(RegisterFile& registers, Register base)
     {
-        return bus.getCPU().getRegisters().getReg(base).raw();
+        return registers.getReg(base).raw();
     }
 
-    uint64_t BaseScaleAddressing(Bus& bus, Register base, uint8_t scale)
+    uint64_t BaseScaleAddressing(RegisterFile& registers, Register base, uint8_t scale)
     {
-        return bus.getCPU().getRegisters().getReg(base).raw() * ScaleConversion(scale);
+        return registers.getReg(base).raw() * ScaleConversion(scale);
     }
 
-    uint64_t BaseIndexAddressing(Bus& bus, Register base, Register index)
+    uint64_t BaseIndexAddressing(RegisterFile& registers, Register base, Register index)
     {
-        return bus.getCPU().getRegisters().getReg(base).raw() + bus.getCPU().getRegisters().getReg(index).raw();
+        return registers.getReg(base).raw() + registers.getReg(index).raw();
     }
 
-    uint64_t BaseIndexScaleAddressing(Bus& bus, Register base, Register index, uint8_t scale)
+    uint64_t BaseIndexScaleAddressing(RegisterFile& registers, Register base, Register index, uint8_t scale)
     {
-        return bus.getCPU().getRegisters().getReg(base).raw() + bus.getCPU().getRegisters().getReg(index).raw() * ScaleConversion(scale);
+        return registers.getReg(base).raw() + registers.getReg(index).raw() * ScaleConversion(scale);
     }
 
-    uint64_t BaseIndexScaleDisplacementAddressing(Bus& bus, Register base, Register index, uint8_t scale, uint64_t displacement)
+    uint64_t BaseIndexScaleDisplacementAddressing(RegisterFile& registers, Register base, Register index, uint8_t scale, uint64_t displacement)
     {
-        return bus.getCPU().getRegisters().getReg(base).raw() + bus.getCPU().getRegisters().getReg(index).raw() * ScaleConversion(scale) + displacement;
+        return registers.getReg(base).raw() + registers.getReg(index).raw() * ScaleConversion(scale) + displacement;
     }
 
-    uint64_t BaseIndexDDisplacementAddressing(Bus& bus, Register base, Register index, uint64_t displacement)
+    uint64_t BaseIndexDDisplacementAddressing(RegisterFile& registers, Register base, Register index, uint64_t displacement)
     {
-        return bus.getCPU().getRegisters().getReg(base).raw() + bus.getCPU().getRegisters().getReg(index).raw() + displacement;
+        return registers.getReg(base).raw() + registers.getReg(index).raw() + displacement;
     }
 
-    uint64_t BaseScaleDisplacementAddressing(Bus& bus, Register base, uint8_t scale, uint64_t displacement)
+    uint64_t BaseScaleDisplacementAddressing(RegisterFile& registers, Register base, uint8_t scale, uint64_t displacement)
     {
-        return bus.getCPU().getRegisters().getReg(base).raw() * ScaleConversion(scale) + displacement;
+        return registers.getReg(base).raw() * ScaleConversion(scale) + displacement;
     }
 
-    uint64_t BaseDisplacementAddressing(Bus& bus, Register base, uint64_t displacement)
+    uint64_t BaseDisplacementAddressing(RegisterFile& registers, Register base, uint64_t displacement)
     {
-        return bus.getCPU().getRegisters().getReg(base).raw() + displacement;
+        return registers.getReg(base).raw() + displacement;
     }
 
     int ScaleConversion(uint8_t scale)

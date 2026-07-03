@@ -4,7 +4,7 @@
 #include "cpu.hpp"
 #include <random>
 #include "bus.hpp"
-
+#include "eventLog.hpp"
 
 
 LRUReplacementPolicy::LRUReplacementPolicy(const uint8_t& numSets, const uint8_t& associativity)
@@ -33,8 +33,6 @@ uint8_t LRUReplacementPolicy::selectLineToReplace(CacheSet& set)
 
     if (state.validLines < set.lines.size()) // If there are still invalid lines in the set
        return state.validLines++; // Return the next free line index and increment the count of valid lines
-
-    
 
     return state.lineIndices.front(); // Get the least recently used line index (the front of the vector)
 
@@ -306,6 +304,7 @@ void RequestScheduler::schedulePendingRequest(PendingRequest&& pendingRequest)
     pendingRequest.remainingLatency = ((pendingRequest.request.type == (RequestType::FILL)) || (pendingRequest.request.type == (RequestType::READ_AFTER_FILL)) || (pendingRequest.request.type == (RequestType::WRITE_AFTER_FILL)) ) ? this->fillLatency : this->latency; 
     pendingRequests.push_back(std::move(pendingRequest)); // Add a pending request to the pending requests vector for processing
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 AddressInfo CacheController::decodeAddress(uint64_t address)
@@ -319,7 +318,6 @@ AddressInfo CacheController::decodeAddress(uint64_t address)
 
     return AddressInfo(address, setIndex, tag, offset); // Return an AddressInfo struct containing the decoded address information
 }
-
 
 void CacheController::handleRequest(PendingRequest& request)
 {
@@ -449,11 +447,17 @@ LookUpResult CacheLevel::lookupCache(const AddressInfo& addressInfo, TypeofData 
 {
     CacheLine* line = storage.findLine(addressInfo.setIndex, addressInfo.tag); // Find the cache line based on the set index and tag from the address information
     CacheLine* line2 = nullptr; // Initialize a pointer for the second cache line in case of cross-line access
+    Result result{};
 
     if (line != nullptr) // If a matching cache line is found
     {
         if (addressInfo.offset + uint8_t(dataType) <= CACHE_LINE_SIZE) // Check if the access is within a single cache line
         {
+            result.success = true; // Set the result to success for a hit within a single cache line
+            result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+            result.errorInfo.event = EventType::CACHE_HIT;
+            result.errorInfo.error = ErrorType::NONE;
+            EventLog::getInstance().submitLog(std::move(result), addressInfo.address);
             return LookUpResult::HIT; // Return HIT if it's a hit within a single cache line
         }
         else
@@ -462,13 +466,28 @@ LookUpResult CacheLevel::lookupCache(const AddressInfo& addressInfo, TypeofData 
             line2 = storage.findLine(addressInfo2.setIndex, addressInfo2.tag); // Find the second cache line for cross-line access based on the next set index and the same tag
             if (line2 != nullptr) // If a matching second cache line is found for cross-line access
             {
+                result.success = true; // Set the result to success for a hit across two cache lines
+                result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+                result.errorInfo.event = EventType::CACHE_HIT;
+                result.errorInfo.error = ErrorType::NONE;
+                EventLog::getInstance().submitLog(std::move(result), addressInfo.address);
                 return LookUpResult::HIT_CROSS_LINES; // Return HIT_CROSS_LINES if it's a hit that spans across two cache lines
             }
+            result.success = false; // Set the result to failure for a miss across two cache lines
+            result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+            result.errorInfo.event = EventType::CACHE_MISS;
+            result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
+            EventLog::getInstance().submitLog(std::move(result), addressInfo.address);
             return LookUpResult::MISS; // Return MISS if the second cache line for cross-line access is not found, indicating a miss across two cache lines
         }
     }
     else
     {
+        result.success = false; // Set the result to failure for a miss within a single cache line
+        result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+        result.errorInfo.event = EventType::CACHE_MISS;
+        result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
+        EventLog::getInstance().submitLog(std::move(result), addressInfo.address);
         return LookUpResult::MISS; // Return MISS if no matching cache line is found
     }
 }
@@ -531,7 +550,7 @@ void CacheLevel::onHit(const AddressInfo& addressInfo, CacheRequest& request)
     {
     case RequestType::READ:
         readSingleLine(addressInfo, request); // Call the read function to handle cache read operations based on
-
+        debugLog("read single line");
         if(int8_t lineIndex = storage.findLineIndex(addressInfo.setIndex, addressInfo.tag); lineIndex >= 0) // If a matching cache line is found based on the set index and tag from the address information
         {
             replacementPolicy->updateOnAccess(storage.getSet(addressInfo.setIndex), uint8_t(lineIndex)); // Update the replacement policy on cache access to reflect the most recently used line
@@ -713,31 +732,30 @@ void CacheLevel::propagateWriteToNextLevel(CacheRequest& request, bool propagate
 
 void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& request)
 {
-    Result<MaxCPUInstructionLength> response {};
+    MaxCPUInstructionLength response {};
+    bool success = false; // Initialize a variable to track the success status of the request
     CacheLine* line = storage.findLine(addressInfo.setIndex, addressInfo.tag); // Find the cache line based on the set index and tag from the address informatio
+    Result result{};
     if (line != nullptr) // If a matching cache line is found
     {
 
-        std::memcpy(response.data.data(), line->data.data() + addressInfo.offset, size_t(request.dataType)); // Copy the requested data from the cache line to the request's data buffer based on the offset and data type
-
-        response.success = true; // Indicate that the request was successful if a matching cache line is found and the data is extracted successfully
-        response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if a matching cache line is found and the data is extracted successfully
-        response.errorInfo.error = ErrorType::NONE; // Set the error type to NONE if a matching cache line is found and the data is extracted successfully
-        response.errorInfo.event = EventType::CACHE_HIT; // Set the event type to CACHE_HIT if a matching cache line is found and the data is extracted successfully
-        
+        std::memcpy(response.data(), line->data.data() + addressInfo.offset, size_t(request.dataType)); // Copy the requested data from the cache line to the request's data buffer based on the offset and data type
+        success = true; // Indicate that the request was successful if a matching cache line is found and the data is extracted successfully
+        result.success = true; // Set the result to success for a hit within a single cache line
+        result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+        result.errorInfo.event = EventType::CACHE_READ;
+        result.errorInfo.error = ErrorType::NONE;
+        EventLog::getInstance().submitLog(std::move(result), line->data);
     }
     else
     {
-            response.data = {};
-            response.success = false; // Indicate that the request was not successful if there is no callback function for the request
-            response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if there is no callback function for the request
-            response.errorInfo.event = EventType::CACHE_READ_ERROR; // Set the error event type to ERROR if there is no callback function for the request
-            response.errorInfo.error = ErrorType::READ_FAIL;
+        result.success = false; // Set the result to failure for a miss within a single cache line
+        result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+        result.errorInfo.event = EventType::CACHE_READ;
+        result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
+        EventLog::getInstance().submitLog(std::move(result));
+           
     }   
-
-    
-
-    bool success = response.success; // Store the success status of the request in a local variable for use in the callback function
 
     bus.getCPU().cacheResponseQueue[request.requestID] =std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
     
@@ -749,35 +767,32 @@ void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& re
 
 void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressInfo& addressInfo2, CacheRequest& request)
 {
-    Result<MaxCPUInstructionLength> response {};
+    MaxCPUInstructionLength response {};
     CacheLine* line1 = storage.findLine(addressInfo1.setIndex, addressInfo1.tag); // Find the first cache line based on the set index and tag from the address information
     CacheLine* line2 = storage.findLine(addressInfo2.setIndex, addressInfo2.tag); // Find the second cache line based on the set index and tag from the address information
-
+    bool success = false; // Initialize a variable to track the success status of the request
+    Result result{};
 
     if(line1 != nullptr && line2 != nullptr) // If both cache lines are found for the cross-line access
     {
-        std::memcpy(response.data.data(), line1->data.data() + addressInfo1.offset, (CACHE_LINE_SIZE - addressInfo1.offset)); // Copy the requested data from the first cache line to the data buffer based on the offset and data type
-        std::memcpy(response.data.data() + (CACHE_LINE_SIZE - addressInfo1.offset), line2->data.data(), size_t(request.dataType) - (CACHE_LINE_SIZE - addressInfo1.offset)); // Copy the remaining data from the second cache line to the data buffer based on the offset and data type
-
-
-        response.success = true; // Indicate that the request was successful if both cache lines are found and the data is extracted successfully
-        response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if both cache lines are found and the data is extracted successfully
-        response.errorInfo.error = ErrorType::NONE; // Set the error type to NONE if both cache lines are found and the data is extracted successfully
-        response.errorInfo.event = EventType::CACHE_HIT; // Set the event type to CACHE_HIT if both cache lines are found and the data is extracted successfully
-    
-        
-    
+        std::memcpy(response.data(), line1->data.data() + addressInfo1.offset, (CACHE_LINE_SIZE - addressInfo1.offset)); // Copy the requested data from the first cache line to the data buffer based on the offset and data type
+        std::memcpy(response.data() + (CACHE_LINE_SIZE - addressInfo1.offset), line2->data.data(), size_t(request.dataType) - (CACHE_LINE_SIZE - addressInfo1.offset)); // Copy the remaining data from the second cache line to the data buffer based on the offset and data type
+        success = true; // Indicate that the request was successful if both cache lines are found and the data is extracted successfully
+        result.success = true; // Set the result to success for a hit across two cache lines
+        result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+        result.errorInfo.event = EventType::CACHE_READ;
+        result.errorInfo.error = ErrorType::NONE;
+        EventLog::getInstance().submitLog(std::move(result), std::pair<LineData, LineData>(line1->data, line2->data));
     }
     else
     {
-        response.data = {};
-        response.success = false; // Indicate that the request was not successful if there is no callback function for the request
-        response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if there is no callback function for the request
-        response.errorInfo.event = EventType::CACHE_READ_ERROR; // Set the error event type to ERROR if there is no callback function for the request
-        response.errorInfo.error = ErrorType::READ_FAIL;
+        result.success = false; // Set the result to failure for a miss across two cache lines
+        result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+        result.errorInfo.event = EventType::CACHE_READ;
+        result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
+        EventLog::getInstance().submitLog(std::move(result));
+    
     }
-
-    bool success = response.success; // Store the success status of the request in a local variable for use in the callback function
 
     bus.getCPU().cacheResponseQueue[request.requestID] =std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
 
@@ -790,17 +805,20 @@ void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressIn
 void CacheLevel::writeSingleLine(const AddressInfo& addressInfo, CacheRequest& request)
 {
     CacheLine* line = storage.findLine(addressInfo.setIndex, addressInfo.tag); // Find the cache line based on the set index and tag from the address information
-    Result<MaxCPUInstructionLength> response {};
+    MaxCPUInstructionLength response {};
+    bool success = false; // Initialize a variable to track the success status of the request
+    Result result{};
 
     if (line != nullptr) // If a matching cache line is found
     {
         std::memcpy(line->data.data() + addressInfo.offset, request.data.data(), size_t(request.dataType)); // Copy the data from the request's data buffer to the cache line based on the offset and data type
         
-
-        response.success = true; // Indicate that the request was successful if a matching cache line is found and the data is written successfully
-        response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if a matching cache line is found and the data is written successfully
-        response.errorInfo.error = ErrorType::NONE; // Set the error type to NONE if a matching cache line is found and the data is written successfully
-        response.errorInfo.event = EventType::CACHE_HIT; // Set the event type to CACHE_HIT if a matching cache line is found and the data is written successfully
+        success = true; // Indicate that the request was successful if a matching cache line is found and the data is written successfully
+        result.success = true; // Set the result to success for a hit within a single cache line
+        result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+        result.errorInfo.event = EventType::CACHE_WRITE;
+        result.errorInfo.error = ErrorType::NONE;
+        EventLog::getInstance().submitLog(std::move(result), line->data);
 
         if(writePolicy->writeThroughOnHit()) // If the write policy is set to write-through
         {
@@ -816,13 +834,13 @@ void CacheLevel::writeSingleLine(const AddressInfo& addressInfo, CacheRequest& r
     }
     else
     {
-        response.success = false; // Indicate that the request was not successful if no matching cache line is found
-        response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if no matching cache line is found
-        response.errorInfo.error = ErrorType::WRITE_FAIL; // Set the error type to WRITE_FAIL if no matching cache line is found
-        response.errorInfo.event = EventType::CACHE_WRITE_ERROR; // Set the event type to CACHE_WRITE_ERROR if no matching cache line is found
+        success = false; // Indicate that the request was not successful if no matching cache line is found
+        result.success = false; // Set the result to failure for a miss within a single cache line
+        result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+        result.errorInfo.event = EventType::CACHE_WRITE;
+        result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
+        EventLog::getInstance().submitLog(std::move(result));
     }
-
-    bool success = response.success; // Store the success status of the request in a local variable for use in the callback function
 
     bus.getCPU().cacheResponseQueue[request.requestID] = std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
 
@@ -836,17 +854,21 @@ void CacheLevel::writeCrossLines(const AddressInfo& addressInfo1, const AddressI
 {
     CacheLine* line1 = storage.findLine(addressInfo1.setIndex, addressInfo1.tag); // Find the first cache line based on the set index and tag from the address information
     CacheLine* line2 = storage.findLine(addressInfo2.setIndex, addressInfo2.tag); // Find the second cache line based on the set index and tag from the address information
-    Result<MaxCPUInstructionLength> response {};
+    MaxCPUInstructionLength response {};
+    bool success = false; // Initialize a variable to track the success status of the request
+    Result result{};
 
     if (line1 != nullptr && line2 != nullptr) // If both cache lines are found for the cross-line access
     {
         std::memcpy(line1->data.data() + addressInfo1.offset, request.data.data(), (CACHE_LINE_SIZE - addressInfo1.offset)); // Copy the data from the request's data buffer to the first cache line based on the offset and data type
         std::memcpy(line2->data.data(), request.data.data() + (CACHE_LINE_SIZE - addressInfo1.offset), size_t(request.dataType) - (CACHE_LINE_SIZE - addressInfo1.offset)); // Copy the remaining data from the request's data buffer to the second cache line based on the offset and data type
 
-        response.success = true; // Indicate that the request was successful if both cache lines are found and the data is written successfully
-        response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if both cache lines are found and the data is written successfully
-        response.errorInfo.error = ErrorType::NONE; // Set the error type to NONE if both cache lines are found and the data is written successfully
-        response.errorInfo.event = EventType::CACHE_HIT; // Set the event type to CACHE_HIT if both cache lines are found and the data is written successfully
+        success = true; // Indicate that the request was successful if both cache lines are found and the data is written successfully
+        result.success = true; // Set the result to success for a hit across two cache lines
+        result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+        result.errorInfo.event = EventType::CACHE_WRITE;
+        result.errorInfo.error = ErrorType::NONE;
+        EventLog::getInstance().submitLog(std::move(result), std::pair<LineData, LineData>(line1->data, line2->data));
 
         if(writePolicy->writeThroughOnHit()) // If the write policy is set to write-through
         {
@@ -862,14 +884,15 @@ void CacheLevel::writeCrossLines(const AddressInfo& addressInfo1, const AddressI
 
     }
     else
-    {
-        response.success = false; // Indicate that the request was not successful if no matching cache
-        response.errorInfo.source = ComponentType::CACHE; // Set the error source to CACHE if no matching cache line is found
-        response.errorInfo.error = ErrorType::WRITE_FAIL; // Set the error type to WRITE
-        response.errorInfo.event = EventType::ERROR; // Set the event type to CACHE_WRITE_ERROR if no matching cache line is found
+    {   
+        result.success = false; // Set the result to failure for a miss across two cache lines
+        result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
+        result.errorInfo.event = EventType::CACHE_WRITE;
+        result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
+        EventLog::getInstance().submitLog(std::move(result));
+      
     }
 
-    bool success = response.success; // Store the success status of the request in a local variable for use in the callback function
 
     bus.getCPU().cacheResponseQueue[request.requestID] = std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
 
@@ -881,6 +904,8 @@ void CacheLevel::writeCrossLines(const AddressInfo& addressInfo1, const AddressI
 
 void CacheLevel::onFill(const AddressInfo& addressInfo, [[maybe_unused]] CacheRequest& request, CacheLine& line)
 {   
+    Result resultFill{};
+
     debugLog("riempimento fill");
     CacheSet& set = storage.getSet(addressInfo.setIndex);
     debugLog("set ottenuto");
@@ -889,9 +914,15 @@ void CacheLevel::onFill(const AddressInfo& addressInfo, [[maybe_unused]] CacheRe
     CacheLine& victim =  set.lines[lineIndex];
     if(victim.valid && victim.dirty)
     {
+        Result resultEviction{};
         uint8_t offsetBits = log2(CACHE_LINE_SIZE);
         uint8_t setIndexBits = log2(numSets);
         uint64_t victimAddress = (victim.tag << (offsetBits + setIndexBits)) | (addressInfo.setIndex << offsetBits);
+        resultEviction.success = true;
+        resultEviction.errorInfo.source = getComponentTypeFromCacheLevelType(type);
+        resultEviction.errorInfo.event = EventType::CACHE_EVICT;
+        resultEviction.errorInfo.error = ErrorType::NONE;
+        EventLog::getInstance().submitLog(std::move(resultEviction), victim.data);
         onEviction(controller.decodeAddress(victimAddress),victim);
     }
 
@@ -900,13 +931,19 @@ void CacheLevel::onFill(const AddressInfo& addressInfo, [[maybe_unused]] CacheRe
     storage.loadLine(addressInfo.setIndex, line, lineIndex); // Load the data into the cache line at the specified set index and tag using the storage's load function, which will handle the actual filling of the cache line with data from the lower level or memory based on the cache line provided in the request
     debugLog("RIGA CARICATA");
     replacementPolicy->onLineLoaded(set, lineIndex);
-
+    
+    resultFill.success = true;
+    resultFill.errorInfo.source = getComponentTypeFromCacheLevelType(type);
+    resultFill.errorInfo.event = EventType::CACHE_FILL;
+    resultFill.errorInfo.error = ErrorType::NONE;
+    EventLog::getInstance().submitLog(std::move(resultFill));
 
     // The actual filling of the cache line with data from the lower level or memory will be handled in the onHit or onMiss functions based on whether the line was found or not, and the replacement policy will be updated accordingly to reflect the most recently used line
 }
 
 void CacheLevel::onEviction(const AddressInfo& addressInfo, const CacheLine& line)
 {
+    Result resultEviction{};
     CacheRequest writeBack;
     writeBack.type = RequestType::WRITE;
     writeBack.address = addressInfo.address; // indirizzo ricostruito della linea vittima
@@ -981,8 +1018,8 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
 {
     debugLog("esecuzione ram richeista:" + std::to_string(pendingRequest.request.requestID));
     CacheRequest& originalRequest = pendingRequest.request; // Get the cache request from the pending request to be processed by the memory scheduler
-    Result<LineData> readResponse;
-    Result<void> writeResponse;
+    LineData readResponse;
+
     //calculating the adress for the start of the line
     uint64_t lineAddress = originalRequest.address & ~(CACHE_LINE_SIZE - 1); //BITMASK FOR REMOVING 6BITS FINALS TAHT RAPPRESENTS THE OFFSET
 
@@ -994,10 +1031,8 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
         {
             debugLog("lettura ram");
             readResponse = bus.getMemory().read(lineAddress);
-            if(readResponse.success)
-            {
-                debugLog("lettura ram successo");
-                //we haev to make 3 copies and make the code redundant cause the function are defined for beeing used with rvalues avoiding copies
+            
+            debugLog("lettura ram completata");
 
                 auto makeFillPending =[&]() ->PendingRequest
                 {
@@ -1007,7 +1042,7 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
                     fillRequest.type = RequestType::FILL;
 
                     CacheLine line = CacheLine();
-                    line.data = readResponse.data;
+                    line.data = readResponse;
 
                     auto fillPendingRequest = PendingRequest();
                     fillPendingRequest.line= std::move(line);
@@ -1034,23 +1069,20 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
                 bus.getCPU().getCacheManager().getL1Cache().schedulePendingRequest(std::move(pendingRequest));
 
                 debugLog("invio originale");
-                
-            }
 
             break;
         }
         case RequestType::READ_MEMORY_FOR_WRITE_MISS:
         {
             readResponse = bus.getMemory().read(lineAddress);
-            if(readResponse.success)
-            {
+           
                 auto fillRequest = CacheRequest();
                 fillRequest.address = lineAddress;
                 fillRequest.dataType = TypeofData::ARRAY_64B;
                 fillRequest.type = RequestType::FILL;
 
                 CacheLine line = CacheLine();
-                line.data = readResponse.data;
+                line.data = readResponse;
 
                 auto fillPendingRequest = PendingRequest();
                 fillPendingRequest.request = std::move(fillRequest);
@@ -1064,13 +1096,11 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
                 debugLog("invio richeista originale");
                 bus.getCPU().getCacheManager().getL3Cache().schedulePendingRequest(std::move(pendingRequest));
                 
-            }
             break;
-            
         }
         case RequestType::WRITE:
         {
-            writeResponse = bus.getMemory().write(lineAddress, pendingRequest.line.data);
+            bus.getMemory().write(lineAddress, pendingRequest.line.data);
 
             //gestire in futuro errori
 

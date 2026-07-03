@@ -2,9 +2,7 @@
 #include "instruction.hpp"
 #include "cpu.hpp"
 #include "memory.hpp"
-#include <string>
 #include "registerFile.hpp"
-#include "bus.hpp"
 #include "helpers.hpp"
 
 //namespace for operand fetching 
@@ -14,7 +12,7 @@ namespace operandFetch {
 
     
     //fetching RM operands 
-    void fetchRM(Instruction* i, Bus& bus)
+    void fetchRM(Instruction* i, RegisterFile& registers)
     {
         //declaring the registers (the type of the register is Register an enum class)
         Register source_register; 
@@ -33,8 +31,8 @@ namespace operandFetch {
             source_register = decodeRegisterRM(rm.r_m, rex, false);
             destination_register = decodeRegisterReg(rm.reg, rex);
 
-            auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(source_register).raw());
-            auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
+            auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
+            auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
 
 
             i->setSourceOperand(std::move(sourceOperand));
@@ -46,13 +44,13 @@ namespace operandFetch {
 
          //Case 2: operation between register and memory
 
-        uint64_t address {calculatingAddressR_M(i, bus)};
+        uint64_t address {calculatingAddressR_M(i, registers)};
 
         destination_register = decodeRegisterReg(rm.reg, rex);
  
         //Source operand is an address and destination is a register
-        auto sourceOperand = std::make_unique<MemOperand>(bus, address, i->getInstructionId());
-        auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
+        auto sourceOperand = std::make_unique<MemOperand>(address);
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
@@ -60,7 +58,7 @@ namespace operandFetch {
     }
 
 
-    void fetchMR(Instruction* i, Bus& bus)
+    void fetchMR(Instruction* i, RegisterFile& registers)
     {
         //declaring the registers (the type of the register is Register an enum class)
         Register source_register; 
@@ -79,8 +77,8 @@ namespace operandFetch {
             destination_register = decodeRegisterRM(rm.r_m, rex, false);
 
             //operand constructors for source and destination operands
-            auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(source_register).raw());
-            auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
+            auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
+            auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
 
 
             //setting the source and destination operands
@@ -95,14 +93,14 @@ namespace operandFetch {
 
         //the address is calculated with the calculatingAddressR_M function 
         //and the address is set to the destination operand
-        uint64_t address {calculatingAddressR_M(i, bus)};
+        uint64_t address {calculatingAddressR_M(i, registers)};
 
         //the source is a register
         source_register = decodeRegisterReg(rm.reg, rex);
 
         //operand constructors for source and destination operands
-        auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(source_register).raw());
-        auto destinationOperand = std::make_unique<MemOperand>(bus, address, i->getInstructionId());
+        auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
+        auto destinationOperand = std::make_unique<MemOperand>(address);
 
 
         i->setSourceOperand(std::move(sourceOperand));
@@ -111,13 +109,13 @@ namespace operandFetch {
 
     }
 
-    void fetchFD(Instruction* i, Bus& bus)
+    void fetchFD(Instruction* i, RegisterFile& registers)
     {
         //operand constructors for source and destination operands
 
         //the destination is a register and the source is a memory address(displacement)
-        auto sourceOperand = std::make_unique<MemOperand>(bus, i->getDisplacement(), i->getInstructionId());
-        auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(Register::RAX).raw());
+        auto sourceOperand = std::make_unique<MemOperand>(i->getDisplacement());
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RAX).raw());
 
 
         i->setSourceOperand(std::move(sourceOperand));
@@ -125,20 +123,20 @@ namespace operandFetch {
     
     }
 
-    void fetchTD(Instruction* i, Bus& bus)
+    void fetchTD(Instruction* i, RegisterFile& registers)
     {
         //operand constructors for source and destination operands
 
         //the source is a register and the destination is a memory address(displacement)
-        auto sourceOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(Register::RAX).raw());
-        auto destinationOperand = std::make_unique<MemOperand>(bus, i->getDisplacement(), i->getInstructionId());
+        auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(Register::RAX).raw());
+        auto destinationOperand = std::make_unique<MemOperand>(i->getDisplacement());
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
 
     }
 
-    void fetchOI(Instruction* i, Bus& bus, uint32_t opcode)
+    void fetchOI(Instruction* i, RegisterFile& registers, uint32_t opcode)
     {
         Register register_name[16] = {Register::RAX, Register::RCX, Register::RDX, Register::RBX, Register::RSP, Register::RBP, Register::RSI, Register::RDI,
                                     Register::R8,Register::R9, Register::R10, Register::R11, Register::R12, Register::R13, Register::R14, Register::R15};
@@ -156,7 +154,7 @@ namespace operandFetch {
         //operand constructors for destination operand 
         //the source is an immediate value and the destination is a register
         auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
-        auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(register_name[reg_index]).raw());
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(register_name[reg_index]).raw());
 
         i->setSourceOperand(std::move(sourceOperand)); // no source operand for immediate move
         i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the register
@@ -164,7 +162,7 @@ namespace operandFetch {
 
     }
 
-    void fetchMI(Instruction* i, Bus& bus)
+    void fetchMI(Instruction* i, RegisterFile& registers)
     {
         //getting the r/m byte
         r_m rm = i->getRM();
@@ -176,7 +174,7 @@ namespace operandFetch {
                 
                 
                 auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
-                auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(destination_register).raw());
+                auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
 
                 i->setSourceOperand(std::move(sourceOperand));
                 i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the register
@@ -185,12 +183,11 @@ namespace operandFetch {
 
         }
 
-        uint64_t address {calculatingAddressR_M(i, bus)};
+        uint64_t address {calculatingAddressR_M(i, registers)};
 
         //the source is an immediate value and the destination is a memory address
         auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
-        auto destinationOperand = std::make_unique<MemOperand>(bus, address, i->getInstructionId());
-
+        auto destinationOperand = std::make_unique<MemOperand>(address);
 
         i->setSourceOperand(std::move(sourceOperand)); // no source operand for immediate move
         i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the register
@@ -198,11 +195,11 @@ namespace operandFetch {
 
     }
 
-    void fetchI(Instruction* i, Bus& bus)
+    void fetchI(Instruction* i, RegisterFile& registers)
     {
         //the source is an immediate value and the destination is a register
         auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
-        auto destinationOperand = std::make_unique<RegOperand>(bus.getCPU().getRegisters().getReg(Register::RAX).raw());
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RAX).raw());
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
@@ -211,8 +208,8 @@ namespace operandFetch {
     
 
 
-    uint64_t calculatingAddressR_M(Instruction* i, Bus& bus)
-    {
+    uint64_t calculatingAddressR_M(Instruction* i, RegisterFile& registers)
+{
         //getting the r/m byte
         r_m rm = i->getRM();
 
@@ -231,12 +228,12 @@ namespace operandFetch {
             if (rm.r_m == 0b101 && rm.mod == 0b00)
             {
                 //calculation of the address with  RIP displacement
-                return AddressCalculator::BaseDisplacementAddressing(bus, Register::RIP, displacement);
+                return AddressCalculator::BaseDisplacementAddressing(registers, Register::RIP, displacement);
             }
             else
             {
                 //destination adress is in the register
-                return AddressCalculator::indirectAddressing(bus, decodeRegisterRM(rm.r_m, rex, i->getHasSIB())) + displacement;
+                return AddressCalculator::indirectAddressing(registers, decodeRegisterRM(rm.r_m, rex, i->getHasSIB())) + displacement;
 
             }
         }
@@ -255,17 +252,17 @@ namespace operandFetch {
             //if the base is 0b101 and the index is not 0b100, base(displacement), index and scale addressing
             else if (sib.base == 0b101 && sib.index != 0b100 && rm.mod == 0b00)
             {
-                address = i->getSIBdisplacement() + AddressCalculator::BaseScaleAddressing(bus, index, sib.scale);
+                address = i->getSIBdisplacement() + AddressCalculator::BaseScaleAddressing(registers, index, sib.scale);
             }
             //if the base is not 0b101 and the index is 0b100, normal base addressing
             else if (sib.base != 0b101 && sib.index == 0b100)
             {
-                address = AddressCalculator::BaseAddressing(bus, base);
+                address = AddressCalculator::BaseAddressing(registers, base);
             }
             //if the base is not 0b101 and the index is not 0b100, base, index and scale addressing
             else
             {
-                address += AddressCalculator::BaseIndexScaleAddressing(bus, base, index, sib.scale);
+                address += AddressCalculator::BaseIndexScaleAddressing(registers, base, index, sib.scale);
             }
 
             //if the mod is 0b01 or 0b10, there is a displacement to add
@@ -279,7 +276,7 @@ namespace operandFetch {
 
         }
 
-    }
+}
 
 }
 
@@ -298,213 +295,16 @@ int Operand::getSize() const {
 }
 
 
-
-Result<void> RegOperand::setValue(uint64_t v, [[maybe_unused]] std::function<void()> callback)
-{
-    
-    uint64_t bitCount = this->size * 8;
-    const uint64_t mask = (bitCount == 64) ? ~0ULL : ((1ULL << bitCount) - 1);
-
-    // Applica la maschera coerente alla size del tipo
-    const uint64_t value = v & mask;
-    this->reg = (this->reg & ~mask) | value;
-            
-    return Result<void>{true, {}};
+void Operand::setType(OperandType t) {
+    this->type = t;
 }
 
-Result<uint64_t> RegOperand::getValue([[maybe_unused]] std::function<void()> callback) 
-{
-    uint64_t result {};
-    int64_t mask {};
-
-    if(this->size == 64)
-        mask = 0xFFFFFFFFFFFFFFFF;
-    else
-        mask = ((1ULL << (this->size)) - 1);
-
-    result = this->reg & mask;
-
-
-    return Result<uint64_t>{result, true, {}};
+OperandType Operand::getType() const {
+    return this->type;
 }
 
 
-Result<void> MemOperand::setValue(uint64_t v, std::function<void()> callback) {
-    
-    if (this->size == 0)
-        return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot set value."}};
 
-    TypeofData dataTypeSize = TypeofData::UNKNOWN;
-    MaxCPUInstructionLength out{}; // Buffer per i dati da scrivere, dimensione massima di 16 byte
-    std::memcpy(out.data(), &v, this->size); // Copia i dati in out, rispettando la size dell'operando
-    
-    switch(size)
-    {
-        case 1:
-            dataTypeSize = TypeofData::UINT8_T;
-            break;
-        case 2:
-            dataTypeSize = TypeofData::UINT16_T;
-            break;
-        case 4:
-            dataTypeSize = TypeofData::UINT32_T;
-            break;
-        case 8:
-            dataTypeSize = TypeofData::UINT64_T;
-            break;
-        default:
-            dataTypeSize = TypeofData::UNKNOWN;
-            break;
-    }
 
-    if(!requestSent)
-    {
-        //sending the write request to the cache manager
 
-        //debugLog("MemOperand: Sending write request to address " + to_string_hex(this->address) + " with value " + to_string_hex(v) + " and size " + std::to_string(this->size) + " bytes.");
-        requestSent = true;
 
-        bus.getCPU().getCacheManager().enqueRequest(CacheRequest(RequestType::WRITE, dataTypeSize, this->address, out, false, instructionID, callback));
-
-        return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Write request sent. Waiting for completion."}};
-    }
-    else
-    {
-        //request already sent, waiting for completion
-
-        debugLog("MemOperand: Write request already sent to address " + to_string_hex(this->address) + ". Waiting for completion.");
-
-        //checking if the request is completed
-        auto it = bus.getCPU().cacheResponseQueue.find(instructionID);
-
-        if (it != bus.getCPU().cacheResponseQueue.end())
-        {
-            //request completed
-            debugLog("MemOperand: Write request completed for address " + to_string_hex(this->address) + ".");
-            
-            //extracting the result
-            Result<void> result;
-            Result<MaxCPUInstructionLength>& response =(it->second);
-
-            result.success = response.success;
-            result.errorInfo = response.errorInfo;
-            
-            if (result.success)
-            {
-                debugLog("MemOperand: Write request successful for address " + to_string_hex(this->address) + ".");
-            }
-            else
-            {
-                debugLog("MemOperand: Write request failed for address " + to_string_hex(this->address) + ": " + response.errorInfo.message);
-            }
-
-            bus.getCPU().cacheResponseQueue.erase(it);
-            requestSent = false; //resetting the flag for future requests
-
-            return result;
-        }
-        else
-        {
-            //request not completed
-            debugLog("MemOperand: Write request not completed for address " + to_string_hex(this->address) + ".");
-            return Result<void>{false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Write request not completed yet."}};
-        }
-
-    }
-}
-
-Result<uint64_t> MemOperand::getValue(std::function<void()> callback) {
-    
-
-    if (this->size == 0)
-    {
-        return Result<uint64_t>{{},false, {ComponentType::OPERAND, EventType::ERROR,ErrorType::INVALID_SIZE, "Size is null. Cannot get value."}};
-    }
-
-    //extracting value first from cache, then from memory if necessary
-    Result<uint64_t> result;
-
-    if(!readRequestSent)
-    {
-        //sending the read request to the cache manager
-
-        debugLog("MemOperand: Sending read request to address " + to_string_hex(this->address) + " with size " + std::to_string(this->size) + " bytes.");
-        readRequestSent = true;
-        TypeofData dataTypeSize;
-        switch (this->size)
-        {
-            case 8:
-                dataTypeSize = TypeofData::UINT8_T;
-                break;
-            case 16:
-                dataTypeSize = TypeofData::UINT16_T;
-                break;
-            case 32:
-                dataTypeSize = TypeofData::UINT32_T;
-                break;
-            case 64:
-                dataTypeSize = TypeofData::UINT64_T;
-                break;
-            default:
-                dataTypeSize = TypeofData::UNKNOWN;
-                break;
-        }
-
-        bus.getCPU().getCacheManager().enqueRequest(CacheRequest(RequestType::READ, dataTypeSize, this->address,MaxCPUInstructionLength{}, false, instructionID, callback));
-
-        return Result<uint64_t>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request sent. Waiting for completion."}};
-    }
-    else
-    {
-        //request already sent, waiting for completion
-
-        debugLog("MemOperand: Read request already sent to address " + to_string_hex(this->address) + ". Waiting for completion.");
-
-        //checking if the request is completed
-        auto it = bus.getCPU().cacheResponseQueue.find(instructionID);
-
-        if (it != bus.getCPU().cacheResponseQueue.end())
-        {
-            //request completed
-            debugLog("MemOperand: Read request completed for address " + to_string_hex(this->address) + ".");
-            
-            //extracting the result
-            Result<MaxCPUInstructionLength>& response =(it->second);
-
-            result.success = response.success;
-            result.errorInfo = response.errorInfo;
-            
-            if (result.success)
-            {
-                debugLog("MemOperand: Read request successful for address " + to_string_hex(this->address) + ".");
-                //getting the value based on the size
-                std::memcpy(&result.data, &response.data, this->size);
-            }
-            else
-            {
-                debugLog("MemOperand: Read request failed for address " + to_string_hex(this->address) + ": " + response.errorInfo.message);
-            }
-
-            bus.getCPU().cacheResponseQueue.erase(it);
-            readRequestSent = false; //resetting the flag for future requests
-
-            return result;
-        }
-        else
-        {
-            //request not completed dhdhhdhd
-            debugLog("MemOperand: Read request not completed for address " + to_string_hex(this->address) + ".");
-            return Result<uint64_t>{{}, false, {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request not completed yet."}};
-        }
-    }
-
-}
-
-Result<void> ImmediateOperand::setValue(uint64_t v, [[maybe_unused]] std::function<void()> callback) {
-    this->value = v;
-    return Result<void>{true, {ComponentType::OPERAND, EventType::NONE, ErrorType::NONE, ""}};
-}
-
-Result<uint64_t> ImmediateOperand::getValue([[maybe_unused]] std::function<void()> callback) {
-    return Result<uint64_t>{this->value, true, {ComponentType::OPERAND, EventType::NONE, ErrorType::NONE, ""}};
-}

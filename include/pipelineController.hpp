@@ -6,9 +6,6 @@
 #include "pipeline.hpp"
 #include "eventHandler.hpp"
 
-class CPU; // Forward declaration
-class Bus; // Forward declaration
-
 
 class PipelineController
 {
@@ -18,11 +15,21 @@ class PipelineController
 
         void setupEvents();
 
-        void onStageComplete(StageType stage);
-
         void onWaitingMemory(StageType stage);
 
         void onMemoryDone(StageType stage);
+
+        void onFetchComplete();
+
+        void onDecodeComplete();
+
+        void onOperandFetchComplete();
+
+        void onExecuteComplete();
+
+        void onMemoryStageComplete();
+
+        void onWriteBackComplete();
 
         void stallForGUI();
 
@@ -34,6 +41,7 @@ class PipelineController
         EventHandler<EventHandlerPipelineEventType> eventHandler;
 
 };
+
 #endif // PIPELINECONTROLLER_HPP
 
 

@@ -16,10 +16,8 @@ public:
     Memory(size_t size, Bus& bus); //constructor that takes the size of the memory and a reference to the Bus
 
     //methods for reading and writing from memory
-    Result<LineData> read(uint64_t address);
-   
-
-    Result<void> write(uint64_t address, LineData line);
+    LineData read(uint64_t address);
+    void write(uint64_t address, LineData line);
 
 
     //get the size of the memory
@@ -50,9 +48,9 @@ public:
     void setBasePointer(uint64_t value);
 
     //push and pop methods for the stack
-    Result<void> push([[maybe_unused]] uint64_t value);
+    void push(uint64_t value);
 
-    Result<uint64_t> pop();
+    uint64_t pop();
 
 
 

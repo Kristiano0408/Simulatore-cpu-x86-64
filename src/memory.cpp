@@ -2,6 +2,7 @@
 #include "cpu.hpp"
 #include <cmath>
 #include "bus.hpp"
+#include "eventLog.hpp"
 //ricordarsi di convertire indirizzi dec per accedere al vettore e in binario per utilizzare l'indirizzo
 
 //ricordasri controllo offset e size per evitare buffer overflow
@@ -10,12 +11,9 @@
 Memory::Memory(size_t size, Bus& bus): data{}, RSP(bus.getCPU().getRegisters().getReg(Register::RSP).raw()), RBP(bus.getCPU().getRegisters().getReg(Register::RBP).raw())
 {
 
-
     data.resize(size, 0); //initialize the memory with 0
-
     this->size = size;
     size_stack = size / 4; //initialize the stack size to 1/4 of the memory size
-
     RSP = this->size - 1; //initialize the stack pointer to the end of the memory
     RBP = this->size - 1; //initialize the base pointer to the end of the memory
 
@@ -76,74 +74,119 @@ uint64_t Memory::getBasePointer() const
 
 
 //da sistemare
-Result<void> Memory::push([[maybe_unused]] uint64_t value)
+void Memory::push( uint64_t value)
 {
-    Result<void> result;
+    Result result{};
+
+
     //controllo overflow
     if (RSP - 8 < size - size_stack) //check if the stack pointer is out of bounds
     {
-        std::cerr << "Stack overflow!" << std::endl; //print error message
         result.success = false;
-        result.errorInfo = {ComponentType::RAM, EventType::RAM_WRITE_ERROR, ErrorType::OUT_OF_BOUNDS, "Stack overflow!"};
-        return result;
+        result.errorInfo.source = ComponentType::RAM;
+        result.errorInfo.event = EventType::ERROR;
+        result.errorInfo.error = ErrorType::STACK_OVERFLOW;
+        EventLog::getInstance().submitLog(std::move(result));
+
+        return;
     }
 
     RSP -= 8; //decrement the stack pointer
-    ///result = writeGeneric<uint64_t>(RSP, value); //write the value to the stack
-    return result;
+    uint64_t lineAddress = RSP - (RSP % CACHE_LINE_SIZE); //calculate the start of the line address to write to the stack
+    LineData lineData = read(lineAddress); //read the line from memory
+    std::memcpy(&lineData[RSP % CACHE_LINE_SIZE], &value, sizeof(value)); //copy the value to the line data
+    write(lineAddress, lineData); 
+
+    result.success = true;
+    result.errorInfo.source = ComponentType::RAM;
+    result.errorInfo.event = EventType::RAM_ACCESS;
+    result.errorInfo.error = ErrorType::NONE;
+    EventLog::getInstance().submitLog(std::move(result));
+
 };
 
 
 
 ///da sistemare
-Result<uint64_t> Memory::pop()
+uint64_t Memory::pop()
 {
-    Result<uint64_t> result;
+    uint64_t value{};
+    LineData readResult{};
+    Result result{};
+
     //controllo underflow
     if (RSP > size - 8) //check if the stack pointer is out of bounds
     {
-        std::cerr << "Stack underflow!" << std::endl; //print error message
         result.success = false;
-        result.errorInfo = {ComponentType::RAM, EventType::RAM_READ_ERROR, ErrorType::OUT_OF_BOUNDS, "Stack underflow!"};
-        return result;
+        result.errorInfo.source = ComponentType::RAM;
+        result.errorInfo.event = EventType::ERROR;
+        result.errorInfo.error = ErrorType::STACK_OVERFLOW;
+        EventLog::getInstance().submitLog(std::move(result));
+        return value;
     }
 
-    //result = readGeneric<uint64_t>(RSP); //read the value from the stack
-    RSP += 8; //increment the stack pointer
-    return result;
+    //calculating the start of the line address to read from the stack
+
+    uint64_t lineAddress = RSP - (RSP % CACHE_LINE_SIZE); //calculate the start of the line address to read from the stack
+
+    readResult = read(lineAddress);
+
+    result.success = true;
+    result.errorInfo.source = ComponentType::RAM;
+    result.errorInfo.event = EventType::RAM_ACCESS;
+    result.errorInfo.error = ErrorType::NONE;
+    EventLog::getInstance().submitLog(std::move(result));
+   
+    return value;
+   
 };
 
 
 
-Result<LineData> Memory::read(uint64_t address) 
+LineData Memory::read(uint64_t addressLine) 
 {
-    Result<LineData> result {};
-    if (address + sizeof(LineData) > size) //check if the address is out of bounds
+    LineData lineData {};
+    Result result{};
+    
+    if (addressLine + sizeof(LineData) > size) //check if the address is out of bounds
     {
         result.success = false;
-        result.errorInfo = {ComponentType::RAM, EventType::RAM_READ_ERROR, ErrorType::OUT_OF_BOUNDS, "Memory access out of bounds!"};
-        return result;
+        result.errorInfo.source = ComponentType::RAM;
+        result.errorInfo.event = EventType::ERROR;
+        result.errorInfo.error = ErrorType::INVALID_ADDRESS;
+        EventLog::getInstance().submitLog(std::move(result));
+        return lineData;
+        
     }
-
-    std::memcpy(&result.data, &data[address], sizeof(LineData));
+    std::memcpy(lineData.data(), &data[addressLine], sizeof(LineData));
+   
     result.success = true;
-    result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
-    return result;
+    result.errorInfo.source = ComponentType::RAM;
+    result.errorInfo.event = EventType::RAM_ACCESS;
+    result.errorInfo.error = ErrorType::NONE;
+    EventLog::getInstance().submitLog(std::move(result), lineData);
+    return lineData;
 }
 
-Result<void> Memory::write(uint64_t address, LineData line)
+void Memory::write(uint64_t addressLine, LineData line)
 {
-        Result<void> result;
-
-    if (address + sizeof(LineData) > size) //check if the address is out of bounds
+    Result result{};
+    if (addressLine + sizeof(LineData) > size) //check if the address is out of bounds
     {
         result.success = false;
-        result.errorInfo = {ComponentType::RAM, EventType::RAM_WRITE_ERROR, ErrorType::OUT_OF_BOUNDS, "Memory access out of bounds!"};
-        return result;
+        result.errorInfo.source = ComponentType::RAM;
+        result.errorInfo.event = EventType::ERROR;
+        result.errorInfo.error = ErrorType::INVALID_ADDRESS;
+        EventLog::getInstance().submitLog(std::move(result));
+        return;
     }
 
-    std::memcpy(&data[address], &line, sizeof(LineData));
+    std::memcpy(&data[addressLine], &line, sizeof(LineData));
+
     result.success = true;
-    result.errorInfo = {ComponentType::RAM, EventType::NONE, ErrorType::NONE, ""};
-    return result;
+    result.errorInfo.source = ComponentType::RAM;
+    result.errorInfo.event = EventType::RAM_ACCESS;
+    result.errorInfo.error = ErrorType::NONE;
+    EventLog::getInstance().submitLog(std::move(result), line);
+  
 }

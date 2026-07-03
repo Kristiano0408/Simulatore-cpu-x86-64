@@ -1,6 +1,9 @@
 
 //refactory massivo
-
+//
+//FINIRE EVENTlOG
+//sistemare valid lines in replacement policy
+//fault bus (+ vedere se utilizzare meccabnsumo di iscrizione dei device aneh per bus)
 
 //namespaec variabili globalei per mask,etc..
 
@@ -45,8 +48,6 @@ conclusione instruction set(controllare istruzioni, mashere e correta esecuzione
 !!IMPLEMENTARE SIGN EXTENSION IN MOV,SUB,ADD PRIMA DI PASSARE AD ALTRE ISTRUZIONI(CAPIRE COME FARE LOGICA GENERALE SENZA CASO PER CASO)
 
 
-!!!!IMPLEMTARE RESULT PER TUTTI I COMPONETI OLTRE a (CACHE MANAGER,ram, operands) al momento la propagazione
-di result si ferma al fetch in cu e nell istruction!!!
 
 
 //funzioni per modificare grandezza ram e cache

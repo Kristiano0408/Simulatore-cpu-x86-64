@@ -13,9 +13,6 @@
 #include <memory>
 #include "operands.hpp"
 
-
-
-class Bus;
 template<EnumType T>
 class EventHandler;
 
@@ -31,22 +28,7 @@ class Instruction
         virtual  ~Instruction();
 
         virtual bool isEmpty() const { return false; }
-        //methods for pipeline stages
 
-        virtual void startExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) = 0; //optional method to start execution (for multi-cycle instructions)
-        virtual void updateExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) = 0; //optional method to update execution (for multi-cycle instructions)
-        virtual void execute(Bus& bus) = 0;//Polimorfic method that will be implemented in the derived classes
-
-        //////////////////////////////////////////////////////////////
-
-        virtual void fetchOperands(Bus& bus) = 0; //Polimorfic method for fetching operands
-
-        //////////////////////////////////////////////////
-
-        virtual void requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) = 0; //Polimorfic method to request memory access (only for load/store instructions)
-        virtual void accessMemory([[maybe_unused]] Bus& bus) = 0; //Polimorfic method for memory access (only for load/store instructions)
-
-        virtual void writeBack([[maybe_unused]]Bus& bus) = 0; //Polimorfic method for write back stage
         uint64_t castingValue(uint64_t value, int nbit); //cast the value to the number of bits of the operand (8, 16, 32, 64)
 
         //setters and getters for the instruction
@@ -132,7 +114,12 @@ class Instruction
 
         void setTemporaryValues(const temporaryValues& values) { tempValues = values; }
 
-        temporaryValues getTemporaryValues() const { return tempValues; }
+        temporaryValues getTemporaryValues()  { return tempValues; }
+
+        temporaryValues& getTemporaryValuesRef() { return tempValues; } // Return a reference to the temporaryValues struct
+
+        void setType(TypeofInstruction type) { this->type = type; }
+        TypeofInstruction getType() const { return type; }
 
     protected:
 
@@ -146,6 +133,7 @@ class Instruction
 
     private:
     //parts of the instruction
+        TypeofInstruction type; //type of the instruction (arithmetic, logical, control flow, etc.)
         uint64_t InstructionId; //unique id for the instruction
         uint32_t opcode;
         uint8_t prefix[4];
@@ -189,18 +177,6 @@ class EmptyInstruction : public Instruction
 
         bool isEmpty() const override { return true; }
 
-        void fetchOperands([[maybe_unused]] Bus& bus) override {}
-
-        //execute the instruction
-        void startExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) override {}
-        void updateExecution([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) override {}
-        void execute([[maybe_unused]] Bus& bus) override {}
-
-        void requestMemoryAccess([[maybe_unused]] Bus& bus, [[maybe_unused]] EventHandler<EventHandlerPipelineEventType>& eventHandler) override {}
-
-        void accessMemory([[maybe_unused]] Bus& bus) override {}
-
-        void writeBack([[maybe_unused]] Bus& bus) override {debugLog("EmptyInstruction writeBack called");}
 
 };
 

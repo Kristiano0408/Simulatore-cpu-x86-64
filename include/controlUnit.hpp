@@ -7,6 +7,7 @@
 class Bus;   // forward declaration
 class CPU;   // forward declaration
 class RegisterFile;   // forward declaration
+class Instruction;   // forward declaration
 template<EnumType T>
 class EventHandler; // forward declaration
 
@@ -21,12 +22,12 @@ class CU
         void startFetch(uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler);
 
         void updateFetch(uint64_t instructionId, EventHandler<EventHandlerPipelineEventType>& eventHandler);
-        InstructionInfo fetchInstruction(uint64_t instructionID, uint64_t index);
-        Instruction* decodeInstruction(InstructionInfo instruction);
-        void OperandFetch(Instruction* instruction);
-        void executeInstruction(Instruction* instruction);
-        void memoryphase(Instruction* instruction);
-        void writeBack(Instruction* instruction);
+        InstructionInfo fetchInstruction(uint64_t instructionID, uint64_t index, EventHandler<EventHandlerPipelineEventType>& eventHandler);
+        void decodeInstruction(InstructionInfo instruction, std::unique_ptr<Instruction>& decodedInstruction, EventHandler<EventHandlerPipelineEventType>& eventHandler);
+        //void OperandFetch(Instruction* instruction);
+        //void executeInstruction(Instruction* instruction);
+        //void memoryphase(Instruction* instruction);
+        //void writeBack(Instruction* instruction);
 
         
         

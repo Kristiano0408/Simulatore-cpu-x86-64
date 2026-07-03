@@ -1,9 +1,8 @@
 #include "alu.hpp"
 #include "cpu.hpp"
 #include "registerFile.hpp"
-#include "bus.hpp"
 
-ALU::ALU(Bus& bus) : bus(bus)
+ALU::ALU()
 {
     //nothing to do here
 }
@@ -14,17 +13,17 @@ ALU::~ALU()
 }
 
 
-void ALU::executeOperation(temporaryValues& tempValues, typeofInstruction type)
+void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type)
 {
     
-
+    debugLog("ALU: Executing operation " + toStringTypeofInstruction(type) + " with source value " + to_string_hex(tempValues.srcValue) + " and destination value " + to_string_hex(tempValues.destValue) + ".");
     uint64_t dest = tempValues.destValue;
     uint64_t src  = tempValues.srcValue;
     uint64_t tmp  = 0;
 
     // Esegui le operazioni normalmente
     switch (type) {
-        case typeofInstruction::ADD:
+        case TypeofInstruction::ADD:
             tmp = add(dest, src);
             tempValues.CF = (tmp < dest);
             tempValues.AF = ((dest & 0xF) + (src & 0xF)) > 0xF;
@@ -32,7 +31,7 @@ void ALU::executeOperation(temporaryValues& tempValues, typeofInstruction type)
                              (((int64_t)tmp < 0) != ((int64_t)dest < 0)));
             break;
 
-        case typeofInstruction::SUB:
+        case TypeofInstruction::SUB:
             tmp = sub(dest, src);
             tempValues.CF = (dest < src);
             tempValues.AF = ((dest & 0xF) - (src & 0xF)) & 0x10;

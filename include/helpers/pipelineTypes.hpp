@@ -1,0 +1,29 @@
+#ifndef PIPELINE_TYPES_HPP
+#define PIPELINE_TYPES_HPP
+
+enum class StageStatus {
+    READY,
+    MEMORY_DONE,
+    STALLED,
+    WAITING_MEMORY,
+    WAITING_SRC_OPERAND,
+    WAITING_DEST_OPERAND,
+    FLUSHED,
+    EMPTY,
+    
+    
+
+    
+};
+
+enum class StageType {
+    FETCH,
+    DECODE,
+    OPERAND_FETCH,
+    EXECUTE,
+    MEMORY,
+    WRITE_BACK
+};
+
+
+#endif // PIPELINE_TYPES_HPP

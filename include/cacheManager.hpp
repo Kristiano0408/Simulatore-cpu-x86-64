@@ -18,14 +18,7 @@
 
 class Bus;
 
-enum class CacheLevelType
-{
-    L1,
-    L2,
-    L3,
-    NONE //placeholder for basic class
 
-};
 
 //basic structure for the cache line
 //it contains the data, the tag, the valid bit and the dirty bit
@@ -257,6 +250,7 @@ class RequestScheduler
         void processRequests(); // Function to be called every clock tick to process pending requests
         void scheduleRequest(CacheRequest&& request); // Function to schedule a cache request
         void schedulePendingRequest(PendingRequest&& pendingRequest); // Function to schedule a pending request
+        const std::vector<PendingRequest>& getPendingRequests() const { return pendingRequests; } // Function to get the pending requests being processed by the cache scheduler
 };
 
 class CacheController
@@ -310,7 +304,8 @@ class CacheLevel: public Device
         void onEviction(const AddressInfo& addressInfo, const CacheLine& evictedLine);
         void propagateWriteToNextLevel(CacheRequest& request, bool propagateCallback); // Function to propagate a write operation to the next cache level or memory based on the write policy
         //void fillLine(const AddressInfo& addressInfo, CacheRequest& request); // Function to fill a cache line with data from the next level or memory based on the cache request and address information
-    
+
+       
     
         public:
         CacheLevel(uint32_t size, uint8_t associativity, uint8_t latency, uint8_t fillLatency, Bus& bus, CacheLevel* nextLevel = nullptr, CacheLevel* parentLevel = nullptr, CacheLevelType type = CacheLevelType::NONE);
@@ -318,6 +313,7 @@ class CacheLevel: public Device
 
         void execute_operation() override; // Override of the pure virtual function from Device class
 
+        const std::vector<PendingRequest>& getPendingRequests() const { return scheduler.getPendingRequests(); } // Function to get the pending requests being processed by the cache scheduler
         LookUpResult lookupCache(const AddressInfo& addressInfo, TypeofData dataType); // Function to perform cache lookup based on address information and type of data being accessed, returns the result of the lookup (hit, miss, hit cross lines, miss cross lines)    
         void onHit(const AddressInfo& addressInfo, CacheRequest& request); // Function to handle cache hit events based on address information and cache request
         void onMiss(CacheRequest& request); // Function to handle cache miss events based on address information and cache request
@@ -361,6 +357,7 @@ class MemoryScheduler
     public:
         MemoryScheduler(Bus& bus, uint64_t latency) : bus(bus), memoryLatency(latency) {}
         //void tick(); // Function to be called every clock tick to process memory requests
+        const std::vector<PendingRequest>& getPendingRequests() const { return memoryRequestQueue; } // Function to get the pending memory requests being processed by the memory scheduler
         void scheduleMemoryRequest(CacheRequest&& request); // Function to schedule a memory request
         void schedulePendingRequest(PendingRequest&& pendingRequest); // Function to schedule a pending memory request
         void processMemoryRequests(); // Function to process scheduled memory requests
@@ -389,6 +386,11 @@ class CacheManager : public Device
         CacheLevel& getL1Cache() { return L1Cache; }
         CacheLevel& getL2Cache() { return L2Cache; }
         CacheLevel& getL3Cache() { return L3Cache; }
+        const std::vector<PendingRequest>& getL1RequestQueue() const { return L1Cache.getPendingRequests(); }
+        const std::vector<PendingRequest>& getL2RequestQueue() const { return L2Cache.getPendingRequests(); }
+        const std::vector<PendingRequest>& getL3RequestQueue() const { return L3Cache.getPendingRequests(); }
+        const std::vector<PendingRequest>& getMemoryRequestQueue() const { return memoryScheduler.getPendingRequests(); }
+
         MemoryScheduler& getMemoryScheduler() { return memoryScheduler; }
 
         uint8_t memoryLatency = 1;
@@ -406,7 +408,7 @@ class CacheManager : public Device
 
 
 };
-
+/*
 /// Function to manage cache offset errors
 template<typename T>
 bool offset_cache(EventType event, ErrorType error, Result<T>& result, uint64_t offset, uint64_t address)
@@ -433,6 +435,6 @@ bool offset_cache(EventType event, ErrorType error, Result<std::array<uint8_t, C
 
 template<>
 bool offset_cache(EventType event, ErrorType error, Result<CacheLine>& result, uint64_t offset, uint64_t address);
-
+*/
 
 #endif //CACHEMANAGER_HPP

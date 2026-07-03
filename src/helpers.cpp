@@ -258,7 +258,29 @@ std::ostream& operator<<(std::ostream& os, const ErrorType& type)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+std::string toStringTypeofInstruction(TypeofInstruction type)
+{
+    switch (type) {
+        case TypeofInstruction::MOV: return "MOV";
+        case TypeofInstruction::ADD: return "ADD";
+        case TypeofInstruction::SUB: return "SUB";
+        default: return "UNKNOWN";
+        }
+}
 
+ComponentType getComponentTypeFromCacheLevelType(CacheLevelType type)
+{
+    switch (type) {
+        case CacheLevelType::L1:
+            return ComponentType::CACHE_L1;
+        case CacheLevelType::L2:
+            return ComponentType::CACHE_L2;
+        case CacheLevelType::L3:
+            return ComponentType::CACHE_L3;
+        default:
+            return ComponentType::CACHE; // Default to CACHE for NONE or unknown types
+    }
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////

@@ -5,7 +5,8 @@
 #include "registerFile.hpp"
 #include "../include/pipeline.hpp"
 #include "../include/helpers.hpp"
-
+#include "../include/eventHandler.hpp"
+#include "../include/instruction.hpp"
 
 CU::CU(Bus& bus) : bus(bus)
 {
@@ -53,9 +54,11 @@ void CU::updateFetch(uint64_t instructionId, EventHandler<EventHandlerPipelineEv
     // This is a placeholder implementation and should be replaced with actual logic
     debugLog("Updating fetch stage...");
 
-    auto it = bus.getCPU().cacheResponseQueue.find(instructionId);
+    bool found = false;
+    MaxCPUInstructionLength buffer;
+    bus.getCPU().findCacheResponse(instructionId, buffer, found);
 
-    if (it != bus.getCPU().cacheResponseQueue.end())
+    if (found)
     {
         debugLog("memory/cache response found for instruction ID: " + std::to_string(instructionId));
         // Trigger an event to notify that the instruction has been fetched
@@ -71,36 +74,21 @@ void CU::updateFetch(uint64_t instructionId, EventHandler<EventHandlerPipelineEv
 }
 
 //method for fethcing the instruction from the ram
-InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
+InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, EventHandler<EventHandlerPipelineEventType>& eventHandler)
 {
 
     debugLog("Fetching instruction from memory...");
 
     // Read a line from the cache buffer_responseQueue
-    auto it = bus.getCPU().cacheResponseQueue.find(instructionId);
+    MaxCPUInstructionLength buffer;
+    bool found = false;
+    bus.getCPU().findCacheResponse(instructionId, buffer, found);
+
+    bus.getCPU().eraseCacheResponseIfFound(instructionId); // Remove the response from the queue after processing
 
     debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
 
-    
-
-    Result<MaxCPUInstructionLength> result = (it->second);
-
-    debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
-
-    //extarcting the correct data from the variant
-    MaxCPUInstructionLength buffer {}; //buffer for the instruction (max length of an instruction is 16 bytes)
-
-
-    debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
-
-    if (result.success)
-        std::memcpy(buffer.data(), result.data.data(), 16);
-    else 
-    {
-        debugLog("Error fetching instruction: " + result.errorInfo.message);
-        // Handle the error appropriately (e.g., throw an exception, return an error code, etc.)
-    }
-
+  
     for(int i=0; i<16; i++)
     {
         debugLog("Byte " + std::to_string(i) + ": " + to_string_hex(static_cast<int>(buffer[i])));
@@ -194,56 +182,23 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index)
 
     debugLog("IR: " + to_string_hex(bus.getCPU().getRegisters().getReg(Register::RIP).raw()));
 
+    eventHandler.triggerEvent(EventHandlerPipelineEventType::FETCH_COMPLETE);
+
     return info;
 
 }
 
 
 //method for decoding the instruction
-Instruction* CU::decodeInstruction(InstructionInfo instruction)
+void CU::decodeInstruction(InstructionInfo instruction, std::unique_ptr<Instruction>& decodedInstruction, EventHandler<EventHandlerPipelineEventType>& eventHandler)
 {
 
-
-   return decoder.decodeInstruction(instruction);
-   
-
-
-
+    decodedInstruction = std::unique_ptr<Instruction>(decoder.decodeInstruction(instruction));
+    debugLog("Decoded instruction type: " + toStringTypeofInstruction(decodedInstruction.get()->getType()));
+    eventHandler.triggerEvent(EventHandlerPipelineEventType::DECODE_COMPLETE); 
+    debugLog("Instruction decoded and DECODE_COMPLETE event triggered.");
 
 }
-
-
-
-void CU::OperandFetch(Instruction* instruction)
-{   
-    instruction->fetchOperands(bus);
- 
-
-}
-
-
-//method for executing the instruction
-void CU::executeInstruction(Instruction* instruction)
-{
-
-    debugLog("executeInstruction");
-    instruction->execute(bus);
-
-    //delete the instruction
-    //delete instruction;
-
-}
-
-void CU::memoryphase(Instruction* instruction)
-{
-    instruction->accessMemory(bus);
-}
-
-void CU::writeBack(Instruction* instruction)
-{
-    instruction->writeBack(bus);
-}
-
 
 
 

@@ -4,7 +4,7 @@ Bindings PyBind11 per il simulatore x86-64
 from __future__ import annotations
 import collections.abc
 import typing
-__all__: list[str] = ['ADD', 'AF', 'ALU', 'ALU_enum', 'AddressingMode', 'AnyData', 'Bus', 'CACHE', 'CACHE_HIT', 'CACHE_L1', 'CACHE_L2', 'CACHE_L3', 'CACHE_MISS', 'CACHE_READ_ERROR', 'CACHE_WRITE_ERROR', 'CF', 'CPU', 'CacheManager', 'Clock', 'ComponentType', 'DecodeOperandFetchBuffer', 'DecodeStage', 'DummyRegister', 'EMPTY', 'ERROR', 'EmptyInstruction', 'EmptyOperand', 'ErrorType', 'Error_Event_Info', 'EventType', 'ExecuteMemoryBuffer', 'ExecuteStage', 'FD', 'FLUSHED', 'FPU', 'FetchDecodeBuffer', 'FetchStage', 'FlagReg', 'Flagbit', 'I', 'INVALID_ADDRESS', 'INVALID_SIZE', 'ImmediateOperand', 'Instruction', 'InstructionInfo', 'MEMORY_DONE', 'MI', 'MOV', 'MR', 'MemOperand', 'Memory', 'MemoryStage', 'MemoryWriteBackBuffer', 'NONE', 'OF', 'OI', 'OPERAND', 'OUT_OF_BOUNDS', 'Operand', 'OperandFetchExecuteBuffer', 'OperandFetchStage', 'PF', 'Pipeline', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15', 'R8', 'R9', 'RAM', 'RAM_ACCESS', 'RAM_READ_ERROR', 'RAM_WRITE_ERROR', 'RAX', 'RBP', 'RBX', 'RCX', 'RDI', 'RDX', 'READY', 'READ_FAIL', 'RIP', 'RM', 'RSI', 'RSP', 'R_M', 'Reg', 'RegOperand', 'Register', 'RegisterFile', 'ResultAnyData', 'ResultArray15', 'ResultArrayCacheLine', 'ResultUint16', 'ResultUint32', 'ResultUint64', 'ResultUint8', 'ResultVoid', 'SF', 'SIB', 'STALLED', 'SUB', 'Stage', 'TD', 'UNKNOWN', 'WAITING_DEST_OPERAND', 'WAITING_MEMORY', 'WAITING_SRC_OPERAND', 'WRITE_FAIL', 'WriteBackStage', 'ZF', 'stageStatus', 'temporaryValues', 'typeofInstruction']
+__all__: list[str] = ['ADD', 'AF', 'ALU', 'ALU_enum', 'AddressingMode', 'Bus', 'CACHE', 'CACHE_HIT', 'CACHE_L1', 'CACHE_L2', 'CACHE_L3', 'CACHE_MISS', 'CACHE_READ_ERROR', 'CACHE_WRITE_ERROR', 'CF', 'CPU', 'CacheManager', 'Clock', 'ComponentType', 'DecodeOperandFetchBuffer', 'DecodeStage', 'DummyRegister', 'EMPTY', 'ERROR', 'EmptyInstruction', 'EmptyOperand', 'ErrorType', 'Error_Event_Info', 'EventType', 'ExecuteMemoryBuffer', 'ExecuteStage', 'FD', 'FLUSHED', 'FPU', 'FetchDecodeBuffer', 'FetchStage', 'FlagReg', 'Flagbit', 'I', 'INVALID_ADDRESS', 'INVALID_SIZE', 'ImmediateOperand', 'Instruction', 'InstructionInfo', 'MEMORY_DONE', 'MI', 'MOV', 'MR', 'MemOperand', 'Memory', 'MemoryStage', 'MemoryWriteBackBuffer', 'NONE', 'OF', 'OI', 'OPERAND', 'OUT_OF_BOUNDS', 'Operand', 'OperandFetchExecuteBuffer', 'OperandFetchStage', 'PF', 'Pipeline', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15', 'R8', 'R9', 'RAM', 'RAM_ACCESS', 'RAM_READ_ERROR', 'RAM_WRITE_ERROR', 'RAX', 'RBP', 'RBX', 'RCX', 'RDI', 'RDX', 'READY', 'READ_FAIL', 'RIP', 'RM', 'RSI', 'RSP', 'R_M', 'Reg', 'RegOperand', 'Register', 'RegisterFile', 'ResultArray15', 'ResultArrayCacheLine', 'ResultUint16', 'ResultUint32', 'ResultUint64', 'ResultUint8', 'ResultVoid', 'SF', 'SIB', 'STALLED', 'SUB', 'Stage', 'TD', 'UNKNOWN', 'WAITING_DEST_OPERAND', 'WAITING_MEMORY', 'WAITING_SRC_OPERAND', 'WRITE_FAIL', 'WriteBackStage', 'ZF', 'stageStatus', 'temporaryValues', 'typeofInstruction']
 class ALU:
     pass
 class AddressingMode:
@@ -59,11 +59,6 @@ class AddressingMode:
     @property
     def value(self) -> int:
         ...
-class AnyData:
-    def __init__(self) -> None:
-        ...
-    def get(self: None | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(64)"] | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(15)"]) -> typing.Any:
-        ...
 class Bus:
     def __init__(self) -> None:
         ...
@@ -101,8 +96,7 @@ class CPU:
     def incrementInstructionIdCounter(self) -> None:
         ...
 class CacheManager:
-    def printCacheState(self) -> None:
-        ...
+    pass
 class Clock:
     def __init__(self) -> None:
         ...
@@ -387,7 +381,7 @@ class Flagbit:
     def value(self) -> int:
         ...
 class ImmediateOperand(Operand):
-    def __init__(self, arg0: None | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(64)"] | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(15)"]) -> None:
+    def __init__(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
 class Instruction:
     def calculating_number_of_bits(self) -> int:
@@ -580,11 +574,11 @@ class MemoryWriteBackBuffer:
 class Operand:
     def getSize(self) -> int:
         ...
-    def getValue(self) -> ResultAnyData:
+    def getValue(self, arg0: ...) -> ResultUint64:
         ...
     def setSize(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
-    def setValue(self, arg0: None | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(64)"] | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(15)"]) -> ResultVoid:
+    def setValue(self, arg0: typing.SupportsInt | typing.SupportsIndex, arg1: ...) -> ResultVoid:
         ...
 class OperandFetchExecuteBuffer:
     flushed: bool
@@ -598,7 +592,7 @@ class OperandFetchStage(Stage):
     def peekInstruction(self) -> Instruction:
         ...
 class Pipeline:
-    def __init__(self, arg0: Bus, arg1: EventHandler) -> None:
+    def __init__(self, arg0: Bus, arg1: ...) -> None:
         ...
     def execute_operation(self) -> None:
         ...
@@ -764,14 +758,6 @@ class RegisterFile:
     def printRegisters(self) -> None:
         ...
     def reset(self) -> None:
-        ...
-class ResultAnyData:
-    errorInfo: Error_Event_Info
-    success: bool
-    def __init__(self) -> None:
-        ...
-    @property
-    def data(self) -> typing.Any:
         ...
 class ResultArray15:
     errorInfo: Error_Event_Info
@@ -948,22 +934,22 @@ class temporaryValues:
     def __init__(self) -> None:
         ...
     @property
-    def destValue(self) -> None | int | int | int | int | typing.Annotated[list[int], "FixedSize(64)"] | typing.Annotated[list[int], "FixedSize(15)"]:
+    def destValue(self) -> int:
         ...
     @destValue.setter
-    def destValue(self, arg0: None | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(64)"] | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(15)"]) -> None:
+    def destValue(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
     @property
-    def resultValue(self) -> None | int | int | int | int | typing.Annotated[list[int], "FixedSize(64)"] | typing.Annotated[list[int], "FixedSize(15)"]:
+    def resultValue(self) -> int:
         ...
     @resultValue.setter
-    def resultValue(self, arg0: None | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(64)"] | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(15)"]) -> None:
+    def resultValue(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
     @property
-    def srcValue(self) -> None | int | int | int | int | typing.Annotated[list[int], "FixedSize(64)"] | typing.Annotated[list[int], "FixedSize(15)"]:
+    def srcValue(self) -> int:
         ...
     @srcValue.setter
-    def srcValue(self, arg0: None | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.SupportsInt | typing.SupportsIndex | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(64)"] | typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(15)"]) -> None:
+    def srcValue(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
 class typeofInstruction:
     """

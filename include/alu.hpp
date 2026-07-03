@@ -7,21 +7,20 @@
 
 #include "helpers.hpp"
 
-class Bus;
+
 
 class ALU {
     // Implementation of the ALU class
 
     public:
-        ALU(Bus& bus);
+        ALU();
         ~ALU();
 
         //arithmetic operations
-        void executeOperation(temporaryValues& tempValues, typeofInstruction type); //executes the operation based on the opcode
+        void executeOperation(temporaryValues& tempValues, TypeofInstruction type); //executes the operation based on the opcode
         //etc 
     private:
         //private members if needed
-        Bus& bus;
         uint64_t add(uint64_t dest, uint64_t src);
         uint64_t sub(uint64_t dest, uint64_t src);
         

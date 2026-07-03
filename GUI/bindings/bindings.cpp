@@ -11,7 +11,7 @@
 #include "../include/pipeline.hpp"
 #include "../include/alu.hpp"
 #include "../include/registerFile.hpp"
-
+#include "../include/eventLog.hpp"
 
 
 namespace py = pybind11;
@@ -88,4 +88,10 @@ PYBIND11_MODULE(simulator, m) {
         .def("getCPU", &Bus::getCPU, py::return_value_policy::reference)
         .def("getMemory", &Bus::getMemory, py::return_value_policy::reference)
         .def("getClock", &Bus::getClock, py::return_value_policy::reference);
+
+    py::class_<EventLog>(m, "EventLog")
+        .def_static("getInstance", &EventLog::getInstance, py::return_value_policy::reference)
+        .def("getLogEntry", &EventLog::getLogEntry)
+        .def("getLogData", &EventLog::getLogData)
+        .def("isLogEmpty", &EventLog::isLogEmpty); // Bind the new method
 }

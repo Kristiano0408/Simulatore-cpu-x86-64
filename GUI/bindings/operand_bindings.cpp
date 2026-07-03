@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "../include/operands.hpp"
+#include "../include/bus.hpp"
 
 namespace py = pybind11;
 
@@ -9,8 +10,8 @@ void bind_operands(py::module &m) {
     py::class_<Operand>(m, "Operand")
         .def("getSize", &Operand::getSize)
         .def("setSize", &Operand::setSize)
-        .def("setValue", &Operand::setValue)
-        .def("getValue", &Operand::getValue);
+        .def("gettype", &Operand::getType)
+        .def("setType", &Operand::setType);
 
     py::class_<EmptyOperand, Operand>(m, "EmptyOperand")
         .def(py::init<>());
@@ -19,8 +20,8 @@ void bind_operands(py::module &m) {
         .def(py::init<uint64_t&>());
 
     py::class_<MemOperand, Operand>(m, "MemOperand")
-        .def(py::init<Bus&, uint64_t, uint64_t>());
+        .def(py::init< int64_t>());
 
     py::class_<ImmediateOperand, Operand>(m, "ImmediateOperand")
-        .def(py::init<anydata>());
+        .def(py::init<uint64_t>());
 }

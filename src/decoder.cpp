@@ -49,18 +49,7 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
     else
     {
         //if the opcode is not found
-        info.totalLength = 0;
-        info.opcodeLength = 0;
-        info.additionalBytes = 0;
-        info.numOperands = 0;
-        info.operandLength = 0;
-        info.hasModRM = false;
-        info.hasDisplacement = false;
-        info.hasImmediate = false;
-        info.src_operand_length = 0;
-        info.dest_operand_length = 0;
-        info.bit_extension = 0;
-        info.rex_w_sensitive = false;
+        info = InstructionInfo(); //return an empty InstructionInfo
         info.description = "Unknown instruction";
 
         std::cerr << "Unknown instruction: " << std::hex << opcode << std::endl;
@@ -72,7 +61,7 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
     for (int i = 0; i < numPrefixes; i++)
     {
         //if there is the prefix for 16bits opernads
-        if(prefix[i] == 0x66 and (info.hasImmediate))
+        if(prefix[i] == LegacyPrefixMask::OPERAND_SIZE_OVERRIDE and (info.hasImmediate))
         {
             //the lenght is reduced by 2 bytes
             info.totalLength -= 2;
@@ -87,7 +76,7 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
         
     }
 
-    if (rex and (rexprefix & 0x08) and (info.hasImmediate or info.hasDisplacement))
+    if (rex and (rexprefix & RexMask::REX_W) and (info.hasImmediate or info.hasDisplacement))
     {
         //the lenght is increased by 4 bytes 
         info.totalLength += 4;
@@ -146,7 +135,9 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
 
     debugLog("Decoding instruction: " + to_string_hex(instruction.opcode) + " - " + std::to_string(static_cast<int>(it.mode)));
 
-    typeofInstruction type_instruction = it.type;
+    TypeofInstruction type_instruction = it.type;
+
+    debugLog("Instruction type: " + toStringTypeofInstruction(type_instruction));
 
     AddressingMode mode = it.mode;
 
@@ -154,7 +145,7 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
     //creating the constructor of the instruction based on the type of instruction
     Instruction* inst = ConstructorCreation(type_instruction);
 
-    
+    inst->setType(type_instruction);
 
     //setting the instruction parameters like the opcode, the prefix, the rex, etc
     settingInstructionParameters(inst, instruction);
@@ -241,7 +232,7 @@ void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo
 
 
 //constructor of the instruction based on the type of instruction
-Instruction* Decoder::ConstructorCreation(typeofInstruction type_instruction)
+Instruction* Decoder::ConstructorCreation(TypeofInstruction type_instruction)
 {
     auto it = instructionConstructors.find(type_instruction);
 
@@ -266,9 +257,9 @@ SIB Decoder::decodeSIB(uint8_t sib)
 {
     SIB sibStruct;
     sibStruct.byte_sib = sib;
-    sibStruct.base = sib & 0b111;
-    sibStruct.index = (sib >> 3) & 0b111;
-    sibStruct.scale = (sib >> 6) & 0b11;
+    sibStruct.base =SIBMask::extractBase(sib);
+    sibStruct.index = SIBMask::extractIndex(sib);
+    sibStruct.scale = SIBMask::extractScale(sib);
 
     return sibStruct;
 }
@@ -277,9 +268,9 @@ r_m Decoder::decodeRM(uint8_t R_M)
 {
     r_m rm;
     rm.byte_r_m = R_M;
-    rm.mod = (R_M >> 6) & 0b11;
-    rm.reg = (R_M >> 3) & 0b111;
-    rm.r_m = (R_M & 0b111);
+    rm.mod = ModRMMask::extractMod(R_M);
+    rm.reg = ModRMMask::extractReg(R_M);
+    rm.r_m = ModRMMask::extractRM(R_M);
 
     return rm;
 }

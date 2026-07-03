@@ -3,6 +3,7 @@
 #include "../include/bus.hpp"
 #include "../include/pipeline.hpp"
 #include "../include/eventHandler.hpp"
+#include "../include/helpers.hpp"
 namespace py = pybind11;
 
 
@@ -117,7 +118,7 @@ void bind_pipeline(py::module &m) {
 
     // ------------------- PIPELINE -------------------
     py::class_<Pipeline>(m, "Pipeline")
-        .def(py::init<Bus&, EventHandler*>())
+        .def(py::init<CPU&, EventHandler<EventHandlerPipelineEventType>*>())
         .def("execute_operation", &Pipeline::execute_operation)
         .def("getFetchStage", &Pipeline::getFetchStage, py::return_value_policy::reference_internal)
         .def("getDecodeStage", &Pipeline::getDecodeStage, py::return_value_policy::reference_internal)

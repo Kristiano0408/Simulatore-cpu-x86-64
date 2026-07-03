@@ -6,11 +6,9 @@
 #include <array>
 #include <string>
 #include <memory>
-#include "instruction.hpp"
 #include "helpers.hpp"
 #include "eventHandler.hpp"
-
-class Bus; // Forward declaration of Bus class
+#include "executeEngine.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,11 +48,11 @@ class FetchStage : public Stage {
 
         ~FetchStage() {};
 
-        void startFetch(Bus& bus, uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler); //fetch the instruction from memory
+        void startFetch(CPU& cpu, uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler); //fetch the instruction from memory
 
-        void updateFetch(Bus& bus, uint64_t instructionId, EventHandler<EventHandlerPipelineEventType>& eventHandler); //update the fetch stage (take the instruction fetched and prepare for decode)
+        void updateFetch(CPU& cpu, uint64_t instructionId, EventHandler<EventHandlerPipelineEventType>& eventHandler); //update the fetch stage (take the instruction fetched and prepare for decode)
 
-        InstructionInfo fetchInstruction(Bus& bus, uint64_t instructionId, uint64_t& index); //fetch the instruction from memory
+        InstructionInfo fetchInstruction(CPU& cpu, uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler); //fetch the instruction from memory
 
         inline InstructionInfo getCurrentInstructionInfo() const { return currentInstructionInfo; }
 
@@ -81,7 +79,7 @@ class  DecodeStage : public Stage {
         
         inline InstructionInfo getInstructionToDecode() const { return instruction_info_to_decode; }
 
-        void decodeInstruction(Bus& bus); //decode the fetched instruction
+        void decodeInstruction(CPU& cpu, EventHandler<EventHandlerPipelineEventType>& eventHandler); //decode the fetched instruction
 
         std::unique_ptr<Instruction> getDecodedInstruction();
 
@@ -106,12 +104,13 @@ class OperandFetchStage : public Stage {
 
         ~OperandFetchStage() {};
 
-        void fetchOperands(Bus& bus); //fetch operands for the decoded instruction
+        void fetchOperands(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //fetch operands for the decoded instruction
 
         std::unique_ptr<Instruction> getInstructionWithFetchedOperands();
 
         void setInstructionWithFetchedOperands(std::unique_ptr<Instruction> instruction);
 
+        inline Instruction& peekInstructionRef() const {return *instruction_with_fetched_operands.get();}
         inline Instruction* peekInstruction() const {return instruction_with_fetched_operands.get();}
 
 
@@ -135,11 +134,12 @@ class ExecuteStage : public Stage {
         void setInstructionToExecute(std::unique_ptr<Instruction> instruction);
         std::unique_ptr<Instruction> getInstructionToExecute();
         
+        inline Instruction& peekInstructionRef() const {return *instruction_to_execute.get();}
         inline Instruction* peekInstruction() const {return instruction_to_execute.get();}
 
-        void startExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler); //start execution of the instruction
-        void updateExecution(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler); //update execution (for multi-cycle instructions)
-        void executeInstruction(Bus& bus); //execute the decoded instruction
+        void startExecution(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //start execution of the instruction
+        void updateExecution(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //update execution (for multi-cycle instructions)
+        void executeInstruction(ExecuteEngine& executeEngine); //execute the decoded instruction
 
     private:
         //any additional members specific to the execute stage
@@ -163,12 +163,10 @@ class MemoryStage : public Stage {
         std::unique_ptr<Instruction> getInstructionToMemory();
 
         inline Instruction* peekInstruction() const {return instruction_to_memory.get();}
+        inline Instruction& peekInstructionRef() const {return *instruction_to_memory.get();}
 
-        void requestMemoryAccess(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler); //start memory access for load/store instructions
-
-        void updateMemoryAccess(Bus& bus, EventHandler<EventHandlerPipelineEventType>& eventHandler); //update memory access (for multi-cycle memory operations)
-
-        void accessMemory(Bus& bus); //perform memory operations if needed
+        void requestMemoryAccess(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //start memory access for load/store instructions
+        void accessMemory(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //perform memory operations if needed
 
     private:
         //any additional members specific to the memory stage
@@ -193,8 +191,9 @@ class WriteBackStage : public Stage {
         std::unique_ptr<Instruction> getInstructionToWriteBack();
 
         inline Instruction* peekInstruction() const {return instruction_to_writeback.get();}
+        inline Instruction& peekInstructionRef() const {return *instruction_to_writeback.get();}
 
-        void writeBack(Bus& bus); //final stage: write results to registers/memory
+        void writeBack(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //final stage: write results to registers/memory
 
     private:
         //any additional members specific to the write-back stage
@@ -203,20 +202,23 @@ class WriteBackStage : public Stage {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//buffers between stages
+
 struct FetchDecodeBuffer {
     
-    bool valid = false;
-    bool stalled = false;
-    bool flushed = false;
-    InstructionInfo instructionInfo;
+    bool valid{};
+    bool stalled{};
+    bool flushed{};
+    InstructionInfo instructionInfo{};
 
+    FetchDecodeBuffer() : valid(false), stalled(false), flushed(false), instructionInfo() {}
 };
 
 struct DecodeOperandFetchBuffer {
     
-    bool valid;
-    bool stalled;
-    bool flushed;
+    bool valid{};
+    bool stalled{};
+    bool flushed{};
     std::unique_ptr<Instruction> decodedInstruction;
     Instruction* peekInstruction() const {return decodedInstruction.get();}
 
@@ -226,9 +228,9 @@ struct DecodeOperandFetchBuffer {
 
 struct OperandFetchExecuteBuffer {
     
-    bool valid;
-    bool stalled;
-    bool flushed;
+    bool valid{};
+    bool stalled{};
+    bool flushed{};
     std::unique_ptr<Instruction> instructionWithOperands;
     Instruction* peekInstruction() const {return instructionWithOperands.get();}
 
@@ -238,9 +240,9 @@ struct OperandFetchExecuteBuffer {
 
 struct ExecuteMemoryBuffer {
     
-    bool valid;
-    bool stalled;
-    bool flushed;
+    bool valid{};
+    bool stalled{};
+    bool flushed{};
     std::unique_ptr<Instruction> executedInstruction;
     Instruction* peekInstruction() const {return executedInstruction.get();}
 
@@ -250,9 +252,9 @@ struct ExecuteMemoryBuffer {
 
 struct MemoryWriteBackBuffer {
 
-    bool valid;
-    bool stalled;
-    bool flushed;
+    bool valid{};
+    bool stalled{};
+    bool flushed{};
     std::unique_ptr<Instruction> memoryAccessedInstruction;
     Instruction* peekInstruction() const {return memoryAccessedInstruction.get();}
 
@@ -268,11 +270,23 @@ class Pipeline : public Device {
 
     public:
 
-        Pipeline(Bus& bus, EventHandler<EventHandlerPipelineEventType>* eventHandler);
+        Pipeline(CPU& cpu, EventHandler<EventHandlerPipelineEventType>* eventHandler);
 
         ~Pipeline() {};
 
         void execute_operation() override; //execute the operation for the current cycle
+
+        void processWriteBackStage();
+
+        void processMemoryStage();
+
+        void processExecuteStage();
+
+        void processOperandFetchStage();
+
+        void processDecodeStage();
+
+        void processFetchStage();
 
         inline FetchStage& getFetchStage() { return fetchStage; }
         inline DecodeStage& getDecodeStage() { return decodeStage; }
@@ -297,7 +311,9 @@ class Pipeline : public Device {
 
     private:
 
-        Bus& bus;
+        CPU& cpu;
+        ExecuteEngine executeEngine;
+
         bool waitingGUI = false;
         FetchStage fetchStage;
         DecodeStage decodeStage;
@@ -332,11 +348,6 @@ class Pipeline : public Device {
         uint64_t index = 0; //index for fetching instruction from memory (in future could be part of fetch stage)
 
         
-
-
-
-
-
 };
 
 
