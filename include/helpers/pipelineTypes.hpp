@@ -10,6 +10,8 @@ enum class StageStatus {
     WAITING_DEST_OPERAND,
     FLUSHED,
     EMPTY,
+    WAITING_GUI_BUFFER1,
+    WAITING_GUI_EXECUTION
     
     
 

@@ -31,7 +31,7 @@ class PipelineController
 
         void onWriteBackComplete();
 
-        void stallForGUI();
+        bool isPipelineStalledForGUI() const;
 
         inline EventHandler<EventHandlerPipelineEventType>& getEventHandler() { return eventHandler; }
 

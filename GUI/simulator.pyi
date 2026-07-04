@@ -4,7 +4,7 @@ Bindings PyBind11 per il simulatore x86-64
 from __future__ import annotations
 import collections.abc
 import typing
-__all__: list[str] = ['ADD', 'AF', 'ALU', 'ALU_enum', 'AddressingMode', 'Bus', 'CACHE', 'CACHE_HIT', 'CACHE_L1', 'CACHE_L2', 'CACHE_L3', 'CACHE_MISS', 'CACHE_READ_ERROR', 'CACHE_WRITE_ERROR', 'CF', 'CPU', 'CacheManager', 'Clock', 'ComponentType', 'DecodeOperandFetchBuffer', 'DecodeStage', 'DummyRegister', 'EMPTY', 'ERROR', 'EmptyInstruction', 'EmptyOperand', 'ErrorType', 'Error_Event_Info', 'EventType', 'ExecuteMemoryBuffer', 'ExecuteStage', 'FD', 'FLUSHED', 'FPU', 'FetchDecodeBuffer', 'FetchStage', 'FlagReg', 'Flagbit', 'I', 'INVALID_ADDRESS', 'INVALID_SIZE', 'ImmediateOperand', 'Instruction', 'InstructionInfo', 'MEMORY_DONE', 'MI', 'MOV', 'MR', 'MemOperand', 'Memory', 'MemoryStage', 'MemoryWriteBackBuffer', 'NONE', 'OF', 'OI', 'OPERAND', 'OUT_OF_BOUNDS', 'Operand', 'OperandFetchExecuteBuffer', 'OperandFetchStage', 'PF', 'Pipeline', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15', 'R8', 'R9', 'RAM', 'RAM_ACCESS', 'RAM_READ_ERROR', 'RAM_WRITE_ERROR', 'RAX', 'RBP', 'RBX', 'RCX', 'RDI', 'RDX', 'READY', 'READ_FAIL', 'RIP', 'RM', 'RSI', 'RSP', 'R_M', 'Reg', 'RegOperand', 'Register', 'RegisterFile', 'ResultArray15', 'ResultArrayCacheLine', 'ResultUint16', 'ResultUint32', 'ResultUint64', 'ResultUint8', 'ResultVoid', 'SF', 'SIB', 'STALLED', 'SUB', 'Stage', 'TD', 'UNKNOWN', 'WAITING_DEST_OPERAND', 'WAITING_MEMORY', 'WAITING_SRC_OPERAND', 'WRITE_FAIL', 'WriteBackStage', 'ZF', 'stageStatus', 'temporaryValues', 'typeofInstruction']
+__all__: list[str] = ['ADD', 'AF', 'ALU', 'ALU_enum', 'AddressingMode', 'Bus', 'CACHE', 'CACHE_HIT', 'CACHE_L1', 'CACHE_L2', 'CACHE_L3', 'CACHE_MISS', 'CACHE_READ_ERROR', 'CACHE_WRITE_ERROR', 'CF', 'CPU', 'CU', 'CacheLevel', 'CacheLine', 'CacheManager', 'CacheRequest', 'Clock', 'ComponentType', 'DecodeOperandFetchBuffer', 'DecodeStage', 'DummyRegister', 'EMPTY', 'ERROR', 'EmptyInstruction', 'EmptyOperand', 'ErrorType', 'Error_Event_Info', 'EventLog', 'EventType', 'ExecuteMemoryBuffer', 'ExecuteStage', 'FD', 'FLUSHED', 'FPU', 'FetchDecodeBuffer', 'FetchStage', 'FlagReg', 'Flagbit', 'I', 'INVALID_ADDRESS', 'INVALID_SIZE', 'ImmediateOperand', 'Instruction', 'InstructionInfo', 'MEMORY_DONE', 'MI', 'MOV', 'MR', 'MemOperand', 'Memory', 'MemoryScheduler', 'MemoryStage', 'MemoryWriteBackBuffer', 'NONE', 'OF', 'OI', 'OPERAND', 'OUT_OF_BOUNDS', 'Operand', 'OperandFetchExecuteBuffer', 'OperandFetchStage', 'OperandType', 'PF', 'PendingRequest', 'Pipeline', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15', 'R8', 'R9', 'RAM', 'RAM_ACCESS', 'RAM_READ_ERROR', 'RAM_WRITE_ERROR', 'RAX', 'RBP', 'RBX', 'RCX', 'RDI', 'RDX', 'READY', 'READ_FAIL', 'RIP', 'RM', 'RSI', 'RSP', 'R_M', 'Reg', 'RegOperand', 'Register', 'RegisterFile', 'RequestState', 'RequestType', 'Result', 'SF', 'SIB', 'STALLED', 'SUB', 'Stage', 'TD', 'TypeofData', 'UNKNOWN', 'WAITING_DEST_OPERAND', 'WAITING_MEMORY', 'WAITING_SRC_OPERAND', 'WRITE_FAIL', 'WriteBackStage', 'ZF', 'stageStatus', 'temporaryValues', 'typeofInstruction']
 class ALU:
     pass
 class AddressingMode:
@@ -95,8 +95,70 @@ class CPU:
         ...
     def incrementInstructionIdCounter(self) -> None:
         ...
-class CacheManager:
+class CU:
     pass
+class CacheLevel:
+    def getPendingRequests(self) -> list[PendingRequest]:
+        ...
+class CacheLine:
+    def __init__(self) -> None:
+        ...
+    @property
+    def data(self) -> list[int]:
+        ...
+    @property
+    def dirty(self) -> bool:
+        ...
+    @property
+    def lastAccessTime(self) -> int:
+        ...
+    @property
+    def tag(self) -> int:
+        ...
+    @property
+    def valid(self) -> bool:
+        ...
+class CacheManager:
+    def getL1Cache(self) -> CacheLevel:
+        ...
+    def getL1RequestQueue(self) -> list[PendingRequest]:
+        ...
+    def getL2Cache(self) -> CacheLevel:
+        ...
+    def getL2RequestQueue(self) -> list[PendingRequest]:
+        ...
+    def getL3Cache(self) -> CacheLevel:
+        ...
+    def getL3RequestQueue(self) -> list[PendingRequest]:
+        ...
+    def getMemoryRequestQueue(self) -> list[PendingRequest]:
+        ...
+    def getMemoryScheduler(self) -> MemoryScheduler:
+        ...
+class CacheRequest:
+    def __init__(self) -> None:
+        ...
+    @property
+    def address(self) -> int:
+        ...
+    @property
+    def callback(self) -> ...:
+        ...
+    @property
+    def data(self) -> list[int]:
+        ...
+    @property
+    def dataType(self) -> TypeofData:
+        ...
+    @property
+    def isWrite(self) -> bool:
+        ...
+    @property
+    def requestId(self) -> int:
+        ...
+    @property
+    def type(self) -> RequestType:
+        ...
 class Clock:
     def __init__(self) -> None:
         ...
@@ -209,9 +271,9 @@ class ErrorType:
     OUT_OF_BOUNDS: typing.ClassVar[ErrorType]  # value = <ErrorType.OUT_OF_BOUNDS: 3>
     READ_FAIL: typing.ClassVar[ErrorType]  # value = <ErrorType.READ_FAIL: 5>
     UNKNOWN: typing.ClassVar[ErrorType]  # value = <ErrorType.UNKNOWN: 6>
-    WAITING_MEMORY: typing.ClassVar[ErrorType]  # value = <ErrorType.WAITING_MEMORY: 7>
+    WAITING_MEMORY: typing.ClassVar[ErrorType]  # value = <ErrorType.WAITING_MEMORY: 8>
     WRITE_FAIL: typing.ClassVar[ErrorType]  # value = <ErrorType.WRITE_FAIL: 4>
-    __members__: typing.ClassVar[dict[str, ErrorType]]  # value = {'NONE': <ErrorType.NONE: 0>, 'INVALID_ADDRESS': <ErrorType.INVALID_ADDRESS: 1>, 'INVALID_SIZE': <ErrorType.INVALID_SIZE: 2>, 'OUT_OF_BOUNDS': <ErrorType.OUT_OF_BOUNDS: 3>, 'WRITE_FAIL': <ErrorType.WRITE_FAIL: 4>, 'READ_FAIL': <ErrorType.READ_FAIL: 5>, 'UNKNOWN': <ErrorType.UNKNOWN: 6>, 'WAITING_MEMORY': <ErrorType.WAITING_MEMORY: 7>}
+    __members__: typing.ClassVar[dict[str, ErrorType]]  # value = {'NONE': <ErrorType.NONE: 0>, 'INVALID_ADDRESS': <ErrorType.INVALID_ADDRESS: 1>, 'INVALID_SIZE': <ErrorType.INVALID_SIZE: 2>, 'OUT_OF_BOUNDS': <ErrorType.OUT_OF_BOUNDS: 3>, 'WRITE_FAIL': <ErrorType.WRITE_FAIL: 4>, 'READ_FAIL': <ErrorType.READ_FAIL: 5>, 'UNKNOWN': <ErrorType.UNKNOWN: 6>, 'WAITING_MEMORY': <ErrorType.WAITING_MEMORY: 8>}
     def __eq__(self, other: typing.Any) -> bool:
         ...
     def __getstate__(self) -> int:
@@ -245,6 +307,16 @@ class Error_Event_Info:
     source: ComponentType
     def __init__(self) -> None:
         ...
+class EventLog:
+    @staticmethod
+    def getInstance() -> EventLog:
+        ...
+    def getLogData(self) -> ...:
+        ...
+    def getLogEntry(self) -> Result:
+        ...
+    def isLogEmpty(self) -> bool:
+        ...
 class EventType:
     """
     Members:
@@ -269,14 +341,14 @@ class EventType:
     """
     CACHE_HIT: typing.ClassVar[EventType]  # value = <EventType.CACHE_HIT: 1>
     CACHE_MISS: typing.ClassVar[EventType]  # value = <EventType.CACHE_MISS: 2>
-    CACHE_READ_ERROR: typing.ClassVar[EventType]  # value = <EventType.CACHE_READ_ERROR: 5>
-    CACHE_WRITE_ERROR: typing.ClassVar[EventType]  # value = <EventType.CACHE_WRITE_ERROR: 6>
+    CACHE_READ_ERROR: typing.ClassVar[EventType]  # value = <EventType.CACHE_READ_ERROR: 9>
+    CACHE_WRITE_ERROR: typing.ClassVar[EventType]  # value = <EventType.CACHE_WRITE_ERROR: 10>
     ERROR: typing.ClassVar[EventType]  # value = <EventType.ERROR: 4>
     NONE: typing.ClassVar[EventType]  # value = <EventType.NONE: 0>
     RAM_ACCESS: typing.ClassVar[EventType]  # value = <EventType.RAM_ACCESS: 3>
-    RAM_READ_ERROR: typing.ClassVar[EventType]  # value = <EventType.RAM_READ_ERROR: 7>
-    RAM_WRITE_ERROR: typing.ClassVar[EventType]  # value = <EventType.RAM_WRITE_ERROR: 8>
-    __members__: typing.ClassVar[dict[str, EventType]]  # value = {'NONE': <EventType.NONE: 0>, 'CACHE_HIT': <EventType.CACHE_HIT: 1>, 'CACHE_MISS': <EventType.CACHE_MISS: 2>, 'RAM_ACCESS': <EventType.RAM_ACCESS: 3>, 'ERROR': <EventType.ERROR: 4>, 'CACHE_READ_ERROR': <EventType.CACHE_READ_ERROR: 5>, 'CACHE_WRITE_ERROR': <EventType.CACHE_WRITE_ERROR: 6>, 'RAM_READ_ERROR': <EventType.RAM_READ_ERROR: 7>, 'RAM_WRITE_ERROR': <EventType.RAM_WRITE_ERROR: 8>}
+    RAM_READ_ERROR: typing.ClassVar[EventType]  # value = <EventType.RAM_READ_ERROR: 11>
+    RAM_WRITE_ERROR: typing.ClassVar[EventType]  # value = <EventType.RAM_WRITE_ERROR: 12>
+    __members__: typing.ClassVar[dict[str, EventType]]  # value = {'NONE': <EventType.NONE: 0>, 'CACHE_HIT': <EventType.CACHE_HIT: 1>, 'CACHE_MISS': <EventType.CACHE_MISS: 2>, 'RAM_ACCESS': <EventType.RAM_ACCESS: 3>, 'ERROR': <EventType.ERROR: 4>, 'CACHE_READ_ERROR': <EventType.CACHE_READ_ERROR: 9>, 'CACHE_WRITE_ERROR': <EventType.CACHE_WRITE_ERROR: 10>, 'RAM_READ_ERROR': <EventType.RAM_READ_ERROR: 11>, 'RAM_WRITE_ERROR': <EventType.RAM_WRITE_ERROR: 12>}
     def __eq__(self, other: typing.Any) -> bool:
         ...
     def __getstate__(self) -> int:
@@ -535,7 +607,7 @@ class InstructionInfo:
     def totalLength(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
 class MemOperand(Operand):
-    def __init__(self, arg0: Bus, arg1: typing.SupportsInt | typing.SupportsIndex, arg2: typing.SupportsInt | typing.SupportsIndex) -> None:
+    def __init__(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
 class Memory:
     def clear(self) -> None:
@@ -548,9 +620,9 @@ class Memory:
         ...
     def getStackPointer(self) -> int:
         ...
-    def pop(self) -> ResultUint64:
+    def pop(self) -> int:
         ...
-    def push(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> ResultVoid:
+    def push(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
     def setBasePointer(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
@@ -559,6 +631,9 @@ class Memory:
     def setDataPartial(self, arg0: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], arg1: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
     def setStackPointer(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+class MemoryScheduler:
+    def getPendingRequests(self) -> list[PendingRequest]:
         ...
 class MemoryStage(Stage):
     def __init__(self) -> None:
@@ -574,11 +649,11 @@ class MemoryWriteBackBuffer:
 class Operand:
     def getSize(self) -> int:
         ...
-    def getValue(self, arg0: ...) -> ResultUint64:
+    def gettype(self) -> OperandType:
         ...
     def setSize(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
-    def setValue(self, arg0: typing.SupportsInt | typing.SupportsIndex, arg1: ...) -> ResultVoid:
+    def setType(self, arg0: OperandType) -> None:
         ...
 class OperandFetchExecuteBuffer:
     flushed: bool
@@ -591,8 +666,66 @@ class OperandFetchStage(Stage):
         ...
     def peekInstruction(self) -> Instruction:
         ...
+class OperandType:
+    """
+    Members:
+    
+      REGISTER
+    
+      MEMORY
+    
+      IMMEDIATE
+    
+      NONE
+    """
+    IMMEDIATE: typing.ClassVar[OperandType]  # value = <OperandType.IMMEDIATE: 2>
+    MEMORY: typing.ClassVar[OperandType]  # value = <OperandType.MEMORY: 1>
+    NONE: typing.ClassVar[OperandType]  # value = <OperandType.NONE: 3>
+    REGISTER: typing.ClassVar[OperandType]  # value = <OperandType.REGISTER: 0>
+    __members__: typing.ClassVar[dict[str, OperandType]]  # value = {'REGISTER': <OperandType.REGISTER: 0>, 'MEMORY': <OperandType.MEMORY: 1>, 'IMMEDIATE': <OperandType.IMMEDIATE: 2>, 'NONE': <OperandType.NONE: 3>}
+    def __eq__(self, other: typing.Any) -> bool:
+        ...
+    def __getstate__(self) -> int:
+        ...
+    def __hash__(self) -> int:
+        ...
+    def __index__(self) -> int:
+        ...
+    def __init__(self, value: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __int__(self) -> int:
+        ...
+    def __ne__(self, other: typing.Any) -> bool:
+        ...
+    def __repr__(self) -> str:
+        ...
+    def __setstate__(self, state: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __str__(self) -> str:
+        ...
+    @property
+    def name(self) -> str:
+        ...
+    @property
+    def value(self) -> int:
+        ...
+class PendingRequest:
+    def __init__(self) -> None:
+        ...
+    @property
+    def CacheLine(self) -> CacheLine:
+        ...
+    @property
+    def remainingLatency(self) -> int:
+        ...
+    @property
+    def request(self) -> CacheRequest:
+        ...
+    @property
+    def requestState(self) -> RequestState:
+        ...
 class Pipeline:
-    def __init__(self, arg0: Bus, arg1: ...) -> None:
+    def __init__(self, arg0: CPU, arg1: ...) -> None:
         ...
     def execute_operation(self) -> None:
         ...
@@ -759,73 +892,114 @@ class RegisterFile:
         ...
     def reset(self) -> None:
         ...
-class ResultArray15:
-    errorInfo: Error_Event_Info
-    success: bool
-    def __init__(self) -> None:
+class RequestState:
+    """
+    Members:
+    
+      IDLE
+    
+      WAITING_LATENCY
+    
+      PROCESSING
+    
+      DONE
+    
+      HIT_READY
+    
+      MISS_PENDING
+    """
+    DONE: typing.ClassVar[RequestState]  # value = <RequestState.DONE: 6>
+    HIT_READY: typing.ClassVar[RequestState]  # value = <RequestState.HIT_READY: 4>
+    IDLE: typing.ClassVar[RequestState]  # value = <RequestState.IDLE: 2>
+    MISS_PENDING: typing.ClassVar[RequestState]  # value = <RequestState.MISS_PENDING: 5>
+    PROCESSING: typing.ClassVar[RequestState]  # value = <RequestState.PROCESSING: 3>
+    WAITING_LATENCY: typing.ClassVar[RequestState]  # value = <RequestState.WAITING_LATENCY: 0>
+    __members__: typing.ClassVar[dict[str, RequestState]]  # value = {'IDLE': <RequestState.IDLE: 2>, 'WAITING_LATENCY': <RequestState.WAITING_LATENCY: 0>, 'PROCESSING': <RequestState.PROCESSING: 3>, 'DONE': <RequestState.DONE: 6>, 'HIT_READY': <RequestState.HIT_READY: 4>, 'MISS_PENDING': <RequestState.MISS_PENDING: 5>}
+    def __eq__(self, other: typing.Any) -> bool:
+        ...
+    def __getstate__(self) -> int:
+        ...
+    def __hash__(self) -> int:
+        ...
+    def __index__(self) -> int:
+        ...
+    def __init__(self, value: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __int__(self) -> int:
+        ...
+    def __ne__(self, other: typing.Any) -> bool:
+        ...
+    def __repr__(self) -> str:
+        ...
+    def __setstate__(self, state: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __str__(self) -> str:
         ...
     @property
-    def data(self) -> typing.Annotated[list[int], "FixedSize(15)"]:
-        ...
-    @data.setter
-    def data(self, arg0: typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(15)"]) -> None:
-        ...
-class ResultArrayCacheLine:
-    errorInfo: Error_Event_Info
-    success: bool
-    def __init__(self) -> None:
+    def name(self) -> str:
         ...
     @property
-    def data(self) -> typing.Annotated[list[int], "FixedSize(64)"]:
+    def value(self) -> int:
         ...
-    @data.setter
-    def data(self, arg0: typing.Annotated[collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], "FixedSize(64)"]) -> None:
+class RequestType:
+    """
+    Members:
+    
+      READ
+    
+      READ_MEMORY_FOR_WRITE_MISS
+    
+      WRITE
+    
+      FILL
+    
+      READ_AFTER_FILL
+    
+      WRITE_AFTER_FILL
+    
+      PREFETCH
+    
+      NONE
+    
+      WRITE_BACK
+    """
+    FILL: typing.ClassVar[RequestType]  # value = <RequestType.FILL: 3>
+    NONE: typing.ClassVar[RequestType]  # value = <RequestType.NONE: 7>
+    PREFETCH: typing.ClassVar[RequestType]  # value = <RequestType.PREFETCH: 6>
+    READ: typing.ClassVar[RequestType]  # value = <RequestType.READ: 0>
+    READ_AFTER_FILL: typing.ClassVar[RequestType]  # value = <RequestType.READ_AFTER_FILL: 4>
+    READ_MEMORY_FOR_WRITE_MISS: typing.ClassVar[RequestType]  # value = <RequestType.READ_MEMORY_FOR_WRITE_MISS: 1>
+    WRITE: typing.ClassVar[RequestType]  # value = <RequestType.WRITE: 2>
+    WRITE_AFTER_FILL: typing.ClassVar[RequestType]  # value = <RequestType.WRITE_AFTER_FILL: 5>
+    WRITE_BACK: typing.ClassVar[RequestType]  # value = <RequestType.WRITE_BACK: 8>
+    __members__: typing.ClassVar[dict[str, RequestType]]  # value = {'READ': <RequestType.READ: 0>, 'READ_MEMORY_FOR_WRITE_MISS': <RequestType.READ_MEMORY_FOR_WRITE_MISS: 1>, 'WRITE': <RequestType.WRITE: 2>, 'FILL': <RequestType.FILL: 3>, 'READ_AFTER_FILL': <RequestType.READ_AFTER_FILL: 4>, 'WRITE_AFTER_FILL': <RequestType.WRITE_AFTER_FILL: 5>, 'PREFETCH': <RequestType.PREFETCH: 6>, 'NONE': <RequestType.NONE: 7>, 'WRITE_BACK': <RequestType.WRITE_BACK: 8>}
+    def __eq__(self, other: typing.Any) -> bool:
         ...
-class ResultUint16:
-    errorInfo: Error_Event_Info
-    success: bool
-    def __init__(self) -> None:
+    def __getstate__(self) -> int:
+        ...
+    def __hash__(self) -> int:
+        ...
+    def __index__(self) -> int:
+        ...
+    def __init__(self, value: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __int__(self) -> int:
+        ...
+    def __ne__(self, other: typing.Any) -> bool:
+        ...
+    def __repr__(self) -> str:
+        ...
+    def __setstate__(self, state: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __str__(self) -> str:
         ...
     @property
-    def data(self) -> int:
-        ...
-    @data.setter
-    def data(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
-        ...
-class ResultUint32:
-    errorInfo: Error_Event_Info
-    success: bool
-    def __init__(self) -> None:
+    def name(self) -> str:
         ...
     @property
-    def data(self) -> int:
+    def value(self) -> int:
         ...
-    @data.setter
-    def data(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
-        ...
-class ResultUint64:
-    errorInfo: Error_Event_Info
-    success: bool
-    def __init__(self) -> None:
-        ...
-    @property
-    def data(self) -> int:
-        ...
-    @data.setter
-    def data(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
-        ...
-class ResultUint8:
-    errorInfo: Error_Event_Info
-    success: bool
-    def __init__(self) -> None:
-        ...
-    @property
-    def data(self) -> int:
-        ...
-    @data.setter
-    def data(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
-        ...
-class ResultVoid:
+class Result:
     errorInfo: Error_Event_Info
     success: bool
     def __init__(self) -> None:
@@ -863,6 +1037,61 @@ class Stage:
     def isInstructionEmpty(self, arg0: Instruction) -> bool:
         ...
     def isStageReady(self) -> bool:
+        ...
+class TypeofData:
+    """
+    Members:
+    
+      UINT8_T
+    
+      UINT16_T
+    
+      UINT32_T
+    
+      UINT64_T
+    
+      ARRAY_16B
+    
+      ARRAY_64B
+    
+      ARRAY_128B
+    
+      UNKNOWN
+    """
+    ARRAY_128B: typing.ClassVar[TypeofData]  # value = <TypeofData.ARRAY_128B: 128>
+    ARRAY_16B: typing.ClassVar[TypeofData]  # value = <TypeofData.ARRAY_16B: 16>
+    ARRAY_64B: typing.ClassVar[TypeofData]  # value = <TypeofData.ARRAY_64B: 64>
+    UINT16_T: typing.ClassVar[TypeofData]  # value = <TypeofData.UINT16_T: 2>
+    UINT32_T: typing.ClassVar[TypeofData]  # value = <TypeofData.UINT32_T: 4>
+    UINT64_T: typing.ClassVar[TypeofData]  # value = <TypeofData.UINT64_T: 8>
+    UINT8_T: typing.ClassVar[TypeofData]  # value = <TypeofData.UINT8_T: 1>
+    UNKNOWN: typing.ClassVar[TypeofData]  # value = <TypeofData.UNKNOWN: 0>
+    __members__: typing.ClassVar[dict[str, TypeofData]]  # value = {'UINT8_T': <TypeofData.UINT8_T: 1>, 'UINT16_T': <TypeofData.UINT16_T: 2>, 'UINT32_T': <TypeofData.UINT32_T: 4>, 'UINT64_T': <TypeofData.UINT64_T: 8>, 'ARRAY_16B': <TypeofData.ARRAY_16B: 16>, 'ARRAY_64B': <TypeofData.ARRAY_64B: 64>, 'ARRAY_128B': <TypeofData.ARRAY_128B: 128>, 'UNKNOWN': <TypeofData.UNKNOWN: 0>}
+    def __eq__(self, other: typing.Any) -> bool:
+        ...
+    def __getstate__(self) -> int:
+        ...
+    def __hash__(self) -> int:
+        ...
+    def __index__(self) -> int:
+        ...
+    def __init__(self, value: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __int__(self) -> int:
+        ...
+    def __ne__(self, other: typing.Any) -> bool:
+        ...
+    def __repr__(self) -> str:
+        ...
+    def __setstate__(self, state: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __str__(self) -> str:
+        ...
+    @property
+    def name(self) -> str:
+        ...
+    @property
+    def value(self) -> int:
         ...
 class WriteBackStage(Stage):
     def __init__(self) -> None:
@@ -1000,8 +1229,8 @@ CACHE_L1: ComponentType  # value = <ComponentType.CACHE_L1: 1>
 CACHE_L2: ComponentType  # value = <ComponentType.CACHE_L2: 2>
 CACHE_L3: ComponentType  # value = <ComponentType.CACHE_L3: 3>
 CACHE_MISS: EventType  # value = <EventType.CACHE_MISS: 2>
-CACHE_READ_ERROR: EventType  # value = <EventType.CACHE_READ_ERROR: 5>
-CACHE_WRITE_ERROR: EventType  # value = <EventType.CACHE_WRITE_ERROR: 6>
+CACHE_READ_ERROR: EventType  # value = <EventType.CACHE_READ_ERROR: 9>
+CACHE_WRITE_ERROR: EventType  # value = <EventType.CACHE_WRITE_ERROR: 10>
 CF: Flagbit  # value = <Flagbit.CF: 0>
 DummyRegister: Register  # value = <Register.DummyRegister: 17>
 EMPTY: stageStatus  # value = <stageStatus.EMPTY: 7>
@@ -1032,8 +1261,8 @@ R8: Register  # value = <Register.R8: 8>
 R9: Register  # value = <Register.R9: 9>
 RAM: ComponentType  # value = <ComponentType.RAM: 4>
 RAM_ACCESS: EventType  # value = <EventType.RAM_ACCESS: 3>
-RAM_READ_ERROR: EventType  # value = <EventType.RAM_READ_ERROR: 7>
-RAM_WRITE_ERROR: EventType  # value = <EventType.RAM_WRITE_ERROR: 8>
+RAM_READ_ERROR: EventType  # value = <EventType.RAM_READ_ERROR: 11>
+RAM_WRITE_ERROR: EventType  # value = <EventType.RAM_WRITE_ERROR: 12>
 RAX: Register  # value = <Register.RAX: 0>
 RBP: Register  # value = <Register.RBP: 7>
 RBX: Register  # value = <Register.RBX: 1>
@@ -1052,7 +1281,7 @@ SUB: typeofInstruction  # value = <typeofInstruction.SUB: 2>
 TD: AddressingMode  # value = <AddressingMode.TD: 6>
 UNKNOWN: ErrorType  # value = <ErrorType.UNKNOWN: 6>
 WAITING_DEST_OPERAND: stageStatus  # value = <stageStatus.WAITING_DEST_OPERAND: 5>
-WAITING_MEMORY: ErrorType  # value = <ErrorType.WAITING_MEMORY: 7>
+WAITING_MEMORY: ErrorType  # value = <ErrorType.WAITING_MEMORY: 8>
 WAITING_SRC_OPERAND: stageStatus  # value = <stageStatus.WAITING_SRC_OPERAND: 4>
 WRITE_FAIL: ErrorType  # value = <ErrorType.WRITE_FAIL: 4>
 ZF: Flagbit  # value = <Flagbit.ZF: 6>

@@ -24,9 +24,10 @@ void bind_cpu(py::module &m) {
         .def("cpuStart", &CPU::cpuStart)
         .def("getInstructionIdCounter", &CPU::getInstructionIdCounter)
         .def("incrementInstructionIdCounter", &CPU::incrementInstructionIdCounter)
-        .def("getALU", &CPU::getALU, py::return_value_policy::reference)
-        .def("getRegisters", &CPU::getRegisters, py::return_value_policy::reference)
-        .def("getControlUnit", &CPU::getControlUnit, py::return_value_policy::reference)
+        .def("getALU", &CPU::getALU, py::return_value_policy::reference_internal)
+        .def("getRegisters", &CPU::getRegisters, py::return_value_policy::reference_internal)
+        .def("getControlUnit", &CPU::getControlUnit, py::return_value_policy::reference_internal)
         .def("getCacheManager", &CPU::getCacheManager, py::return_value_policy::reference_internal)
-        .def("getPipeline", &CPU::getPipeline, py::return_value_policy::reference);
+        .def("getPipeline", &CPU::getPipeline, py::return_value_policy::reference_internal);
+
 }

@@ -24,7 +24,6 @@ enum class EventHandlerPipelineEventType {
     MEMORY_DONE_EXECUTE,
     MEMORY_WAITING_FETCH,
     MEMORY_DONE_FETCH,
-    STALL_FOR_GUI,
     
 };
 

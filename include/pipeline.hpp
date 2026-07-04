@@ -30,8 +30,13 @@ class Stage
 
         inline void setStatus(StageStatus newStatus) { status = newStatus; }
 
+        inline bool isStalledGUI() const { return StalledGUI; }
+
+        inline void setStalledGUI(bool stalled) { StalledGUI = stalled; }
+
     private:
 
+        bool StalledGUI = false; // Flag to indicate if the stage is stalled due to GUI interaction
         StageStatus status = StageStatus::READY;
 
 };
@@ -303,9 +308,6 @@ class Pipeline : public Device {
         inline ExecuteMemoryBuffer& getExecuteMemoryBuffer() { return executeMemoryBuffer; }
         inline MemoryWriteBackBuffer& getMemoryWriteBackBuffer() { return memoryWriteBackBuffer; }
 
-        inline bool isWaitingGUI() const { return waitingGUI; }
-        inline void setWaitingGUI(bool wait) { waitingGUI = wait; }
-
         inline void setEventHandler(EventHandler<EventHandlerPipelineEventType>& handler) { eventHandler = &handler; }
         
 
@@ -313,8 +315,6 @@ class Pipeline : public Device {
 
         CPU& cpu;
         ExecuteEngine executeEngine;
-
-        bool waitingGUI = false;
         FetchStage fetchStage;
         DecodeStage decodeStage;
         OperandFetchStage operandFetchStage;

@@ -46,7 +46,7 @@ PYBIND11_MODULE(simulator, m) {
     // ------------------------------
     py::class_<ALU>(m, "ALU");
 
-
+     py::class_<CU>(m, "CU");
 
     //.def(py::init<>());  
 
@@ -94,4 +94,6 @@ PYBIND11_MODULE(simulator, m) {
         .def("getLogEntry", &EventLog::getLogEntry)
         .def("getLogData", &EventLog::getLogData)
         .def("isLogEmpty", &EventLog::isLogEmpty); // Bind the new method
+
+   
 }

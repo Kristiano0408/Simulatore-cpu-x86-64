@@ -216,14 +216,24 @@ void Pipeline::processWriteBackStage()
             debugLog("Memory-WriteBack buffer has valid instruction.");
             writeBackStage.setInstructionToWriteBack(std::move(memoryWriteBackBuffer.memoryAccessedInstruction));
             memoryWriteBackBuffer.valid = false;
+            #ifdef GUI_ENABLED
+            writeBackStage.setStalledGUI(true); // Reset the stalled flag
+            writeBackStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
+            #else
             writeBackStage.writeBack(executeEngine, *eventHandler);
+            #endif
 
         }
         else if (memoryStage.isStageReady() && !memoryStage.isInstructionEmpty(memoryStage.peekInstruction()))
         {
             debugLog("Memory stage has valid instruction.");
             writeBackStage.setInstructionToWriteBack(memoryStage.getInstructionToMemory());
+            #ifdef GUI_ENABLED
+            writeBackStage.setStalledGUI(true); // Reset the stalled flag
+            writeBackStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
+            #else
             writeBackStage.writeBack(executeEngine, *eventHandler);
+            #endif
 
         }
         else 
@@ -231,6 +241,21 @@ void Pipeline::processWriteBackStage()
             debugLog("WriteBack stage has no instruction to process.");
         }
     }
+    #ifdef GUI_ENABLED
+    else if(writeBackStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)
+    {
+            writeBackStage.setStalledGUI(true); // Reset the stalled flag
+            debugLog("WriteBack stage is waiting for GUI buffer update.");
+            writeBackStage.writeBack(executeEngine, *eventHandler);
+
+    }
+    else if(writeBackStage.getStatus() == StageStatus::WAITING_GUI_EXECUTION)
+    {
+            writeBackStage.setStalledGUI(false); // Reset the stalled flag
+            writeBackStage.setInstructionToWriteBack(nullptr); //reset the instruction of write back stage
+            writeBackStage.setStatus(StageStatus::READY); // Set the status to ready for the next instruction
+    }
+    #endif
     else 
     {
         debugLog("WRITEBACK STAGE is not ready.");
@@ -249,13 +274,23 @@ void Pipeline::processMemoryStage()
             debugLog("Execute-Memory buffer has valid instruction.");
             memoryStage.setInstructionToMemory(std::move(executeMemoryBuffer.executedInstruction));
             executeMemoryBuffer.valid = false;
+            #ifdef GUI_ENABLED
+            memoryStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
+            memoryStage.setStalledGUI(true); // Set the stalled flag
+            #else
             memoryStage.requestMemoryAccess(executeEngine, *eventHandler);
+            #endif
         }
         else if (executeStage.isStageReady() && !executeStage.isInstructionEmpty(executeStage.peekInstruction()))
         {
             debugLog("Execute stage has valid instruction.");
             memoryStage.setInstructionToMemory(executeStage.getInstructionToExecute());
+            #ifdef GUI_ENABLED
+            memoryStage.setStalledGUI(true); // Set the stalled flag
+            memoryStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
+            #else
             memoryStage.requestMemoryAccess(executeEngine, *eventHandler);
+            #endif
 
         }
         else 
@@ -263,6 +298,28 @@ void Pipeline::processMemoryStage()
             debugLog("Memory stage has no instruction to process.");
         }
     }
+    #ifdef GUI_ENABLED
+    else if(memoryStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)
+    {
+            debugLog("Memory stage is waiting for GUI buffer update.");
+            memoryStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI execution
+            memoryStage.requestMemoryAccess(executeEngine, *eventHandler);
+            memoryStage.setStalledGUI(false); // Set the stalled flag
+
+    }
+    else if(memoryStage.getStatus() == StageStatus::WAITING_GUI_EXECUTION)
+    {
+            debugLog("Memory stage is waiting for GUI execution to complete.");
+            memoryWriteBackBuffer.memoryAccessedInstruction = memoryStage.getInstructionToMemory();
+            memoryWriteBackBuffer.valid = true;
+            memoryWriteBackBuffer.stalled = false;
+            memoryWriteBackBuffer.flushed = false;
+            memoryStage.setInstructionToMemory(nullptr); //reset the instruction of write back stage
+            memoryStage.setStatus(StageStatus::READY); // Set the status to waiting for GUI buffer update
+            memoryStage.setStalledGUI(false); // Set the stalled flag
+    }
+
+    #endif
     else if (memoryStage.getStatus() == StageStatus::WAITING_MEMORY)
     {
         debugLog("MEMORY STAGE is waiting for memory operation to complete.");
@@ -274,6 +331,7 @@ void Pipeline::processMemoryStage()
         debugLog("MEMORY STAGE memory operation completed.");
         // Move instruction to Memory-WriteBack buffer
         memoryStage.accessMemory(executeEngine, *eventHandler);
+
     }
     else 
     {
@@ -293,19 +351,48 @@ void Pipeline::processExecuteStage()
             debugLog("OperandFetch-Execute buffer has valid instruction.");
             executeStage.setInstructionToExecute(std::move(operandFetchExecuteBuffer.instructionWithOperands));
             operandFetchExecuteBuffer.valid = false;
+            #ifdef GUI_ENABLED
+            executeStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
+            executeStage.setStalledGUI(true); // Set the stalled flag
+            #else
             executeStage.startExecution(executeEngine,*eventHandler);
+            #endif
         }
         else if (operandFetchStage.isStageReady() && !operandFetchStage.isInstructionEmpty(operandFetchStage.peekInstruction()))
         {
             debugLog("Operand Fetch stage has valid instruction.");
             executeStage.setInstructionToExecute(operandFetchStage.getInstructionWithFetchedOperands());
+            #ifdef GUI_ENABLED
+            executeStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
+            executeStage.setStalledGUI(true); // Set the stalled flag
+            #else
             executeStage.startExecution(executeEngine, *eventHandler);
+            #endif
         }
         else 
         {
             debugLog("Execute stage has no instruction to process.");
         }
     }
+    #ifdef GUI_ENABLED
+    else if(executeStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)
+    {
+            debugLog("Execute stage is waiting for GUI buffer update.");
+            executeStage.startExecution(executeEngine, *eventHandler);
+            executeStage.setStalledGUI(false); // Set the stalled flag
+
+    }
+    else if(executeStage.getStatus() == StageStatus::WAITING_GUI_EXECUTION)
+    {
+            debugLog("Execute stage is waiting for GUI execution to complete.");
+            executeMemoryBuffer.executedInstruction = executeStage.getInstructionToExecute();
+            executeMemoryBuffer.valid = true;
+            executeMemoryBuffer.stalled = false;
+            executeMemoryBuffer.flushed = false;
+            executeStage.setStalledGUI(false); // Set the stalled flag
+            executeStage.setStatus(StageStatus::READY); // Set the status to waiting for GUI buffer update
+    }
+    #endif
     else if (executeStage.getStatus() == StageStatus::WAITING_MEMORY)
     {
         debugLog("EXECUTE STAGE is waiting for instruction execution to complete.");
@@ -340,23 +427,52 @@ void Pipeline::processOperandFetchStage()
             debugLog("Decoding-OperandFetch buffer has valid instruction.");
             operandFetchStage.setInstructionWithFetchedOperands(std::move(decodeOperandFetchBuffer.decodedInstruction));
             decodeOperandFetchBuffer.valid = false;
+            #ifdef GUI_ENABLED
+            operandFetchStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
+            operandFetchStage.setStalledGUI(true); // Set the stalled flag
+            #else
             operandFetchStage.fetchOperands(executeEngine, *eventHandler);
-            
-            // After fetching operands, move instruction to OperandFetch-Execute buffer
-
-            
+            #endif   
         }
         else if (decodeStage.isStageReady() && !decodeStage.isInstructionEmpty(decodeStage.peekInstruction()))
         {
             debugLog("Decode stage has valid instruction.");
             operandFetchStage.setInstructionWithFetchedOperands(decodeStage.getDecodedInstruction());
+            #ifdef GUI_ENABLED
+            operandFetchStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
+            operandFetchStage.setStalledGUI(true); // Set the stalled flag
+            #else
             operandFetchStage.fetchOperands(executeEngine, *eventHandler);
+            #endif
+
         }
         else 
         {
             debugLog("Operand Fetch stage has no instruction to process.");
         }
+
     }
+    #ifdef GUI_ENABLED
+    else if(operandFetchStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)
+    {
+            debugLog("Operand Fetch stage is waiting for GUI buffer update.");
+            operandFetchStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI execution
+            operandFetchStage.fetchOperands(executeEngine, *eventHandler);
+            operandFetchStage.setStalledGUI(true); // Set the stalled flag
+
+    }
+    else if(operandFetchStage.getStatus() == StageStatus::WAITING_GUI_EXECUTION)
+    {
+            debugLog("Operand Fetch stage is waiting for GUI execution to complete.");
+            operandFetchExecuteBuffer.instructionWithOperands = operandFetchStage.getInstructionWithFetchedOperands();
+            operandFetchExecuteBuffer.valid = true;
+            operandFetchExecuteBuffer.stalled = false;
+            operandFetchExecuteBuffer.flushed = false;
+            operandFetchStage.setInstructionWithFetchedOperands(nullptr); //reset the instruction of write back stage
+            operandFetchStage.setStatus(StageStatus::READY); // Set the status to ready for the next instruction
+            operandFetchStage.setStalledGUI(false); // Set the stalled flag
+    }
+    #endif
     else 
     {
         std::cout << "OPERAND FETCH STAGE is not ready." << std::endl;
@@ -376,21 +492,49 @@ void Pipeline::processDecodeStage()
             debugLog("Fetch-Decode buffer has valid instruction.");
             decodeStage.setInstructionToDecode(fetchDecodeBuffer.instructionInfo);
             fetchDecodeBuffer.valid = false;
+            #ifdef GUI_ENABLED
+            decodeStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
+            decodeStage.setStalledGUI(true); // Set the stalled flag
+            #else
             decodeStage.decodeInstruction(cpu, *eventHandler);
-            //reset the istruictioninfo of decode stage
+            #endif
         }
         else if (fetchStage.isStageReady() && fetchStage.getCurrentInstructionInfo().instruction.size() > 0)
         {
             decodeStage.setInstructionToDecode(fetchStage.getCurrentInstructionInfo());
+            #ifdef GUI_ENABLED
+            decodeStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status  
+            decodeStage.setStalledGUI(true); // Set the stalled flag
+            #else
             decodeStage.decodeInstruction(cpu, *eventHandler);
-            // After decoding, move instruction to Decode-OperandFetch buffer
-            //reset the istruictioninfo of decode stage
+            #endif
         }
         else 
         {
             debugLog("Decode stage has no instruction to process.");
         }
     }
+    #ifdef GUI_ENABLED
+    else if(decodeStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)
+    {
+            debugLog("Decode stage is waiting for GUI buffer update.");
+            decodeStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI execution
+            decodeStage.decodeInstruction(cpu, *eventHandler);
+            decodeStage.setStalledGUI(false); // Set the stalled flag
+
+    }
+    else if(decodeStage.getStatus() == StageStatus::WAITING_GUI_EXECUTION)
+    {
+            debugLog("Decode stage is waiting for GUI execution to complete.");
+            decodeOperandFetchBuffer.decodedInstruction = decodeStage.getDecodedInstruction();
+            decodeOperandFetchBuffer.valid = true;
+            decodeOperandFetchBuffer.stalled = false;
+            decodeOperandFetchBuffer.flushed = false;
+            decodeStage.setStalledGUI(false); // Set the stalled flag
+            decodeStage.setInstructionToDecode(InstructionInfo{}); //reset the instruction of write back stage
+            decodeStage.setStatus(StageStatus::READY); // Set the status to ready for the next instruction
+    }
+    #endif
     else 
         debugLog("DECODE STAGE is not ready.");
 
@@ -426,10 +570,21 @@ void Pipeline::processFetchStage()
         fetchDecodeBuffer.instructionInfo = fetchStage.fetchInstruction(cpu, FetchstageInstructionId, index, *eventHandler);
         
     }
+    #ifdef GUI_ENABLED
+    else if(fetchStage.getStatus() == StageStatus::WAITING_GUI_EXECUTION)
+    {
+            fetchDecodeBuffer.valid = true;
+            fetchDecodeBuffer.stalled = false;
+            fetchDecodeBuffer.flushed = false;
+            fetchStage.setCurrentInstructionInfo(InstructionInfo()); //reset the instructionInfo of fetch stage
+            fetchStage.setStatus(StageStatus::READY); // Set the status to ready for the next instruction
+            fetchStage.setStalledGUI(false); // Set the stalled flag
+    }
     else 
     {
         debugLog("FETCH STAGE is not ready.");
     }
+    #endif
 
 }
 

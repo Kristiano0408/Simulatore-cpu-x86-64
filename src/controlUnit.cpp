@@ -41,7 +41,6 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler<EventH
 
 
     bus.getCPU().getCacheManager().enqueRequest(std::move(cacheRequest));
-
     // Trigger an event to notify that a cache request has been sent
     eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_WAITING_FETCH);
 

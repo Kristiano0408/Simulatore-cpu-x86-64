@@ -27,7 +27,6 @@ void PipelineController::setupEvents()
     eventHandler.registerEvent(EventHandlerPipelineEventType::MEMORY_WAITING_FETCH, [this]() { onWaitingMemory(StageType::FETCH); });
     eventHandler.registerEvent(EventHandlerPipelineEventType::MEMORY_DONE_FETCH, [this]() { onMemoryDone(StageType::FETCH); });
 
-    eventHandler.registerEvent(EventHandlerPipelineEventType::STALL_FOR_GUI, [this]() { stallForGUI(); });
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,18 +49,26 @@ void PipelineController::onMemoryDone(StageType stage)
 void PipelineController::onFetchComplete()
 {
     FetchStage& fetchStage = pipeline.getFetchStage();
+
+    #ifdef GUI_ENABLED
+    fetchStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI buffer update
+    fetchStage.setStalledGUI(true); // Set the stalled flag
+    #else
     FetchDecodeBuffer& fetchDecodeBuffer = pipeline.getFetchDecodeBuffer();
     fetchDecodeBuffer.valid = true;
     fetchDecodeBuffer.stalled = false;
     fetchDecodeBuffer.flushed = false;
     fetchStage.setStatus(StageStatus::READY);
-     //reset the instructionInfo of fetch stage
     fetchStage.setCurrentInstructionInfo(InstructionInfo());
+    #endif
 }
 
 void PipelineController::onDecodeComplete()
 {
     DecodeStage& decodeStage = pipeline.getDecodeStage();
+    #ifdef GUI_ENABLED
+    decodeStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI buffer update
+    #else
     DecodeOperandFetchBuffer& decodeOperandFetchBuffer = pipeline.getDecodeOperandFetchBuffer();
     decodeOperandFetchBuffer.decodedInstruction = decodeStage.getDecodedInstruction();
     decodeStage.setInstructionToDecode(InstructionInfo()); //reset the instructionInfo of decode stage
@@ -69,53 +76,76 @@ void PipelineController::onDecodeComplete()
     decodeOperandFetchBuffer.stalled = false;
     decodeOperandFetchBuffer.flushed = false;
     decodeStage.setStatus(StageStatus::READY);
+    #endif
 }
 
 void PipelineController::onOperandFetchComplete()
 {
     OperandFetchStage& operandFetchStage = pipeline.getOperandFetchStage();
+    
+    #ifdef GUI_ENABLED
+    operandFetchStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status
+    #else
     OperandFetchExecuteBuffer& operandFetchExecuteBuffer = pipeline.getOperandFetchExecuteBuffer();
     operandFetchExecuteBuffer.instructionWithOperands = operandFetchStage.getInstructionWithFetchedOperands();
     operandFetchExecuteBuffer.valid = true;
     operandFetchExecuteBuffer.stalled = false;
     operandFetchExecuteBuffer.flushed = false;
     operandFetchStage.setStatus(StageStatus::READY);
+    #endif
 }
 
 void PipelineController::onExecuteComplete()
 {
     ExecuteStage& executeStage = pipeline.getExecuteStage();
+    #ifdef GUI_ENABLED
+    executeStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI buffer update
+    executeStage.setStalledGUI(true); // Set the stalled flag
+    #else
     ExecuteMemoryBuffer& executeMemoryBuffer = pipeline.getExecuteMemoryBuffer();
     executeMemoryBuffer.executedInstruction = executeStage.getInstructionToExecute();
     executeMemoryBuffer.valid = true;
     executeMemoryBuffer.stalled = false;
     executeMemoryBuffer.flushed = false;
     executeStage.setStatus(StageStatus::READY);
+    #endif
 }
 
 void PipelineController::onMemoryStageComplete()
 {
     MemoryStage& memoryStage = pipeline.getMemoryStage();
-    MemoryWriteBackBuffer& memoryWriteBackBuffer = pipeline.getMemoryWriteBackBuffer();
-    memoryWriteBackBuffer.memoryAccessedInstruction = memoryStage.getInstructionToMemory();
-    memoryWriteBackBuffer.valid = true;
-    memoryWriteBackBuffer.stalled = false;
-    memoryWriteBackBuffer.flushed = false;
+    
+    #ifdef GUI_ENABLED
+    memoryStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI buffer update
+    memoryStage.setStalledGUI(true); // Set the stalled flag
+    #else
     memoryStage.setStatus(StageStatus::READY);
+    #endif
 }
 
 void PipelineController::onWriteBackComplete()
-{
+    {
+       
     WriteBackStage& writeBackStage = pipeline.getWriteBackStage();
-    writeBackStage.setInstructionToWriteBack(nullptr); //reset the instruction of write back stage
+    #ifdef GUI_ENABLED
+    writeBackStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to execution done
+    #else
     writeBackStage.setStatus(StageStatus::READY);
+    writeBackStage.setInstructionToWriteBack(nullptr); //reset the instruction of write back stage
+    #endif
+   
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void PipelineController::stallForGUI()
+bool PipelineController::isPipelineStalledForGUI() const
 {
-    pipeline.setWaitingGUI(true);
+    // Check if any stage is stalled for GUI
+    return pipeline.getFetchStage().isStalledGUI() ||
+           pipeline.getDecodeStage().isStalledGUI() ||
+           pipeline.getOperandFetchStage().isStalledGUI() ||
+           pipeline.getExecuteStage().isStalledGUI() ||
+           pipeline.getMemoryStage().isStalledGUI() ||
+           pipeline.getWriteBackStage().isStalledGUI();
 }
-
-

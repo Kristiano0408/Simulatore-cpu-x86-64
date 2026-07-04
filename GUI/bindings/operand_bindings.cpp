@@ -7,6 +7,12 @@ namespace py = pybind11;
 
 void bind_operands(py::module &m) {
 
+    py::enum_<OperandType>(m, "OperandType")
+        .value("REGISTER", OperandType::REGISTER)
+        .value("MEMORY", OperandType::MEMORY)
+        .value("IMMEDIATE", OperandType::IMMEDIATE)
+        .value("NONE", OperandType::NONE);
+        
     py::class_<Operand>(m, "Operand")
         .def("getSize", &Operand::getSize)
         .def("setSize", &Operand::setSize)

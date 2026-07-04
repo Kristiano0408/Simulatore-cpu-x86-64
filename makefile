@@ -4,8 +4,14 @@ CXXFLAGS = -std=c++23 -O2 -Wall -Wextra -Iinclude -fPIC
 
 # Debug
 ifeq ($(DEBUG),1)
-    CXXFLAGS += -DDEBUG -g
+    CXXFLAGS += -DDEBUG
 endif
+
+# GUI
+ifeq ($(GUI_ENABLED),1)
+	CXXFLAGS += -DGUI_ENABLED
+endif
+#
 
 # Directory
 SRCDIR = src

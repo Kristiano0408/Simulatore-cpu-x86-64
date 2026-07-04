@@ -3,4 +3,4 @@ source venv/bin/activate
 
 python -m pybind11_stubgen GUI.simulator -o .
 
-make -j$(nproc)
+make -j$(nproc) DEBUG=1 GUI_ENABLED=1
