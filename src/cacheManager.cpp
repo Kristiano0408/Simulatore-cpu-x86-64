@@ -484,7 +484,7 @@ LookUpResult CacheLevel::lookupCache(const AddressInfo& addressInfo, TypeofData 
             result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
             result.errorInfo.event = EventType::CACHE_HIT;
             result.errorInfo.error = ErrorType::NONE;
-            EventLog::getInstance().submitLog(std::move(result), addressInfo.address);
+            EventLog::getInstance().pushCacheDataLogEntry(std::move(result), nullptr, nullptr, addressInfo, AddressInfo()); // Log the cache hit event with the address and data from the cache line
             return LookUpResult::HIT; // Return HIT if it's a hit within a single cache line
         }
         else
@@ -497,14 +497,14 @@ LookUpResult CacheLevel::lookupCache(const AddressInfo& addressInfo, TypeofData 
                 result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
                 result.errorInfo.event = EventType::CACHE_HIT;
                 result.errorInfo.error = ErrorType::NONE;
-                EventLog::getInstance().submitLog(std::move(result), addressInfo.address);
+                EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, addressInfo2); // Log the cache hit event with the address and data from both cache lines
                 return LookUpResult::HIT_CROSS_LINES; // Return HIT_CROSS_LINES if it's a hit that spans across two cache lines
             }
             result.success = false; // Set the result to failure for a miss across two cache lines
             result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
             result.errorInfo.event = EventType::CACHE_MISS;
             result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-            EventLog::getInstance().submitLog(std::move(result), addressInfo.address);
+            EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo()); // Log the cache miss event with the address and data from the first cache line
             return LookUpResult::MISS; // Return MISS if the second cache line for cross-line access is not found, indicating a miss across two cache lines
         }
     }
@@ -514,7 +514,7 @@ LookUpResult CacheLevel::lookupCache(const AddressInfo& addressInfo, TypeofData 
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_MISS;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-        EventLog::getInstance().submitLog(std::move(result), addressInfo.address);
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo()); // Log the cache miss event with the address and data from the first cache line
         return LookUpResult::MISS; // Return MISS if no matching cache line is found
     }
 }
@@ -772,7 +772,7 @@ void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& re
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_READ;
         result.errorInfo.error = ErrorType::NONE;
-        EventLog::getInstance().submitLog(std::move(result), line->data);
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), &(line->data), static_cast<LineData*>(nullptr), addressInfo, AddressInfo()); // Log the cache hit event with the address and data from the cache line
     }
     else
     {
@@ -780,7 +780,7 @@ void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& re
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_READ;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-        EventLog::getInstance().submitLog(std::move(result));
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(), AddressInfo());
            
     }   
 
@@ -809,7 +809,7 @@ void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressIn
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_READ;
         result.errorInfo.error = ErrorType::NONE;
-        EventLog::getInstance().submitLog(std::move(result), std::pair<LineData, LineData>(line1->data, line2->data));
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), &(line1->data), &(line2->data), addressInfo1, addressInfo2);
     }
     else
     {
@@ -817,7 +817,7 @@ void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressIn
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_READ;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-        EventLog::getInstance().submitLog(std::move(result));
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(), AddressInfo());
     
     }
 
@@ -845,7 +845,7 @@ void CacheLevel::writeSingleLine(const AddressInfo& addressInfo, CacheRequest& r
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_WRITE;
         result.errorInfo.error = ErrorType::NONE;
-        EventLog::getInstance().submitLog(std::move(result), line->data);
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), &(line->data), static_cast<LineData*>(nullptr), addressInfo, AddressInfo()); // Log the cache hit event with the address and data from the cache line
 
         if(writePolicy->writeThroughOnHit()) // If the write policy is set to write-through
         {
@@ -866,7 +866,7 @@ void CacheLevel::writeSingleLine(const AddressInfo& addressInfo, CacheRequest& r
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_WRITE;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-        EventLog::getInstance().submitLog(std::move(result));
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(), AddressInfo());
     }
 
     bus.getCPU().cacheResponseQueue[request.requestID] = std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
@@ -895,7 +895,7 @@ void CacheLevel::writeCrossLines(const AddressInfo& addressInfo1, const AddressI
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_WRITE;
         result.errorInfo.error = ErrorType::NONE;
-        EventLog::getInstance().submitLog(std::move(result), std::pair<LineData, LineData>(line1->data, line2->data));
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), &(line1->data), &(line2->data), addressInfo1, addressInfo2);
 
         if(writePolicy->writeThroughOnHit()) // If the write policy is set to write-through
         {
@@ -916,8 +916,7 @@ void CacheLevel::writeCrossLines(const AddressInfo& addressInfo1, const AddressI
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_WRITE;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-        EventLog::getInstance().submitLog(std::move(result));
-      
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(), AddressInfo());
     }
 
 
@@ -949,7 +948,7 @@ void CacheLevel::onFill(const AddressInfo& addressInfo, [[maybe_unused]] CacheRe
         resultEviction.errorInfo.source = getComponentTypeFromCacheLevelType(type);
         resultEviction.errorInfo.event = EventType::CACHE_EVICT;
         resultEviction.errorInfo.error = ErrorType::NONE;
-        EventLog::getInstance().submitLog(std::move(resultEviction), victim.data);
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(resultEviction), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo());
         onEviction(controller.decodeAddress(victimAddress),victim);
     }
 
@@ -963,7 +962,7 @@ void CacheLevel::onFill(const AddressInfo& addressInfo, [[maybe_unused]] CacheRe
     resultFill.errorInfo.source = getComponentTypeFromCacheLevelType(type);
     resultFill.errorInfo.event = EventType::CACHE_FILL;
     resultFill.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().submitLog(std::move(resultFill));
+    EventLog::getInstance().pushCacheDataLogEntry(std::move(resultFill), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(), AddressInfo());
 
     // The actual filling of the cache line with data from the lower level or memory will be handled in the onHit or onMiss functions based on whether the line was found or not, and the replacement policy will be updated accordingly to reflect the most recently used line
 }

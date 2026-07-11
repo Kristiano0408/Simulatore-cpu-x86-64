@@ -94,42 +94,56 @@ class QueueCacheFriendly
 {
     private:
         std::vector<T> data;
-        std::vector<uint8_t> indexes; // This will hold the indexes of the elements in the order(LIFO)
-        std::vector<uint8_t> positionOfIndexes; // This will hold the positions of the indexes in the order they were added to the queue.
+        std::vector<uint32_t> indexes; // This will hold the indexes of the elements in the order(LIFO)
+        std::vector<uint32_t> positionOfIndexes; // This will hold the positions of the indexes in the order they were added to the queue.
 
     //indexes[i] will give you the index of the element in data, and positionOfIndexes[indexes[i]] will give you the position of that index in the queue.
 
     public:
-        QueueCacheFriendly(){
-            data.reserve(256); // Reserve space for 256 elements
-            indexes.reserve(256); // Reserve space for 256 indexes
-            positionOfIndexes.reserve(256); // Reserve space for 256 positions of indexes
+        QueueCacheFriendly(){}
+
+        void reserve(size_t size)
+        {
+            data.reserve(size); // Reserve space for 'size' elements to avoid frequent reallocations
+            indexes.reserve(size); // Reserve space for 'size' indexes
+            positionOfIndexes.reserve(size); // Reserve space for 'size' positions of indexes
         }
 
-       
+        size_t size() const
+        {
+            return indexes.size(); // Return the number of elements in the queue
+        }
+        
+        void push(T&& value)
+        {
+            indexes.push_back(static_cast<uint32_t>(data.size()));
+            positionOfIndexes.push_back(static_cast<uint32_t>(indexes.size() - 1)); // Store the position of the index
+            data.push_back(std::move(value));
+        }
+
         void push(const T& value)
         {
-            indexes.push_back(static_cast<uint8_t>(data.size()));
-            positionOfIndexes.push_back(static_cast<uint8_t>(indexes.size() - 1)); // Store the position of the index
+            indexes.push_back(static_cast<uint32_t>(data.size()));
+            positionOfIndexes.push_back(static_cast<uint32_t>(indexes.size() - 1)); // Store the position of the index
             data.push_back(value);
         }
 
-         T pop()   // rimuove l'elemento in testa logica (indexes.front())
+        T pop()   // rimuove l'elemento in testa logica (indexes.front())
         {
-            uint8_t physIdx = indexes.front();      // slot fisico dell'elemento da rimuovere
+            uint32_t physIdx = indexes.front();      // slot fisico dell'elemento da rimuovere
             T value = std::move(data[physIdx]);      // estratto SUBITO, per valore: sicuro
 
-            uint8_t lastPhys = static_cast<uint8_t>(data.size() - 1);   // vero ultimo slot fisico
+            uint32_t lastPhys = static_cast<uint32_t>(data.size() - 1);   // vero ultimo slot fisico
             if (physIdx != lastPhys)
             {
                 data[physIdx] = std::move(data[lastPhys]);              // rilocazione fisica corretta
-                uint8_t movedLogicalPos = positionOfIndexes[lastPhys];
+                uint32_t movedLogicalPos = positionOfIndexes[lastPhys];
                 indexes[movedLogicalPos] = physIdx;
                 positionOfIndexes[physIdx] = movedLogicalPos;
             }
             data.pop_back();
 
-            uint8_t lastLogical = static_cast<uint8_t>(indexes.size() - 1);
+            uint32_t lastLogical = static_cast<uint32_t>(indexes.size() - 1);
             indexes[0] = indexes[lastLogical];       // rimuovi la posizione logica 0 (swap-and-pop sull'ORDINE)
             positionOfIndexes[indexes[0]] = 0;
             indexes.pop_back();

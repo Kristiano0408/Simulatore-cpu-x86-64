@@ -86,7 +86,7 @@ void Memory::push( uint64_t value)
         result.errorInfo.source = ComponentType::RAM;
         result.errorInfo.event = EventType::ERROR;
         result.errorInfo.error = ErrorType::STACK_OVERFLOW;
-        EventLog::getInstance().submitLog(std::move(result));
+        EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), RSP);
 
         return;
     }
@@ -101,7 +101,7 @@ void Memory::push( uint64_t value)
     result.errorInfo.source = ComponentType::RAM;
     result.errorInfo.event = EventType::RAM_ACCESS;
     result.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().submitLog(std::move(result));
+    EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), &lineData, RSP);
 
 };
 
@@ -121,7 +121,7 @@ uint64_t Memory::pop()
         result.errorInfo.source = ComponentType::RAM;
         result.errorInfo.event = EventType::ERROR;
         result.errorInfo.error = ErrorType::STACK_OVERFLOW;
-        EventLog::getInstance().submitLog(std::move(result));
+        EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), RSP);
         return value;
     }
 
@@ -135,7 +135,7 @@ uint64_t Memory::pop()
     result.errorInfo.source = ComponentType::RAM;
     result.errorInfo.event = EventType::RAM_ACCESS;
     result.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().submitLog(std::move(result));
+    EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), &readResult, RSP);
    
     return value;
    
@@ -154,7 +154,7 @@ LineData Memory::read(uint64_t addressLine)
         result.errorInfo.source = ComponentType::RAM;
         result.errorInfo.event = EventType::ERROR;
         result.errorInfo.error = ErrorType::INVALID_ADDRESS;
-        EventLog::getInstance().submitLog(std::move(result));
+        EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), addressLine);
         return lineData;
         
     }
@@ -164,7 +164,7 @@ LineData Memory::read(uint64_t addressLine)
     result.errorInfo.source = ComponentType::RAM;
     result.errorInfo.event = EventType::RAM_ACCESS;
     result.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().submitLog(std::move(result), lineData);
+    EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), &lineData, addressLine);
     return lineData;
 }
 
@@ -177,7 +177,7 @@ void Memory::write(uint64_t addressLine, LineData line)
         result.errorInfo.source = ComponentType::RAM;
         result.errorInfo.event = EventType::ERROR;
         result.errorInfo.error = ErrorType::INVALID_ADDRESS;
-        EventLog::getInstance().submitLog(std::move(result));
+        EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), addressLine);
         return;
     }
 
@@ -187,6 +187,6 @@ void Memory::write(uint64_t addressLine, LineData line)
     result.errorInfo.source = ComponentType::RAM;
     result.errorInfo.event = EventType::RAM_ACCESS;
     result.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().submitLog(std::move(result), line);
+    EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), &line, addressLine);
   
 }

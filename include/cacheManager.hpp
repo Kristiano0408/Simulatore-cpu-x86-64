@@ -20,85 +20,9 @@ class Bus;
 
 
 
-//basic structure for the cache line
-//it contains the data, the tag, the valid bit and the dirty bit
-struct CacheLine // in caso separare metadati da dati per cache locability
-{
-    alignas(CACHE_LINE_SIZE) LineData data;  // Data stored in the cache line
-
-    uint64_t tag;
-    uint64_t lastAccessTime; // use it as a counter for replacement policy, syncronized with clock when access
-
-    bool valid;
-    bool dirty; // Indicates if the line has been modified
-   
-
-    CacheLine() : data{}, tag{}, lastAccessTime{}, valid(false), dirty(false) {}
 
 
-};
 
-
-/// Cache set structure
-/// Contains multiple cache lines and the set index
-struct CacheSet
-{
-    std::vector<CacheLine> lines; // Lines in the cache set
-    uint64_t setIndex;
-};
-
-
-struct PendingRequest
-{   
-    CacheLine line= CacheLine{}; //copy of the line 
-    CacheRequest request;
-    uint16_t remainingLatency; // Remaining latency in ticks
-    RequestState state = RequestState::IDLE;
-    
-
-    PendingRequest(CacheRequest&& req, uint16_t latency)
-        : request(std::move(req)), remainingLatency(latency) {}
-
-    PendingRequest(CacheRequest&& req, uint16_t latency, CacheLine res)
-        : line(std::move(res)), request(std::move(req)), remainingLatency(latency)  {}
-    PendingRequest(CacheRequest&& req, uint16_t latency, RequestState st)
-        : request(std::move(req)), remainingLatency(latency), state(st) {}
-    PendingRequest(CacheRequest&& req, CacheLine res)
-        : line(std::move(res)), request(std::move(req)) {}
-    PendingRequest() = default;
-};
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-struct AddressInfo
-{
-    uint64_t address;
-    uint64_t setIndex;
-    uint64_t tag;
-    uint64_t offset;
-
-    AddressInfo(uint64_t addr, uint64_t setIdx, uint64_t tg, uint64_t off)
-        : address(addr), setIndex(setIdx), tag(tg), offset(off) {}
-};
-
-struct CacheEventPayload
-{
-    AddressInfo addressInfo1;
-    AddressInfo addressInfo2;
-    CacheRequest& request;
-    CacheLine* line; // Pointer to the cache line involved in the event, if applicable
-
-    CacheEventPayload(const AddressInfo& addrInfo1, const AddressInfo& addrInfo2, CacheRequest& req) : addressInfo1(addrInfo1), addressInfo2(addrInfo2), request(req) {}
-    CacheEventPayload(const AddressInfo& addrInfo, CacheRequest& req) : addressInfo1(addrInfo), addressInfo2(0, 0, 0, 0), request(req), line(nullptr) {}
-    CacheEventPayload(const AddressInfo& addrInfo, CacheRequest& req, CacheLine* cacheLine) : addressInfo1(addrInfo), addressInfo2(0, 0, 0, 0), request(req), line(cacheLine) {}
-};
-
-struct CacheLookupPayload
-{
-    AddressInfo addressInfo;
-    TypeofData dataType;
-
-    CacheLookupPayload(const AddressInfo& addrInfo, TypeofData dt) : addressInfo(addrInfo), dataType(dt) {}
-};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

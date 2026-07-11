@@ -43,6 +43,8 @@ struct LogStorage {
 
     LogStorage();
 
+    
+
 };
 
 
@@ -53,9 +55,23 @@ class EventLog
         void bindTicks(uint64_t* ticks); // Bind the clock ticks reference to the EventLog
         
         bool isLogEmpty() const; // Check if the log is empty
-        
-        
 
+        void pushCacheDataLogEntry(Result&& result, LineData* line1, LineData* line2, AddressInfo addressInfo1, AddressInfo addressInfo2);
+        void pushMemoryDataLogEntry(Result&& result, LineData* lineData, uint64_t addressLine);
+        void pushOperandDataLogEntry(Result&& result, uint64_t operandValue);
+        void pushGeneralLogEntry(Result&& result);
+        
+        size_t getCacheDataLogSize() const { return logs.cacheDataLogs.size(); }
+        size_t getMemoryDataLogSize() const { return logs.memoryDataLogs.size(); }
+        size_t getOperandDataLogSize() const { return logs.operandDataLogs.size(); }
+        size_t getGeneralLogSize() const { return logs.generalLogs.size(); }
+
+
+        CacheDataLogEntry getCacheDataLogEntry() { return logs.cacheDataLogs.pop(); }
+        MemoryDataLogEntry getMemoryDataLogEntry() { return logs.memoryDataLogs.pop(); }
+        OperandDataLogEntry getOperandDataLogEntry() { return logs.operandDataLogs.pop(); }
+        LogEntry getGeneralLogEntry() { return logs.generalLogs.pop(); }
+        
     private:
         EventLog() = default;
         EventLog(const EventLog&) = delete;

@@ -2,62 +2,17 @@
 #include "cacheManager.hpp"
 #include <vector>
 
-LogStorage::LogStorage() : logEntries(), positionalLogEntries(), logData() {
-    logData.reserve(100); // Reserve space for 100 log data entries to avoid frequent reallocations
-    logEntries.reserve(100); // Reserve space for 100 log entries to avoid frequent reallocations
-    positionalLogEntries.reserve(100); // Reserve space for 100 positional log entries to avoid frequent reallocations
-}
-
-
-
-
-void LogStorage::pushLogEntry(Result&& result, std::optional<std::any>&& data, uint64_t timestamp) 
+LogStorage::LogStorage() : cacheDataLogs(), memoryDataLogs(), operandDataLogs(), generalLogs() 
 {
-    LogEntry entry{std::move(result), timestamp};
-    if (data.has_value()) 
-        logData.push_back(std::move(data.value()));
-    else 
-        logData.push_back(std::any{}); // Store an empty std::any if no data is provided
-
-    logEntries.push_back(std::move(entry));
-    positionalLogEntries.push_back(logEntries.size() - 1); // Store the position of the new log entry
+    cacheDataLogs.reserve(256); // Reserve space for 256 cache data log entries
+    memoryDataLogs.reserve(256); // Reserve space for 256 memory data log entries
+    operandDataLogs.reserve(256); // Reserve space for 256 operand data log entries
+    generalLogs.reserve(256); // Reserve space for 256 general log entries
 }
 
-bool LogStorage::isLogEmpty() const 
-{
-    return logEntries.empty();
-}
 
-size_t LogStorage::getLogSize() const 
-{
-    return logEntries.size();
-}
 
-Result LogStorage::getLogEntry() 
-{
 
-    Result result;
-    size_t lastIndex = positionalLogEntries.back(); // Get the index of the last log entry
-    size_t indexEntryPop = positionalLogEntries.front(); // Get the index of the first log entry
-    std::swap(logEntries[lastIndex], logEntries[indexEntryPop]);
-    std::swap(logData[lastIndex], logData[indexEntryPop]);
-
-    result = std::move(logEntries.back().result);
-    positionalLogEntries[0] = lastIndex; // Update the positional log entries to reflect the swap
-    logEntries.pop_back();
-    positionalLogEntries.pop_back(); // Remove the last index from the positional log entries
-    
-    return result;
-
-}
-
-std::any LogStorage::getLogData() 
-{
-    std::any data;
-    data = std::move(logData.back()); //we dont need to do the swap becasue teh data is always fetched after the log entry, so the swap is already done in getLogEntry()
-    logData.pop_back();
-    return data;
-}
 
 
 EventLog& EventLog::getInstance() 
@@ -71,33 +26,47 @@ void EventLog::bindTicks(uint64_t* ticks)
     clockTicks = ticks;
 }
 
-void EventLog::submitLog(Result&& result, std::any&& data) 
-{
-    pushLogEntry(std::move(result), std::make_optional(std::move(data)));
-}
-
-void EventLog::submitLog(Result&& result) 
-{
-    pushLogEntry(std::move(result));
-}
-
-Result EventLog::getLogEntry()
-{
-    return logs.getLogEntry();
-}
-
-std::any EventLog::getLogData()
-{
-    return logs.getLogData();
-}
-
-void EventLog::pushLogEntry(Result&& result, std::optional<std::any>&& data) 
-{
-    uint64_t timestamp = clockTicks ? *clockTicks : 0; // Use the bound clock ticks if available, otherwise default to 0
-    logs.pushLogEntry(std::move(result), std::move(data), timestamp);
-}
-
 bool EventLog::isLogEmpty() const 
 {
-    return logs.isLogEmpty();
+    return logs.cacheDataLogs.size() == 0 && logs.memoryDataLogs.size() == 0 &&
+           logs.operandDataLogs.size() == 0 && logs.generalLogs.size() == 0;
+}
+
+void EventLog::pushCacheDataLogEntry(Result&& result, LineData* line1, LineData* line2, AddressInfo addressInfo1, AddressInfo addressInfo2) 
+{
+    CacheDataLogEntry entry{};
+    entry.logEntry.result = std::move(result);
+    entry.logEntry.timestamp = (clockTicks != nullptr) ? *clockTicks : 0; // Use the current clock ticks if available, otherwise default to 0
+    entry.line1 = line1;
+    entry.line2 = line2;
+    entry.addressInfo1 = addressInfo1;
+    entry.addressInfo2 = addressInfo2;
+    logs.cacheDataLogs.push(std::move(entry));
+}
+
+void EventLog::pushMemoryDataLogEntry(Result&& result, LineData* lineData, uint64_t addressLine) 
+{
+    MemoryDataLogEntry entry{};
+    entry.logEntry.result = std::move(result);
+    entry.logEntry.timestamp = (clockTicks != nullptr) ? *clockTicks : 0; // Use the current clock ticks if available, otherwise default to 0
+    entry.lineData = lineData;
+    entry.addressLine = addressLine;
+    logs.memoryDataLogs.push(std::move(entry));
+}
+
+void EventLog::pushOperandDataLogEntry(Result&& result, uint64_t operandValue) 
+{
+    OperandDataLogEntry entry{};
+    entry.logEntry.result = std::move(result);
+    entry.logEntry.timestamp = (clockTicks != nullptr) ? *clockTicks : 0; // Use the current clock ticks if available, otherwise default to 0
+    entry.operandValue = operandValue;
+    logs.operandDataLogs.push(std::move(entry));
+}
+
+void EventLog::pushGeneralLogEntry(Result&& result) 
+{
+    LogEntry entry{};
+    entry.result = std::move(result);
+    entry.timestamp = (clockTicks != nullptr) ? *clockTicks : 0; // Use the current clock ticks if available, otherwise default to 0
+    logs.generalLogs.push(std::move(entry));
 }

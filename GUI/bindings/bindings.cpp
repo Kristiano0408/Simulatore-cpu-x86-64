@@ -25,6 +25,9 @@ void bind_instruction(py::module &m);
 void bind_operands(py::module &m);
 void bind_helpers(py::module &m);
 void bind_result_info(py::module &m);
+void bind_eventLog(py::module &m);
+
+
 
 PYBIND11_MODULE(simulator, m) {
     m.doc() = "Bindings PyBind11 per il simulatore x86-64";
@@ -39,6 +42,7 @@ PYBIND11_MODULE(simulator, m) {
     bind_pipeline(m);
     bind_instruction(m);
     bind_operands(m);
+    bind_eventLog(m);
     
 
     // ------------------------------
@@ -89,11 +93,5 @@ PYBIND11_MODULE(simulator, m) {
         .def("getMemory", &Bus::getMemory, py::return_value_policy::reference)
         .def("getClock", &Bus::getClock, py::return_value_policy::reference);
 
-    py::class_<EventLog>(m, "EventLog")
-        .def_static("getInstance", &EventLog::getInstance, py::return_value_policy::reference)
-        .def("getLogEntry", &EventLog::getLogEntry)
-        .def("getLogData", &EventLog::getLogData)
-        .def("isLogEmpty", &EventLog::isLogEmpty); // Bind the new method
-
-   
+    
 }

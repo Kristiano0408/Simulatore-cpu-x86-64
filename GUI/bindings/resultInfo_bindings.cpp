@@ -15,8 +15,8 @@ namespace py = pybind11;
 // Template bind_result e specializzazioni
 // -------------------------------------------------------------------------
 
-void bind_result(py::module &m, const char* name) {
-    py::class_<Result>(m, name)
+void bind_result(py::module &m) {
+    py::class_<Result>(m, "Result")
         .def(py::init<>())
         .def_readwrite("success", &Result::success)
         .def_readwrite("errorInfo", &Result::errorInfo);
@@ -69,6 +69,6 @@ void bind_result_info(py::module &m) {
         .def_readwrite("event", &Error_Event_Info::event)
         .def_readwrite("error", &Error_Event_Info::error);
 
-    bind_result(m, "Result");
+    bind_result(m);
     // fine
 }

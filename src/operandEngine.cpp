@@ -66,7 +66,7 @@ OperandResult OperandEngine::setRegisterValue(Operand* operand, uint64_t value)
     result.errorInfo.event = EventType::OPERAND_SET_VALUE;
     result.errorInfo.error = ErrorType::NONE;
 
-    EventLog::getInstance().submitLog(std::move(result), value);
+    EventLog::getInstance().pushOperandDataLogEntry(std::move(result), valueMasked);
 
     return {OperandStatus::OK, 0};
     
@@ -90,7 +90,7 @@ OperandResult OperandEngine::getRegisterValue(Operand* operand)
     result.errorInfo.source = ComponentType::OPERAND;
     result.errorInfo.event = EventType::OPERAND_GET_VALUE;
     result.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().submitLog(std::move(result), value);
+    EventLog::getInstance().pushOperandDataLogEntry(std::move(result), value);
 
 
     return {OperandStatus::OK, value};
@@ -109,7 +109,7 @@ OperandResult OperandEngine::setImmediateValue(Operand* operand, uint64_t value)
 
     result.success = true;
     result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_SET_VALUE, ErrorType::NONE};
-    EventLog::getInstance().submitLog(std::move(result), value);
+    EventLog::getInstance().pushOperandDataLogEntry(std::move(result), value);
 
     return {OperandStatus::OK, 0}; 
 }
@@ -122,7 +122,7 @@ OperandResult OperandEngine::getImmediateValue(Operand* operand)
     Result result;
     result.success = true;
     result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_GET_VALUE, ErrorType::NONE };
-    EventLog::getInstance().submitLog(std::move(result), immOperand->getValue());
+    EventLog::getInstance().pushOperandDataLogEntry(std::move(result), immOperand->getValue());
     return {OperandStatus::OK, immOperand->getValue()};
 }
 
@@ -138,7 +138,7 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
     {
         result.success = false;
         result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE};
-        EventLog::getInstance().submitLog(std::move(result));
+        EventLog::getInstance().pushOperandDataLogEntry(std::move(result), uint64_t{0});
         return {OperandStatus::ERROR, 0};
     }
 
@@ -175,7 +175,7 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
 
         result.success = false;
         result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY};
-        EventLog::getInstance().submitLog(std::move(result));
+        EventLog::getInstance().pushOperandDataLogEntry(std::move(result), uint64_t{0});
         return {OperandStatus::WAITING_MEMORY, 0};
     }
     else
@@ -202,7 +202,7 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
 
             result.success = true;
             result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_GET_VALUE, ErrorType::NONE};
-            EventLog::getInstance().submitLog(std::move(result));
+            EventLog::getInstance().pushOperandDataLogEntry(std::move(result), value);
 
             return {OperandStatus::OK, value};
         }
@@ -228,7 +228,7 @@ OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* o
     {
         result.success = false;
         result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE};
-        EventLog::getInstance().submitLog(std::move(result), value);
+        EventLog::getInstance().pushOperandDataLogEntry(std::move(result), value);
         return {OperandStatus::ERROR, 0};
     }
 
@@ -265,7 +265,7 @@ OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* o
         cacheManager.enqueRequest(CacheRequest(RequestType::WRITE, dataTypeSize, memOperand->getAddress(), out, false, core.InstructionId, callbackContext, callback));
         result.success = false;
         result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY};
-        EventLog::getInstance().submitLog(std::move(result));
+        EventLog::getInstance().pushOperandDataLogEntry(std::move(result), uint64_t{0});
         return {OperandStatus::WAITING_MEMORY, 0};
     }
     else
@@ -293,7 +293,7 @@ OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* o
 
             result.success = true;
             result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_SET_VALUE, ErrorType::NONE};
-            EventLog::getInstance().submitLog(std::move(result), value);
+            EventLog::getInstance().pushOperandDataLogEntry(std::move(result), value);
 
 
             return {OperandStatus::OK, 0};
@@ -304,7 +304,7 @@ OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* o
             DEBUG_LOG(debugLog("MemOperand: Write request not completed for address " + to_string_hex(memOperand->getAddress()) + "."));
             result.success = false;
             result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY};
-            EventLog::getInstance().submitLog(std::move(result), value);
+            EventLog::getInstance().pushOperandDataLogEntry(std::move(result), value);
             return {OperandStatus::WAITING_MEMORY, 0};
         }
 
