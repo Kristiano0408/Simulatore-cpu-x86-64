@@ -1,9 +1,10 @@
 #include "registerFile.hpp"
 #include <string>
 #include <iostream>
-
+#include "helpers.hpp"
 RegisterFile::RegisterFile()
 {
+    DEBUG_LOG(debugLog("Register File created"));
     // Initialize all registers to 0
    for (auto& reg : GPregisters)
    {

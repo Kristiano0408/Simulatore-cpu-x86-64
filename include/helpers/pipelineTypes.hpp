@@ -1,7 +1,8 @@
 #ifndef PIPELINE_TYPES_HPP
 #define PIPELINE_TYPES_HPP
 
-enum class StageStatus {
+enum class StageStatus : uint8_t 
+{
     READY,
     MEMORY_DONE,
     STALLED,
@@ -18,7 +19,8 @@ enum class StageStatus {
     
 };
 
-enum class StageType {
+enum class StageType : uint8_t 
+{
     FETCH,
     DECODE,
     OPERAND_FETCH,

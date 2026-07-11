@@ -24,7 +24,7 @@ class Stage
 
         inline bool isStageReady() const {return status == StageStatus::READY; }
 
-        bool isInstructionEmpty(const Instruction* instr) const;
+        bool isInstructionEmpty(Instruction* instr) const;
 
         inline StageStatus getStatus() const { return status; }
 
@@ -53,11 +53,11 @@ class FetchStage : public Stage {
 
         ~FetchStage() {};
 
-        void startFetch(CPU& cpu, uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler); //fetch the instruction from memory
+        void startFetch(CPU& cpu, uint64_t instructionId, uint64_t& index, PipelineEventHandler& eventHandler); //fetch the instruction from memory
 
-        void updateFetch(CPU& cpu, uint64_t instructionId, EventHandler<EventHandlerPipelineEventType>& eventHandler); //update the fetch stage (take the instruction fetched and prepare for decode)
+        void updateFetch(CPU& cpu, uint64_t instructionId, PipelineEventHandler& eventHandler); //update the fetch stage (take the instruction fetched and prepare for decode)
 
-        InstructionInfo fetchInstruction(CPU& cpu, uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler); //fetch the instruction from memory
+        InstructionInfo fetchInstruction(CPU& cpu, uint64_t instructionId, uint64_t& index, PipelineEventHandler& eventHandler); //fetch the instruction from memory
 
         inline InstructionInfo getCurrentInstructionInfo() const { return currentInstructionInfo; }
 
@@ -84,7 +84,7 @@ class  DecodeStage : public Stage {
         
         inline InstructionInfo getInstructionToDecode() const { return instruction_info_to_decode; }
 
-        void decodeInstruction(CPU& cpu, EventHandler<EventHandlerPipelineEventType>& eventHandler); //decode the fetched instruction
+        void decodeInstruction(CPU& cpu, PipelineEventHandler& eventHandler); //decode the fetched instruction
 
         std::unique_ptr<Instruction> getDecodedInstruction();
 
@@ -109,7 +109,7 @@ class OperandFetchStage : public Stage {
 
         ~OperandFetchStage() {};
 
-        void fetchOperands(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //fetch operands for the decoded instruction
+        void fetchOperands(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //fetch operands for the decoded instruction
 
         std::unique_ptr<Instruction> getInstructionWithFetchedOperands();
 
@@ -142,8 +142,8 @@ class ExecuteStage : public Stage {
         inline Instruction& peekInstructionRef() const {return *instruction_to_execute.get();}
         inline Instruction* peekInstruction() const {return instruction_to_execute.get();}
 
-        void startExecution(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //start execution of the instruction
-        void updateExecution(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //update execution (for multi-cycle instructions)
+        void startExecution(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //start execution of the instruction
+        void updateExecution(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //update execution (for multi-cycle instructions)
         void executeInstruction(ExecuteEngine& executeEngine); //execute the decoded instruction
 
     private:
@@ -170,8 +170,8 @@ class MemoryStage : public Stage {
         inline Instruction* peekInstruction() const {return instruction_to_memory.get();}
         inline Instruction& peekInstructionRef() const {return *instruction_to_memory.get();}
 
-        void requestMemoryAccess(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //start memory access for load/store instructions
-        void accessMemory(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //perform memory operations if needed
+        void requestMemoryAccess(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //start memory access for load/store instructions
+        void accessMemory(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //perform memory operations if needed
 
     private:
         //any additional members specific to the memory stage
@@ -198,7 +198,7 @@ class WriteBackStage : public Stage {
         inline Instruction* peekInstruction() const {return instruction_to_writeback.get();}
         inline Instruction& peekInstructionRef() const {return *instruction_to_writeback.get();}
 
-        void writeBack(ExecuteEngine& executeEngine, EventHandler<EventHandlerPipelineEventType>& eventHandler); //final stage: write results to registers/memory
+        void writeBack(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //final stage: write results to registers/memory
 
     private:
         //any additional members specific to the write-back stage
@@ -227,7 +227,7 @@ struct DecodeOperandFetchBuffer {
     std::unique_ptr<Instruction> decodedInstruction;
     Instruction* peekInstruction() const {return decodedInstruction.get();}
 
-    DecodeOperandFetchBuffer() : valid(false), stalled(false), flushed(false), decodedInstruction(std::make_unique<EmptyInstruction>()) {}
+    DecodeOperandFetchBuffer() : valid(false), stalled(false), flushed(false), decodedInstruction(std::make_unique<Instruction>()) {}
 
 };
 
@@ -239,7 +239,7 @@ struct OperandFetchExecuteBuffer {
     std::unique_ptr<Instruction> instructionWithOperands;
     Instruction* peekInstruction() const {return instructionWithOperands.get();}
 
-    OperandFetchExecuteBuffer() : valid(false), stalled(false), flushed(false), instructionWithOperands(std::make_unique<EmptyInstruction>()) {}
+    OperandFetchExecuteBuffer() : valid(false), stalled(false), flushed(false), instructionWithOperands(std::make_unique<Instruction>()) {}
 
 };
 
@@ -251,7 +251,7 @@ struct ExecuteMemoryBuffer {
     std::unique_ptr<Instruction> executedInstruction;
     Instruction* peekInstruction() const {return executedInstruction.get();}
 
-    ExecuteMemoryBuffer() : valid(false), stalled(false), flushed(false), executedInstruction(std::make_unique<EmptyInstruction>()) {}
+    ExecuteMemoryBuffer() : valid(false), stalled(false), flushed(false), executedInstruction(std::make_unique<Instruction>()) {}
 
 };
 
@@ -263,7 +263,7 @@ struct MemoryWriteBackBuffer {
     std::unique_ptr<Instruction> memoryAccessedInstruction;
     Instruction* peekInstruction() const {return memoryAccessedInstruction.get();}
 
-    MemoryWriteBackBuffer() : valid(false), stalled(false), flushed(false), memoryAccessedInstruction(std::make_unique<EmptyInstruction>()) {}
+    MemoryWriteBackBuffer() : valid(false), stalled(false), flushed(false), memoryAccessedInstruction(std::make_unique<Instruction>()) {}
 
 };
 
@@ -275,7 +275,7 @@ class Pipeline : public Device {
 
     public:
 
-        Pipeline(CPU& cpu, EventHandler<EventHandlerPipelineEventType>* eventHandler);
+        Pipeline(CPU& cpu, PipelineEventHandler* eventHandler);
 
         ~Pipeline() {};
 
@@ -308,7 +308,7 @@ class Pipeline : public Device {
         inline ExecuteMemoryBuffer& getExecuteMemoryBuffer() { return executeMemoryBuffer; }
         inline MemoryWriteBackBuffer& getMemoryWriteBackBuffer() { return memoryWriteBackBuffer; }
 
-        inline void setEventHandler(EventHandler<EventHandlerPipelineEventType>& handler) { eventHandler = &handler; }
+        inline void setEventHandler(PipelineEventHandler* handler) { eventHandler = handler; }
         
 
     private:
@@ -332,7 +332,7 @@ class Pipeline : public Device {
         };
 
         //event handler for pipeline events with callbacks from pipeline controller
-        EventHandler<EventHandlerPipelineEventType>* eventHandler;
+        PipelineEventHandler* eventHandler;
 
         //buffer between stages 
         FetchDecodeBuffer fetchDecodeBuffer;

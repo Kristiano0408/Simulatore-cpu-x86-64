@@ -23,7 +23,7 @@ class Decoder {
         //decode the instruction
         InstructionInfo LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4], int numPrefixes, bool rex, uint16_t rexprefix);
         void fixTotalLengthPrefix(InstructionInfo& info);
-        Instruction* decodeInstruction(InstructionInfo instruction);
+        std::unique_ptr<Instruction> decodeInstruction(InstructionInfo instruction);
          //decode the  r/m operand
         static r_m decodeRM(uint8_t r_m);
         //decode the SIB operand
@@ -40,10 +40,6 @@ class Decoder {
 
         
     private:
-
-        //decode the instruction
-        Instruction* ConstructorCreation(TypeofInstruction type_instruction);
-    
 
         //decode immediate value
         static void decodeImmediateValue(InstructionInfo instructionInfo, Instruction* instruction, int position);

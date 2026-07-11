@@ -8,25 +8,40 @@
 #include <optional>
 #include <any>
 
+struct AddressInfo;
+
 struct LogEntry {
     Result result; // Result of the event or error
     uint64_t timestamp; // Timestamp of the event or error
 };
 
+struct CacheDataLogEntry {
+    LogEntry logEntry; // Log entry containing the result and timestamp
+    LineData* line1; // Data of the first cache line
+    LineData* line2; // Data of the second cache line (if applicable)
+    AddressInfo addressInfo1; // Address information of the first cache line
+    AddressInfo addressInfo2; // Address information of the second cache line (if applicable)
+};
+
+struct MemoryDataLogEntry {
+    LogEntry logEntry; // Log entry containing the result and timestamp
+    LineData* lineData; // Data of the memory line
+    uint64_t addressLine; // Address of the memory line
+};
+
+struct OperandDataLogEntry {
+    LogEntry logEntry; // Log entry containing the result and timestamp
+    uint64_t operandValue; // Value of the operand
+};
+
+
 struct LogStorage {
-    std::vector<LogEntry> logEntries; // Store the log entries
-    std::vector<size_t> positionalLogEntries; // Store the positions of log entries for quick access
-    std::vector<std::any> logData; // Store any additional data related to the event
+    QueueCacheFriendly<CacheDataLogEntry> cacheDataLogs; // Queue to store cache data log entries
+    QueueCacheFriendly<MemoryDataLogEntry> memoryDataLogs; // Queue to store memory data log entries
+    QueueCacheFriendly<OperandDataLogEntry> operandDataLogs; // Queue to store operand data log entries
+    QueueCacheFriendly<LogEntry> generalLogs; // Queue to store general log entries
 
     LogStorage();
-
-    void pushLogEntry(Result&& result, std::optional<std::any>&& data = std::nullopt, uint64_t timestamp = 0);
-    Result getLogEntry();
-    std::any getLogData();
-
-    bool isLogEmpty() const; // Check if the log is empty
-    size_t getLogSize() const; // Get the number of log entries
-
 
 };
 
@@ -36,12 +51,7 @@ class EventLog
     public:
         static EventLog& getInstance();
         void bindTicks(uint64_t* ticks); // Bind the clock ticks reference to the EventLog
-        void submitLog(Result&& result, std::any&& data);
-        void submitLog(Result&& result);
-
-        Result getLogEntry();
-        std::any getLogData();
-
+        
         bool isLogEmpty() const; // Check if the log is empty
         
         
@@ -50,8 +60,6 @@ class EventLog
         EventLog() = default;
         EventLog(const EventLog&) = delete;
         EventLog& operator=(const EventLog&) = delete;
-
-        void pushLogEntry(Result&& result, std::optional<std::any>&& data = std::nullopt);
 
         LogStorage logs; // Store the log entries and related data
 

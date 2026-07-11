@@ -5,7 +5,7 @@
 #include "registerFile.hpp"
 
 #include "cacheManager.hpp"
-#include "instruction_wrapper.hpp"
+#include "instruction.hpp"
 
 class CPU;
 class ALU;
@@ -26,12 +26,12 @@ class ExecuteEngine
             : cpu(cpu), registerFile(registerFile), alu(alu), cacheManager(cacheManager), operandEngine(cacheManager, cpu)
         {}
 
-        void fetchOperands(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler);
-        void startExecution(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler);
-        void updateExecution(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler);
-        void requestMemoryAccess(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler);
-        void accessMemory(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler);
-        void writeBackInstruction(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler);
+        void fetchOperands(Instruction* instruction, PipelineEventHandler& eventHandler);
+        void startExecution(Instruction* instruction, PipelineEventHandler& eventHandler);
+        void updateExecution(Instruction* instruction, PipelineEventHandler& eventHandler);
+        void requestMemoryAccess(Instruction* instruction, PipelineEventHandler& eventHandler);
+        void accessMemory(Instruction* instruction, PipelineEventHandler& eventHandler);
+        void writeBackInstruction(Instruction* instruction, PipelineEventHandler& eventHandler);
 
 
 

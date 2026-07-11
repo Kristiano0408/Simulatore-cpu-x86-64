@@ -2,9 +2,10 @@
 #define RESULT_HPP
 
 #include <string>
+#include <cstdint>
 
-
-enum class ComponentType {
+enum class ComponentType : uint8_t
+{
     CACHE,
     CACHE_L1,
     CACHE_L2,
@@ -16,7 +17,8 @@ enum class ComponentType {
     UNKNOWN,
 };
 
-enum class ErrorType {
+enum class ErrorType : uint8_t
+{
     NONE,
     INVALID_ADDRESS,
     INVALID_SIZE,
@@ -28,7 +30,8 @@ enum class ErrorType {
     WAITING_MEMORY
 };
 
-enum class EventType {
+enum class EventType : uint8_t
+{
     NONE,
     CACHE_HIT,
     CACHE_MISS,
@@ -50,7 +53,6 @@ struct Error_Event_Info {
     ComponentType source = ComponentType::UNKNOWN; // Source of the error or event
     EventType event = EventType::NONE;
     ErrorType error = ErrorType::NONE;
-    std::string message =""; // Error message optional for debugging
 };
 
 struct Result 

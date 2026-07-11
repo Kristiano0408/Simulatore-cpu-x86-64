@@ -6,7 +6,7 @@
 
 
 class RegisterFile;
-enum class Register;
+enum class Register : uint8_t;
 
 namespace AddressCalculator
 {

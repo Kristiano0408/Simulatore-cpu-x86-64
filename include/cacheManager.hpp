@@ -22,9 +22,9 @@ class Bus;
 
 //basic structure for the cache line
 //it contains the data, the tag, the valid bit and the dirty bit
-struct alignas(CACHE_LINE_SIZE) CacheLine
+struct CacheLine // in caso separare metadati da dati per cache locability
 {
-    LineData data;  // Data stored in the cache line
+    alignas(CACHE_LINE_SIZE) LineData data;  // Data stored in the cache line
 
     uint64_t tag;
     uint64_t lastAccessTime; // use it as a counter for replacement policy, syncronized with clock when access
@@ -52,19 +52,19 @@ struct PendingRequest
 {   
     CacheLine line= CacheLine{}; //copy of the line 
     CacheRequest request;
-    int remainingLatency; // Remaining latency in ticks
+    uint16_t remainingLatency; // Remaining latency in ticks
     RequestState state = RequestState::IDLE;
     
 
-    PendingRequest(CacheRequest&& req, int latency)
+    PendingRequest(CacheRequest&& req, uint16_t latency)
         : request(std::move(req)), remainingLatency(latency) {}
 
-    PendingRequest(CacheRequest&& req, int latency, CacheLine res)
-        : line(res), request(std::move(req)), remainingLatency(latency)  {}
-    PendingRequest(CacheRequest&& req, int latency, RequestState st)
+    PendingRequest(CacheRequest&& req, uint16_t latency, CacheLine res)
+        : line(std::move(res)), request(std::move(req)), remainingLatency(latency)  {}
+    PendingRequest(CacheRequest&& req, uint16_t latency, RequestState st)
         : request(std::move(req)), remainingLatency(latency), state(st) {}
     PendingRequest(CacheRequest&& req, CacheLine res)
-        : line(res), request(std::move(req)) {}
+        : line(std::move(res)), request(std::move(req)) {}
     PendingRequest() = default;
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +108,7 @@ class ReplacementPolicy
         virtual uint8_t selectLineToReplace(CacheSet& set) = 0; // Pure virtual function to select a line to replace based on the replacement policy
         virtual void updateOnAccess(CacheSet& set, uint8_t lineIndex) = 0; // Pure virtual function to update the replacement policy state on cache access
         virtual void onLineLoaded(CacheSet& set, uint8_t lineIndex) = 0; // Pure virtual function to update the replacement policy state when a line is loaded into the cache
-        virtual void initializeSet(uint8_t setIndex, uint8_t associativity) = 0; // Pure virtual function to initialize the replacement policy state for a cache set
+        virtual void initializeSet(uint8_t associativity) = 0; // Pure virtual function to initialize the replacement policy state for a cache set
         virtual ~ReplacementPolicy() = default; // Virtual destructor for proper cleanup of derived classes
 };
 
@@ -116,7 +116,7 @@ class NULLPolicy : public ReplacementPolicy
 {
     public:
 
-    void initializeSet([[maybe_unused]] uint8_t setIndex, [[maybe_unused]] uint8_t associativity) override {}; // Function to initialize the LRU state for a cache set
+    void initializeSet([[maybe_unused]] uint8_t associativity) override {}; // Function to initialize the LRU state for a cache set
     uint8_t selectLineToReplace([[maybe_unused]] CacheSet& set) override {return 0;}; // Override of the function to select a line to replace based on LRU policy
     void updateOnAccess([[maybe_unused]] CacheSet& set, [[maybe_unused]] uint8_t lineIndex) override {}; // Override of the function to update the LRU state on cache access
     void onLineLoaded([[maybe_unused]] CacheSet& set,[[maybe_unused]] uint8_t lineIndex) override {}; // Override of the function to update the LRU state when a line is loaded into the cache
@@ -124,18 +124,19 @@ class NULLPolicy : public ReplacementPolicy
 
 struct LRUState
 {
-   std::vector<uint8_t> lineIndices; // Vector to maintain the order of line indices based on recency of access (least recently accessed at the front)
-   std::unordered_map<uint8_t, uint8_t> indexMap; // Map to quickly access the position of a line index in the vector for O(1) updates
-   uint8_t validLines = 0; // Counter to keep track of the number of valid lines in the cache set, used for optimization to quickly find free lines without searching through the vector
+    ReplacementPolicyQueueCacheFriendly<uint8_t> queue; // Queue to maintain the order of line indices based on recency of access (least recently accessed at the front)
 };
+
 //LRU replacement policy implementation
 class LRUReplacementPolicy : public ReplacementPolicy
 {
+
     private:
-        std::unordered_map<uint8_t, LRUState> lruMap; // Map to hold the LRU state for each cache set (set index mapped to a vector of line indices ordered by recency of access)
+        std::vector<LRUState> lruStates; // Queue to maintain the order of line indices based on recency of access (least recently accessed at the front)
+        //every lruState is associated with a set, and the queue maintains the order of sets based on recency of access (least recently accessed set at the front)
     public:
-        LRUReplacementPolicy(const uint8_t& numSets, const uint8_t& associativity); // Constructor to initialize the LRU state for all cache sets based on the number of sets and associativity
-        void initializeSet(uint8_t setIndex, uint8_t associativity) override; // Function to initialize the LRU state for a cache set
+        LRUReplacementPolicy(const uint32_t& numSets, const uint8_t& associativity); // Constructor to initialize the LRU state for all cache sets based on the number of sets and associativity
+        void initializeSet(uint8_t associativity) override; // Function to initialize the LRU state for a cache set
         uint8_t selectLineToReplace(CacheSet& set) override; // Override of the function to select a line to replace based on LRU policy
         void updateOnAccess(CacheSet& set, uint8_t lineIndex) override; // Override of the function to update the LRU state on cache access
         void onLineLoaded(CacheSet& set, uint8_t lineIndex) override; // Override of the function to update the LRU state when a line is loaded into the cache
@@ -145,7 +146,6 @@ class LRUReplacementPolicy : public ReplacementPolicy
 struct PLRUTree
 {
     std::vector<bool> bits; // Vector to hold the bits of the PLRU tree, where each bit indicates the direction to take for replacement (0 for left, 1 for right)
-    uint8_t validLines = 0; // Counter to keep track of the number of valid lines in the cache set, used for optimization to quickly find free lines without traversing the tree
     PLRUTree(uint8_t associativity) : bits(associativity - 1, false) {} // Constructor to initialize the PLRU tree based on the associativity of the cache set
     uint8_t selectLineToReplace(); // Function to select a line to replace based on the PLRU tree
     void updateLine(uint8_t lineIndex); // Function to update the PLRU tree on cache access to reflect the most recently used line
@@ -155,10 +155,10 @@ struct PLRUTree
 class PLRUReplacementPolicy : public ReplacementPolicy
 {
     private:
-        std::unordered_map<uint8_t, PLRUTree> plruMap; // Map to hold the PLRU state for each cache set (set index mapped to a vector of bits representing the PLRU tree)
+        std::vector<PLRUTree> plruTrees; // Vector to hold the PLRU trees for each cache set, where each tree maintains the replacement state for its corresponding set
     public:
-        PLRUReplacementPolicy(const uint8_t& numSets, const uint8_t& associativity); // Constructor to initialize the PLRU state for all cache sets based on the number of sets and associativity
-        void initializeSet(uint8_t setIndex, uint8_t associativity) override; // Function to initialize the PLRU state for a cache set
+        PLRUReplacementPolicy(const uint32_t& numSets, const uint8_t& associativity); // Constructor to initialize the PLRU state for all cache sets based on the number of sets and associativity
+        void initializeSet(uint8_t associativity) override; // Function to initialize the PLRU state for a cache set
         uint8_t selectLineToReplace(CacheSet& set) override; // Override of the function to select a line to replace based on PLRU policy
         void updateOnAccess(CacheSet& set, uint8_t lineIndex) override; // Override of the function to update the PLRU state on cache access
         void onLineLoaded(CacheSet& set, uint8_t lineIndex) override; // Override of the function to update the PLRU state when a line is loaded into the cache
@@ -240,13 +240,17 @@ class CacheStorage
 
 class RequestScheduler
 {
+    using CallbackType = void(*)(void*, PendingRequest&);
     private:
         uint8_t latency; // Latency of the cache level in ticks
         uint8_t fillLatency;
         std::vector<PendingRequest> pendingRequests; // Vector to hold pending requests being processed by the cache scheduler
-        std::function<void(PendingRequest&)> cacheControllerCallback; // Callback function to be called when a cache request is ready to be processed by the cache controller
-    public:
-        RequestScheduler(uint8_t latency, uint8_t latencyFill, std::function<void(PendingRequest&)> cacheControllerCallback) : latency(latency), fillLatency(latencyFill), cacheControllerCallback(std::move(cacheControllerCallback)) {} // Constructor to initialize the request scheduler with a callback function for processing cache requests
+
+        CallbackType cacheControllerCallback; // Callback function to be called when a cache request is ready to be processed by the cache controller
+        void* CallbackContext; // Context pointer to be passed to the callback function for additional information or state management
+        
+        public:
+        RequestScheduler(uint8_t latency, uint8_t latencyFill, CallbackType cacheControllerCallback, void* context) : latency(latency), fillLatency(latencyFill), cacheControllerCallback(cacheControllerCallback), CallbackContext(context) {} // Constructor to initialize the request scheduler with a callback function for processing cache requests
         void processRequests(); // Function to be called every clock tick to process pending requests
         void scheduleRequest(CacheRequest&& request); // Function to schedule a cache request
         void schedulePendingRequest(PendingRequest&& pendingRequest); // Function to schedule a pending request
@@ -256,15 +260,17 @@ class RequestScheduler
 class CacheController
 {
     private:
-        EventHandler<EventHandlerCacheEventType>& cacheEventHandler; // Event handler for managing cache events and callbacks
+        CacheEventHandler& cacheEventHandler; // Event handler for managing cache events and callbacks
         uint32_t numSets; // Number of cache sets in the cache level
+
     public:
-        CacheController(EventHandler<EventHandlerCacheEventType>& eventHandler, uint32_t numSets) : cacheEventHandler(eventHandler), numSets(numSets) {} // Constructor to initialize the cache controller with an event handler and number of cache sets
+        CacheController(CacheEventHandler& eventHandler, uint32_t numSets) : cacheEventHandler(eventHandler), numSets(numSets) { DEBUG_LOG(debugLog("Cache Controller created")); } // Constructor to initialize the cache controller with an event handler and number of cache sets
         
         AddressInfo decodeAddress(uint64_t address); // Function to calculate the set index, tag and offset from a memory address
 
         LookUpResult lookupCache(const AddressInfo& addressInfo, TypeofData dataType); // Function to perform cache lookup based on address information and type of data being accessed
         void handleRequest(PendingRequest& request); // Function to handle incoming cache requests and coordinate the cache operations
+        static void CallBackWrapperScheduler(void* context, PendingRequest& request); // Wrapper function to trigger a cache lookup event for logging or debugging purposes
     
 };
 
@@ -274,7 +280,7 @@ class CacheLevel: public Device
 {
     private:
         uint32_t cacheSize;
-        uint8_t associativity;
+        
         uint32_t numSets;
 
         Bus& bus;
@@ -282,10 +288,13 @@ class CacheLevel: public Device
         CacheLevel* nextLevel;
         CacheLevel* parentLevel;
 
+        uint8_t associativity;
         uint8_t latencyCycles;
         uint8_t latencyFill;
         CacheLevelType type = CacheLevelType::NONE;
 
+        CacheEventHandler eventHandler;
+        
         CacheStorage storage;
         CacheController controller;
         RequestScheduler scheduler;
@@ -293,7 +302,13 @@ class CacheLevel: public Device
         std::unique_ptr<ReplacementPolicy> replacementPolicy; // Unique pointer to the replacement policy used by the cache level
         std::unique_ptr<WritePolicy> writePolicy; // Unique pointer to the write policy used by the cache level
 
-        EventHandler<EventHandlerCacheEventType> eventHandler;
+        
+
+        static void onHitWrapper(void* context, CacheEventPayload& payload); // Wrapper function to trigger a cache hit event for logging or debugging purposes
+        static void onMissWrapper(void* context, CacheEventPayload& payload); // Wrapper function to trigger a cache miss event for logging or debugging purposes
+        static void onHitCrossLinesWrapper(void* context, CacheEventPayload& payload); // Wrapper function to trigger a cache hit cross lines event for logging or debugging purposes
+        static void onFillWrapper(void* context, CacheEventPayload& payload);
+        static LookUpResult LookupWrapper(void* context, CacheLookupPayload& payload); // Wrapper function to trigger a cache lookup event for logging or debugging purposes
 
         //void read(const AddressInfo& addressInfo, CacheRequest& request); // Function to read data from the cache based on address information and cache request
         void readSingleLine(const AddressInfo& addressInfo, CacheRequest& request); // Function to read data from a single cache line based on address information and cache request
@@ -355,7 +370,7 @@ class MemoryScheduler
         uint64_t memoryLatency; // Latency of memory access in cycles
         std::vector<PendingRequest> memoryRequestQueue; // Queue to hold pending memory requests
     public:
-        MemoryScheduler(Bus& bus, uint64_t latency) : bus(bus), memoryLatency(latency) {}
+        MemoryScheduler(Bus& bus, uint64_t latency) : bus(bus), memoryLatency(latency) { DEBUG_LOG(debugLog("Memory Scheduler created")); } // Constructor to initialize the memory scheduler with a reference to the bus and memory latency
         //void tick(); // Function to be called every clock tick to process memory requests
         const std::vector<PendingRequest>& getPendingRequests() const { return memoryRequestQueue; } // Function to get the pending memory requests being processed by the memory scheduler
         void scheduleMemoryRequest(CacheRequest&& request); // Function to schedule a memory request

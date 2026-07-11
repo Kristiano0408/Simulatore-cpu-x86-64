@@ -1,6 +1,12 @@
 #ifndef DEBUG_HPP
 #define DEBUG_HPP
 
+#ifdef DEBUG
+#define DEBUG_LOG(x) x
+#else
+#define DEBUG_LOG(x)
+#endif
+
 #include <iostream>
 #include <string>
 #include "instructionTypes.hpp"

@@ -15,8 +15,7 @@ ALU::~ALU()
 
 void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type)
 {
-    
-    debugLog("ALU: Executing operation " + toStringTypeofInstruction(type) + " with source value " + to_string_hex(tempValues.srcValue) + " and destination value " + to_string_hex(tempValues.destValue) + ".");
+    DEBUG_LOG(debugLog("ALU: Executing operation " + toStringTypeofInstruction(type) + " with source value " + to_string_hex(tempValues.srcValue) + " and destination value " + to_string_hex(tempValues.destValue) + "."));
     uint64_t dest = tempValues.destValue;
     uint64_t src  = tempValues.srcValue;
     uint64_t tmp  = 0;

@@ -14,15 +14,16 @@ namespace operandFetch {
     //fetching RM operands 
     void fetchRM(Instruction* i, RegisterFile& registers)
     {
+        InstructionCore& core = i->getCore();
         //declaring the registers (the type of the register is Register an enum class)
         Register source_register; 
         Register destination_register;
 
         //getting the r/m byte
-        r_m rm = i->getRM();
+        r_m rm = core.rm;
 
         //getting the rex prefix
-        uint8_t rex = i->getRexprefix();
+        uint8_t rex = core.rexprefix;
 
 
         //Case 1: operation between register and register (maybe you can use the regToReg boolean variable)
@@ -60,15 +61,16 @@ namespace operandFetch {
 
     void fetchMR(Instruction* i, RegisterFile& registers)
     {
+        InstructionCore& core = i->getCore();
         //declaring the registers (the type of the register is Register an enum class)
         Register source_register; 
         Register destination_register;
 
         //getting the r/m byte
-        r_m rm = i->getRM();
+        r_m rm = core.rm;
 
         //getting the rex prefix
-        uint8_t rex = i->getRexprefix();
+        uint8_t rex = core.rexprefix;
 
         //Case 1: operation between register and register
         if(rm.mod == 0b11)   
@@ -111,10 +113,11 @@ namespace operandFetch {
 
     void fetchFD(Instruction* i, RegisterFile& registers)
     {
+        InstructionCore& core = i->getCore();
         //operand constructors for source and destination operands
 
         //the destination is a register and the source is a memory address(displacement)
-        auto sourceOperand = std::make_unique<MemOperand>(i->getDisplacement());
+        auto sourceOperand = std::make_unique<MemOperand>(core.displacement);
         auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RAX).raw());
 
 
@@ -125,11 +128,12 @@ namespace operandFetch {
 
     void fetchTD(Instruction* i, RegisterFile& registers)
     {
+        InstructionCore& core = i->getCore();
         //operand constructors for source and destination operands
 
         //the source is a register and the destination is a memory address(displacement)
         auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(Register::RAX).raw());
-        auto destinationOperand = std::make_unique<MemOperand>(i->getDisplacement());
+        auto destinationOperand = std::make_unique<MemOperand>(core.displacement);
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
@@ -138,6 +142,7 @@ namespace operandFetch {
 
     void fetchOI(Instruction* i, RegisterFile& registers, uint32_t opcode)
     {
+        InstructionCore& core = i->getCore();
         Register register_name[16] = {Register::RAX, Register::RCX, Register::RDX, Register::RBX, Register::RSP, Register::RBP, Register::RSI, Register::RDI,
                                     Register::R8,Register::R9, Register::R10, Register::R11, Register::R12, Register::R13, Register::R14, Register::R15};
     
@@ -146,14 +151,14 @@ namespace operandFetch {
         int reg_index = opcode & 0x07;
     
         //if Rex.b = 1, add 8 to the register index
-        if(i->getRexprefix() & 0x01)  
+        if(core.rexprefix & 0x01)  
         {
         reg_index += 8;
         }
         
         //operand constructors for destination operand 
         //the source is an immediate value and the destination is a register
-        auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
+        auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
         auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(register_name[reg_index]).raw());
 
         i->setSourceOperand(std::move(sourceOperand)); // no source operand for immediate move
@@ -164,16 +169,17 @@ namespace operandFetch {
 
     void fetchMI(Instruction* i, RegisterFile& registers)
     {
+        InstructionCore& core = i->getCore();
         //getting the r/m byte
-        r_m rm = i->getRM();
+        r_m rm = core.rm;
 
         if(rm.mod == 0b11)
         {
-                Register  destination_register = decodeRegisterRM(rm.r_m, i->getRexprefix(), false);
+                Register  destination_register = decodeRegisterRM(rm.r_m, core.rexprefix, false);
 
                 
                 
-                auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
+                auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
                 auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
 
                 i->setSourceOperand(std::move(sourceOperand));
@@ -186,7 +192,7 @@ namespace operandFetch {
         uint64_t address {calculatingAddressR_M(i, registers)};
 
         //the source is an immediate value and the destination is a memory address
-        auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
+        auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
         auto destinationOperand = std::make_unique<MemOperand>(address);
 
         i->setSourceOperand(std::move(sourceOperand)); // no source operand for immediate move
@@ -198,7 +204,8 @@ namespace operandFetch {
     void fetchI(Instruction* i, RegisterFile& registers)
     {
         //the source is an immediate value and the destination is a register
-        auto sourceOperand = std::make_unique<ImmediateOperand>(i->getValue());
+        InstructionCore& core = i->getCore();
+        auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
         auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RAX).raw());
 
         i->setSourceOperand(std::move(sourceOperand));
@@ -209,21 +216,23 @@ namespace operandFetch {
 
 
     uint64_t calculatingAddressR_M(Instruction* i, RegisterFile& registers)
-{
+    {
+        InstructionCore& core = i->getCore();
+        InstructionFlags& flags = i->getFlags();
         //getting the r/m byte
-        r_m rm = i->getRM();
+        r_m rm = core.rm;
 
         //getting the rex prefix
-        uint8_t rex = i->getRexprefix();
+        uint8_t rex = core.rexprefix;
 
         //getting the displacement
-        uint64_t displacement = i->getDisplacement();
+        uint64_t displacement = core.displacement;
 
         //getting the SIB byte
-        SIB sib = i->getSIB();
+        SIB sib = core.sib;
 
         //if there is no SIB
-        if(!i->getHasSIB())
+        if(!flags.hasSIB)
         {
             if (rm.r_m == 0b101 && rm.mod == 0b00)
             {
@@ -233,26 +242,26 @@ namespace operandFetch {
             else
             {
                 //destination adress is in the register
-                return AddressCalculator::indirectAddressing(registers, decodeRegisterRM(rm.r_m, rex, i->getHasSIB())) + displacement;
+                return AddressCalculator::indirectAddressing(registers, decodeRegisterRM(rm.r_m, rex, flags.hasSIB)) + displacement;
 
             }
         }
         else
         {
             //calculation of the address with SIB
-            Register base = decodeRegisterSIB_base(sib.base, rex, i->getHasSIB());
-            Register index = decodeRegisterSIB_index(sib.index, rex, i->getHasSIB());
+            Register base = decodeRegisterSIB_base(sib.base, rex, flags.hasSIB);
+            Register index = decodeRegisterSIB_index(sib.index, rex, flags.hasSIB);
             uint64_t address = 0;
 
             //if the base is 0b101 and the index is 0b100, there is no index and base is 32 bit displacement
             if (sib.base == 0b101 && sib.index == 0b100 && rm.mod == 0b00)
             {
-                address = i->getSIBdisplacement();
+                address = core.SIBdisplacement;
             }
             //if the base is 0b101 and the index is not 0b100, base(displacement), index and scale addressing
             else if (sib.base == 0b101 && sib.index != 0b100 && rm.mod == 0b00)
             {
-                address = i->getSIBdisplacement() + AddressCalculator::BaseScaleAddressing(registers, index, sib.scale);
+                address = core.SIBdisplacement + AddressCalculator::BaseScaleAddressing(registers, index, sib.scale);
             }
             //if the base is not 0b101 and the index is 0b100, normal base addressing
             else if (sib.base != 0b101 && sib.index == 0b100)

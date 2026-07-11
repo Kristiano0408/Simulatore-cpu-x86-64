@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-enum class Register;
+enum class Register : uint8_t;
 
 
 

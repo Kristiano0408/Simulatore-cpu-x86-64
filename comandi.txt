@@ -4,3 +4,15 @@ source venv/bin/activate
 python -m pybind11_stubgen GUI.simulator -o .
 
 make -j$(nproc) DEBUG=1 GUI_ENABLED=1
+
+perf record -F 99 -g --call-graph dwarf ./build/prova
+perf script > out.perf
+sudo sysctl -w kernel.perf_event_paranoid=0
+
+./stackcollapse-perf.pl ~/Documents/GitHub/Simulatore-cpu-x86-64/out.perf > ~/Documents/GitHub/Simulatore-cpu-x86-64/out.folded
+./flamegraph.pl ~/Documents/GitHub/Simulatore-cpu-x86-64/out.folded > ~/Documents/GitHub/Simulatore-cpu-x86-64/flame.svg
+
+source /opt/intel/oneapi/setvars.sh
+sudo sysctl kernel.yama.ptrace_scope=0 (/etc/sysctl.d/10-ptrace.conf)
+sudo sysctl kernel.perf_event_paranoid=1
+sudo sysctl kernel.kptr_restrict=0

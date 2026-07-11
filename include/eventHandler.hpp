@@ -2,85 +2,74 @@
 #define EVENT_HANDLER_HPP
 
 #include <functional>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <any>
 #include <variant>
+#include <array>
+#include <optional>
 #include "helpers.hpp"
 
-//in futuro sostituire stringhe con enum class (se possibile far in modo eh ne psoos inserie diversi)
-template<typename T>
-concept EnumType = std::is_enum_v<T>;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct CacheLookupPayload;
+struct CacheEventPayload;
+enum class EventHandlerCacheEventType : uint8_t;
 
-template<EnumType T>
-class EventHandler
+class CacheEventHandler 
 {
+    using CallbackLookupType = LookUpResult(*)(void* context, CacheLookupPayload&);
+    using CallbackHandleRequestType = void(*)(void* context, CacheEventPayload&);
+    using ArrayCallbackHandleRequestType = std::array<CallbackHandleRequestType, static_cast<size_t>(EventHandlerCacheEventType::COUNT)>;
     public:
-        EventHandler() {};
+        CacheEventHandler();
 
-        inline void registerEvent(const T eventType, std::function<void()> callback) { eventMap.insert({eventType, callback}); }
+        void setContext(void* context) { callbackContext = context; } // Set the context pointer for the cache controller to access its own state or data when processing requests
 
-        template<typename Targs, typename TReturn>
-        void registerEvent(const T eventType, std::function<TReturn(Targs)> callback) 
-        {
-            if constexpr (std::is_same_v<TReturn, void>) 
-            {
-                if constexpr (std::is_same_v<Targs, void>)
-                    eventMapTyped.insert({eventType, [callback](std::any){ callback(); return std::monostate{}; }}); 
-                else
-                eventMapTyped.insert({eventType, [callback](std::any arg){callback(std::any_cast<Targs>(arg)); return std::monostate{}; }}); 
-            }
-            else
-            {   if constexpr (std::is_same_v<Targs, void>)
-                    eventMapTyped.insert({eventType, [callback](std::any){ return callback(); }}); 
-                else
-                    eventMapTyped.insert({eventType, [callback](std::any arg){ return callback(std::any_cast<Targs>(arg)); }}); 
-            }
-        }
+        void registerHandleRequestEvent(const EventHandlerCacheEventType eventType, CallbackHandleRequestType callback);
 
-        inline void triggerEvent(const T eventType){ if(auto it = eventMap.find(eventType); it != eventMap.end()) { it->second(); } }
+        void registerLookupCacheEvent(CallbackLookupType callback);
+
+        void triggerHandleRequestEvent(const EventHandlerCacheEventType eventType, CacheEventPayload& payload);
+
+        LookUpResult triggerLookupCacheEvent(CacheLookupPayload& payload);
+
+        const ArrayCallbackHandleRequestType& getHandleRequestCallbacks() const { return handleRequestCallbacks; }
+
+        CallbackLookupType getLookupCacheCallback() const { return lookupCacheCallback; }
 
 
-        template<typename Targs, typename TReturn>
-        TReturn triggerEvent(const T eventType, Targs arg)
-        { 
-            if(auto it = eventMapTyped.find(eventType); it != eventMapTyped.end()) 
-            {
-                if constexpr (std::is_same_v<TReturn, void>) 
-                {
-                    if constexpr (std::is_same_v<Targs, void>)
-                        it->second(std::monostate{}); // Call the callback with a dummy argument for void
-                    else
-                        it->second(arg); // Call the callback and ignore the return value
-                    return; // Return void
-                }
-                else
-                {   
-                    if constexpr (std::is_same_v<Targs, void>)
-                        return std::any_cast<TReturn>(it->second(std::monostate{})); // Call the callback with a dummy argument for void and return the result
-                    else
-                        return std::any_cast<TReturn>(it->second(arg)); // Call the callback and return the result
-                }
-            }
-        }
 
-        
-        inline void clearEvents() { eventMap.clear(); }
 
-        inline  auto getEventMap() const { return eventMap; }
-        
-        inline  std::function<void()> getCallback(const T eventType) {
-            if(auto it = eventMap.find(eventType); it != eventMap.end()) {
-                return it->second;
-            }
-            return nullptr;
-        }
-
+      
     private:
-        std::map<T, std::function<void()>> eventMap;  //sostituire in futuro con unordered map o hash map per migliorare le prestazioni
-        std::map<T, std::function<std::any(std::any)>> eventMapTyped; // Map to hold controller-specific events and callbacks
-
+        ArrayCallbackHandleRequestType handleRequestCallbacks; // Vector to hold controller-specific events and callbacks
+        void* callbackContext; // Context pointer to be passed to the callback function for additional information or state management
+        CallbackLookupType lookupCacheCallback;
 };
 
 
+enum class EventHandlerPipelineEventType : uint8_t;
+enum class StageType : uint8_t;
+
+class PipelineEventHandler
+{
+    using CallbackPipelineEventType = void(*)(void* context);
+    using ArrayCallbackPipelineEventType = std::array<CallbackPipelineEventType, static_cast<size_t>(EventHandlerPipelineEventType::COUNT)>;
+    public:
+        PipelineEventHandler();
+
+        void setContext(void* context) { callbackContext = context; } // Set the context pointer for the cache controller to access its own state or data when processing requests
+
+        void* getContext() const { return callbackContext; } // Get the context pointer for the cache controller to access its own state or data when processing requests
+        
+        void registerPipelineEvent(const EventHandlerPipelineEventType eventName, CallbackPipelineEventType callback);
+
+        void triggerPipelineEvent(const EventHandlerPipelineEventType eventName);
+
+        CallbackPipelineEventType getCallback(const EventHandlerPipelineEventType eventName) const;
+
+    private:
+        ArrayCallbackPipelineEventType pipelineCallbacks;
+        void* callbackContext; // Context pointer to be passed to the callback function for additional information or state management
+};
 #endif // EVENT_HANDLER_HPP

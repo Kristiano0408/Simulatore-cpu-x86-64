@@ -7,196 +7,18 @@
 
 Instruction::Instruction()
 {
-    rm = {0, 0, 0, 0};
-    sib = {0, 0, 0, 0};
-    hasDisplacement = false;
-    hasImmediate = false;
-    hasModRM = false;
-    hasSIB = false;
-    regToReg = false;
-    regToMem = false;
-    memToReg = false;
-    numPrefixes = 0;
-    rex = false;
-    rexprefix = 0;
-    nbit = 0;
-    opcode = 0;
-    value = 0;
-    displacement = 0;
-    SIBdisplacement = 0;
+    core = InstructionCore();
+    flags = InstructionFlags();
     sourceOperand = std::make_unique<EmptyOperand>();
     destinationOperand = std::make_unique<EmptyOperand>();
 
 }
-
-Instruction::~Instruction() {
-}
-
-void Instruction::setOpcode(uint32_t opcode) 
+bool Instruction::isEmpty() const 
 {
-    this->opcode = opcode;
+    return (core.opcode == 0 || core.InstructionId == 0 || sourceOperand->getType() == OperandType::NONE || destinationOperand->getType() == OperandType::NONE);
 }
 
-uint32_t Instruction::getOpcode() 
-{
-    return opcode;
-}
-
-void Instruction::setPrefix(uint8_t prefix[4]) 
-{
-    for (int i = 0; i < 4; i++) {
-        this->prefix[i] = prefix[i];
-    }
-}
-
-uint8_t* Instruction::getPrefix() 
-{
-    return prefix;
-}
-
-void Instruction::setNumPrefixes(int numPrefixes) 
-{
-    this->numPrefixes = numPrefixes;
-}
-
-int Instruction::getNumPrefixes() {
-    return numPrefixes;
-}
-
-void Instruction::setRex(bool rex) {
-    this->rex = rex;
-}
-
-bool Instruction::getRex() {
-    return rex;
-}
-
-void Instruction::setRexprefix(int8_t rexprefix) {
-    this->rexprefix = rexprefix;
-}
-
-int8_t Instruction::getRexprefix() {
-    return rexprefix;
-}
-
-
-void Instruction::setNbit(int nbit) {
-    this->nbit = nbit;
-}
-
-int Instruction::getNbit() {
-    return nbit;
-}
-
-
-void Instruction::setHasImmediate(bool hasImmediate) {
-    this->hasImmediate = hasImmediate;
-}
-
-bool Instruction::getHasImmediate() {
-    return hasImmediate;
-}
-
-
-void Instruction::setHasDisplacement(bool hasDisplacement) {
-    this->hasDisplacement = hasDisplacement;
-}
-
-bool Instruction::getHasDisplacement() {
-    return hasDisplacement;
-}
-
-
-void Instruction::setHasModRM(bool hasModRM) {
-    this->hasModRM = hasModRM;
-}
-
-bool Instruction::getHasModRM() {
-    return hasModRM;
-}
-
-
-void Instruction::setHasSIB(bool hasSIB) {
-    this->hasSIB = hasSIB;
-}
-
-bool Instruction::getHasSIB() {
-    return hasSIB;
-}
-
-
-void Instruction::setRM(r_m rm) {
-    this->rm = rm;
-}
-
-r_m Instruction::getRM() {
-    return rm;
-}
-
-
-void Instruction::setSIB(SIB sib) {
-    this->sib = sib;
-}
-
-SIB Instruction::getSIB() {
-    return sib;
-}
-
-
-void Instruction::setValue(uint64_t value) {
-    this->value = value;
-}
-
-uint64_t Instruction::getValue() {
-    return value;
-}
-
-
-void Instruction::setDisplacement(uint64_t displacement) {
-    this->displacement = displacement;
-}
-
-uint64_t Instruction::getDisplacement() {
-    return displacement;
-}
-
-
-void Instruction::setSIBdisplacement(uint32_t SIBdisplacement) {
-    this->SIBdisplacement = SIBdisplacement;
-}
-
-uint32_t Instruction::getSIBdisplacement() {
-    return SIBdisplacement;
-}
-
-
-void Instruction::setRegToReg(bool regToReg) {
-    this->regToReg = regToReg;
-}
-
-bool Instruction::getRegToReg() {
-    return regToReg;
-}
-
-
-void Instruction::setRegToMem(bool regToMem) {
-    this->regToMem = regToMem;
-}
-
-bool Instruction::getRegToMem() {
-    return regToMem;
-}
-
-
-void Instruction::setMemToReg(bool memToReg) {
-    this->memToReg = memToReg;
-}
-
-bool Instruction::getMemToReg() {
-    return memToReg;
-}
-
-uint64_t Instruction::castingValue(uint64_t value, int nbit) 
+uint64_t Instruction::castingValue(uint64_t value, uint8_t nbit) 
 {
     switch (nbit)
     {
@@ -235,25 +57,22 @@ Operand* Instruction::getDestinationOperand() {
     return destinationOperand.get(); // return the raw pointer of the unique_ptr
 }
 
-void Instruction::setAddressingMode(AddressingMode addressingMode) {
-    this->addressingMode = addressingMode;
-}
 
 //calculate the number of bits of the value/operand
-int Instruction::calculating_number_of_bits() 
+uint8_t Instruction::calculating_number_of_bits() 
 {
-    uint32_t opcode = getOpcode();
+    uint32_t opcode = core.opcode;
 
-    if (getRexprefix() & 0x08)
+    if (core.rexprefix & 0x08)
     {
         return 64;
     }
 
-    for (int i = 0; i < getNumPrefixes(); i++)
+    for (int i = 0; i < core.numPrefixes; i++)
     {
-        if (getPrefix()[i] == 0x66)
+        if (core.prefix[i] == 0x66)
         {
-            debugLog("66 prefix");
+            DEBUG_LOG(debugLog("66 prefix"));
             return 16;
         }
     }
@@ -273,11 +92,8 @@ int Instruction::calculating_number_of_bits()
 }
 
 //get the addressing mode
-AddressingMode Instruction::getAddressingMode() {
-    return addressingMode;
-}
 
-uint64_t Instruction::mask(int nbit) 
+uint64_t Instruction::mask(uint8_t nbit) 
 {
     switch (nbit)
     {

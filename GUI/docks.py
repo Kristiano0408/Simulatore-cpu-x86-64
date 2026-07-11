@@ -332,7 +332,7 @@ class PipelineDock(QDockWidget):
             if hasattr(stage, "peekInstruction") and not isinstance(stage, simulator.DecodeStage):
                 instr = stage.peekInstruction()
                 if instr is not None and not stage.isInstructionEmpty(instr):
-                    instr_id = instr.getInstructionId()
+                    instr_id = instr.getCore().InstructionId
             elif hasattr(stage, "getInstructionToDecode"):
                 instr_info = stage.getInstructionToDecode() 
                 if instr_info is not None:
@@ -352,7 +352,7 @@ class PipelineDock(QDockWidget):
             elif hasattr(buf, "peekInstruction"):
                 instr = buf.peekInstruction()
                 if instr is not None:
-                    instr_id = instr.getInstructionId()
+                    instr_id = instr.getCore().InstructionId
             elif hasattr(buf, "instructionInfo"):
                 instr_info = buf.instructionInfo
                 if instr_info is not None:

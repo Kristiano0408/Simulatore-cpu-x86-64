@@ -4,13 +4,15 @@
 #include <cstdint>
 
 
-enum class OperandStatus {
+enum class OperandStatus : uint8_t 
+{
     OK,
     WAITING_MEMORY,
     ERROR
 };
 
-enum class OperandType {
+enum class OperandType : uint8_t 
+{
     REGISTER,
     MEMORY,
     IMMEDIATE,
@@ -21,6 +23,7 @@ enum class OperandType {
 struct OperandResult {
     OperandStatus status;
     uint64_t value {}; // Only valid if status is OK
+    
 };
 
 

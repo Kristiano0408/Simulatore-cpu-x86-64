@@ -49,7 +49,6 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
     else
     {
         //if the opcode is not found
-        info = InstructionInfo(); //return an empty InstructionInfo
         info.description = "Unknown instruction";
 
         std::cerr << "Unknown instruction: " << std::hex << opcode << std::endl;
@@ -114,8 +113,11 @@ void Decoder::fixTotalLengthPrefix(InstructionInfo& info)
 
 
 
-Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
+std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruction)
 {
+    //creating the constructor of the instruction based on the type of instruction
+    std::unique_ptr<Instruction> instructionPtr = std::make_unique<Instruction>();
+
     int position = 0;
 
     position = instruction.prefixCount;
@@ -133,22 +135,22 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
     
     auto it = instructionMap.find(instruction.opcode)->second;
 
-    debugLog("Decoding instruction: " + to_string_hex(instruction.opcode) + " - " + std::to_string(static_cast<int>(it.mode)));
+    DEBUG_LOG(debugLog("Decoding instruction: " + to_string_hex(instruction.opcode) + " - " + std::to_string(static_cast<int>(it.mode))));
 
     TypeofInstruction type_instruction = it.type;
 
-    debugLog("Instruction type: " + toStringTypeofInstruction(type_instruction));
+    DEBUG_LOG(debugLog("Instruction type: " + toStringTypeofInstruction(type_instruction)));
 
     AddressingMode mode = it.mode;
 
 
-    //creating the constructor of the instruction based on the type of instruction
-    Instruction* inst = ConstructorCreation(type_instruction);
+    
+    InstructionCore& core = instructionPtr->getCore();
 
-    inst->setType(type_instruction);
+    core.type = type_instruction;
 
     //setting the instruction parameters like the opcode, the prefix, the rex, etc
-    settingInstructionParameters(inst, instruction);
+    settingInstructionParameters(instructionPtr.get(), instruction);
 
 
     //getting the corrisponding function for the addressing mode
@@ -160,12 +162,12 @@ Instruction* Decoder::decodeInstruction(InstructionInfo instruction)
     {
         DecodeFunc decodeFunc = it2->second;
         //calling the function for decoding the instruction
-        decodeFunc(inst, instruction, position);
+        decodeFunc(instructionPtr.get(), instruction, position);
 
         //setting the addressing mode of the instruction
-        inst->setAddressingMode(mode);
+        core.addressingMode = mode;
 
-        return inst;
+        return instructionPtr;
     }
     else
     {
@@ -183,8 +185,9 @@ void Decoder::decodeInstructionOI(Instruction* instruction, const InstructionInf
 {
     //decode the immediate value
     decodeImmediateValue(instructionInfo, instruction, position);
-    instruction->setHasImmediate(true);
-    instruction->setRegToReg(true); //immediate to register (the flag is reused implicitly for this purpose for simplicity)
+    InstructionFlags& flags = instruction->getFlags();
+    flags.hasImmediate = 1;
+    flags.regToReg = 1; //immediate to register (the flag is reused implicitly for this purpose for simplicity)
     
 }
 
@@ -195,59 +198,48 @@ void Decoder::decodeInstructionMI(Instruction* instruction, const InstructionInf
 
 void Decoder::decodeInstructionMR(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
 {
-    instruction->setRegToMem(true);
+    InstructionFlags& flags = instruction->getFlags();
+    flags.regToMem = 1;
     decode_RM_instruction(instruction, instructionInfo, position);
 }
 
 void Decoder::decodeInstructionRM(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
 {
-    instruction->setMemToReg(true);
+    InstructionFlags& flags = instruction->getFlags();
+    flags.memToReg = 1;
     decode_RM_instruction(instruction, instructionInfo, position);
 }
 
 void Decoder::decodeInstructionFD(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
 {
     //decode 
-    instruction->setHasDisplacement(true);
-    instruction->setMemToReg(true);
-    instruction->setDisplacement(decodeDisplacement(instructionInfo, position, 4));
+    InstructionFlags& flags = instruction->getFlags();
+    InstructionCore& core = instruction->getCore();
+    flags.hasDisplacement = 1;
+    flags.memToReg = 1;
+    core.displacement = decodeDisplacement(instructionInfo, position, 4);
 }
 
 void Decoder::decodeInstructionTD(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
 {
     //decode 
-    instruction->setHasDisplacement(true);
-    instruction->setRegToMem(true);
-    instruction->setDisplacement(decodeDisplacement(instructionInfo, position, 4));
+    InstructionFlags& flags = instruction->getFlags();
+    InstructionCore& core = instruction->getCore();
+    flags.hasDisplacement = 1;
+    flags.regToMem = 1;
+    core.displacement = decodeDisplacement(instructionInfo, position, 4);
 }
 
 void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
 {
-    instruction->setHasImmediate(true);
-    instruction->setRegToReg(true);  //immediate to register (the flag is reused implicitly for this purpose for simplicity)
+    InstructionFlags& flags = instruction->getFlags();
+    flags.hasImmediate = 1;
+    flags.regToReg = 1;  //immediate to register (the flag is reused implicitly for this purpose for simplicity)
     decodeImmediateValue(instructionInfo, instruction, position);
     
 }
 
 
-
-//constructor of the instruction based on the type of instruction
-Instruction* Decoder::ConstructorCreation(TypeofInstruction type_instruction)
-{
-    auto it = instructionConstructors.find(type_instruction);
-
-    if (it != instructionConstructors.end())
-    {
-        std::unique_ptr<Instruction> instruction = it->second(); // Creo l'oggetto con unique_ptr
-        return instruction.release(); // Rilascia il controllo del puntatore e lo restituisce come raw pointer
-    }
-    else
-    {
-        std::cerr << "Unknown instruction type" << std::endl;
-        return nullptr;
-    }
-}
-       
 
 
 
@@ -285,8 +277,8 @@ void Decoder::decodeImmediateValue(InstructionInfo instructionInfo, Instruction*
     }
 
     //position += instructionInfo.operandLength;
-
-    instruction->setValue(value);
+    InstructionCore& core = instruction->getCore();
+    core.value = value;
 
 
     
@@ -295,18 +287,15 @@ void Decoder::decodeImmediateValue(InstructionInfo instructionInfo, Instruction*
 void Decoder::settingInstructionParameters(Instruction* instruction, InstructionInfo instructionInfo)
 {
     //setting the parameters of instruction
-    instruction->setOpcode(instructionInfo.opcode);
-    
-    instruction->setPrefix(instructionInfo.prefix);
+    InstructionCore& core = instruction->getCore();
+    core.opcode = instructionInfo.opcode;
+    core.prefix = instructionInfo.prefix;
+    core.numPrefixes = instructionInfo.prefixCount;
+    core.rexprefix = instructionInfo.rexprefix;
+    core.InstructionId = instructionInfo.instructionId;
 
-    instruction->setNumPrefixes(instructionInfo.prefixCount);
-
-    instruction->setRex(instructionInfo.rex);
-
-    instruction->setRexprefix(instructionInfo.rexprefix);
-
-    instruction->setInstructionId(instructionInfo.instructionId);
-    
+    InstructionFlags& flags = instruction->getFlags();
+    flags.rex = instructionInfo.rex;
 }
 
 uint64_t Decoder::decodeDisplacement(InstructionInfo instruction, int& position, int size)
@@ -324,48 +313,45 @@ uint64_t Decoder::decodeDisplacement(InstructionInfo instruction, int& position,
 
 void Decoder::decode_RM_instruction(Instruction* instruction, InstructionInfo instructionInfo, int& position)
 {
+    InstructionCore& core = instruction->getCore();
+    InstructionFlags& flags = instruction->getFlags();
     uint64_t displacement = 0;
-
-
 
     //decode the ModRM
     r_m rm = decodeRM(instructionInfo.instruction[position]);
 
-
     position++;
-    instruction->setRM(rm);
-    instruction->setHasModRM(true);
 
+    core.rm = rm;
+    flags.hasModRM = 1;
    //control of the varius cases of addressing mode
-   if(rm.mod == 0b11)
+    if(rm.mod == 0b11)
     {   
         //the operand is a register
-        instruction->setHasDisplacement(false);
-        instruction->setHasSIB(false);
-        instruction->setRegToReg(true);
-        instruction->setMemToReg(false);
-        instruction->setRegToMem(false);
-
+        flags.hasDisplacement = 0;
+        flags.hasSIB = 0;
+        flags.regToReg = 1;
+        flags.memToReg = 0;
+        flags.regToMem = 0;
     }
-   
     else if (rm.mod == 0b00)
     {
 
         if(rm.r_m == 0b100)
         {
             //there is SIB
-            instruction->setHasSIB(true);
+            flags.hasSIB = 1;
             SIB sib = decodeSIB(instructionInfo.instruction[position]);
             position++;
-            instruction->setSIB(sib);
+            core.sib = sib;
             if(sib.base == 0b101)
             {
                 //the operand is a displacement
-                instruction->setHasDisplacement(true);
+                flags.hasDisplacement = 1;
                 //the displacement is 32 bit
                 displacement = decodeDisplacement(instructionInfo, position, 4);
                 //set the displacement
-                instruction->setSIBdisplacement(static_cast<uint32_t>(displacement));
+                core.SIBdisplacement = static_cast<uint32_t>(displacement);
             }
    
 
@@ -373,11 +359,11 @@ void Decoder::decode_RM_instruction(Instruction* instruction, InstructionInfo in
         else if (rm.r_m == 0b101)
         {
             //the operand is a displacement
-            instruction->setHasDisplacement(true);
+            flags.hasDisplacement = 1;
             //the displacement is 32 bit
             displacement = decodeDisplacement(instructionInfo, position, 4);
             //set the displacement
-            instruction->setDisplacement(displacement);
+            core.displacement = displacement;
         }
         else 
         {
@@ -389,36 +375,36 @@ void Decoder::decode_RM_instruction(Instruction* instruction, InstructionInfo in
     else if (rm.mod == 0b01)
     {
         //the operand is a register/mem with 8 bit displacement
-        instruction->setHasDisplacement(true);
+        flags.hasDisplacement = 1;
        
         if (rm.r_m == 0b100)
         {
            //there is SIB
-           instruction->setHasSIB(true);
+           flags.hasSIB = 1;
            SIB sib = decodeSIB(instructionInfo.instruction[position]);
            position++;
-           instruction->setSIB(sib);
+           core.sib = sib;
 
         }
 
         displacement = 0;
         displacement += instructionInfo.instruction[position];
         position++;
-        instruction->setDisplacement(displacement);
+        core.displacement = displacement;
        
     }
 
     else if (rm.mod == 0b10)
     {
         //the operand is a register/mem with 32 bit displacement
-        instruction->setHasDisplacement(true);
+        flags.hasDisplacement = 1;
         if (rm.r_m == 0b100)
         {
            //there is SIB
-           instruction->setHasSIB(true);
+           flags.hasSIB = 1;
            SIB sib = decodeSIB(instructionInfo.instruction[position]);
            position++;
-           instruction->setSIB(sib);
+           core.sib = sib;
 
         }
 
@@ -426,7 +412,7 @@ void Decoder::decode_RM_instruction(Instruction* instruction, InstructionInfo in
 
         displacement = decodeDisplacement(instructionInfo, position, 4);
 
-        instruction->setDisplacement(displacement);
+        core.displacement = displacement;
     }
 
     if(instructionInfo.hasImmediate)

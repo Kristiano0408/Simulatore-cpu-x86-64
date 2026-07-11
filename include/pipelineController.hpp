@@ -17,28 +17,56 @@ class PipelineController
 
         void onWaitingMemory(StageType stage);
 
+        static void onWaitingMemoryWrapperFetch(void* context);
+
+        static void onWaitingMemoryWrapperExecute(void* context);
+
+        static void onWaitingMemoryWrapperMemoryStage(void* context);
+
+
+
         void onMemoryDone(StageType stage);
+
+        static void onMemoryDoneWrapperFetch(void* context);
+
+        static void onMemoryDoneWrapperExecute(void* context);
+
+        static void onMemoryDoneWrapperMemoryStage(void* context);
+
+
 
         void onFetchComplete();
 
+        static void onFetchCompleteWrapper(void* context);
+
         void onDecodeComplete();
+
+        static void onDecodeCompleteWrapper(void* context);
 
         void onOperandFetchComplete();
 
+        static void onOperandFetchCompleteWrapper(void* context);
+
         void onExecuteComplete();
+
+        static void onExecuteCompleteWrapper(void* context);
 
         void onMemoryStageComplete();
 
+        static void onMemoryStageCompleteWrapper(void* context);
+
         void onWriteBackComplete();
+
+        static void onWriteBackCompleteWrapper(void* context);
 
         bool isPipelineStalledForGUI() const;
 
-        inline EventHandler<EventHandlerPipelineEventType>& getEventHandler() { return eventHandler; }
+        inline PipelineEventHandler* getEventHandler() { return &eventHandler; }
 
 
     private:
         Pipeline& pipeline;
-        EventHandler<EventHandlerPipelineEventType> eventHandler;
+        PipelineEventHandler eventHandler;
 
 };
 

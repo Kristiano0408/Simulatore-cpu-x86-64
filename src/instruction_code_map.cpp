@@ -1,7 +1,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include "instruction_code_map.hpp"
-#include "instruction_wrapper.hpp"
+#include "instruction.hpp"
 #include "decoder.hpp"
 
 
@@ -79,13 +79,6 @@ std::unordered_map<AddressingMode, DecodeFunc> Addressing_modes
 };
 
 
-
-std::unordered_map<TypeofInstruction, std::function<std::unique_ptr<Instruction>()>> instructionConstructors 
-{
-    {TypeofInstruction::MOV, [](){ return std::make_unique<MoveInstruction>(); }},
-    {TypeofInstruction::ADD, [](){ return std::make_unique<AddInstruction>(); }},
-    {TypeofInstruction::SUB, [](){ return std::make_unique<SubInstruction>(); }}
-};
 
 
 

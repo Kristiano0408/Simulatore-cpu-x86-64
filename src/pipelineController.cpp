@@ -12,20 +12,21 @@ PipelineController::PipelineController(Pipeline& pipelineRef)
 void PipelineController::setupEvents()
 {
     // Register events for stage completions
-    eventHandler.registerEvent(EventHandlerPipelineEventType::FETCH_COMPLETE, [this]() { onFetchComplete(); });
-    eventHandler.registerEvent(EventHandlerPipelineEventType::DECODE_COMPLETE, [this]() { onDecodeComplete(); });
-    eventHandler.registerEvent(EventHandlerPipelineEventType::OPERAND_FETCH_COMPLETE, [this]() { onOperandFetchComplete(); });
-    eventHandler.registerEvent(EventHandlerPipelineEventType::EXECUTE_COMPLETE, [this]() { onExecuteComplete(); });
-    eventHandler.registerEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE, [this]() { onMemoryStageComplete(); });
-    eventHandler.registerEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE, [this]() { onWriteBackComplete(); });
+    eventHandler.setContext(this); // Set the context for the event handler to this PipelineController instance
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::FETCH_COMPLETE, &PipelineController::onFetchCompleteWrapper);
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::DECODE_COMPLETE, &PipelineController::onDecodeCompleteWrapper);
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::OPERAND_FETCH_COMPLETE, &PipelineController::onOperandFetchCompleteWrapper);
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::EXECUTE_COMPLETE, &PipelineController::onExecuteCompleteWrapper);
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE, &PipelineController::onMemoryStageCompleteWrapper);
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE, &PipelineController::onWriteBackCompleteWrapper);
 
     // Register events for memory waiting and completion
-    eventHandler.registerEvent(EventHandlerPipelineEventType::MEMORY_WAITING, [this]() { onWaitingMemory(StageType::MEMORY); });
-    eventHandler.registerEvent(EventHandlerPipelineEventType::MEMORY_DONE, [this]() { onMemoryDone(StageType::MEMORY); });
-    eventHandler.registerEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE, [this]() { onWaitingMemory(StageType::EXECUTE); });
-    eventHandler.registerEvent(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE, [this]() { onMemoryDone(StageType::EXECUTE); });
-    eventHandler.registerEvent(EventHandlerPipelineEventType::MEMORY_WAITING_FETCH, [this]() { onWaitingMemory(StageType::FETCH); });
-    eventHandler.registerEvent(EventHandlerPipelineEventType::MEMORY_DONE_FETCH, [this]() { onMemoryDone(StageType::FETCH); });
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING, &PipelineController::onWaitingMemoryWrapperMemoryStage);
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::MEMORY_DONE, &PipelineController::onMemoryDoneWrapperMemoryStage);
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE, &PipelineController::onWaitingMemoryWrapperExecute);
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE, &PipelineController::onMemoryDoneWrapperExecute);
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING_FETCH, &PipelineController::onWaitingMemoryWrapperFetch);
+    eventHandler.registerPipelineEvent(EventHandlerPipelineEventType::MEMORY_DONE_FETCH, &PipelineController::onMemoryDoneWrapperFetch);
 
 }
 
@@ -38,11 +39,49 @@ void PipelineController::onWaitingMemory(StageType stage)
     currentStage->setStatus(StageStatus::WAITING_MEMORY);
 }
 
+void PipelineController::onWaitingMemoryWrapperFetch(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onWaitingMemory(StageType::FETCH);
+}
+
+void PipelineController::onWaitingMemoryWrapperExecute(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onWaitingMemory(StageType::EXECUTE);
+}
+
+void PipelineController::onWaitingMemoryWrapperMemoryStage(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onWaitingMemory(StageType::MEMORY);
+}
+
+
+
 void PipelineController::onMemoryDone(StageType stage)
 {
     Stage* currentStage = pipeline.getStage(stage);
 
     currentStage->setStatus(StageStatus::MEMORY_DONE);
+}
+
+void PipelineController::onMemoryDoneWrapperFetch(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onMemoryDone(StageType::FETCH);
+}
+
+void PipelineController::onMemoryDoneWrapperExecute(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onMemoryDone(StageType::EXECUTE);
+}
+
+void PipelineController::onMemoryDoneWrapperMemoryStage(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onMemoryDone(StageType::MEMORY);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +102,13 @@ void PipelineController::onFetchComplete()
     #endif
 }
 
+void PipelineController::onFetchCompleteWrapper(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onFetchComplete();
+}
+
+
 void PipelineController::onDecodeComplete()
 {
     DecodeStage& decodeStage = pipeline.getDecodeStage();
@@ -78,6 +124,13 @@ void PipelineController::onDecodeComplete()
     decodeStage.setStatus(StageStatus::READY);
     #endif
 }
+
+void PipelineController::onDecodeCompleteWrapper(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onDecodeComplete();
+}
+
 
 void PipelineController::onOperandFetchComplete()
 {
@@ -95,6 +148,13 @@ void PipelineController::onOperandFetchComplete()
     #endif
 }
 
+void PipelineController::onOperandFetchCompleteWrapper(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onOperandFetchComplete();
+}
+
+
 void PipelineController::onExecuteComplete()
 {
     ExecuteStage& executeStage = pipeline.getExecuteStage();
@@ -111,6 +171,13 @@ void PipelineController::onExecuteComplete()
     #endif
 }
 
+void PipelineController::onExecuteCompleteWrapper(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onExecuteComplete();
+}
+
+
 void PipelineController::onMemoryStageComplete()
 {
     MemoryStage& memoryStage = pipeline.getMemoryStage();
@@ -121,6 +188,12 @@ void PipelineController::onMemoryStageComplete()
     #else
     memoryStage.setStatus(StageStatus::READY);
     #endif
+}
+
+void PipelineController::onMemoryStageCompleteWrapper(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onMemoryStageComplete();
 }
 
 void PipelineController::onWriteBackComplete()
@@ -137,6 +210,11 @@ void PipelineController::onWriteBackComplete()
     
 }
 
+void PipelineController::onWriteBackCompleteWrapper(void* context)
+{
+    PipelineController* controller = static_cast<PipelineController*>(context);
+    controller->onWriteBackComplete();
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool PipelineController::isPipelineStalledForGUI() const

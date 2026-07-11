@@ -1,7 +1,12 @@
 #include "eventLog.hpp"
+#include "cacheManager.hpp"
 #include <vector>
 
-LogStorage::LogStorage() : logEntries(), positionalLogEntries(), logData() {}
+LogStorage::LogStorage() : logEntries(), positionalLogEntries(), logData() {
+    logData.reserve(100); // Reserve space for 100 log data entries to avoid frequent reallocations
+    logEntries.reserve(100); // Reserve space for 100 log entries to avoid frequent reallocations
+    positionalLogEntries.reserve(100); // Reserve space for 100 positional log entries to avoid frequent reallocations
+}
 
 
 

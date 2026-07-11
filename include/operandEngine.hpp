@@ -12,8 +12,8 @@ class OperandEngine
     public:
         OperandEngine(CacheManager& cm, CPU& c) : cacheManager(cm), cpu(c) {};
 
-        OperandResult readOperand(Instruction* instruction, Operand* operand, std::function<void()> callback);
-        OperandResult writeOperand(Instruction* instruction, Operand* operand, uint64_t value, std::function<void()> callback);
+        OperandResult readOperand(Instruction* instruction, Operand* operand, void* context, void(*callback)(void* context));
+        OperandResult writeOperand(Instruction* instruction, Operand* operand, uint64_t value, void* context, void(*callback)(void* context));
 
     
     private:
@@ -25,8 +25,8 @@ class OperandEngine
         OperandResult setImmediateValue(Operand* operand, uint64_t value);
         OperandResult getImmediateValue(Operand* operand);
 
-        OperandResult getMemoryValue(Instruction* instruction, Operand* operand, std::function<void()> callback);
-        OperandResult setMemoryValue(Instruction* instruction, Operand* operand, uint64_t value, std::function<void()> callback);
+        OperandResult getMemoryValue(Instruction* instruction, Operand* operand, void* callbackContext, void(*callback)(void* context));
+        OperandResult setMemoryValue(Instruction* instruction, Operand* operand, uint64_t value, void* callbackContext, void(*callback)(void* context));
 
 };
 

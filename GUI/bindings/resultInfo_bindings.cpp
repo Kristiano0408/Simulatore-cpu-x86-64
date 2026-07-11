@@ -67,8 +67,7 @@ void bind_result_info(py::module &m) {
         .def(py::init<>())
         .def_readwrite("source", &Error_Event_Info::source)
         .def_readwrite("event", &Error_Event_Info::event)
-        .def_readwrite("error", &Error_Event_Info::error)
-        .def_readwrite("message", &Error_Event_Info::message);
+        .def_readwrite("error", &Error_Event_Info::error);
 
     bind_result(m, "Result");
     // fine

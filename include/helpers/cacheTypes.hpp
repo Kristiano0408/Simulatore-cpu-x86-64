@@ -7,7 +7,7 @@
 #include "result.hpp"
 
 // Request type enumeration 
-enum class RequestType
+enum class RequestType : uint8_t
 {
     READ,
     READ_MEMORY_FOR_WRITE_MISS,
@@ -25,7 +25,7 @@ enum class RequestType
 
 //RequestState enum class 
 
-enum class RequestState
+enum class RequestState : uint8_t
 {
     WAITING_LATENCY,
     READY_TO_PROCESS,
@@ -38,7 +38,7 @@ enum class RequestState
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-enum class TypeofData
+enum class TypeofData : uint8_t
 {
     UINT8_T = 1,
     UINT16_T = 2,
@@ -53,22 +53,25 @@ enum class TypeofData
 
 struct CacheRequest
 {
-    RequestType type = RequestType::NONE; // Type of request (READ or WRITE)
-    TypeofData dataType = TypeofData::UNKNOWN; // Type of data for the request
+    using CallbackType = void(*)(void* context); // Callback function type for request completion
+
     uint64_t address = 0; // Memory address
     MaxCPUInstructionLength data{}; // Data for write requests (up to 15 bytes, maximun size for an instruction with prefixes and opcode, 16 bytes to align)
+    uint64_t requestID = 0; // Unique ID for the request
+    void* callbackContext = nullptr; // Context pointer for the callback function
+    CallbackType callback = nullptr; // Callback function to be called when the request is completed
     bool completed = false; // Indicates if the request has been completed
-    int requestID = 0; // Unique ID for the request
-    std::function<void()> callback; // Callback function to be called when the request is completed
+    RequestType type = RequestType::NONE; // Type of request (READ or WRITE)
+    TypeofData dataType = TypeofData::UNKNOWN; // Type of data for the request
 
-    CacheRequest(): type(RequestType::NONE), dataType(TypeofData::UNKNOWN), address(0), data{}, completed(false), requestID(0), callback(nullptr) {}
+    CacheRequest():  address(0), data{}, requestID(0), callbackContext(nullptr), callback(nullptr), completed(false), type(RequestType::NONE), dataType(TypeofData::UNKNOWN){}
 
-    CacheRequest(RequestType type, TypeofData dataType, uint64_t address, const MaxCPUInstructionLength& data, bool completed, uint64_t requestID, std::function<void()> callback)
-        : type(type), dataType(dataType), address(address), data(data), completed(completed), requestID(requestID), callback(callback) {}
+    CacheRequest(RequestType type, TypeofData dataType, uint64_t address, const MaxCPUInstructionLength& data, bool completed, uint64_t requestID, void* callbackContext, CallbackType callback)
+        : address(address), data(data), requestID(requestID), callbackContext(callbackContext), callback(callback), completed(completed), type(type), dataType(dataType) {}
 };
 
 
-enum class CacheLevelType
+enum class CacheLevelType : uint8_t
 {
     L1,
     L2,
@@ -78,7 +81,7 @@ enum class CacheLevelType
 };
 
 
-enum class LookUpResult 
+enum class LookUpResult : uint8_t
 {
     HIT,
     MISS,

@@ -67,16 +67,7 @@ void bind_helpers(py::module &m)
         .def_readwrite("prefixCount", &InstructionInfo::prefixCount)
         
         // array prefix -> py::list/vector
-        .def_property(
-            "prefix",
-            [](const InstructionInfo &self) {
-                return std::vector<uint8_t>(self.prefix, self.prefix + 4);
-            },
-            [](InstructionInfo &self, const std::vector<uint8_t> &v) {
-                for (size_t i = 0; i < 4 && i < v.size(); i++)
-                    self.prefix[i] = v[i];
-            }
-        )
+        .def_readonly("prefix", &InstructionInfo::prefix)
 
         .def_readwrite("rex", &InstructionInfo::rex)
         .def_readwrite("rexprefix", &InstructionInfo::rexprefix)

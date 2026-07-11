@@ -42,9 +42,10 @@ int main()
 {
     setNonCanonical(true); // Abilita modalità non canonica per l'input
 
+    DEBUG_LOG(debugLog("inizializzazione bus"));
     Bus bus; // Create a bus instance
-    
-
+    DEBUG_LOG(debugLog("inizializzazione cpu"));
+    #ifndef PERF
 
     std::vector<uint8_t> data= {
         /*
@@ -137,14 +138,13 @@ int main()
 
     };
 
-    printf("Loading data into memory...\n");
 
     bus.getMemory().setData(data); // Set the data in memory
 
-    printf("data loaded into memory\n");
 
+    
+    
     std::vector<uint8_t> memoryData = bus.getMemory().getData();
-
     for (size_t i = 0; i < memoryData.size(); i++) {
         cout << "Memory[" << i << "]: " << hex << static_cast<int>(memoryData[i]) << endl;
     }
@@ -193,6 +193,29 @@ int main()
         }
         
     }
+    #else
+    constexpr int programSize = 1024 * 1024;
+
+    std::vector<uint8_t> memoryData(programSize);
+
+    for(size_t i = 0; i < programSize; i += 6)
+    {
+        memoryData[i]     = 0x2C;
+        memoryData[i + 1] = 0x03;
+
+        memoryData[i + 2] = 0x28;
+        memoryData[i + 3] = 0xD8;
+
+        memoryData[i + 4] = 0x2A;
+        memoryData[i + 5] = 0xD8;
+    }
+
+    bus.getMemory().setData(memoryData);
+    for(uint64_t i = 0; i < programSize/2; i++)
+    {
+    bus.tick();
+    }
+    #endif
 
     /*for (int i = 0; i < 1 ;i++)
     {

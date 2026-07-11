@@ -2,6 +2,9 @@
 CXX = g++
 CXXFLAGS = -std=c++23 -O2 -Wall -Wextra -Iinclude -fPIC
 
+ifeq ($(PERF),1)
+	CXXFLAGS += -g -DPERF
+endif
 # Debug
 ifeq ($(DEBUG),1)
     CXXFLAGS += -DDEBUG
@@ -18,9 +21,17 @@ SRCDIR = src
 OBJDIR = build
 GUI_SRCDIR = GUI
 BINDINGS_DIR = $(GUI_SRCDIR)/bindings
+TESTS_DIR = tests
 
 # Pybind11 + includes Python
 PYBIND11_INCLUDES = -Ipybind11/include $(shell python3-config --includes)
+
+#test sources
+TEST_SOURCES = $(shell find $(TESTS_DIR) -name '*.cpp')
+TEST_OBJS = $(patsubst $(TESTS_DIR)/%.cpp,$(OBJDIR)/tests/%.o,$(TEST_SOURCES))
+
+TEST_BINDIR = $(OBJDIR)/tests_bin
+TEST_EXECS = $(patsubst $(TESTS_DIR)/%.cpp,$(TEST_BINDIR)/%,$(TEST_SOURCES))
 
 
 # Core sources excluding prova.cpp
@@ -43,16 +54,25 @@ EXEC = $(OBJDIR)/prova
 
 # Build dirs
 #DIRS = $(sort $(dir $(CORE_OBJS) $(PROVA_OBJ)))
-DIRS = $(sort $(dir $(CORE_OBJS) $(PROVA_OBJ) $(BINDINGS_OBJS)))
+DIRS = $(sort $(dir $(CORE_OBJS) $(PROVA_OBJ) $(BINDINGS_OBJS) $(TEST_OBJS)))
 
 # -----------------------
 # Target principali
 # -----------------------
-all: dirs $(CORE_OBJS) $(PROVA_OBJ) $(BINDINGS_OBJS) $(PYTHON_MODULE) $(EXEC)
+
+
+all: dirs $(CORE_OBJS) $(PROVA_OBJ) $(BINDINGS_OBJS) $(PYTHON_MODULE) $(EXEC) 
 #all: dirs $(CORE_OBJS) $(PROVA_OBJ)  $(EXEC)
+
+tests: dirs $(CORE_OBJS) $(TEST_EXECS)
 
 dirs:
 	@mkdir -p $(DIRS)
+
+#tests
+$(OBJDIR)/tests/%.o: $(TESTS_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Core C++
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
@@ -72,8 +92,16 @@ $(PYTHON_MODULE): $(CORE_OBJS) $(BINDINGS_OBJS)
 $(EXEC): $(CORE_OBJS) $(PROVA_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
+
+
+
+$(TEST_BINDIR)/%: $(OBJDIR)/tests/%.o $(CORE_OBJS)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+
 # Pulizia
 clean:
 	rm -rf $(OBJDIR) $(GUI_SRCDIR)/*.so $(GUI_SRCDIR)/*.o
 
-.PHONY: all clean dirs
+.PHONY: all clean dirs tests

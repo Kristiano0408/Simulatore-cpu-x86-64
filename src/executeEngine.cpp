@@ -3,105 +3,111 @@
 #include "alu.hpp"
 
 
-void ExecuteEngine::fetchOperands(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+void ExecuteEngine::fetchOperands(Instruction* instruction, PipelineEventHandler& eventHandler) 
 {
     //fetch the operands
     //std::cout << "Fetching operands for Sub Instruction" << std::endl;
     //fetch the operands
     //using switch case to get the operands
-    switch (instruction->getAddressingMode())
+    InstructionCore& core = instruction->getCore();
+    switch (core.addressingMode)
     {
         case AddressingMode::MR:                     //sub register to R/M
-            debugLog("SUB_MR");
+            DEBUG_LOG(debugLog("SUB_MR"));
             operandFetch::fetchMR(instruction, registerFile);
             break;  
         case AddressingMode::RM:                    //sub R/M to register
-            debugLog("SUB_RM");
+            DEBUG_LOG(debugLog("SUB_RM"));
             operandFetch::fetchRM(instruction, registerFile);
             break;
         case AddressingMode::MI:                   //sub immediate to memory/register
-            debugLog("SUB_MI");
+            DEBUG_LOG(debugLog("SUB_MI"));
             operandFetch::fetchMI(instruction, registerFile);
             break;
         case AddressingMode::I:                  //sub immediate to accumulator
-            debugLog("SUB_I");
+            DEBUG_LOG(debugLog("SUB_I"));
             operandFetch::fetchI(instruction, registerFile);
             break;
         case AddressingMode::OI:
-            debugLog("SUB_OI");
-            operandFetch::fetchOI(instruction, registerFile, instruction->getOpcode());
+            DEBUG_LOG(debugLog("SUB_OI"));
+            operandFetch::fetchOI(instruction, registerFile, core.opcode);
             break;
         case AddressingMode::FD:
-            debugLog("SUB_FD");
+            DEBUG_LOG(debugLog("SUB_FD"));
             operandFetch::fetchFD(instruction, registerFile);
             break;
         case AddressingMode::TD:
-            debugLog("SUB_TD");
+            DEBUG_LOG(debugLog("SUB_TD"));
             operandFetch::fetchTD(instruction, registerFile);
             break;
         default:
             break;
    }
 
-   eventHandler.triggerEvent(EventHandlerPipelineEventType::OPERAND_FETCH_COMPLETE);
+   eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::OPERAND_FETCH_COMPLETE);
 }
 
 
 
-void ExecuteEngine::startExecution(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
-{
+void ExecuteEngine::startExecution(Instruction* instruction, PipelineEventHandler& eventHandler) 
+{   
+    InstructionCore& core = instruction->getCore();
+    InstructionFlags& flags = instruction->getFlags();
     //setting the size of the operands
-    int bit = instruction->calculating_number_of_bits();
+    uint8_t bit = instruction->calculating_number_of_bits();
 
-    instruction->setNbit(bit);
+    core.nbit = bit;
 
     instruction->getSourceOperand()->setSize(bit);
     instruction->getDestinationOperand()->setSize(bit);
 
     OperandResult response;
-    response = operandEngine.readOperand(instruction, instruction->getSourceOperand(), eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE));
+    response = operandEngine.readOperand(instruction, instruction->getSourceOperand(), eventHandler.getContext(), eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE));
 
+    DEBUG_LOG(debugLog(std::to_string(static_cast<int>(response.status))));
+    DEBUG_LOG(debugLog("Source operand value: " + to_string_hex(response.value)));
     if(response.status == OperandStatus::ERROR)
     {
+        DEBUG_LOG(debugLog("Error occurred while fetching source operand."));
         return;
     }
     else if(response.status == OperandStatus::WAITING_MEMORY)
     {
         //set the stage to waiting memory using the callback to the pipeline
-        eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE);
-        instruction->setWaitingSrcOperand(true);
+        eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE);
+        flags.waitingSrcOperand = true;
     }
     else
     {
-        instruction->setWaitingSrcOperand(false);
+        flags.waitingSrcOperand = false;
         instruction->getTemporaryValuesRef().srcValue = response.value;
     }
 
-    response = operandEngine.readOperand(instruction, instruction->getDestinationOperand(), eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE));
+    response = operandEngine.readOperand(instruction, instruction->getDestinationOperand(), eventHandler.getContext(), eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE));
 
 
     if(response.status == OperandStatus::ERROR)
     {
-        
+        DEBUG_LOG(debugLog("Error occurred while fetching destination operand."));
         return;
     }
     else if(response.status == OperandStatus::WAITING_MEMORY)
     {
-        eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE);
-        instruction->setWaitingDestOperand(true);
+        eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE);
+        flags.waitingDestOperand = true;
     }
     else
     {
-        instruction->setWaitingDestOperand(false);
+        flags.waitingDestOperand = false;
         instruction->getTemporaryValuesRef().destValue = response.value;
     }
 
-    if(!instruction->isWaitingSrcOperand() && !instruction->isWaitingDestOperand())
+    if(!flags.waitingSrcOperand && !flags.waitingDestOperand)
     {
         //both operands are ready, we can proceed to execute( non multi-cycle instruction only for non-memory operands)
         executeInstruction(instruction);
-        debugLog("esecuzioen diretta");
-        eventHandler.triggerEvent(EventHandlerPipelineEventType::EXECUTE_COMPLETE);
+        DEBUG_LOG(debugLog("esecuzioen diretta"));
+        eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::EXECUTE_COMPLETE);
     }
 
 
@@ -109,22 +115,23 @@ void ExecuteEngine::startExecution(Instruction* instruction, EventHandler<EventH
 
 
 
-void ExecuteEngine::updateExecution(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+void ExecuteEngine::updateExecution(Instruction* instruction, PipelineEventHandler& eventHandler) 
 {
     OperandResult response;
+    InstructionFlags& flags = instruction->getFlags();
 
-    response = operandEngine.readOperand(instruction, instruction->getSourceOperand(), eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE));
+    response = operandEngine.readOperand(instruction, instruction->getSourceOperand(), nullptr, nullptr);
 
     if(response.status == OperandStatus::OK)
     {
-        instruction->setWaitingSrcOperand(false);
+        flags.waitingSrcOperand = false;
         instruction->getTemporaryValuesRef().srcValue = response.value;
         
     }
     else if (response.status == OperandStatus::WAITING_MEMORY)
     {
         //still waiting for memory access to complete
-        instruction->setWaitingSrcOperand(true);
+        flags.waitingSrcOperand = true;
         return;
     }
     else
@@ -134,18 +141,18 @@ void ExecuteEngine::updateExecution(Instruction* instruction, EventHandler<Event
     }
     
 
-    response = operandEngine.readOperand(instruction, instruction->getDestinationOperand(), eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE));
+    response = operandEngine.readOperand(instruction, instruction->getDestinationOperand(), nullptr, nullptr);
 
     if(response.status == OperandStatus::OK)
     {
-        instruction->setWaitingDestOperand(false);
+        flags.waitingDestOperand = false;
         instruction->getTemporaryValuesRef().destValue = response.value;
         
     }
     else if (response.status == OperandStatus::WAITING_MEMORY)
     {
         //still waiting for memory access to complete
-        instruction->setWaitingDestOperand(true);
+        flags.waitingDestOperand = true;
         return;
     }
     else
@@ -155,7 +162,7 @@ void ExecuteEngine::updateExecution(Instruction* instruction, EventHandler<Event
     }
 
     executeInstruction(instruction);
-    eventHandler.triggerEvent(EventHandlerPipelineEventType::EXECUTE_COMPLETE);
+    eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::EXECUTE_COMPLETE);
     
 }
 
@@ -164,37 +171,40 @@ void ExecuteEngine::updateExecution(Instruction* instruction, EventHandler<Event
 
 void ExecuteEngine::executeInstruction(Instruction* instruction) 
 {
-    debugLog(toStringTypeofInstruction(instruction->getType()) + " instruction execution started.");
+    InstructionCore& core = instruction->getCore();
+    InstructionFlags& flags = instruction->getFlags();
+    DEBUG_LOG(debugLog(toStringTypeofInstruction(core.type) + " instruction execution started."));
     //we have both operands ready, we can proceed to execute the subtraction (first we must visist the variant to get the values)
-    if(!instruction->isWaitingSrcOperand() && !instruction->isWaitingDestOperand())
+    if(!flags.waitingSrcOperand && !flags.waitingDestOperand)
     {
-        alu.executeOperation(instruction->getTemporaryValuesRef(), instruction->getType());
+        alu.executeOperation(instruction->getTemporaryValuesRef(), core.type);
     }
     
     
-    debugLog("Subtraction executed");
-    debugLog("Result: " + to_string_hex(instruction->getTemporaryValuesRef().resultValue));
+    DEBUG_LOG(debugLog("Subtraction executed"));
+    DEBUG_LOG(debugLog("Result: " + to_string_hex(instruction->getTemporaryValuesRef().resultValue)));
     
 }
 
 
-void ExecuteEngine::requestMemoryAccess(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler) 
+void ExecuteEngine::requestMemoryAccess(Instruction* instruction, PipelineEventHandler& eventHandler) 
 {
+    InstructionFlags& flags = instruction->getFlags();
 
-    if(!instruction->getRegToMem())
+    if(!flags.regToMem)
     {
-        debugLog("No memory access needed for SubInstruction (not register to memory).");
-        eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE);
+        DEBUG_LOG(debugLog("No memory access needed for SubInstruction (not register to memory)."));
+        eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE);
         return;
     }
         
     //writing result back to memory
-    OperandResult response = operandEngine.writeOperand(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue, eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE));
+    OperandResult response = operandEngine.writeOperand(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue, eventHandler.getContext(), eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE));
 
     if(response.status == OperandStatus::WAITING_MEMORY)
     {
         //set the stage to waiting memory using the callback to the pipeline
-        eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_WAITING);
+        eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING);
     }
     else if(response.status == OperandStatus::ERROR)
     {
@@ -208,16 +218,20 @@ void ExecuteEngine::requestMemoryAccess(Instruction* instruction, EventHandler<E
 
 }
 
-void ExecuteEngine::accessMemory(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler)
-{
-    if(!instruction->getRegToMem())
+void ExecuteEngine::accessMemory(Instruction* instruction, PipelineEventHandler& eventHandler)
+{   
+    
+    InstructionFlags& flags = instruction->getFlags();
+    InstructionCore& core = instruction->getCore();
+
+    if(!flags.regToMem)
         return;
     
     //serching in cache response queue for the result
 
-    cpu.eraseCacheResponseIfFound(instruction->getInstructionId());
+    cpu.eraseCacheResponseIfFound(core.InstructionId);
 
-    eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE);
+    eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE);
     
 
 }
@@ -227,25 +241,27 @@ void ExecuteEngine::accessMemory(Instruction* instruction, EventHandler<EventHan
 
 
 
-void ExecuteEngine::writeBackInstruction(Instruction* instruction, EventHandler<EventHandlerPipelineEventType>& eventHandler) {
+void ExecuteEngine::writeBackInstruction(Instruction* instruction, PipelineEventHandler& eventHandler) 
+{
+    InstructionFlags& instructionFlags = instruction->getFlags();
 
     //writing back the result to destination operand if it's register
-    if(!instruction->getRegToReg() && !instruction->getMemToReg())
+    if(!instructionFlags.regToReg && !instructionFlags.memToReg)
     {
-        debugLog("getRegToReg(): " + std::to_string(instruction->getRegToReg()));
-        debugLog("getMemToReg(): " + std::to_string(instruction->getMemToReg()));
-        debugLog("getRegToMem(): " + std::to_string(instruction->getRegToMem()));
-        debugLog("No write-back needed for SubInstruction (not register to register or memory to register).");
-        eventHandler.triggerEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
+        DEBUG_LOG(debugLog("getRegToReg(): " + std::to_string(instructionFlags.regToReg)));
+        DEBUG_LOG(debugLog("getMemToReg(): " + std::to_string(instructionFlags.memToReg)));
+        DEBUG_LOG(debugLog("getRegToMem(): " + std::to_string(instructionFlags.regToMem)));
+        DEBUG_LOG(debugLog("No write-back needed for SubInstruction (not register to register or memory to register)."));
+        eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
         return;
     }
 
-    debugLog("Writing back result for SubInstruction.");
+    DEBUG_LOG(debugLog("Writing back result for SubInstruction."));
 
 
     //std::cout<< std::is_same_v(*a, RegOperand);
 
-    OperandResult response = operandEngine.writeOperand(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue, nullptr);
+    OperandResult response = operandEngine.writeOperand(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue, nullptr, nullptr);
     
 
     if(response.status == OperandStatus::ERROR)
@@ -256,7 +272,7 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction, EventHandler<
     {
 
     }
-    //ubdate flags in CPU
+    //update flags in CPU
     FlagReg& flags = registerFile.getFlags();
 
     flags.setFlag(Flagbit::ZF, instruction->getTemporaryValues().ZF);
@@ -266,6 +282,6 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction, EventHandler<
     flags.setFlag(Flagbit::PF, instruction->getTemporaryValues().PF);
     flags.setFlag(Flagbit::AF, instruction->getTemporaryValues().AF);  
 
-    eventHandler.triggerEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
+    eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
 
 }

@@ -16,8 +16,7 @@
 #include "pipelineController.hpp"
 
 class Bus;
-template<EnumType T>
-class EventHandler;
+class PipelineEventHandler;
 
 class CPU: public Device
 {

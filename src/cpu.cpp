@@ -2,8 +2,9 @@
 #include "bus.hpp"
 
 //constructor for the CPU
-CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(), registers(), cacheManager(bus, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc), pipeline(*this, static_cast<EventHandler<EventHandlerPipelineEventType>*>(nullptr)), pipelineController(pipeline)
- {
+CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(), registers(), cacheManager(bus, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc), pipeline(*this, nullptr), pipelineController(pipeline)
+{
+    DEBUG_LOG(debugLog("CPU created"));
     pipeline.setEventHandler(pipelineController.getEventHandler());
   
  }
@@ -53,7 +54,7 @@ void CPU::cpuStart()
 
 void CPU::cpuStep()
 {
-    debugLog("CPU Step Start");
+    DEBUG_LOG(debugLog("CPU Step Start"));
     tick(); //advance the CPU by one clock cycle
 }
 

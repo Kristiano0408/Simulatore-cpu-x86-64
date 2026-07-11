@@ -24,7 +24,7 @@ void bind_pipeline(py::module &m) {
         .def("getInstructionToDecode", &DecodeStage::getInstructionToDecode)
         .def("peekInstruction", [](const DecodeStage& stage) -> Instruction* {
             Instruction* instr = stage.peekInstruction();
-            if (!instr || instr->isEmpty())  // check interno
+            if (!instr)  // check interno
                 return nullptr;              // pybind11 mapperà nullptr in None
             return instr;
         }, py::return_value_policy::reference_internal);
@@ -33,7 +33,7 @@ void bind_pipeline(py::module &m) {
         .def(py::init<>())
         .def("peekInstruction", [](const OperandFetchStage& stage) -> Instruction* {
             Instruction* instr = stage.peekInstruction();
-            if (!instr || instr->isEmpty())  // check interno
+            if (!instr)  // check interno
                 return nullptr;              // pybind11 mapperà nullptr in None
             return instr;
         }, py::return_value_policy::reference_internal);
@@ -42,7 +42,7 @@ void bind_pipeline(py::module &m) {
         .def(py::init<>())
         .def("peekInstruction", [](const ExecuteStage& stage) -> Instruction* {
             Instruction* instr = stage.peekInstruction();
-            if (!instr || instr->isEmpty())  // check interno
+            if (!instr)  // check interno
                 return nullptr;              // pybind11 mapperà nullptr in None
             return instr;
         }, py::return_value_policy::reference_internal);
@@ -51,7 +51,7 @@ void bind_pipeline(py::module &m) {
         .def(py::init<>())
         .def("peekInstruction", [](const MemoryStage& stage) -> Instruction* {
             Instruction* instr = stage.peekInstruction();
-            if (!instr || instr->isEmpty())  // check interno
+            if (!instr)  // check interno
                 return nullptr;              // pybind11 mapperà nullptr in None
             return instr;
         }, py::return_value_policy::reference_internal);
@@ -60,7 +60,7 @@ void bind_pipeline(py::module &m) {
         .def(py::init<>())
         .def("peekInstruction", [](const WriteBackStage& stage) -> Instruction* {
             Instruction* instr = stage.peekInstruction();
-            if (!instr || instr->isEmpty())  // check interno
+            if (!instr)  // check interno
                 return nullptr;              // pybind11 mapperà nullptr in None
             return instr;
         }, py::return_value_policy::reference_internal);
@@ -78,7 +78,7 @@ void bind_pipeline(py::module &m) {
         .def_readwrite("flushed", &DecodeOperandFetchBuffer::flushed)
         .def("peekInstruction", [](const DecodeOperandFetchBuffer& buffer) -> Instruction* {
             Instruction* instr = buffer.peekInstruction();
-            if (!instr || instr->isEmpty())  // check interno
+            if (!instr)  // check interno
                 return nullptr;              // pybind11 mapperà nullptr in None
             return instr;
         }, py::return_value_policy::reference_internal);
@@ -89,7 +89,7 @@ void bind_pipeline(py::module &m) {
         .def_readwrite("flushed", &OperandFetchExecuteBuffer::flushed)
         .def("peekInstruction", [](const OperandFetchExecuteBuffer& buffer) -> Instruction* {
             Instruction* instr = buffer.peekInstruction();
-            if (!instr || instr->isEmpty())  // check interno
+            if (!instr)  // check interno
                 return nullptr;              // pybind11 mapperà nullptr in None
             return instr;
         }, py::return_value_policy::reference_internal);
@@ -100,7 +100,7 @@ void bind_pipeline(py::module &m) {
         .def_readwrite("flushed", &ExecuteMemoryBuffer::flushed)
         .def("peekInstruction", [](const ExecuteMemoryBuffer& buffer) -> Instruction* {
             Instruction* instr = buffer.peekInstruction();
-            if (!instr || instr->isEmpty())  // check interno
+            if (!instr)  // check interno
                 return nullptr;              // pybind11 mapperà nullptr in None
             return instr;
         }, py::return_value_policy::reference_internal);
@@ -111,14 +111,14 @@ void bind_pipeline(py::module &m) {
         .def_readwrite("flushed", &MemoryWriteBackBuffer::flushed)
         .def("peekInstruction", [](const MemoryWriteBackBuffer& buffer) -> Instruction* {
             Instruction* instr = buffer.peekInstruction();
-            if (!instr || instr->isEmpty())  // check interno
+            if (!instr)  // check interno
                 return nullptr;              // pybind11 mapperà nullptr in None
             return instr;
         }, py::return_value_policy::reference_internal);
 
     // ------------------- PIPELINE -------------------
     py::class_<Pipeline>(m, "Pipeline")
-        .def(py::init<CPU&, EventHandler<EventHandlerPipelineEventType>*>())
+        .def(py::init<CPU&, PipelineEventHandler*>())
         .def("execute_operation", &Pipeline::execute_operation)
         .def("getFetchStage", &Pipeline::getFetchStage, py::return_value_policy::reference_internal)
         .def("getDecodeStage", &Pipeline::getDecodeStage, py::return_value_policy::reference_internal)

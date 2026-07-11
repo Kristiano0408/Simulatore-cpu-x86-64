@@ -8,14 +8,15 @@
 #include <memory>
 #include <array>
 
-enum class Register {
+enum class Register : uint8_t
+{
     RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP,
     R8, R9, R10, R11, R12, R13, R14, R15,
     RIP, DummyRegister
 };
 
 
-enum Flagbit{
+enum class Flagbit : uint8_t {
 
     CF = 0, //carry flag
     PF = 2, //parity flag

@@ -4,7 +4,7 @@
 void Device::tick() {
     
     ticks_progress++;
-    debugLog("Device ticked, progress: " + std::to_string(ticks_progress) + "/" + std::to_string(getTicksNeeded()));
+    DEBUG_LOG(debugLog("Device ticked, progress: " + std::to_string(ticks_progress) + "/" + std::to_string(getTicksNeeded())));
     if (ticks_progress >= getTicksNeeded()) {
         execute_operation();
         ticks_progress = 0; // Reset progress after operation is executed

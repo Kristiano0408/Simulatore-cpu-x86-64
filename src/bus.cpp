@@ -6,7 +6,7 @@
 
 Bus::Bus() :cpu(*this), memory(1024*1024, *this)
 {
-   
+   DEBUG_LOG(debugLog("Bus created"));
 }
 
 void Bus::tick() {
@@ -18,11 +18,11 @@ void Bus::tick() {
         return;
     }
     #endif
-    debugLog("Bus Tick Start");
+    DEBUG_LOG(debugLog("Bus Tick Start"));
     cpu.getPipeline().tick();
-    debugLog("Pipeline ticked");
+    DEBUG_LOG(debugLog("Pipeline ticked"));
     cpu.getCacheManager().tick();
-    debugLog("CacheManager ticked");
+    DEBUG_LOG(debugLog("CacheManager ticked"));
     clock.tick();
 }
 

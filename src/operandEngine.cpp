@@ -4,17 +4,20 @@
 #include "eventLog.hpp"
 #include "cpu.hpp"
 
-OperandResult OperandEngine::readOperand(Instruction* instruction, Operand* operand, std::function<void()> callback) 
+OperandResult OperandEngine::readOperand(Instruction* instruction, Operand* operand, void* context, void(*callback)(void* context))
 {
     OperandResult result;
     switch (operand->getType()) {
         case OperandType::REGISTER:
+        DEBUG_LOG(debugLog("Reading from register operand."));
             result = getRegisterValue(operand);
             return result;
         case OperandType::MEMORY:
-            result = getMemoryValue(instruction, operand, callback);
+        DEBUG_LOG(debugLog("Reading from memory operand."));
+            result = getMemoryValue(instruction, operand, context, callback);
             return result;
         case OperandType::IMMEDIATE:
+        DEBUG_LOG(debugLog("Reading from immediate operand."));
             result = getImmediateValue(operand);
             return result;
         default:
@@ -22,7 +25,7 @@ OperandResult OperandEngine::readOperand(Instruction* instruction, Operand* oper
     }
 }
 
-OperandResult OperandEngine::writeOperand(Instruction* instruction, Operand* operand, uint64_t value, std::function<void()> callback) 
+OperandResult OperandEngine::writeOperand(Instruction* instruction, Operand* operand, uint64_t value, void* context, void(*callback)(void* context))
 {
     OperandResult result;
     switch (operand->getType()) {
@@ -30,7 +33,7 @@ OperandResult OperandEngine::writeOperand(Instruction* instruction, Operand* ope
             result = setRegisterValue(operand, value);
             return result;
         case OperandType::MEMORY:
-            result = setMemoryValue(instruction, operand, value, callback);
+            result = setMemoryValue(instruction, operand, value, context, callback);
             return result;
         case OperandType::IMMEDIATE:
             result = setImmediateValue(operand, value);
@@ -105,7 +108,7 @@ OperandResult OperandEngine::setImmediateValue(Operand* operand, uint64_t value)
     immOperand->setValue(value);
 
     result.success = true;
-    result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_SET_VALUE, ErrorType::NONE, ""};
+    result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_SET_VALUE, ErrorType::NONE};
     EventLog::getInstance().submitLog(std::move(result), value);
 
     return {OperandStatus::OK, 0}; 
@@ -118,22 +121,23 @@ OperandResult OperandEngine::getImmediateValue(Operand* operand)
   
     Result result;
     result.success = true;
-    result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_GET_VALUE, ErrorType::NONE, ""};
+    result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_GET_VALUE, ErrorType::NONE };
     EventLog::getInstance().submitLog(std::move(result), immOperand->getValue());
     return {OperandStatus::OK, immOperand->getValue()};
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* operand, std::function<void()> callback) 
+OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* operand, void* callbackContext, void(*callback)(void* context))
 {
+    InstructionCore& core = instruction->getCore();
     MemOperand* memOperand = static_cast<MemOperand*>(operand);
 
     Result result;
     if (memOperand->getSize() == 0)
     {
         result.success = false;
-        result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE, "Size is null. Cannot get value."};
+        result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE};
         EventLog::getInstance().submitLog(std::move(result));
         return {OperandStatus::ERROR, 0};
     }
@@ -145,7 +149,7 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
     {
         //sending the read request to the cache manager
 
-        debugLog("MemOperand: Sending read request to address " + to_string_hex(memOperand->getAddress()) + " with size " + std::to_string(memOperand->getSize()) + " bytes.");
+        DEBUG_LOG(debugLog("MemOperand: Sending read request to address " + to_string_hex(memOperand->getAddress()) + " with size " + std::to_string(memOperand->getSize()) + " bytes."));
         memOperand->setReadRequestSent(true);
         TypeofData dataTypeSize;
         switch (memOperand->getSize())
@@ -167,10 +171,10 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
                 break;
         }
 
-        cacheManager.enqueRequest(CacheRequest(RequestType::READ, dataTypeSize, memOperand->getAddress(),MaxCPUInstructionLength{}, false, instruction->getInstructionId(), callback));
+        cacheManager.enqueRequest(CacheRequest(RequestType::READ, dataTypeSize, memOperand->getAddress(),MaxCPUInstructionLength{}, false, core.InstructionId, callbackContext, callback));
 
         result.success = false;
-        result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Read request sent. Waiting for completion."};
+        result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY};
         EventLog::getInstance().submitLog(std::move(result));
         return {OperandStatus::WAITING_MEMORY, 0};
     }
@@ -178,42 +182,43 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
     {
         //request already sent, waiting for completion
 
-        debugLog("MemOperand: Read request already sent to address " + to_string_hex(memOperand->getAddress()) + ". Waiting for completion.");
+        DEBUG_LOG(debugLog("MemOperand: Read request already sent to address " + to_string_hex(memOperand->getAddress()) + ". Waiting for completion."));
 
         MaxCPUInstructionLength response;
         bool found = false;
         //checking if the request is completed
-        cpu.findCacheResponse(instruction->getInstructionId(), response, found);
+        cpu.findCacheResponse(core.InstructionId, response, found);
 
         if (found)
         {
             //request completed
-            debugLog("MemOperand: Read request completed for address " + to_string_hex(memOperand->getAddress()) + ".");
+            DEBUG_LOG(debugLog("MemOperand: Read request completed for address " + to_string_hex(memOperand->getAddress()) + "."));
             
             //extracting the result
             std::memcpy(&value, response.data(), memOperand->getSize());
             
-            cpu.eraseCacheResponseIfFound(instruction->getInstructionId());
+            cpu.eraseCacheResponseIfFound(core.InstructionId);
             memOperand->setReadRequestSent(false); //resetting the flag for future requests
 
             result.success = true;
-            result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_GET_VALUE, ErrorType::NONE, ""};
-            EventLog::getInstance().submitLog(std::move(result), result);
+            result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_GET_VALUE, ErrorType::NONE};
+            EventLog::getInstance().submitLog(std::move(result));
 
             return {OperandStatus::OK, value};
         }
         else
         {
             //request not completed dhdhhdhd
-            debugLog("MemOperand: Read request not completed for address " + to_string_hex(memOperand->getAddress()) + ".");
+            DEBUG_LOG(debugLog("MemOperand: Read request not completed for address " + to_string_hex(memOperand->getAddress()) + "."));
             return {OperandStatus::WAITING_MEMORY, 0};
         }
     }
 
 }
 
-OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* operand, uint64_t value, std::function<void()> callback) 
+OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* operand, uint64_t value, void* callbackContext, void(*callback)(void* context))
 {
+    InstructionCore& core = instruction->getCore();
     MemOperand* memOperand = static_cast<MemOperand*>(operand);
 
     Result result;
@@ -222,7 +227,7 @@ OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* o
     if (memOperand->getSize() == 0)
     {
         result.success = false;
-        result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE, "Size is null. Cannot set value."};
+        result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::INVALID_SIZE};
         EventLog::getInstance().submitLog(std::move(result), value);
         return {OperandStatus::ERROR, 0};
     }
@@ -257,9 +262,9 @@ OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* o
         //debugLog("MemOperand: Sending write request to address " + to_string_hex(this->address) + " with value " + to_string_hex(v) + " and size " + std::to_string(this->size) + " bytes.");
         memOperand->setWriteRequestSent(true);
 
-        cacheManager.enqueRequest(CacheRequest(RequestType::WRITE, dataTypeSize, memOperand->getAddress(), out, false, instruction->getInstructionId(), callback));
+        cacheManager.enqueRequest(CacheRequest(RequestType::WRITE, dataTypeSize, memOperand->getAddress(), out, false, core.InstructionId, callbackContext, callback));
         result.success = false;
-        result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Write request sent. Waiting for completion."};
+        result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY};
         EventLog::getInstance().submitLog(std::move(result));
         return {OperandStatus::WAITING_MEMORY, 0};
     }
@@ -267,27 +272,27 @@ OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* o
     {
         //request already sent, waiting for completion
 
-        debugLog("MemOperand: Write request already sent to address " + to_string_hex(memOperand->getAddress()) + ". Waiting for completion.");
+        DEBUG_LOG(debugLog("MemOperand: Write request already sent to address " + to_string_hex(memOperand->getAddress()) + ". Waiting for completion."));
 
         //checking if the request is completed
         MaxCPUInstructionLength response;
         bool found = false;
 
-        cpu.findCacheResponse(instruction->getInstructionId(), response, found);
+        cpu.findCacheResponse(core.InstructionId, response, found);
 
 
 
         if (found)
         {
             //request completed
-            debugLog("MemOperand: Write request completed for address " + to_string_hex(memOperand->getAddress()) + ".");
+            DEBUG_LOG(debugLog("MemOperand: Write request completed for address " + to_string_hex(memOperand->getAddress()) + "."));
             
             //extracting the result
-            cpu.eraseCacheResponseIfFound(instruction->getInstructionId());
+            cpu.eraseCacheResponseIfFound(core.InstructionId);
             memOperand->setWriteRequestSent(false); //resetting the flag for future requests
 
             result.success = true;
-            result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_SET_VALUE, ErrorType::NONE, ""};
+            result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_SET_VALUE, ErrorType::NONE};
             EventLog::getInstance().submitLog(std::move(result), value);
 
 
@@ -296,9 +301,9 @@ OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* o
         else
         {
             //request not completed
-            debugLog("MemOperand: Write request not completed for address " + to_string_hex(memOperand->getAddress()) + ".");
+            DEBUG_LOG(debugLog("MemOperand: Write request not completed for address " + to_string_hex(memOperand->getAddress()) + "."));
             result.success = false;
-            result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY, "Write request not completed yet."};
+            result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY};
             EventLog::getInstance().submitLog(std::move(result), value);
             return {OperandStatus::WAITING_MEMORY, 0};
         }

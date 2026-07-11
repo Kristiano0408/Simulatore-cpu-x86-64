@@ -64,7 +64,6 @@ void bind_cacheManager(py::module &m) {
             return data;
         })
         .def_readonly("isWrite", &CacheRequest::completed)
-        .def_readonly("callback", &CacheRequest::callback)
         .def_readonly("requestId", &CacheRequest::requestID);
 
 

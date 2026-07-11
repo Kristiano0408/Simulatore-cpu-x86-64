@@ -10,7 +10,7 @@
 
 CU::CU(Bus& bus) : bus(bus)
 {
-    //nothing to do here
+    DEBUG_LOG(debugLog("Control Unit created"));
 
 }
 
@@ -18,11 +18,11 @@ CU::~CU()
 {
 }
 
-void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler<EventHandlerPipelineEventType>& eventHandler)
+void CU::startFetch(uint64_t instructionId, uint64_t& index, PipelineEventHandler& eventHandler)
 {
     // Implementation of instruction fetching using the bus
     // This is a placeholder implementation and should be replaced with actual logic
-    debugLog("Starting instruction fetch...");
+    DEBUG_LOG(debugLog("Starting instruction fetch..."));
 
     RegisterFile& cpuRegisters = bus.getCPU().getRegisters();  // get the registers of the CPU temporarily
     //take the value of istruction register
@@ -30,7 +30,7 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler<EventH
     //fetching the instruction from cache or memory
 
 
-    debugLog("Fetching instruction at address: " + to_string_hex(index));
+    DEBUG_LOG(debugLog("Fetching instruction at address: " + to_string_hex(index)));
 
     auto cacheRequest =CacheRequest();
     cacheRequest.type = RequestType::READ;
@@ -38,20 +38,21 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, EventHandler<EventH
     cacheRequest.dataType = TypeofData::ARRAY_16B;
     cacheRequest.requestID = instructionId;
     cacheRequest.callback = eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_FETCH);
+    cacheRequest.callbackContext = eventHandler.getContext();
 
 
     bus.getCPU().getCacheManager().enqueRequest(std::move(cacheRequest));
     // Trigger an event to notify that a cache request has been sent
-    eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_WAITING_FETCH);
+    eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING_FETCH);
 
-    debugLog("Cache request sent for instruction fetch.");
+    DEBUG_LOG(debugLog("Cache request sent for instruction fetch."));
 }
 
-void CU::updateFetch(uint64_t instructionId, EventHandler<EventHandlerPipelineEventType>& eventHandler)
+void CU::updateFetch(uint64_t instructionId, PipelineEventHandler& eventHandler)
 {
     // Implementation of updating fetch stage using the bus
     // This is a placeholder implementation and should be replaced with actual logic
-    debugLog("Updating fetch stage...");
+    DEBUG_LOG(debugLog("Updating fetch stage..."));
 
     bool found = false;
     MaxCPUInstructionLength buffer;
@@ -59,13 +60,13 @@ void CU::updateFetch(uint64_t instructionId, EventHandler<EventHandlerPipelineEv
 
     if (found)
     {
-        debugLog("memory/cache response found for instruction ID: " + std::to_string(instructionId));
+        DEBUG_LOG(debugLog("memory/cache response found for instruction ID: " + std::to_string(instructionId)));
         // Trigger an event to notify that the instruction has been fetched
-        eventHandler.triggerEvent(EventHandlerPipelineEventType::MEMORY_DONE_FETCH);
+        eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_DONE_FETCH);
     }
     else
     {
-        debugLog("No cache response found for instruction ID: " + std::to_string(instructionId));
+        DEBUG_LOG(debugLog("No cache response found for instruction ID: " + std::to_string(instructionId)));
     }
 
     
@@ -73,10 +74,10 @@ void CU::updateFetch(uint64_t instructionId, EventHandler<EventHandlerPipelineEv
 }
 
 //method for fethcing the instruction from the ram
-InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, EventHandler<EventHandlerPipelineEventType>& eventHandler)
+InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, PipelineEventHandler& eventHandler)
 {
 
-    debugLog("Fetching instruction from memory...");
+    DEBUG_LOG(debugLog("Fetching instruction from memory..."));
 
     // Read a line from the cache buffer_responseQueue
     MaxCPUInstructionLength buffer;
@@ -85,12 +86,12 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Eve
 
     bus.getCPU().eraseCacheResponseIfFound(instructionId); // Remove the response from the queue after processing
 
-    debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId));
+    DEBUG_LOG(debugLog("Searching for cache response for instruction ID: " + std::to_string(instructionId)));
 
   
     for(int i=0; i<16; i++)
     {
-        debugLog("Byte " + std::to_string(i) + ": " + to_string_hex(static_cast<int>(buffer[i])));
+        DEBUG_LOG(debugLog("Byte " + std::to_string(i) + ": " + to_string_hex(static_cast<int>(buffer[i]))));
     }
 
     //extracting the instruction from the buffer
@@ -133,9 +134,9 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Eve
         byteCounter++; //increment the byte counter
         r_m rm = decoder.decodeRM(byteRM);
 
-        debugLog("Mod: " + to_string_hex(static_cast<int>(rm.mod)));
-        debugLog("Reg: " + to_string_hex(static_cast<int>(rm.reg)));
-        debugLog("R/M: " + to_string_hex(static_cast<int>(rm.r_m)));
+        DEBUG_LOG(debugLog("Mod: " + to_string_hex(static_cast<int>(rm.mod))));
+        DEBUG_LOG(debugLog("Reg: " + to_string_hex(static_cast<int>(rm.reg))));
+        DEBUG_LOG(debugLog("R/M: " + to_string_hex(static_cast<int>(rm.r_m))));
 
         Instructionbytes.push_back(byteRM); //add the byte to the instruction bytes
 
@@ -157,31 +158,31 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Eve
 
     
 
-    debugLog("Opcode: " + to_string_hex(info.opcode));
-    debugLog("Prefix Count: " + std::to_string(info.prefixCount));
-    debugLog("Total Length: " + std::to_string(info.totalLength));
-    debugLog("Opcode Length: " + std::to_string(info.opcodeLength));
-    debugLog("Additional Bytes: " + std::to_string(info.additionalBytes));
-    debugLog("Description: " + std::string(info.description));
-    debugLog("Number of Operands: " + std::to_string(info.numOperands));
-    debugLog("Operand Length: " + std::to_string(info.operandLength));
+    DEBUG_LOG(debugLog("Opcode: " + to_string_hex(info.opcode)));
+    DEBUG_LOG(debugLog("Prefix Count: " + std::to_string(info.prefixCount)));
+    DEBUG_LOG(debugLog("Total Length: " + std::to_string(info.totalLength)));
+    DEBUG_LOG(debugLog("Opcode Length: " + std::to_string(info.opcodeLength)));
+    DEBUG_LOG(debugLog("Additional Bytes: " + std::to_string(info.additionalBytes)));
+    DEBUG_LOG(debugLog("Description: " + std::string(info.description)));
+    DEBUG_LOG(debugLog("Number of Operands: " + std::to_string(info.numOperands)));
+    DEBUG_LOG(debugLog("Operand Length: " + std::to_string(info.operandLength)));
 
     //load the bytes in the struct of the instruction
     info.instruction = Instructionbytes;
 
-    debugLog("Instruction: ");
+    DEBUG_LOG(debugLog("Instruction: "));
 
     for (size_t i = 0; i < info.instruction.size(); i++)
     {
-        debugLog("Byte: " + to_string_hex(static_cast<int>(info.instruction[i])));
+        DEBUG_LOG(debugLog("Byte: " + to_string_hex(static_cast<int>(info.instruction[i]))));
     }
 
     //set the RIP to the next instruction
     bus.getCPU().getRegisters().getReg(Register::RIP) = index + static_cast<uint64_t>(info.totalLength);
 
-    debugLog("IR: " + to_string_hex(bus.getCPU().getRegisters().getReg(Register::RIP).raw()));
+    DEBUG_LOG(debugLog("IR: " + to_string_hex(bus.getCPU().getRegisters().getReg(Register::RIP).raw())));
 
-    eventHandler.triggerEvent(EventHandlerPipelineEventType::FETCH_COMPLETE);
+    eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::FETCH_COMPLETE);
 
     return info;
 
@@ -189,14 +190,13 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Eve
 
 
 //method for decoding the instruction
-void CU::decodeInstruction(InstructionInfo instruction, std::unique_ptr<Instruction>& decodedInstruction, EventHandler<EventHandlerPipelineEventType>& eventHandler)
+void CU::decodeInstruction(InstructionInfo instruction, std::unique_ptr<Instruction>& decodedInstruction, PipelineEventHandler& eventHandler)
 {
-
-    decodedInstruction = std::unique_ptr<Instruction>(decoder.decodeInstruction(instruction));
-    debugLog("Decoded instruction type: " + toStringTypeofInstruction(decodedInstruction.get()->getType()));
-    eventHandler.triggerEvent(EventHandlerPipelineEventType::DECODE_COMPLETE); 
-    debugLog("Instruction decoded and DECODE_COMPLETE event triggered.");
-
+   
+    decodedInstruction = decoder.decodeInstruction(instruction);
+    DEBUG_LOG(debugLog("Decoded instruction type: " + toStringTypeofInstruction(decodedInstruction.get()->getCore().type)));
+    eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::DECODE_COMPLETE); 
+    DEBUG_LOG(debugLog("Instruction decoded and DECODE_COMPLETE event triggered."));
 }
 
 
@@ -238,7 +238,7 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
             byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
             byteCounter++; //increment the byte counter
             bytes.push_back(byte);
-            debugLog("SIB: " + to_string_hex(static_cast<int>(byte)));
+            DEBUG_LOG(debugLog("SIB: " + to_string_hex(static_cast<int>(byte))));
             info.hasSIB = true;
             info.totalLength += 1;
             info.additionalBytes += 1;
@@ -253,7 +253,7 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
                 {
                     byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
                     byteCounter++; //increment the byte counter
-                    debugLog("Displacement: " + to_string_hex(static_cast<int>(byte)));
+                    DEBUG_LOG(debugLog("Displacement: " + to_string_hex(static_cast<int>(byte))));
                     bytes.push_back(byte);
                     
                 }
@@ -273,7 +273,7 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
             info.hasDisplacement = true;
             info.totalLength += 1;
             info.additionalBytes += 1;
-            debugLog("Displacement: " + to_string_hex(static_cast<int>(byte)));
+            DEBUG_LOG(debugLog("Displacement: " + to_string_hex(static_cast<int>(byte))));
         }
 
         if (rm.mod == 0b10)
@@ -283,7 +283,7 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
             {
                 byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
                 byteCounter++; //increment the byte counter
-                debugLog("Displacement: " + to_string_hex(static_cast<int>(byte)));
+                DEBUG_LOG(debugLog("Displacement: " + to_string_hex(static_cast<int>(byte))));
                 bytes.push_back(byte);
             }
             info.totalLength += 4;
@@ -299,7 +299,7 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
             {
                 byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
                 byteCounter++; //increment the byte counter
-                debugLog("Displacement: " + to_string_hex(static_cast<int>(byte)));
+                DEBUG_LOG(debugLog("Displacement: " + to_string_hex(static_cast<int>(byte))));
                 bytes.push_back(byte);
                 
             }
@@ -363,7 +363,7 @@ void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, in
         //the opcode is part of a group of instructions
         //the real opcode is in the ModRM byte
         //the lenght of the opcode is 1 byte
-        debugLog("Opcode is part of a group of instructions");
+        DEBUG_LOG(debugLog("Opcode is part of a group of instructions"));
 
         //fething the ModRM byte
         byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer (DONT INCREMENT THE BYTE COUNTER, ONLY READ THE BYTE)
@@ -374,7 +374,7 @@ void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, in
         //setting the real opcode
         opcode = (opcode << 8) | static_cast<uint32_t>(reg);
 
-        debugLog("Real Opcode: " + to_string_hex(opcode));
+        DEBUG_LOG(debugLog("Real Opcode: " + to_string_hex(opcode)));
 
         //the opcode is still 1 byte, this script just modify the "opcode" variable to avoid mistakes in the decoding phase using it has a key for the map
         
