@@ -11,14 +11,14 @@
 #include "controlUnit.hpp"
 #include "alu.hpp"
 #include "registerFile.hpp"
-#include "cacheManager.hpp"
+#include "cache/cacheManager.hpp"
 #include "pipeline.hpp"
 #include "pipelineController.hpp"
 
 class Bus;
 class PipelineEventHandler;
 
-class CPU: public Device
+class CPU: public TickedDevice, public FaultDevice
 {
 
     private:
@@ -83,7 +83,7 @@ class CPU: public Device
 
         PipelineController& getPipelineController();
 
-        void sendCacheRequest(CacheRequest&& request); //send a cache request
+        void sendCacheRequest(CacheRequest&& request, CacheLevelType cacheType); //send a cache request
 
         void eraseCacheResponseIfFound(int requestID); //erase a cache response from the queue
 

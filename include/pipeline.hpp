@@ -271,7 +271,8 @@ struct MemoryWriteBackBuffer {
 
 // Pipeline class
 
-class Pipeline : public Device {
+class Pipeline : public TickedDevice, public FaultDevice
+{
 
     public:
 

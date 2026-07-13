@@ -1,387 +1,9 @@
-#include "cacheManager.hpp"
-#include "memory.hpp"
-#include <iostream>
-#include "cpu.hpp"
-#include <random>
+#include "cache/cacheLevel.hpp"
 #include "bus.hpp"
 #include "eventLog.hpp"
 
-
-LRUReplacementPolicy::LRUReplacementPolicy(const uint32_t& numSets, const uint8_t& associativity)
-{
-    lruStates.reserve(numSets); // Reserve space for the LRU states based on the number of sets
-    for (uint32_t i = 0; i < numSets; ++i)
-    {
-        initializeSet(associativity); // Initialize the LRU state for each cache set based on the number of sets and associativity
-    }
-}
-
-void LRUReplacementPolicy::initializeSet(uint8_t associativity)
-{
-    LRUState state;
-    for (uint8_t i = 0; i < associativity; ++i)
-    {
-        state.queue.push(i); // Initialize the queue with line indices based on the associativity of the cache set
-    }
-    lruStates.push_back(state); // Add the LRU state for the cache set to the LRU queue
-}
-
-uint8_t LRUReplacementPolicy::selectLineToReplace(CacheSet& set)
-{
-    DEBUG_LOG(debugLog("selezione linea"));
-    LRUState& state = lruStates[set.setIndex];
-
-    for(uint8_t i = 0; i < set.lines.size(); ++i)
-    {
-        if (!set.lines[i].valid) // If there is an invalid line in the set, return its index for replacement
-        {
-            return i;
-        }
-    }
-
-    return state.queue.getLastRecent(); // Select the line to replace based on the LRU queue for the cache set
-
-}
-
-void LRUReplacementPolicy::updateOnAccess(CacheSet& set, uint8_t lineIndex)  
-{
-    lruStates[set.setIndex].queue.touch(lineIndex); // Update the LRU queue on cache access to reflect the most recently used line
-}
-
-void LRUReplacementPolicy::onLineLoaded(CacheSet& set, uint8_t lineIndex) 
-{
-    lruStates[set.setIndex].queue.touch(lineIndex); // Update the LRU queue when a line is loaded into the cache to reflect the most recently used line
-
-}
-
-
-uint8_t PLRUTree::selectLineToReplace()
-{
-    uint8_t node = 0; // Start at the root of the PLRU tree
-
-    while (node < bits.size()) // Traverse the tree until reaching a leaf node
-    {
-        node = bits[node] ? (2 * node + 2) : (2 * node + 1); // Move left or right based on the bit value at the current node( 1 for right, 0 for left)
-    }
-
-    return node - bits.size(); // Return the line index corresponding to the leaf node reached
-}
-
-void PLRUTree::updateLine(uint8_t lineIndex)
-{
-    uint8_t node = lineIndex + bits.size(); // Start at the leaf node corresponding to the accessed line index
-
-    while (node > 0) // Traverse the tree until reaching a leaf node
-    {
-        uint8_t parent = (node - 1) / 2; // Calculate the parent node index
-        bits[parent] = (node == 2 * parent + 1) ? 0 : 1; // Update the bit at the parent node to indicate the direction taken (1 for right, 0 for left) and move up to the parent node
-        
-        node = parent;
-    }
-}
-
-
-PLRUReplacementPolicy::PLRUReplacementPolicy(const uint32_t& numSets, const uint8_t& associativity)
-{
-    plruTrees.reserve(numSets); // Reserve space for the PLRU trees based on the number of sets
-    for (uint32_t i = 0; i < numSets; ++i)
-    {
-        initializeSet(associativity); // Initialize the PLRU state for each cache set based on the number of sets and associativity
-    }
-}
-
-void PLRUReplacementPolicy::initializeSet(uint8_t associativity)
-{
-    PLRUTree tree(associativity); // Create a PLRU tree for the cache set based on the associativity
-    for (uint8_t i = 0; i < associativity; ++i)
-    {
-        tree.updateLine(i); // Initialize the PLRU tree by updating the lines based on the associativity
-    }
-    plruTrees.push_back(tree); // Add the initialized PLRU tree to the vector
-}
-
-uint8_t PLRUReplacementPolicy::selectLineToReplace(CacheSet& set)
-{
-    auto& tree = plruTrees[set.setIndex]; // Get the PLRU tree for the cache set
-    for (uint8_t i = 0; i < set.lines.size(); ++i)
-    {
-        if (!set.lines[i].valid) // If there is an invalid line in the set, return its index for replacement
-        {
-            return i;
-        }
-    }
-
-    return tree.selectLineToReplace(); // Select the line to replace based on the PLRU tree for the cache set
-}
-
-void PLRUReplacementPolicy::updateOnAccess(CacheSet& set, uint8_t lineIndex)
-{
-    auto& tree = plruTrees[set.setIndex]; // Get the PLRU tree for the cache set
-    tree.updateLine(lineIndex); // Update the PLRU tree on cache access to reflect the most recently used line
-}
-
-void PLRUReplacementPolicy::onLineLoaded(CacheSet& set, uint8_t lineIndex)
-{
-    auto& tree = plruTrees[set.setIndex]; // Get the PLRU tree for the cache set
-    tree.updateLine(lineIndex); // Update the PLRU tree when a line is loaded into the cache to reflect the most recently used line
-}
-
-
-uint8_t RandomReplacementPolicy::selectLineToReplace(CacheSet& set)
-{
-    
-    
-    std::uniform_int_distribution<> dis(0, set.lines.size() - 1); // Uniform distribution to select a random line index from the set
-
-    return dis(gen); // Return a randomly selected line index from the set
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-CacheStorage::CacheStorage(uint8_t numSets, uint8_t associativity)
-{
-    sets.resize(numSets); // Resize the vector of cache sets based on the number of sets
-
-    for (uint8_t i = 0; i < numSets; ++i)
-    {
-        sets[i].setIndex = i; // Initialize the set index for each cache set
-        sets[i].lines.resize(associativity); // Resize the vector of cache lines in each set based on the associativity
-
-        for (uint8_t j = 0; j < associativity; ++j)
-        {
-            sets[i].lines[j].valid = false; // Initialize all lines as invalid
-            sets[i].lines[j].dirty = false; // Initialize all lines as not dirty
-            sets[i].lines[j].tag = 0;
-            sets[i].lines[j].lastAccessTime = 0; // Initialize last access time to 0
-        }
-    }
-}
-
-CacheLine* CacheStorage::findLine(uint8_t setIndex, uint64_t tag)
-{
-    CacheSet& set = sets[setIndex]; // Get the cache set based on the set index
-
-    for (CacheLine& line : set.lines) // Loop through the lines in the set
-    {
-        if (line.valid && line.tag == tag) // Check if the line is valid and the tag matches
-        {
-            return &line; // Return a pointer to the matching cache line
-        }
-    }
-
-    return nullptr; // Return nullptr if no matching line is found
-}
-
-int8_t CacheStorage::findLineIndex(uint8_t setIndex, uint64_t tag)
-{
-    CacheSet& set = sets[setIndex];
-    for (uint8_t i = 0; i < set.lines.size(); ++i)
-        if (set.lines[i].valid && set.lines[i].tag == tag)
-            return i;
-
-    return -1; // miss
-}
-
-void CacheStorage::invalidateLine(uint8_t setIndex, uint8_t lineIndex)
-{
-    CacheSet& set = sets[setIndex]; // Get the cache set based on the set index
-    CacheLine& line = set.lines[lineIndex]; // Get the cache line based on the line index
-
-    if (line.valid) // Check if the line is valid before invalidating
-    {
-        line.valid = false; // Invalidate the line
-        line.dirty = false; // Mark the line as not dirty
-    }
-}
-
-void CacheStorage::invalidateAllLines()
-{
-    for (uint8_t i = 0; i < sets.size(); ++i) // Loop through all cache sets
-    {
-        for (uint8_t j = 0; j < sets[i].lines.size(); ++j) // Loop through all lines in the cache set
-        {
-            invalidateLine(i, j); // Invalidate each line in the cache set
-        }
-    }
-}
-
-
-void CacheStorage::invalidateLineByAddress(AddressInfo addressInfo)
-{
-    int8_t lineIndex = findLineIndex(addressInfo.setIndex, addressInfo.tag); // Find the line index based on the set index and tag from the address information
-
-    if (lineIndex < 0) [[unlikely]] // If no matching line is found, return without invalidating
-        return;
-
-    invalidateLine(addressInfo.setIndex, lineIndex); // Invalidate the specific cache line based on the set index and line index
-}
-
-void CacheStorage::flush(auto&& memoryWriteFunction)
-{
-    int i = 0;
-    for (CacheSet& set : sets) // Loop through all cache sets
-    {
-
-        for (CacheLine& line : set.lines) // Loop through all lines in the cache set
-        {
-            if (line.valid && line.dirty) // Check if the line is valid and dirty before flushing
-            {
-                uint8_t offsetBits = std::countr_zero(CACHE_LINE_SIZE); // Calculate the number of bits for the offset based on the cache line size
-                uint8_t setIndexBits = std::countr_zero(sets.size()); // Calculate the number of bits for the set index based on the number of cache sets
-                uint64_t address = (line.tag << (offsetBits + setIndexBits)) | (i<< offsetBits);
-                memoryWriteFunction(address, line.data);
-                // Example: memory.write(line.tag * CACHE_LINE_SIZE, line.data);
-                line.dirty = false; // Mark the line as not dirty after flushing
-            }
-        }
-        i++;
-    }
-}
-
-void CacheStorage::loadLine(uint8_t setIndex, const CacheLine& line, uint8_t lineIndex)
-{
-    CacheSet& set = sets[setIndex]; // Get the cache set based on the set index
-    CacheLine& targetLine = set.lines[lineIndex]; // Get the target cache line based on the line index
-
-    targetLine.data = line.data; // Load the data into the target cache line
-    targetLine.tag = line.tag; // Set the tag for the target cache line
-    targetLine.valid = true; // Mark the target cache line as valid
-    targetLine.dirty = false; // Mark the target cache line as not dirty since it's being loaded with new data
-
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void RequestScheduler::processRequests()
-{
-    for (auto it = pendingRequests.begin(); it != pendingRequests.end();)
-    {
-        if (it->state == RequestState::WAITING_LATENCY) // Check if the request is in WAITING state
-        {
-            --(it->remainingLatency); // Decrement the remaining latency for the request( IT CANT BE ZERO)
-
-            if (it->remainingLatency == 0) // If the request is ready to be processed
-            {
-                it->state = RequestState::READY_TO_PROCESS; // Update the state to READY_TO_PROCESS
-                DEBUG_LOG(debugLog("n di richeiste: " + std::to_string(pendingRequests.size())));
-                cacheControllerCallback(CallbackContext, *it); // Call the callback function to process the request using the provided context
-                it = pendingRequests.erase(it); // Remove the request from the pending requests vector after processing
-                DEBUG_LOG(debugLog("n di richeiste dopo esecuzione: " + std::to_string(pendingRequests.size())));
-
-            }
-            else
-            {
-                ++it; // Move to the next request in the vector
-            }
-        }
-        else
-        {
-            ++it; // Move to the next request in the vector if it's not in WAITING state
-        }
-    }
-}
-
-void RequestScheduler::scheduleRequest(CacheRequest&& request)
-{
-    DEBUG_LOG(debugLog("richiesta inserita"));
-    uint8_t latency = ((request.type == (RequestType::FILL)) || (request.type == (RequestType::READ_AFTER_FILL)) || (request.type == (RequestType::WRITE_AFTER_FILL))) ? this->fillLatency : this->latency; 
-    pendingRequests.emplace_back(std::move(request), latency, RequestState::WAITING_LATENCY); // Add a new request to the pending requests vector with the specified latency
-}
-
-void RequestScheduler::schedulePendingRequest(PendingRequest&& pendingRequest)
-{   
-    pendingRequest.state = RequestState::WAITING_LATENCY; // Set the state of the pending request to WAITING_LATENCY before scheduling
-    pendingRequest.remainingLatency = ((pendingRequest.request.type == (RequestType::FILL)) || (pendingRequest.request.type == (RequestType::READ_AFTER_FILL)) || (pendingRequest.request.type == (RequestType::WRITE_AFTER_FILL)) ) ? this->fillLatency : this->latency; 
-    pendingRequests.push_back(std::move(pendingRequest)); // Add a pending request to the pending requests vector for processing
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-AddressInfo CacheController::decodeAddress(uint64_t address)
-{
-    uint8_t offsetBits = std::countr_zero(CACHE_LINE_SIZE); // Calculate the number of bits for the offset based on the cache line size
-    uint8_t setIndexBits = std::countr_zero(numSets); // Calculate the number of bits for the set index based on the number of cache sets
-
-    uint64_t offset = address & ((1ULL << offsetBits) - 1); // Extract the offset from the address using bitwise operations
-    uint64_t setIndex = (address >> offsetBits) & ((1ULL << setIndexBits) - 1); // Extract the set index from the address using bitwise operations
-    uint64_t tag = address >> (offsetBits + setIndexBits); // Extract the tag from the address by shifting right by the total number of bits for offset and set index
-
-    return AddressInfo(address, setIndex, tag, offset); // Return an AddressInfo struct containing the decoded address information
-}
-
-void CacheController::handleRequest(PendingRequest& request)
-{
-
-    CacheRequest& cacheRequest = request.request; // Get a reference to the cache request from the pending request
-     
-    DEBUG_LOG(debugLog("processing request "+ std::to_string(request.request.requestID)));
-    // Handle the incoming cache request and coordinate the cache operations based on the request type and address information
-    // This function will involve looking up the cache, determining hits or misses, and performing the necessary actions (e.g., loading data, writing back dirty lines, etc.)
-    AddressInfo addressInfo = decodeAddress(cacheRequest.address); // Decode the memory address to get set index, tag, and offset information
-    CacheEventPayload payload = CacheEventPayload(addressInfo, AddressInfo(0, 0, 0, 0), cacheRequest);
-
-    if(cacheRequest.type == RequestType::FILL) // If the request is a FILL request and it's a hit, we need to fill the cache line with data from the next level or memory
-    {
-        DEBUG_LOG(debugLog("fill request ricevuta"));
-        CacheEventPayload payloadFill = CacheEventPayload(addressInfo, cacheRequest, &(request.line)); // Create a payload for the fill event with the address information and cache request
-        cacheEventHandler.triggerHandleRequestEvent(EventHandlerCacheEventType::CACHE_FILL, payloadFill); // Trigger a cache fill event for logging or debugging purposes
-        return;
-    }
-    else if (cacheRequest.type == RequestType::READ_AFTER_FILL || cacheRequest.type == RequestType::WRITE_AFTER_FILL)
-    {
-        DEBUG_LOG(debugLog("cache hit"));
-        cacheEventHandler.triggerHandleRequestEvent(EventHandlerCacheEventType::CACHE_HIT, payload); // Trigger a cache hit event for logging or debugging purposes
-
-        return;
-
-    }
-
-    LookUpResult result = lookupCache(addressInfo, cacheRequest.dataType); // Perform a cache lookup based on the decoded address information to determine if it's a hit or miss
-
-    switch (result)
-    {
-        case LookUpResult::HIT:
-        DEBUG_LOG(debugLog("hit cache"));
-            cacheEventHandler.triggerHandleRequestEvent(EventHandlerCacheEventType::CACHE_HIT, payload); // Trigger a cache hit event for logging or debugging purposes
-            break;
-        case LookUpResult::MISS:
-        DEBUG_LOG(debugLog("miss_cache"));
-            cacheEventHandler.triggerHandleRequestEvent(EventHandlerCacheEventType::CACHE_MISS, payload); // Trigger a cache miss event for logging or debugging purposes
-            break;
-        case LookUpResult::HIT_CROSS_LINES:
-        DEBUG_LOG(debugLog("hit cross cache"));
-            payload.addressInfo2 = decodeAddress(cacheRequest.address + (CACHE_LINE_SIZE - addressInfo.offset)); // Decode the address of the second cache line for cross-line access
-            cacheEventHandler.triggerHandleRequestEvent(EventHandlerCacheEventType::CACHE_HIT_CROSS_LINES, payload); // Trigger a cache hit cross lines event for logging or debugging purposes
-            break;
-        case LookUpResult::ERROR:
-        DEBUG_LOG(debugLog("error cache"));
-            break;
-    }
-
-    return;
-}
-
-LookUpResult CacheController::lookupCache(const AddressInfo& addressInfo, TypeofData dataType)
-{
-    // Perform a cache lookup based on the decoded address information to determine if it's a hit or miss
-    LookUpResult result = LookUpResult::ERROR; // Initialize the result to error
-    CacheLookupPayload payload = CacheLookupPayload(addressInfo, dataType); // Create a payload for the cache lookup event with the address information and type of data being accessed
-    result = cacheEventHandler.triggerLookupCacheEvent(payload); // Trigger a cache lookup event for logging or debugging purposes
-    return result;
-}
-
-void CacheController::CallBackWrapperScheduler(void* context, PendingRequest& request)
-{
-    DEBUG_LOG(debugLog("callback scheduler"));
-    CacheController* controller = static_cast<CacheController*>(context); // Cast the context pointer to a CacheController pointer
-    controller->handleRequest(request); // Call the handleRequest function to process the cache request
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-CacheLevel::CacheLevel(uint32_t size, uint8_t associativity, uint8_t latency, uint8_t fillLatency, Bus& bus, CacheLevel *nextLevel, CacheLevel* parentLevel, CacheLevelType cacheType)
-    : cacheSize(size), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus), nextLevel(nextLevel), parentLevel(parentLevel),associativity(associativity), latencyCycles(latency), latencyFill(fillLatency), type(cacheType),
+CacheLevel::CacheLevel(uint32_t size, uint8_t associativity, uint8_t latency, uint8_t fillLatency, Bus& bus, CacheLevel *nextLevel, CacheLevel* parentLevel1, CacheLevel* parentLevel2, CacheLevelType cacheType, std::array<CacheLevel*, 2> L1Ipath, std::array<CacheLevel*, 2> L1Dpath)
+    : cacheSize(size), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus), nextLevel(nextLevel), parentLevel1(parentLevel1), parentLevel2(parentLevel2), L1Ipath(L1Ipath), L1Dpath(L1Dpath), associativity(associativity), latencyCycles(latency), latencyFill(fillLatency), type(cacheType),
     storage(numSets, associativity), controller(eventHandler, numSets), scheduler(latencyCycles, fillLatency, &CacheController::CallBackWrapperScheduler, static_cast<void*>(&this->controller))
 {
     DEBUG_LOG(debugLog("inizializzazione cache level"));
@@ -401,6 +23,8 @@ CacheLevel::CacheLevel(uint32_t size, uint8_t associativity, uint8_t latency, ui
 
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void CacheLevel::onHitWrapper(void* context, CacheEventPayload& payload)
 {
@@ -433,6 +57,8 @@ LookUpResult CacheLevel::LookupWrapper(void* context, CacheLookupPayload& payloa
     return cacheLevel->lookupCache(payload.addressInfo, payload.dataType); // Call the lookupCache function to perform the cache lookup and return the result
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void CacheLevel::execute_operation()
 {
     #ifdef DEBUG
@@ -441,8 +67,11 @@ void CacheLevel::execute_operation()
 
     switch (type)
     {
-    case CacheLevelType::L1:
-        cache = "L1";
+    case CacheLevelType::L1I:
+        cache = "L1I";
+        break;
+    case CacheLevelType::L1D:
+        cache = "L1D";
         break;
     case CacheLevelType::L2:
         cache = "L2";
@@ -484,7 +113,7 @@ LookUpResult CacheLevel::lookupCache(const AddressInfo& addressInfo, TypeofData 
             result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
             result.errorInfo.event = EventType::CACHE_HIT;
             result.errorInfo.error = ErrorType::NONE;
-            EventLog::getInstance().pushCacheDataLogEntry(std::move(result), nullptr, nullptr, addressInfo, AddressInfo()); // Log the cache hit event with the address and data from the cache line
+            EventLog::getInstance().pushCacheDataLogEntry({std::move(result)}, nullptr, nullptr, addressInfo, AddressInfo(0, 0, 0, 0)); // Log the cache hit event with the address and data from the cache line
             return LookUpResult::HIT; // Return HIT if it's a hit within a single cache line
         }
         else
@@ -504,7 +133,8 @@ LookUpResult CacheLevel::lookupCache(const AddressInfo& addressInfo, TypeofData 
             result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
             result.errorInfo.event = EventType::CACHE_MISS;
             result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-            EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo()); // Log the cache miss event with the address and data from the first cache line
+            EventLog& log = EventLog::getInstance();
+            log.pushCacheDataLogEntry({std::move(result)}, static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo(uint64_t(0), uint64_t(0), uint64_t(0), uint64_t(0))); // Log the cache miss event with the address and data from the first cache line
             return LookUpResult::MISS; // Return MISS if the second cache line for cross-line access is not found, indicating a miss across two cache lines
         }
     }
@@ -514,14 +144,14 @@ LookUpResult CacheLevel::lookupCache(const AddressInfo& addressInfo, TypeofData 
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_MISS;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo()); // Log the cache miss event with the address and data from the first cache line
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo(uint64_t(0), uint64_t(0), uint64_t(0), uint64_t(0))); // Log the cache miss event with the address and data from the first cache line
         return LookUpResult::MISS; // Return MISS if no matching cache line is found
     }
 }
 
 void CacheLevel::onHit(const AddressInfo& addressInfo, CacheRequest& request)
 {
-    if(type != CacheLevelType::L1)
+    if(type != CacheLevelType::L1I && type != CacheLevelType::L1D)
     {   
         if(!writePolicy->writeAllocateOnMiss() && request.type == RequestType::WRITE)
         {
@@ -542,37 +172,38 @@ void CacheLevel::onHit(const AddressInfo& addressInfo, CacheRequest& request)
         replacementPolicy->updateOnAccess(storage.getSet(addressInfo.setIndex), lineIndex);
         CacheLine* line = storage.findLine(addressInfo.setIndex, addressInfo.tag);
 
-        auto MakeFillPendingRequest = [&]()
-        {
-            CacheRequest fillRequest = CacheRequest();
-            fillRequest.address = addressInfo.address - addressInfo.offset; //adress start line
-            fillRequest.dataType = TypeofData::ARRAY_64B;
-            fillRequest.type = RequestType::FILL;
-            PendingRequest fillPendingRequest = PendingRequest();
-            fillPendingRequest.line = *line;
-            fillPendingRequest.request = std::move(fillRequest);
-            
-            return fillPendingRequest;
-        };
+        
 
-        CacheLevel* topLevel = parentLevel;
-
-        while (topLevel != nullptr)
-        {
-            topLevel->schedulePendingRequest(MakeFillPendingRequest());
-            topLevel = topLevel->parentLevel;
-        }
+    
+       
+        request.typeofL1 == CacheLevelType::L1I ? fillToL1I(line, addressInfo) : fillToL1D(line, addressInfo);
+        
+        
         
         //recreating the original request for L1
         PendingRequest originalPendingRequest = PendingRequest();
         originalPendingRequest.request = request;
 
         originalPendingRequest.request.type =  originalPendingRequest.request.type == RequestType::READ ? RequestType::READ_AFTER_FILL : RequestType::WRITE_AFTER_FILL;
-        bus.getCPU().getCacheManager().getL1Cache().schedulePendingRequest(std::move(originalPendingRequest));
+        switch(request.typeofL1)
+        {
+            case CacheLevelType::L1I:
+                L1Ipath[1]->schedulePendingRequest(std::move(originalPendingRequest));
+                break;
+            case CacheLevelType::L1D:
+                L1Dpath[1]->schedulePendingRequest(std::move(originalPendingRequest));
+                break;
+            default:
+                //error handling
+                break;
+        }
+        
 
         return;
 
     }
+    
+    
     switch (request.type)
     {
     case RequestType::READ:
@@ -601,7 +232,7 @@ void CacheLevel::onHit(const AddressInfo& addressInfo, CacheRequest& request)
 
 void CacheLevel::onHitCrossLines(const AddressInfo& addressInfo1, const AddressInfo& addressInfo2, CacheRequest& request)
 {
-     if(type != CacheLevelType::L1)
+     if(type != CacheLevelType::L1I && type != CacheLevelType::L1D)
     {   
         if(!writePolicy->writeAllocateOnMiss() && request.type == RequestType::WRITE)
         {
@@ -626,18 +257,6 @@ void CacheLevel::onHitCrossLines(const AddressInfo& addressInfo1, const AddressI
         replacementPolicy->updateOnAccess(storage.getSet(addressInfo1.setIndex), lineIndex1);
         CacheLine* line1 = storage.findLine(addressInfo1.setIndex, addressInfo1.tag);
 
-        auto MakeFillPendingRequest1 = [&]()
-        {
-            CacheRequest fillRequest = CacheRequest();
-            fillRequest.address = addressInfo1.address - addressInfo1.offset; //adress start line
-            fillRequest.dataType = TypeofData::ARRAY_64B;
-            fillRequest.type = RequestType::FILL;
-            PendingRequest fillPendingRequest = PendingRequest();
-            fillPendingRequest.line = *line1;
-            fillPendingRequest.request = std::move(fillRequest);
-            
-            return fillPendingRequest;
-        };
 
         int8_t lineIndex2 = storage.findLineIndex(addressInfo2.setIndex, addressInfo2.tag);
         if (lineIndex2 < 0)
@@ -647,37 +266,25 @@ void CacheLevel::onHitCrossLines(const AddressInfo& addressInfo1, const AddressI
         replacementPolicy->updateOnAccess(storage.getSet(addressInfo2.setIndex), lineIndex2);
         CacheLine* line2 = storage.findLine(addressInfo2.setIndex, addressInfo2.tag);
 
-        auto MakeFillPendingRequest2 = [&]()
-        {
-            CacheRequest fillRequest = CacheRequest();
-            fillRequest.address = addressInfo2.address - addressInfo2.offset; //adress start line
-            fillRequest.dataType = TypeofData::ARRAY_64B;
-            fillRequest.type = RequestType::FILL;
-            PendingRequest fillPendingRequest = PendingRequest();
-            fillPendingRequest.line = *line2;
-            fillPendingRequest.request = std::move(fillRequest);
-            
-            return fillPendingRequest;
-        };
-
-
-
-
-        CacheLevel* topLevel = parentLevel;
-
-        while (topLevel != nullptr)
-        {
-            topLevel->schedulePendingRequest(MakeFillPendingRequest1());
-            topLevel->schedulePendingRequest(MakeFillPendingRequest2());
-            topLevel = topLevel->parentLevel;
-        }
+        request.typeofL1 == CacheLevelType::L1I ? fillToL1Idouble(line1, line2, addressInfo1, addressInfo2) : fillToL1Ddouble(line1, line2, addressInfo1, addressInfo2);
         
         //recreating the original request for L1
         PendingRequest originalPendingRequest = PendingRequest();
         originalPendingRequest.request = request;
 
         originalPendingRequest.request.type =  originalPendingRequest.request.type == RequestType::READ ? RequestType::READ_AFTER_FILL : RequestType::WRITE_AFTER_FILL;
-        bus.getCPU().getCacheManager().getL1Cache().schedulePendingRequest(std::move(originalPendingRequest));
+        switch(request.typeofL1)
+        {
+            case CacheLevelType::L1I:
+                L1Ipath[1]->schedulePendingRequest(std::move(originalPendingRequest));
+                break;
+            case CacheLevelType::L1D:
+                L1Dpath[1]->schedulePendingRequest(std::move(originalPendingRequest));
+                break;
+            default:
+                //error handling
+                break;
+        }
 
         return;
 
@@ -772,7 +379,7 @@ void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& re
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_READ;
         result.errorInfo.error = ErrorType::NONE;
-        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), &(line->data), static_cast<LineData*>(nullptr), addressInfo, AddressInfo()); // Log the cache hit event with the address and data from the cache line
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), &(line->data), static_cast<LineData*>(nullptr), addressInfo, AddressInfo(0, 0, 0, 0)); // Log the cache hit event with the address and data from the cache line
     }
     else
     {
@@ -780,7 +387,7 @@ void CacheLevel::readSingleLine(const AddressInfo& addressInfo, CacheRequest& re
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_READ;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(), AddressInfo());
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(0, 0, 0, 0), AddressInfo(0, 0, 0, 0));
            
     }   
 
@@ -817,7 +424,7 @@ void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressIn
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_READ;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(), AddressInfo());
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(0, 0, 0, 0), AddressInfo(0, 0, 0, 0));
     
     }
 
@@ -845,7 +452,7 @@ void CacheLevel::writeSingleLine(const AddressInfo& addressInfo, CacheRequest& r
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_WRITE;
         result.errorInfo.error = ErrorType::NONE;
-        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), &(line->data), static_cast<LineData*>(nullptr), addressInfo, AddressInfo()); // Log the cache hit event with the address and data from the cache line
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), &(line->data), static_cast<LineData*>(nullptr), addressInfo, AddressInfo(0, 0, 0, 0)); // Log the cache hit event with the address and data from the cache line
 
         if(writePolicy->writeThroughOnHit()) // If the write policy is set to write-through
         {
@@ -866,7 +473,7 @@ void CacheLevel::writeSingleLine(const AddressInfo& addressInfo, CacheRequest& r
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_WRITE;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(), AddressInfo());
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(0, 0, 0, 0), AddressInfo(0, 0, 0, 0));
     }
 
     bus.getCPU().cacheResponseQueue[request.requestID] = std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
@@ -916,7 +523,7 @@ void CacheLevel::writeCrossLines(const AddressInfo& addressInfo1, const AddressI
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_WRITE;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
-        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(), AddressInfo());
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(0, 0, 0, 0), AddressInfo(0, 0, 0, 0));
     }
 
 
@@ -948,7 +555,7 @@ void CacheLevel::onFill(const AddressInfo& addressInfo, [[maybe_unused]] CacheRe
         resultEviction.errorInfo.source = getComponentTypeFromCacheLevelType(type);
         resultEviction.errorInfo.event = EventType::CACHE_EVICT;
         resultEviction.errorInfo.error = ErrorType::NONE;
-        EventLog::getInstance().pushCacheDataLogEntry(std::move(resultEviction), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo());
+        EventLog::getInstance().pushCacheDataLogEntry(std::move(resultEviction), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo(0, 0, 0, 0));
         onEviction(controller.decodeAddress(victimAddress),victim);
     }
 
@@ -962,7 +569,7 @@ void CacheLevel::onFill(const AddressInfo& addressInfo, [[maybe_unused]] CacheRe
     resultFill.errorInfo.source = getComponentTypeFromCacheLevelType(type);
     resultFill.errorInfo.event = EventType::CACHE_FILL;
     resultFill.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().pushCacheDataLogEntry(std::move(resultFill), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(), AddressInfo());
+    EventLog::getInstance().pushCacheDataLogEntry(std::move(resultFill), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), AddressInfo(0, 0, 0, 0), AddressInfo(0, 0, 0, 0));
 
     // The actual filling of the cache line with data from the lower level or memory will be handled in the onHit or onMiss functions based on whether the line was found or not, and the replacement policy will be updated accordingly to reflect the most recently used line
 }
@@ -990,197 +597,133 @@ void CacheLevel::onEviction(const AddressInfo& addressInfo, const CacheLine& lin
 
 
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
 
-
-void MemoryScheduler::scheduleMemoryRequest(CacheRequest&& request)
+void CacheLevel::fillToL1D(CacheLine* line, const AddressInfo& addressInfo)
 {
-    DEBUG_LOG(debugLog("richeista inserita in ram"));
-    PendingRequest pendingRequest = PendingRequest(); // Create a new pending memory request to be scheduled for processing by the memory scheduler
-    pendingRequest.request = std::move(request);   
-    pendingRequest.remainingLatency = memoryLatency; // Set the remaining latency for the memory request based on the specified memory latency
-    pendingRequest.state = RequestState::WAITING_LATENCY; // Set the initial state of the memory request to WAITING_LATENCY to indicate that it is waiting for the specified memory latency before being processed
-    memoryRequestQueue.push_back(std::move(pendingRequest)); // Add the pending memory request to the queue of pending requests to be processed by the memory scheduler
-}
-
-void MemoryScheduler::schedulePendingRequest(PendingRequest&& pendingRequest)
-{
-    pendingRequest.remainingLatency = memoryLatency; // Set the remaining latency for the pending request based on the specified memory latency
-    pendingRequest.state = RequestState::WAITING_LATENCY; // Set the initial state of the pending request to WAITING_LATENCY to indicate that it is waiting for the specified memory latency before being processed
-    memoryRequestQueue.push_back(std::move(pendingRequest)); // Add the pending request to the queue of pending requests to be processed by the memory scheduler
-}
-
-void MemoryScheduler::processMemoryRequests()
-{
-    for (auto it = memoryRequestQueue.begin(); it != memoryRequestQueue.end();)
-    {
-        PendingRequest& pendingRequest = *it;
-
-        if (pendingRequest.state == RequestState::WAITING_LATENCY) // If the pending request is in the WAITING_LATENCY state
+    auto MakeFillPendingRequest = [&]()
         {
-            if (pendingRequest.remainingLatency > 0) // If there is remaining latency for the pending request
-            {
-                --pendingRequest.remainingLatency; // Decrement the remaining latency for the pending request
-            }
-            if (pendingRequest.remainingLatency == 0) // If the remaining latency for the pending request has reached zero
-            {
-                pendingRequest.state = RequestState::READY_TO_PROCESS; // Set the state of the pending request to READY_TO_PROCESS to indicate that it is ready to be processed by the memory scheduler
-            }
-        }
-
-        if (pendingRequest.state == RequestState::READY_TO_PROCESS) // If the pending request is in the READY_TO_PROCESS state
-        {   
-            processMemoryRequest(std::move(pendingRequest)); // Process the memory request using the processMemoryRequest function, which will handle the actual processing of the memory request based on its type and data
-            it = memoryRequestQueue.erase(it); // Remove the processed memory request from the queue of pending requests
-        }
-        else
-            ++it; // Move to the next pending request in the queue if the current request is not ready to be processed
-    }
-    
-}
-
-void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
-{
-    DEBUG_LOG(debugLog("esecuzione ram richeista:" + std::to_string(pendingRequest.request.requestID)));
-    CacheRequest& originalRequest = pendingRequest.request; // Get the cache request from the pending request to be processed by the memory scheduler
-    LineData readResponse;
-
-    //calculating the adress for the start of the line
-    uint64_t lineAddress = originalRequest.address & ~(CACHE_LINE_SIZE - 1); //BITMASK FOR REMOVING 6BITS FINALS TAHT RAPPRESENTS THE OFFSET
-
-
-
-    switch (originalRequest.type) // Process the memory request based on its type (READ or WRITE) and handle the data accordingly
-    {
-        case RequestType::READ:
-        {
-            DEBUG_LOG(debugLog("lettura ram"));
-            readResponse = bus.getMemory().read(lineAddress);
+            CacheRequest fillRequest = CacheRequest();
+            fillRequest.address = addressInfo.address - addressInfo.offset; //adress start line
+            fillRequest.dataType = TypeofData::ARRAY_64B;
+            fillRequest.type = RequestType::FILL;
+            fillRequest.typeofL1 = CacheLevelType::NONE;
+            PendingRequest fillPendingRequest = PendingRequest();
+            fillPendingRequest.line = *line;
+            fillPendingRequest.request = std::move(fillRequest);
             
-            DEBUG_LOG(debugLog("lettura ram completata"));
+            return fillPendingRequest;
+        };
 
-                auto makeFillPending =[&]() ->PendingRequest
-                {
-                    auto fillRequest = CacheRequest();
-                    fillRequest.address = lineAddress;
-                    fillRequest.dataType = TypeofData::ARRAY_64B;
-                    fillRequest.type = RequestType::FILL;
-
-                    CacheLine line = CacheLine();
-                    line.data = readResponse;
-
-                    auto fillPendingRequest = PendingRequest();
-                    fillPendingRequest.line= std::move(line);
-                    fillPendingRequest.request = std::move(fillRequest);
-
-                    return fillPendingRequest;
-
-                };
-
-               
-              
-
-                bus.getCPU().getCacheManager().getL3Cache().schedulePendingRequest(makeFillPending());
-
-        
-                bus.getCPU().getCacheManager().getL2Cache().schedulePendingRequest(makeFillPending());
-
-                bus.getCPU().getCacheManager().getL1Cache().schedulePendingRequest(makeFillPending());
-                
-                DEBUG_LOG(debugLog("fill inviate"));
-
-                //sending to L1 also teh original request to hit and responde to cpu
-                
-                bus.getCPU().getCacheManager().getL1Cache().schedulePendingRequest(std::move(pendingRequest));
-
-                DEBUG_LOG(debugLog("invio originale"));
-
-            break;
-        }
-        case RequestType::READ_MEMORY_FOR_WRITE_MISS:
-        {
-            readResponse = bus.getMemory().read(lineAddress);
-           
-                auto fillRequest = CacheRequest();
-                fillRequest.address = lineAddress;
-                fillRequest.dataType = TypeofData::ARRAY_64B;
-                fillRequest.type = RequestType::FILL;
-
-                CacheLine line = CacheLine();
-                line.data = readResponse;
-
-                auto fillPendingRequest = PendingRequest();
-                fillPendingRequest.request = std::move(fillRequest);
-                fillPendingRequest.line = std::move(line);
-
-                DEBUG_LOG(debugLog("invio fill L3"));
-                bus.getCPU().getCacheManager().getL3Cache().schedulePendingRequest(std::move(fillPendingRequest));
-
-                //sending to L1 also teh original request to hit and responde to cpu
-                originalRequest.type = RequestType::WRITE;
-                DEBUG_LOG(debugLog("invio richeista originale"));
-                bus.getCPU().getCacheManager().getL3Cache().schedulePendingRequest(std::move(pendingRequest));
-                
-            break;
-        }
-        case RequestType::WRITE:
-        {
-            bus.getMemory().write(lineAddress, pendingRequest.line.data);
-
-            //gestire in futuro errori
-
-            break;
-        }
-        default:
-            break;
-    }
-
-    
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
-
-CacheManager::CacheManager(Bus& bus,uint32_t l1Size, uint32_t l2Size, uint32_t l3Size, uint8_t l1Assoc, uint8_t l2Assoc, uint8_t l3Assoc, uint8_t l1Latency, uint8_t l2Latency, uint8_t l3Latency, uint8_t l1FillLatency, uint8_t l2FillLatency, uint8_t l3FillLatency)
-                            :   L3Cache(l3Size, l3Assoc, l3Latency, l3FillLatency, bus, nullptr, nullptr, CacheLevelType::L3),
-                                L2Cache(l2Size, l2Assoc, l2Latency, l2FillLatency, bus, nullptr, nullptr, CacheLevelType::L2),
-                                L1Cache(l1Size, l1Assoc, l1Latency, l1FillLatency, bus, nullptr, nullptr, CacheLevelType::L1),
-                                memoryScheduler(bus,memoryLatency),
-                                bus(bus) 
-{
-    DEBUG_LOG(debugLog("inizializzazione cache manager"));
-    L3Cache.setParentLevel(&L2Cache);
-
-    L2Cache.setParentLevel(&L1Cache);
-    L2Cache.setNextLevel(&L3Cache);
-
-    L1Cache.setNextLevel(&L2Cache);
-}
-
-CacheManager::~CacheManager(){}
-
-void CacheManager::execute_operation()
-{   
-    
-    for (auto it = requestQueue.begin(); it != requestQueue.end();)
+    for (CacheLevel* parentLevel :L1Dpath)
     {
-        CacheRequest request =(*it);
-        L1Cache.scheduleRequest(std::move(request));
-
-        it = requestQueue.erase(it);
+        if(parentLevel != nullptr)
+        {
+            parentLevel->schedulePendingRequest(MakeFillPendingRequest());
+        }
     }
-
-    memoryScheduler.processMemoryRequests();
-    L3Cache.execute_operation();
-    L2Cache.execute_operation();
-    L1Cache.execute_operation();
-    
-
-
 }
 
-void CacheManager::flushAllCaches()
+void CacheLevel::fillToL1I(CacheLine* line, const AddressInfo& addressInfo)
 {
-    L3Cache.getStorage().flush([&](uint64_t address, const LineData& line){bus.getMemory().write(address, line);});
-    L2Cache.getStorage().flush([&](uint64_t address, const LineData& line){bus.getMemory().write(address, line);});
-    L1Cache.getStorage().flush([&](uint64_t address, const LineData& line){bus.getMemory().write(address, line);});
+    auto MakeFillPendingRequest = [&]()
+        {
+            CacheRequest fillRequest = CacheRequest();
+            fillRequest.address = addressInfo.address - addressInfo.offset; //adress start line
+            fillRequest.dataType = TypeofData::ARRAY_64B;
+            fillRequest.type = RequestType::FILL;
+            fillRequest.typeofL1 = CacheLevelType::NONE;
+            PendingRequest fillPendingRequest = PendingRequest();
+            fillPendingRequest.line = *line;
+            fillPendingRequest.request = std::move(fillRequest);
+            
+            return fillPendingRequest;
+        };
+
+    for (CacheLevel* parentLevel :L1Ipath)
+    {
+        if(parentLevel != nullptr)
+        {
+            parentLevel->schedulePendingRequest(MakeFillPendingRequest());
+        }
+    }
+}
+
+void CacheLevel::fillToL1Idouble(CacheLine* line1, CacheLine* line2, const AddressInfo& addressInfo1, const AddressInfo& addressInfo2)
+{
+    auto MakeFillPendingRequest1 = [&]()
+        {
+            CacheRequest fillRequest = CacheRequest();
+            fillRequest.address = addressInfo1.address - addressInfo1.offset; //adress start line
+            fillRequest.dataType = TypeofData::ARRAY_64B;
+            fillRequest.type = RequestType::FILL;
+            fillRequest.typeofL1 = CacheLevelType::NONE;
+            PendingRequest fillPendingRequest = PendingRequest();
+            fillPendingRequest.line = *line1;
+            fillPendingRequest.request = std::move(fillRequest);
+            
+            return fillPendingRequest;
+        };
+
+    auto MakeFillPendingRequest2 = [&]()
+        {
+            CacheRequest fillRequest = CacheRequest();
+            fillRequest.address = addressInfo2.address - addressInfo2.offset; //adress start line
+            fillRequest.dataType = TypeofData::ARRAY_64B;
+            fillRequest.type = RequestType::FILL;
+            fillRequest.typeofL1 = CacheLevelType::NONE;
+            PendingRequest fillPendingRequest = PendingRequest();
+            fillPendingRequest.line = *line2;
+            fillPendingRequest.request = std::move(fillRequest);
+            
+            return fillPendingRequest;
+        };
+
+    for (CacheLevel* parentLevel :L1Ipath)
+    {
+        if(parentLevel != nullptr)
+        {
+            parentLevel->schedulePendingRequest(MakeFillPendingRequest1());
+            parentLevel->schedulePendingRequest(MakeFillPendingRequest2());
+        }
+    }
+}
+
+void CacheLevel::fillToL1Ddouble(CacheLine* line1, CacheLine* line2, const AddressInfo& addressInfo1, const AddressInfo& addressInfo2)
+{
+    auto MakeFillPendingRequest1 = [&]()
+        {
+            CacheRequest fillRequest = CacheRequest();
+            fillRequest.address = addressInfo1.address - addressInfo1.offset; //adress start line
+            fillRequest.dataType = TypeofData::ARRAY_64B;
+            fillRequest.type = RequestType::FILL;
+            fillRequest.typeofL1 = CacheLevelType::NONE;
+            PendingRequest fillPendingRequest = PendingRequest();
+            fillPendingRequest.line = *line1;
+            fillPendingRequest.request = std::move(fillRequest);
+            
+            return fillPendingRequest;
+        };
+
+    auto MakeFillPendingRequest2 = [&]()
+        {
+            CacheRequest fillRequest = CacheRequest();
+            fillRequest.address = addressInfo2.address - addressInfo2.offset; //adress start line
+            fillRequest.dataType = TypeofData::ARRAY_64B;
+            fillRequest.type = RequestType::FILL;
+            fillRequest.typeofL1 = CacheLevelType::NONE;
+            PendingRequest fillPendingRequest = PendingRequest();
+            fillPendingRequest.line = *line2;
+            fillPendingRequest.request = std::move(fillRequest);
+            
+            return fillPendingRequest;
+        };
+
+    for (CacheLevel* parentLevel :L1Dpath)
+    {
+        if(parentLevel != nullptr)
+        {
+            parentLevel->schedulePendingRequest(MakeFillPendingRequest1());
+            parentLevel->schedulePendingRequest(MakeFillPendingRequest2());
+        }
+    }
 }

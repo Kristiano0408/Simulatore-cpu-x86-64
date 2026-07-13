@@ -8,11 +8,12 @@
 #include <optional>
 #include <any>
 
-struct AddressInfo;
 
 struct LogEntry {
     Result result; // Result of the event or error
     uint64_t timestamp; // Timestamp of the event or error
+
+    LogEntry() : result{}, timestamp(0) {}
 };
 
 struct CacheDataLogEntry {
@@ -21,6 +22,8 @@ struct CacheDataLogEntry {
     LineData* line2; // Data of the second cache line (if applicable)
     AddressInfo addressInfo1; // Address information of the first cache line
     AddressInfo addressInfo2; // Address information of the second cache line (if applicable)
+
+    CacheDataLogEntry() : line1(nullptr), line2(nullptr), addressInfo1(0, 0, 0, 0), addressInfo2(0, 0, 0, 0) {}
 };
 
 struct MemoryDataLogEntry {
@@ -36,10 +39,10 @@ struct OperandDataLogEntry {
 
 
 struct LogStorage {
-    QueueCacheFriendly<CacheDataLogEntry> cacheDataLogs; // Queue to store cache data log entries
-    QueueCacheFriendly<MemoryDataLogEntry> memoryDataLogs; // Queue to store memory data log entries
-    QueueCacheFriendly<OperandDataLogEntry> operandDataLogs; // Queue to store operand data log entries
-    QueueCacheFriendly<LogEntry> generalLogs; // Queue to store general log entries
+    FixedSizeQueueCacheFriendly<CacheDataLogEntry, 1024> cacheDataLogs; // Queue to store cache data log entries
+    FixedSizeQueueCacheFriendly<MemoryDataLogEntry, 1024> memoryDataLogs; // Queue to store memory data log entries
+    FixedSizeQueueCacheFriendly<OperandDataLogEntry, 1024> operandDataLogs; // Queue to store operand data log entries
+    FixedSizeQueueCacheFriendly<LogEntry, 1024> generalLogs; // Queue to store general log entries
 
     LogStorage();
 

@@ -2,15 +2,13 @@
 //refactory massivo
 //
 //FINIRE EVENTlOG
-//sistemare valid lines in replacement policy + sistemare perforrmance
+
 //fault bus (+ vedere se utilizzare meccabnsumo di iscrizione dei device aneh per bus)
-
-cache pazzurda pazza sgravata(suddivisioen l1 in i e d)
-
+//capire coem sostituire dizioanrio cpu risposte cache
 
 
 
-///GUI (FINIRE pybind, suddividere in piu moduli con vari file per organizzazione), sistemare pipeline(gestione microstep per gui) e visualizzazioen cahce
+///GUI (FINIRE pybind, suddividere in piu moduli con vari file per organizzazione) e visualizzazioen cahce
 
 
 

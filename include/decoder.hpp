@@ -8,13 +8,14 @@
 #include "instruction.hpp"
 #include <vector>
 #include "helpers.hpp"
+#include "device.hpp"
 
 
 
 
 
-
-class Decoder {
+class Decoder : public FaultDevice
+{
     
     public:
         Decoder();

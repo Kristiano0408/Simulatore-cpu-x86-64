@@ -1,18 +1,9 @@
 #include "eventLog.hpp"
-#include "cacheManager.hpp"
+#include "cache/cacheManager.hpp"
 #include <vector>
 
 LogStorage::LogStorage() : cacheDataLogs(), memoryDataLogs(), operandDataLogs(), generalLogs() 
-{
-    cacheDataLogs.reserve(256); // Reserve space for 256 cache data log entries
-    memoryDataLogs.reserve(256); // Reserve space for 256 memory data log entries
-    operandDataLogs.reserve(256); // Reserve space for 256 operand data log entries
-    generalLogs.reserve(256); // Reserve space for 256 general log entries
-}
-
-
-
-
+{}
 
 
 EventLog& EventLog::getInstance() 

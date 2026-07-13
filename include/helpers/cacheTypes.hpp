@@ -62,14 +62,15 @@ struct AddressInfo
     AddressInfo(uint64_t addr, uint64_t setIdx, uint64_t tg, uint64_t off)
         : address(addr), setIndex(setIdx), tag(tg), offset(off) {}
 
-    AddressInfo() : address(0), setIndex(0), tag(0), offset(0) {}
+    ///AddressInfo() : address(0), setIndex(0), tag(0), offset(0) {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum class CacheLevelType : uint8_t
 {
-    L1,
+    L1I,
+    L1D,
     L2,
     L3,
     NONE //placeholder for basic class
@@ -129,19 +130,22 @@ struct CacheRequest
     bool completed = false; // Indicates if the request has been completed
     RequestType type = RequestType::NONE; // Type of request (READ or WRITE)
     TypeofData dataType = TypeofData::UNKNOWN; // Type of data for the request
+    CacheLevelType typeofL1 = CacheLevelType::NONE;
 
-    CacheRequest():  address(0), data{}, requestID(0), callbackContext(nullptr), callback(nullptr), completed(false), type(RequestType::NONE), dataType(TypeofData::UNKNOWN){}
+    CacheRequest():  address(0), data{}, requestID(0), callbackContext(nullptr), callback(nullptr), completed(false), type(RequestType::NONE), dataType(TypeofData::UNKNOWN), typeofL1(CacheLevelType::NONE){}
 
-    CacheRequest(RequestType type, TypeofData dataType, uint64_t address, const MaxCPUInstructionLength& data, bool completed, uint64_t requestID, void* callbackContext, CallbackType callback)
-        : address(address), data(data), requestID(requestID), callbackContext(callbackContext), callback(callback), completed(completed), type(type), dataType(dataType) {}
+    CacheRequest(RequestType type, TypeofData dataType, CacheLevelType typeofL1, uint64_t address, const MaxCPUInstructionLength& data, bool completed, uint64_t requestID, void* callbackContext, CallbackType callback)
+        : address(address), data(data), requestID(requestID), callbackContext(callbackContext), callback(callback), completed(completed), type(type), dataType(dataType), typeofL1(typeofL1) {}
 };
 
 struct PendingRequest
 {   
+    
     CacheLine line= CacheLine{}; //copy of the line 
     CacheRequest request;
     uint16_t remainingLatency; // Remaining latency in ticks
     RequestState state = RequestState::IDLE;
+    
     
 
     PendingRequest(CacheRequest&& req, uint16_t latency)

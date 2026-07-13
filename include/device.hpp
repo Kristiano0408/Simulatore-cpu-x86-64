@@ -1,7 +1,14 @@
 #ifndef DEVICE_HPP
 #define DEVICE_HPP
 
-class Device {
+#include <cstdint>
+#include <atomic>
+#include <array>
+#include "helpers.hpp"
+#include "faultHandler.hpp"
+
+
+class TickedDevice {
 
 protected:
     // Protected members can be accessed by derived classes
@@ -10,7 +17,7 @@ protected:
 
 public:
    
-    virtual ~Device() = default;
+    virtual ~TickedDevice() = default;
 
     void tick(); // Function to be called every clock tick
 
@@ -27,6 +34,27 @@ public:
 
 
     
+};
+
+
+class FaultDevice
+{
+    public:
+        FaultDevice();
+        uint16_t getDeviceId() const;
+        void setFaultBus(FaultBus* bus); // Set the FaultBus pointer (called by the FaultBus class)
+
+    protected:
+        FaultHandler faultHandler; // Each device has its own FaultHandler to manage its fault callbacks
+
+    private:
+        uint16_t deviceId; // Unique identifier for the device
+        static std::atomic<uint16_t> globalId; // Global fault counter for the device(for creating unique fault IDs)
+        
+        
+        
+    
+        
 };
 
 #endif // DEVICE_HPP

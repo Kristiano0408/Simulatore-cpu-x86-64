@@ -6,7 +6,7 @@
 #include "../include/cpu.hpp"
 #include "../include/clock.hpp"
 #include "../include/memory.hpp"
-#include "../include/cacheManager.hpp"
+#include "../include/cache/cacheManager.hpp"
 #include "../include/device.hpp"
 #include "../include/pipeline.hpp"
 #include "../include/alu.hpp"

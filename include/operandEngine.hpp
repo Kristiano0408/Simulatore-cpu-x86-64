@@ -2,12 +2,14 @@
 #define OPERAND_ENGINE_HPP
 
 #include "operands.hpp"
+#include "memoryInterface.hpp"
+#include "device.hpp"
 
 class Instruction;
 class CacheManager;
 class CPU;
 
-class OperandEngine
+class OperandEngine : public FaultDevice
 {
     public:
         OperandEngine(CacheManager& cm, CPU& c) : cacheManager(cm), cpu(c) {};
@@ -19,6 +21,7 @@ class OperandEngine
     private:
         CacheManager& cacheManager; // Assuming you have a CacheManager class to handle memory operations
         CPU& cpu; 
+        DataMemoryInterface dataMemoryInterface; // Assuming you have a DataMemoryInterface class to handle memory operations
         OperandResult setRegisterValue(Operand* operand, uint64_t value);
         OperandResult getRegisterValue(Operand* operand);
 

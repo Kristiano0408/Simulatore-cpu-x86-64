@@ -6,10 +6,12 @@
 #include <cstdint>
 
 #include "helpers.hpp"
+#include "device.hpp"
 
 
 
-class ALU {
+class ALU : public FaultDevice
+{
     // Implementation of the ALU class
 
     public:

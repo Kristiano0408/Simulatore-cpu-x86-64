@@ -4,13 +4,14 @@
 #include "operandEngine.hpp"
 #include "registerFile.hpp"
 
-#include "cacheManager.hpp"
+#include "cache/cacheManager.hpp"
 #include "instruction.hpp"
+#include "device.hpp"
 
 class CPU;
 class ALU;
 
-class ExecuteEngine
+class ExecuteEngine : public FaultDevice
 {
     private:
         CPU& cpu;

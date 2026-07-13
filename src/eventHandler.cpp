@@ -1,5 +1,5 @@
 #include "eventHandler.hpp"
-#include "cacheManager.hpp"
+#include "cache/cacheManager.hpp"
 #include "pipelineController.hpp"
 
 CacheEventHandler::CacheEventHandler() : callbackContext(nullptr),lookupCacheCallback(nullptr)

@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "../../include/cacheManager.hpp"
+#include "../../include/cache/cacheManager.hpp"
 
 namespace py = pybind11;
 
@@ -81,11 +81,13 @@ void bind_cacheManager(py::module &m) {
         .def("getPendingRequests", &MemoryScheduler::getPendingRequests, py::return_value_policy::reference_internal);
     
     py::class_<CacheManager>(m, "CacheManager")
-        .def("getL1Cache", &CacheManager::getL1Cache,py::return_value_policy::reference_internal)
+        .def("getL1Cache", &CacheManager::getL1ICache,py::return_value_policy::reference_internal)
+        .def("getL1DCache", &CacheManager::getL1DCache, py::return_value_policy::reference_internal)
         .def("getL2Cache", &CacheManager::getL2Cache, py::return_value_policy::reference_internal)
         .def("getL3Cache", &CacheManager::getL3Cache, py::return_value_policy::reference_internal)
         .def("getMemoryScheduler", &CacheManager::getMemoryScheduler, py::return_value_policy::reference_internal)
-        .def("getL1RequestQueue", &CacheManager::getL1RequestQueue, py::return_value_policy::reference_internal)
+        .def("getL1RequestQueue", &CacheManager::getL1IRequestQueue, py::return_value_policy::reference_internal)
+        .def("getL1DRequestQueue", &CacheManager::getL1DRequestQueue, py::return_value_policy::reference_internal)
         .def("getL2RequestQueue", &CacheManager::getL2RequestQueue, py::return_value_policy::reference_internal)
         .def("getL3RequestQueue", &CacheManager::getL3RequestQueue, py::return_value_policy::reference_internal)
         .def("getMemoryRequestQueue", &CacheManager::getMemoryRequestQueue, py::return_value_policy::reference_internal);

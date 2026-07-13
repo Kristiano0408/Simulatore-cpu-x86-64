@@ -3,6 +3,8 @@
 
 #include "decoder.hpp"
 #include <array>
+#include "memoryInterface.hpp"
+#include "device.hpp"
 
 class Bus;   // forward declaration
 class CPU;   // forward declaration
@@ -10,7 +12,7 @@ class RegisterFile;   // forward declaration
 class Instruction;   // forward declaration
 class PipelineEventHandler; // forward declaration
 
-class CU
+class CU : public FaultDevice
 {
     public:
         CU(Bus& bus);
@@ -19,14 +21,9 @@ class CU
 
 
         void startFetch(uint64_t instructionId, uint64_t& index,  PipelineEventHandler& eventHandler);
-
         void updateFetch(uint64_t instructionId, PipelineEventHandler& eventHandler);
         InstructionInfo fetchInstruction(uint64_t instructionID, uint64_t index, PipelineEventHandler& eventHandler);
         void decodeInstruction(InstructionInfo instruction, std::unique_ptr<Instruction>& decodedInstruction, PipelineEventHandler& eventHandler);
-        //void OperandFetch(Instruction* instruction);
-        //void executeInstruction(Instruction* instruction);
-        //void memoryphase(Instruction* instruction);
-        //void writeBack(Instruction* instruction);
 
         
         
@@ -35,6 +32,7 @@ class CU
         Decoder decoder;
         Bus& bus; //reference to the bus
         uint64_t currentInstructionId;
+        InstructionMemoryInterface instructionMemoryInterface; // Interface for instruction memory access
 
         
 

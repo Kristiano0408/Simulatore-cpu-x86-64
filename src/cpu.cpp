@@ -72,9 +72,9 @@ void CPU::execute_operation()
 }
 
 
-void CPU::sendCacheRequest(CacheRequest&& request)
+void CPU::sendCacheRequest(CacheRequest&& request, CacheLevelType cacheType)
 {
-    cacheManager.enqueRequest(std::move(request));
+    cacheManager.enqueRequest(std::move(request), cacheType); //send a cache request to the cache manager
 }
 
 void CPU::eraseCacheResponseIfFound(int requestID)

@@ -1,6 +1,6 @@
 #include "operandEngine.hpp"
 #include "instruction.hpp"
-#include "cacheManager.hpp"
+#include "cache/cacheManager.hpp"
 #include "eventLog.hpp"
 #include "cpu.hpp"
 
@@ -170,8 +170,8 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
                 dataTypeSize = TypeofData::UNKNOWN;
                 break;
         }
-
-        cacheManager.enqueRequest(CacheRequest(RequestType::READ, dataTypeSize, memOperand->getAddress(),MaxCPUInstructionLength{}, false, core.InstructionId, callbackContext, callback));
+        CacheRequest request(RequestType::READ, dataTypeSize, dataMemoryInterface.type, memOperand->getAddress(), MaxCPUInstructionLength{}, false, core.InstructionId, callbackContext, callback);
+        cacheManager.enqueRequest(std::move(request), dataMemoryInterface.type);
 
         result.success = false;
         result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY};
@@ -262,7 +262,8 @@ OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* o
         //debugLog("MemOperand: Sending write request to address " + to_string_hex(this->address) + " with value " + to_string_hex(v) + " and size " + std::to_string(this->size) + " bytes.");
         memOperand->setWriteRequestSent(true);
 
-        cacheManager.enqueRequest(CacheRequest(RequestType::WRITE, dataTypeSize, memOperand->getAddress(), out, false, core.InstructionId, callbackContext, callback));
+        CacheRequest request(RequestType::WRITE, dataTypeSize, dataMemoryInterface.type, memOperand->getAddress(), out, false, core.InstructionId, callbackContext, callback);
+        cacheManager.enqueRequest(std::move(request), dataMemoryInterface.type);
         result.success = false;
         result.errorInfo = {ComponentType::OPERAND, EventType::ERROR, ErrorType::WAITING_MEMORY};
         EventLog::getInstance().pushOperandDataLogEntry(std::move(result), uint64_t{0});

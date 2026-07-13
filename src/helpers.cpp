@@ -271,7 +271,9 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
 ComponentType getComponentTypeFromCacheLevelType(CacheLevelType type)
 {
     switch (type) {
-        case CacheLevelType::L1:
+        case CacheLevelType::L1I:
+            return ComponentType::CACHE_L1;
+        case CacheLevelType::L1D:
             return ComponentType::CACHE_L1;
         case CacheLevelType::L2:
             return ComponentType::CACHE_L2;

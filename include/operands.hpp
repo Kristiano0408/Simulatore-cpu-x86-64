@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include "helpers.hpp"
-#include "cacheManager.hpp"
+#include "cache/cacheManager.hpp"
 #include <functional>
 
 class RegisterFile;

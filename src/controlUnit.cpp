@@ -39,9 +39,10 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, PipelineEventHandle
     cacheRequest.requestID = instructionId;
     cacheRequest.callback = eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_FETCH);
     cacheRequest.callbackContext = eventHandler.getContext();
+    cacheRequest.typeofL1 = instructionMemoryInterface.type; // Set the cache level type for instruction memory interface
 
 
-    bus.getCPU().getCacheManager().enqueRequest(std::move(cacheRequest));
+    bus.getCPU().getCacheManager().enqueRequest(std::move(cacheRequest), instructionMemoryInterface.type);
     // Trigger an event to notify that a cache request has been sent
     eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING_FETCH);
 

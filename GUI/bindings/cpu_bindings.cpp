@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "../include/cpu.hpp"
-#include "../include/cacheManager.hpp"
+#include "../include/cache/cacheManager.hpp"
 #include "../include/pipeline.hpp"
 #include "../include/alu.hpp"
 #include "../include/registerFile.hpp"

@@ -17,6 +17,8 @@
 #include "helpers/decoderHelper.hpp"
 #include "helpers/eventHelper.hpp"
 #include "helpers/various.hpp"
+#include "helpers/cacheTypes.hpp"
+#include "helpers/faultHelper.hpp"
 
 
 
