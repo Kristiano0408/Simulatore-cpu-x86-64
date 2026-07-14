@@ -3,7 +3,94 @@
 #include "alu.hpp"
 
 
-void ExecuteEngine::fetchOperands(Instruction* instruction, PipelineEventHandler& eventHandler) 
+
+void ExecuteEngine::resetExecutionState() 
+{
+    isExecuting = false;
+    executionQueue.pop(); // Remove the completed operation from the queue
+}
+
+void ExecuteEngine::resetMemoryAccessState() 
+{
+    isAccessingMemory = false;
+    memoryAccessQueue.pop(); // Remove the completed operation from the queue
+}
+
+void ExecuteEngine::triggerPipelineMemoryWaitingExecuteCallback(void* context) 
+{
+    ExecuteEngine* engine = static_cast<ExecuteEngine*>(context);
+    engine->pipelineEventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE);
+}
+
+void ExecuteEngine::triggerPipelineMemoryDoneExecuteCallback(void* context) 
+{
+    ExecuteEngine* engine = static_cast<ExecuteEngine*>(context);
+    engine->pipelineEventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE);
+}
+
+void ExecuteEngine::triggerPipelineExecuteCompleteCallback(void* context) 
+{
+    ExecuteEngine* engine = static_cast<ExecuteEngine*>(context);
+    engine->pipelineEventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::EXECUTE_COMPLETE);
+}
+
+
+void ExecuteEngine::triggerPipelineMemoryWaitingCallback(void* context) 
+{
+    ExecuteEngine* engine = static_cast<ExecuteEngine*>(context);
+    engine->pipelineEventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING);
+}
+
+void ExecuteEngine::triggerPipelineMemoryCompleteCallback(void* context) 
+{
+    ExecuteEngine* engine = static_cast<ExecuteEngine*>(context);
+    engine->pipelineEventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_DONE);
+}
+
+void ExecuteEngine::completeExecutionCallback(void* context) 
+{
+    ExecuteEngine* engine = static_cast<ExecuteEngine*>(context);
+    engine->executeInstruction(engine->getExecutionQueue().front().instruction);
+    engine->resetExecutionState();
+    engine->pipelineEventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::EXECUTE_COMPLETE);
+}
+
+void ExecuteEngine::resetMemoryAccessStateWrapper(void* context) 
+{
+    ExecuteEngine* engine = static_cast<ExecuteEngine*>(context);
+    engine->resetMemoryAccessState();
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void ExecuteEngine::execute_operation() 
+{
+    // Check if there are any pending operations in the queues
+    if (!operandFetchQueue.empty())
+    {
+        Instruction* instruction = operandFetchQueue.front();
+        fetchOperands(instruction);
+        operandFetchQueue.pop(); // Remove the completed operation from the queue
+    } 
+    else if (!executionQueue.empty())
+    {
+        Instruction* instruction = executionQueue.front();
+        executeInstruction(instruction);
+    } 
+
+    else if (!memoryAccessQueue.empty()) 
+    {
+        Instruction* instruction = memoryAccessQueue.front();
+        requestMemoryAccess(instruction);
+    } 
+    else if (!writeBackQueue.empty()) 
+    {
+        Instruction* instruction = writeBackQueue.front();
+        writeBackInstruction(instruction);
+        writeBackQueue.pop();
+    }
+}
+
+void ExecuteEngine::fetchOperands(Instruction* instruction) 
 {
     //fetch the operands
     //std::cout << "Fetching operands for Sub Instruction" << std::endl;
@@ -44,13 +131,21 @@ void ExecuteEngine::fetchOperands(Instruction* instruction, PipelineEventHandler
             break;
    }
 
-   eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::OPERAND_FETCH_COMPLETE);
+   pipelineEventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::OPERAND_FETCH_COMPLETE);
 }
 
 
 
-void ExecuteEngine::startExecution(Instruction* instruction, PipelineEventHandler& eventHandler) 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void ExecuteEngine::startExecution(Instruction* instruction) 
 {   
+    if(isExecuting)
+    {
+        DEBUG_LOG(debugLog("ExecuteEngine is already executing an instruction. Cannot execute another instruction simultaneously."));
+        return;
+    }
+    isExecuting = true;
     InstructionCore& core = instruction->getCore();
     InstructionFlags& flags = instruction->getFlags();
     //setting the size of the operands
@@ -61,125 +156,47 @@ void ExecuteEngine::startExecution(Instruction* instruction, PipelineEventHandle
     instruction->getSourceOperand()->setSize(bit);
     instruction->getDestinationOperand()->setSize(bit);
 
-    OperandResult response;
-    response = operandEngine.readOperand(instruction, instruction->getSourceOperand(), eventHandler.getContext(), eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE));
-
-    DEBUG_LOG(debugLog(std::to_string(static_cast<int>(response.status))));
-    DEBUG_LOG(debugLog("Source operand value: " + to_string_hex(response.value)));
-    if(response.status == OperandStatus::ERROR)
-    {
-        DEBUG_LOG(debugLog("Error occurred while fetching source operand."));
-        return;
-    }
-    else if(response.status == OperandStatus::WAITING_MEMORY)
-    {
-        //set the stage to waiting memory using the callback to the pipeline
-        eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE);
-        flags.waitingSrcOperand = true;
-    }
-    else
-    {
-        flags.waitingSrcOperand = false;
-        instruction->getTemporaryValuesRef().srcValue = response.value;
-    }
-
-    response = operandEngine.readOperand(instruction, instruction->getDestinationOperand(), eventHandler.getContext(), eventHandler.getCallback(EventHandlerPipelineEventType::MEMORY_DONE_EXECUTE));
+    operandEngine.readOperand(instruction, instruction->getSourceOperand(), executeEngineEventHandler);
 
 
-    if(response.status == OperandStatus::ERROR)
-    {
-        DEBUG_LOG(debugLog("Error occurred while fetching destination operand."));
-        return;
-    }
-    else if(response.status == OperandStatus::WAITING_MEMORY)
-    {
-        eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING_EXECUTE);
-        flags.waitingDestOperand = true;
-    }
-    else
-    {
-        flags.waitingDestOperand = false;
-        instruction->getTemporaryValuesRef().destValue = response.value;
-    }
+    operandEngine.readOperand(instruction, instruction->getDestinationOperand(), executeEngineEventHandler);
 
-    if(!flags.waitingSrcOperand && !flags.waitingDestOperand)
-    {
-        //both operands are ready, we can proceed to execute( non multi-cycle instruction only for non-memory operands)
-        executeInstruction(instruction);
-        DEBUG_LOG(debugLog("esecuzioen diretta"));
-        eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::EXECUTE_COMPLETE);
-    }
+
 
 
 }
 
 
-
-void ExecuteEngine::updateExecution(Instruction* instruction, PipelineEventHandler& eventHandler) 
+void ExecuteEngine::executeInstruction(Instruction* instruction)
 {
-    OperandResult response;
-    InstructionFlags& flags = instruction->getFlags();
-
-    response = operandEngine.readOperand(instruction, instruction->getSourceOperand(), nullptr, nullptr);
-
-    if(response.status == OperandStatus::OK)
+    if(isExecuting)
     {
-        flags.waitingSrcOperand = false;
-        instruction->getTemporaryValuesRef().srcValue = response.value;
-        
-    }
-    else if (response.status == OperandStatus::WAITING_MEMORY)
-    {
-        //still waiting for memory access to complete
-        flags.waitingSrcOperand = true;
+        DEBUG_LOG(debugLog("ExecuteEngine is already executing an instruction. Cannot execute another instruction simultaneously."));
         return;
     }
-    else
-    {
-        //error occurred while fetching the source operand
-        return;
-    }
-    
-
-    response = operandEngine.readOperand(instruction, instruction->getDestinationOperand(), nullptr, nullptr);
-
-    if(response.status == OperandStatus::OK)
-    {
-        flags.waitingDestOperand = false;
-        instruction->getTemporaryValuesRef().destValue = response.value;
-        
-    }
-    else if (response.status == OperandStatus::WAITING_MEMORY)
-    {
-        //still waiting for memory access to complete
-        flags.waitingDestOperand = true;
-        return;
-    }
-    else
-    {
-        //error occurred while fetching the destination operand
-        return;
-    }
-
-    executeInstruction(instruction);
-    eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::EXECUTE_COMPLETE);
-    
-}
+    isExecuting = true;
 
 
-
-
-void ExecuteEngine::executeInstruction(Instruction* instruction) 
-{
     InstructionCore& core = instruction->getCore();
     InstructionFlags& flags = instruction->getFlags();
-    DEBUG_LOG(debugLog(toStringTypeofInstruction(core.type) + " instruction execution started."));
-    //we have both operands ready, we can proceed to execute the subtraction (first we must visist the variant to get the values)
-    if(!flags.waitingSrcOperand && !flags.waitingDestOperand)
+
+    switch(core.executionMode)
     {
-        alu.executeOperation(instruction->getTemporaryValuesRef(), core.type);
+        case InstructionExecutionMode::ALU:
+            alu.executeOperation(instruction->getTemporaryValuesRef(), core.type);
+            break;
+        case InstructionExecutionMode::DATA_TRANSFER:
+            //nothing to do here, the data transfer is handled by other parts of the execute engine
+            break;
+        case InstructionExecutionMode::CONTROL_FLOW:
+            //executeControlFlowOperation(instruction);
+            break;
+        case InstructionExecutionMode::SYSTEM:
+            //executeSystemOperation(instruction);
+            break;
+        default:
+            break;
     }
-    
     
     DEBUG_LOG(debugLog("Subtraction executed"));
     DEBUG_LOG(debugLog("Result: " + to_string_hex(instruction->getTemporaryValuesRef().resultValue)));

@@ -143,11 +143,13 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
 
     AddressingMode mode = it.mode;
 
-
+    InstructionExecutionMode executionMode = it.executionMode;
     
     InstructionCore& core = instructionPtr->getCore();
 
     core.type = type_instruction;
+
+    core.executionMode = executionMode;
 
     //setting the instruction parameters like the opcode, the prefix, the rex, etc
     settingInstructionParameters(instructionPtr.get(), instruction);

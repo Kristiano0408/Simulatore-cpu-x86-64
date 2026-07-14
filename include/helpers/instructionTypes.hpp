@@ -39,11 +39,33 @@ enum class AddressingMode : uint8_t
 
 };
 
+enum class InstructionExecutionMode : uint8_t
+{
+    ALU,
+    DATA_TRANSFER,
+    CONTROL_FLOW,
+    SYSTEM,
+
+};
+
+enum class InstructionDataTransferMode : uint8_t
+{
+    REGISTER_TO_REGISTER,
+    REGISTER_TO_MEMORY,
+    MEMORY_TO_REGISTER,
+    IMMEDIATE_TO_REGISTER,
+    IMMEDIATE_TO_ACCUMULATOR,
+    IMMEDIATE_TO_MEMORY,
+    MEMORY_TO_MEMORY,
+    
+};
+
 //struct for the instruction type and relative addressing mode
 struct InstructionType_and_addMode
 {
     TypeofInstruction type;
     AddressingMode mode;
+    InstructionExecutionMode executionMode;
 };
 
 struct temporaryValues {
@@ -73,6 +95,7 @@ struct InstructionCore
     SIB sib;
     TypeofInstruction type; //type of the instruction (arithmetic, logical, control flow, etc.)
     AddressingMode addressingMode; //addressing mode of the instruction
+    InstructionExecutionMode executionMode; //execution mode of the instruction (ALU, data transfer, control flow, etc.)
 
 
 };
@@ -90,6 +113,7 @@ struct InstructionFlags
     uint8_t memToReg : 1;
     uint8_t waitingSrcOperand : 1;
     uint8_t waitingDestOperand : 1;
+    InstructionDataTransferMode dataTransferMode;
 };
 
 struct InstructionInfo {

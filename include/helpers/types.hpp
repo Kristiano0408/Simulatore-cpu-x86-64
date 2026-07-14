@@ -104,6 +104,16 @@ class FixedSizeQueueCacheFriendly
         {
             return tail - head; // Return the current size of the queue
         }
+
+        bool isFull() const
+        {
+            return size() == N; // Check if the queue is full
+        }
+
+        bool empty() const
+        {
+            return size() == 0; // Check if the queue is empty
+        }
      
         void push(T&& value)
         {
@@ -123,6 +133,13 @@ class FixedSizeQueueCacheFriendly
             {
                 head = (head + 1) % N;
             }
+        }
+
+        T front() const
+        {
+            if (head == tail) 
+                throw std::out_of_range("Queue is empty");
+            return data[head]; // Return the value at the head of the queue
         }
 
         T pop()   // rimuove l'elemento in testa logica (indexes.front())

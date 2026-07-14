@@ -30,4 +30,12 @@ enum class EventHandlerPipelineEventType : uint8_t
     COUNT // Represents the total number of event types
 };
 
+
+enum class EventHandlerExecuteEngineEventType : uint8_t 
+{
+    EXECUTE_COMPLETE,
+    MEMORY_COMPLETE,
+    COUNT // Represents the total number of event types
+};
+
 #endif // EVENT_HELPER_HPP

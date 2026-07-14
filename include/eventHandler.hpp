@@ -49,7 +49,6 @@ class CacheEventHandler
 
 
 enum class EventHandlerPipelineEventType : uint8_t;
-enum class StageType : uint8_t;
 
 class PipelineEventHandler
 {
@@ -71,5 +70,29 @@ class PipelineEventHandler
     private:
         ArrayCallbackPipelineEventType pipelineCallbacks;
         void* callbackContext; // Context pointer to be passed to the callback function for additional information or state management
+};
+
+
+enum class EventHandlerExecuteEngineEventType : uint8_t;
+
+
+class ExecuteEngineEventHandler
+{   
+    using CallbackExecuteEngineEventType = void(*)(void* context);
+    using ArrayCallbackExecuteEngineEventType = std::array<CallbackExecuteEngineEventType, static_cast<size_t>(EventHandlerExecuteEngineEventType::COUNT)>;
+    public:
+        ExecuteEngineEventHandler();
+
+        void setContext(void* context) { callbackContext = context; } // Set the context pointer for the cache controller to access its own state or data when processing requests
+
+        void* getContext() const { return callbackContext; } // Get the context pointer for the cache controller to access its own state or data when processing requests
+        
+        void registerExecuteEngineEvent(const EventHandlerExecuteEngineEventType eventName, CallbackExecuteEngineEventType callback);
+
+        void triggerExecuteEngineEvent(const EventHandlerExecuteEngineEventType eventName);
+        
+    private:
+        void* callbackContext; // Context pointer to be passed to the callback function for additional information or state management
+        ArrayCallbackExecuteEngineEventType executeEngineCallbacks;
 };
 #endif // EVENT_HANDLER_HPP
