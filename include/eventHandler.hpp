@@ -91,6 +91,8 @@ class ExecuteEngineEventHandler
 
         void triggerExecuteEngineEvent(const EventHandlerExecuteEngineEventType eventName);
         
+        CallbackExecuteEngineEventType getCallback(const EventHandlerExecuteEngineEventType eventName) const { return executeEngineCallbacks[static_cast<uint8_t>(eventName)]; }
+
     private:
         void* callbackContext; // Context pointer to be passed to the callback function for additional information or state management
         ArrayCallbackExecuteEngineEventType executeEngineCallbacks;

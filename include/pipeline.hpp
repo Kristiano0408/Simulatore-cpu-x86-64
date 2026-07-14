@@ -109,7 +109,7 @@ class OperandFetchStage : public Stage {
 
         ~OperandFetchStage() {};
 
-        void fetchOperands(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //fetch operands for the decoded instruction
+        void fetchOperands(ExecuteEngine& executeEngine); //fetch operands for the decoded instruction
 
         std::unique_ptr<Instruction> getInstructionWithFetchedOperands();
 
@@ -142,9 +142,7 @@ class ExecuteStage : public Stage {
         inline Instruction& peekInstructionRef() const {return *instruction_to_execute.get();}
         inline Instruction* peekInstruction() const {return instruction_to_execute.get();}
 
-        void startExecution(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //start execution of the instruction
-        void updateExecution(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //update execution (for multi-cycle instructions)
-        void executeInstruction(ExecuteEngine& executeEngine); //execute the decoded instruction
+        void startExecution(ExecuteEngine& executeEngine); //start execution of the instruction
 
     private:
         //any additional members specific to the execute stage
@@ -170,8 +168,7 @@ class MemoryStage : public Stage {
         inline Instruction* peekInstruction() const {return instruction_to_memory.get();}
         inline Instruction& peekInstructionRef() const {return *instruction_to_memory.get();}
 
-        void requestMemoryAccess(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //start memory access for load/store instructions
-        void accessMemory(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //perform memory operations if needed
+        void requestMemoryAccess(ExecuteEngine& executeEngine); //start memory access for load/store instructions
 
     private:
         //any additional members specific to the memory stage
@@ -198,7 +195,7 @@ class WriteBackStage : public Stage {
         inline Instruction* peekInstruction() const {return instruction_to_writeback.get();}
         inline Instruction& peekInstructionRef() const {return *instruction_to_writeback.get();}
 
-        void writeBack(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler); //final stage: write results to registers/memory
+        void writeBack(ExecuteEngine& executeEngine); //final stage: write results to registers/memory
 
     private:
         //any additional members specific to the write-back stage
@@ -282,6 +279,8 @@ class Pipeline : public TickedDevice, public FaultDevice
 
         void execute_operation() override; //execute the operation for the current cycle
 
+        void tick() override; //tick the pipeline for the current cycle
+
         void processWriteBackStage();
 
         void processMemoryStage();
@@ -309,7 +308,7 @@ class Pipeline : public TickedDevice, public FaultDevice
         inline ExecuteMemoryBuffer& getExecuteMemoryBuffer() { return executeMemoryBuffer; }
         inline MemoryWriteBackBuffer& getMemoryWriteBackBuffer() { return memoryWriteBackBuffer; }
 
-        inline void setEventHandler(PipelineEventHandler* handler) { eventHandler = handler; }
+        void setEventHandler(PipelineEventHandler* handler);
         
 
     private:

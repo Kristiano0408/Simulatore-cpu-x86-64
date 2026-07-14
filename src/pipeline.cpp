@@ -68,11 +68,16 @@ std::unique_ptr<Instruction> OperandFetchStage::getInstructionWithFetchedOperand
     return std::move(instruction_with_fetched_operands);
 }
 
-void OperandFetchStage::fetchOperands(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler) 
+void OperandFetchStage::fetchOperands(ExecuteEngine& executeEngine) 
 {
     DEBUG_LOG(debugLog("Fetching operands for the instruction..."));
     if (instruction_with_fetched_operands) {
-        executeEngine.fetchOperands(peekInstruction(), eventHandler);
+        if (instruction_with_fetched_operands->isEmpty()) 
+        {
+            DEBUG_LOG(debugLog("Instruction is empty. No operand fetch needed."));
+            return;
+        }
+        executeEngine.sendOperandFetchRequest(peekInstruction());
     }
 }
 
@@ -96,22 +101,20 @@ std::unique_ptr<Instruction> ExecuteStage::getInstructionToExecute() {
 }
 
 
-void ExecuteStage::startExecution(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler) 
+void ExecuteStage::startExecution(ExecuteEngine& executeEngine) 
 {
     // This is a placeholder implementation and should be replaced with actual logic
     DEBUG_LOG(debugLog("Starting execution of instruction..."));
     if (instruction_to_execute) {
-        executeEngine.startExecution(peekInstruction(), eventHandler);
+        if (instruction_to_execute->isEmpty()) 
+        {
+            DEBUG_LOG(debugLog("Instruction is empty. No execution needed."));
+            return;
+        }
+        executeEngine.sendExecutionRequest(peekInstruction());
     }
 }
 
-void ExecuteStage::updateExecution(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler) 
-{
-    DEBUG_LOG(debugLog("Updating execution of instruction..."));
-    if (instruction_to_execute) {
-        executeEngine.updateExecution(peekInstruction(), eventHandler);
-    }
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,21 +135,22 @@ std::unique_ptr<Instruction> MemoryStage::getInstructionToMemory()
 }
 
 
-void MemoryStage::requestMemoryAccess(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler) 
+void MemoryStage::requestMemoryAccess(ExecuteEngine& executeEngine) 
 {
     DEBUG_LOG(debugLog("Requesting memory access for instruction..."));
     if (instruction_to_memory) 
     {
-        executeEngine.requestMemoryAccess(peekInstruction(), eventHandler);
+        if (instruction_to_memory->isEmpty()) 
+        {
+            DEBUG_LOG(debugLog("Instruction is empty. No memory access needed."));
+            return;
+        }
+        
+        executeEngine.sendMemoryAccessRequest(peekInstruction());
     } 
     
 }
 
-void MemoryStage::accessMemory(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler) 
-{
-    if (instruction_to_memory)
-        executeEngine.accessMemory(peekInstruction(), eventHandler);
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -164,11 +168,15 @@ std::unique_ptr<Instruction> WriteBackStage::getInstructionToWriteBack()
     return std::move(instruction_to_writeback);
 }
 
-void WriteBackStage::writeBack(ExecuteEngine& executeEngine, PipelineEventHandler& eventHandler) 
+void WriteBackStage::writeBack(ExecuteEngine& executeEngine) 
 {
     DEBUG_LOG(debugLog("Write-Back stage processing..."));
     if (instruction_to_writeback) {
-        executeEngine.writeBackInstruction(peekInstruction(), eventHandler);
+        if (instruction_to_writeback->isEmpty()) {
+            DEBUG_LOG(debugLog("Instruction is empty. No write-back needed."));
+            return;
+        }
+        executeEngine.sendWriteBackRequest(peekInstruction());
     } else {
         DEBUG_LOG(debugLog("No instruction to write back."));
     }
@@ -179,9 +187,19 @@ void WriteBackStage::writeBack(ExecuteEngine& executeEngine, PipelineEventHandle
 
 //implementation of the pipeline class
 
-Pipeline::Pipeline(CPU& cpu, PipelineEventHandler* eventHandler) : cpu(cpu), executeEngine(cpu, cpu.getRegisters(), cpu.getALU(), cpu.getCacheManager()), fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage(), eventHandler(eventHandler) 
+Pipeline::Pipeline(CPU& cpu, PipelineEventHandler* eventHandler) : cpu(cpu), executeEngine(cpu, cpu.getRegisters(), cpu.getALU(), cpu.getCacheManager(), eventHandler), fetchStage(), decodeStage(), executeStage(), memoryStage(), writeBackStage(), eventHandler(eventHandler) 
 {
-    
+}
+
+void Pipeline::tick() 
+{
+    ticks_progress++;
+    DEBUG_LOG(debugLog("Device ticked, progress: " + std::to_string(ticks_progress) + "/" + std::to_string(getTicksNeeded())));
+    if (ticks_progress >= getTicksNeeded()) {
+        execute_operation();
+        ticks_progress = 0; // Reset progress after operation is executed
+    }
+    executeEngine.tick(); // Tick the execute engine to process any ongoing operations
 }
                                
 void Pipeline::execute_operation() 
@@ -205,6 +223,11 @@ void Pipeline::execute_operation()
     
 }
 
+void Pipeline::setEventHandler(PipelineEventHandler* handler)
+{
+    eventHandler = handler; 
+    executeEngine.setPipelineEventHandler(handler); 
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Pipeline::processWriteBackStage() 
@@ -221,7 +244,7 @@ void Pipeline::processWriteBackStage()
             writeBackStage.setStalledGUI(true); // Reset the stalled flag
             writeBackStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
             #else
-            writeBackStage.writeBack(executeEngine, *eventHandler);
+            writeBackStage.writeBack(executeEngine);
             #endif
 
         }
@@ -233,7 +256,7 @@ void Pipeline::processWriteBackStage()
             writeBackStage.setStalledGUI(true); // Reset the stalled flag
             writeBackStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
             #else
-            writeBackStage.writeBack(executeEngine, *eventHandler);
+            writeBackStage.writeBack(executeEngine);
             #endif
 
         }
@@ -247,7 +270,7 @@ void Pipeline::processWriteBackStage()
     {
             writeBackStage.setStalledGUI(true); // Reset the stalled flag
             DEBUG_LOG(debugLog("WriteBack stage is waiting for GUI buffer update."));
-            writeBackStage.writeBack(executeEngine, *eventHandler);
+            writeBackStage.writeBack(executeEngine);
 
     }
     else if(writeBackStage.getStatus() == StageStatus::WAITING_GUI_EXECUTION)
@@ -279,7 +302,7 @@ void Pipeline::processMemoryStage()
             memoryStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
             memoryStage.setStalledGUI(true); // Set the stalled flag
             #else
-            memoryStage.requestMemoryAccess(executeEngine, *eventHandler);
+            memoryStage.requestMemoryAccess(executeEngine);
             #endif
         }
         else if (executeStage.isStageReady() && !executeStage.isInstructionEmpty(executeStage.peekInstruction()))
@@ -290,7 +313,7 @@ void Pipeline::processMemoryStage()
             memoryStage.setStalledGUI(true); // Set the stalled flag
             memoryStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
             #else
-            memoryStage.requestMemoryAccess(executeEngine, *eventHandler);
+            memoryStage.requestMemoryAccess(executeEngine);
             #endif
 
         }
@@ -304,7 +327,7 @@ void Pipeline::processMemoryStage()
     {
             DEBUG_LOG(debugLog("Memory stage is waiting for GUI buffer update."));
             memoryStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI execution
-            memoryStage.requestMemoryAccess(executeEngine, *eventHandler);
+            memoryStage.requestMemoryAccess(executeEngine);
             memoryStage.setStalledGUI(false); // Set the stalled flag
 
     }
@@ -330,8 +353,6 @@ void Pipeline::processMemoryStage()
     else if (memoryStage.getStatus() == StageStatus::MEMORY_DONE)
     {
         DEBUG_LOG(debugLog("MEMORY STAGE memory operation completed."));
-        // Move instruction to Memory-WriteBack buffer
-        memoryStage.accessMemory(executeEngine, *eventHandler);
 
     }
     else 
@@ -356,7 +377,7 @@ void Pipeline::processExecuteStage()
             executeStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
             executeStage.setStalledGUI(true); // Set the stalled flag
             #else
-            executeStage.startExecution(executeEngine,*eventHandler);
+            executeStage.startExecution(executeEngine);
             #endif
         }
         else if (operandFetchStage.isStageReady() && !operandFetchStage.isInstructionEmpty(operandFetchStage.peekInstruction()))
@@ -367,7 +388,7 @@ void Pipeline::processExecuteStage()
             executeStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
             executeStage.setStalledGUI(true); // Set the stalled flag
             #else
-            executeStage.startExecution(executeEngine, *eventHandler);
+            executeStage.startExecution(executeEngine);
             #endif
         }
         else 
@@ -379,7 +400,7 @@ void Pipeline::processExecuteStage()
     else if(executeStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)
     {
             DEBUG_LOG(debugLog("Execute stage is waiting for GUI buffer update."));
-            executeStage.startExecution(executeEngine, *eventHandler);
+            executeStage.startExecution(executeEngine);
             executeStage.setStalledGUI(false); // Set the stalled flag
 
     }
@@ -401,12 +422,7 @@ void Pipeline::processExecuteStage()
     }
     else if (executeStage.getStatus() == StageStatus::MEMORY_DONE)
     {
-        executeStage.updateExecution(executeEngine, *eventHandler);
         DEBUG_LOG(debugLog("EXECUTE STAGE instruction execution completed."));
-
-        // Move instruction to Execute-Memory buffer
-        DEBUG_LOG(debugLog("INDEX VALUE: " + to_string_hex(index)));
-        
     }
     else 
     {
@@ -432,7 +448,7 @@ void Pipeline::processOperandFetchStage()
             operandFetchStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
             operandFetchStage.setStalledGUI(true); // Set the stalled flag
             #else
-            operandFetchStage.fetchOperands(executeEngine, *eventHandler);
+            operandFetchStage.fetchOperands(executeEngine);
             #endif   
         }
         else if (decodeStage.isStageReady() && !decodeStage.isInstructionEmpty(decodeStage.peekInstruction()))
@@ -443,7 +459,7 @@ void Pipeline::processOperandFetchStage()
             operandFetchStage.setStatus(StageStatus::WAITING_GUI_BUFFER1); // Set the status
             operandFetchStage.setStalledGUI(true); // Set the stalled flag
             #else
-            operandFetchStage.fetchOperands(executeEngine, *eventHandler);
+            operandFetchStage.fetchOperands(executeEngine);
             #endif
 
         }
@@ -458,7 +474,7 @@ void Pipeline::processOperandFetchStage()
     {
             DEBUG_LOG(debugLog("Operand Fetch stage is waiting for GUI buffer update."));
             operandFetchStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI execution
-            operandFetchStage.fetchOperands(executeEngine, *eventHandler);
+            operandFetchStage.fetchOperands(executeEngine);
             operandFetchStage.setStalledGUI(true); // Set the stalled flag
 
     }

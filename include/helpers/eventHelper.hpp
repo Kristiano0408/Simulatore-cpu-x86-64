@@ -33,9 +33,18 @@ enum class EventHandlerPipelineEventType : uint8_t
 
 enum class EventHandlerExecuteEngineEventType : uint8_t 
 {
-    EXECUTE_COMPLETE,
-    MEMORY_COMPLETE,
-    COUNT // Represents the total number of event types
+
+    EXECUTE_PHASE_COMPLETE = 0,
+    MEMORY_PHASE_COMPLETE = 1,
+    OPERAND_COMPLETE_READ = 2,
+    OPERAND_COMPLETE_WRITE = 3,
+
+    MEMORY_WAITING = 4,
+    MEMORY_DONE = 5,
+    MEMORY_WAITING_EXECUTE = 6,
+    MEMORY_DONE_EXECUTE = 7,
+
+    COUNT = 8 // Represents the total number of event types
 };
 
 #endif // EVENT_HELPER_HPP

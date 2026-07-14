@@ -72,6 +72,8 @@ struct temporaryValues {
         uint64_t srcValue; //value of the source operand
         uint64_t destValue; //value of the destination operand
         uint64_t resultValue; //result of the operation
+        bool isSrcValueReady = false; //flag to indicate if the source value is ready
+        bool isDestValueReady = false; //flag to indicate if the destination value is ready
         bool CF; //Carry Flag
         bool ZF; //Zero Flag
         bool SF; //Sign Flag

@@ -72,3 +72,30 @@ PipelineEventHandler::CallbackPipelineEventType PipelineEventHandler::getCallbac
     return pipelineCallbacks[eventTypeIndex]; // Return the registered callback function for the specified event type
 }
 
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+ExecuteEngineEventHandler::ExecuteEngineEventHandler() : callbackContext(nullptr)
+{
+    executeEngineCallbacks.fill(nullptr); // Fill the array with nullptr values
+}
+
+void ExecuteEngineEventHandler::registerExecuteEngineEvent(const EventHandlerExecuteEngineEventType eventName, CallbackExecuteEngineEventType callback) 
+{
+    uint8_t eventTypeIndex = static_cast<uint8_t>(eventName); // Convert the event type to an index for the vector
+
+    executeEngineCallbacks[eventTypeIndex] = callback; // Register the callback function for the specified event type in the vector
+}
+
+
+void ExecuteEngineEventHandler::triggerExecuteEngineEvent(const EventHandlerExecuteEngineEventType eventName) 
+{
+    uint8_t eventTypeIndex = static_cast<uint8_t>(eventName); // Convert the event type to an index for the vector
+
+    if(executeEngineCallbacks[eventTypeIndex] != nullptr) // Check if a callback function is registered for the specified event type
+    {
+        executeEngineCallbacks[eventTypeIndex](callbackContext); // Call the registered callback function for the specified event type with the context
+    }
+}

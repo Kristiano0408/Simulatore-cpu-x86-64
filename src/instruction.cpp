@@ -15,7 +15,7 @@ Instruction::Instruction()
 }
 bool Instruction::isEmpty() const 
 {
-    return (core.opcode == 0 || core.InstructionId == 0 || sourceOperand->getType() == OperandType::NONE || destinationOperand->getType() == OperandType::NONE);
+    return (core.opcode == 0 || core.InstructionId == 0);
 }
 
 uint64_t Instruction::castingValue(uint64_t value, uint8_t nbit) 

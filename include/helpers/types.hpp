@@ -3,13 +3,25 @@
 #include <cstddef>
 #include <compare>
 #include "maskAndConst.hpp"
+#include "debug.hpp"
 
-
+#ifdef DEBUG
+#define DEBUG_LOG(x) x
+#else
+#define DEBUG_LOG(x)
+#endif
 
 using LineData = std::array<std::byte, CACHE_LINE_SIZE>; // Type alias for cache line data
 using MaxCPUInstructionLength = std::array<std::byte, 16>; // Type alias for maximum CPU instruction length (16 bytes)
 using Index = std::ptrdiff_t; // Use std::ptrdiff_t for index type, which is a signed integer type used for pointer arithmetic and array indexing
 
+inline void debugLog2([[maybe_unused]] const std::string& message) 
+{
+
+    #ifdef DEBUG
+    std::cout << "[DEBUG] " << message << std::endl;    
+    #endif
+}
 
 template<typename T, typename Tag>
 struct TypeWrapper 
@@ -112,7 +124,9 @@ class FixedSizeQueueCacheFriendly
 
         bool empty() const
         {
-            return size() == 0; // Check if the queue is empty
+            DEBUG_LOG(debugLog2("FixedSizeQueueCacheFriendly: Checking if queue is empty."));
+            DEBUG_LOG(debugLog2("FixedSizeQueueCacheFriendly: Head index: " + std::to_string(head) + ", Tail index: " + std::to_string(tail) + ", Size: " + std::to_string(size())));
+            return (size() == 0 || head == tail); // Check if the queue is empty
         }
      
         void push(T&& value)

@@ -19,7 +19,7 @@ public:
    
     virtual ~TickedDevice() = default;
 
-    void tick(); // Function to be called every clock tick
+    virtual void tick(); // Function to be called every clock tick
 
     virtual void execute_operation() = 0; // Pure virtual function to be implemented by derived classes
 

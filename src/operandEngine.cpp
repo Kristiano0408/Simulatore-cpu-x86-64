@@ -3,43 +3,105 @@
 #include "cache/cacheManager.hpp"
 #include "eventLog.hpp"
 #include "cpu.hpp"
+#include "eventHandler.hpp"
 
-OperandResult OperandEngine::readOperand(Instruction* instruction, Operand* operand, void* context, void(*callback)(void* context))
+
+void OperandEngine::sendReadRequest(Instruction* instruction, Operand* srcOperand, Operand* destOperand)
 {
-    OperandResult result;
-    switch (operand->getType()) {
-        case OperandType::REGISTER:
-        DEBUG_LOG(debugLog("Reading from register operand."));
-            result = getRegisterValue(operand);
-            return result;
-        case OperandType::MEMORY:
-        DEBUG_LOG(debugLog("Reading from memory operand."));
-            result = getMemoryValue(instruction, operand, context, callback);
-            return result;
-        case OperandType::IMMEDIATE:
-        DEBUG_LOG(debugLog("Reading from immediate operand."));
-            result = getImmediateValue(operand);
-            return result;
-        default:
-            return {OperandStatus::ERROR, 0};
+    readQueue.push({instruction, srcOperand, destOperand});
+}
+
+void OperandEngine::sendWriteRequest(Instruction* instruction, Operand* operand, uint64_t value)
+{
+    writeQueue.push({instruction, operand, value});
+}
+
+void OperandEngine::execute_operation()
+{
+    // Process read operations
+    if (!readQueue.empty())
+    {
+        OperandContextRead context = readQueue.front();
+        temporaryValues& tempValues = context.instruction->getTemporaryValuesRef();
+
+        if(tempValues.isSrcValueReady)
+            readOperand(context.instruction, context.srcOperand, WhichOperand::SOURCE);
+        
+        if(tempValues.isDestValueReady)
+            readOperand(context.instruction, context.destOperand, WhichOperand::DESTINATION);
+    }
+
+    // Process write operations
+    if (!writeQueue.empty())
+    {
+        OperandContextWrite context = writeQueue.front();
+        writeOperand(context.instruction, context.operand, context.value);
     }
 }
 
-OperandResult OperandEngine::writeOperand(Instruction* instruction, Operand* operand, uint64_t value, void* context, void(*callback)(void* context))
+void OperandEngine::readOperand(Instruction* instruction, Operand* operand, WhichOperand whichoperand)
 {
+    DEBUG_LOG(debugLog("OperandEngine: Reading operand of type " + std::to_string(static_cast<uint8_t>(operand->getType())) + " for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+    OperandResult result;
+    switch (operand->getType()) {
+        case OperandType::REGISTER:
+            DEBUG_LOG(debugLog("Reading from register operand."));
+            result = getRegisterValue(instruction, operand, whichoperand);
+            if(result.status == OperandStatus::OK && instruction->getTemporaryValuesRef().isSrcValueReady && instruction->getTemporaryValuesRef().isDestValueReady)
+            {
+                DEBUG_LOG(debugLog("OperandEngine: Register read completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ);
+                readQueue.pop(); // Remove the completed read operation from the queue
+            }
+            return;
+        case OperandType::MEMORY:
+            DEBUG_LOG(debugLog("Reading from memory operand."));
+            result = getMemoryValue(instruction, operand, executeEngineEventHandler.getContext(), executeEngineEventHandler.getCallback(EventHandlerExecuteEngineEventType::MEMORY_DONE), whichoperand);
+            
+            if(result.status == OperandStatus::OK && instruction->getTemporaryValuesRef().isSrcValueReady && instruction->getTemporaryValuesRef().isDestValueReady)
+            {
+                DEBUG_LOG(debugLog("OperandEngine: Memory read completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ);
+                readQueue.pop(); // Remove the completed read operation from the queue
+            }
+            return;
+        case OperandType::IMMEDIATE:
+            DEBUG_LOG(debugLog("Reading from immediate operand."));
+            result = getImmediateValue(instruction, operand, whichoperand);
+            if(result.status == OperandStatus::OK && instruction->getTemporaryValuesRef().isSrcValueReady && instruction->getTemporaryValuesRef().isDestValueReady)
+            {
+                DEBUG_LOG(debugLog("OperandEngine: Immediate read completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ);
+                readQueue.pop(); // Remove the completed read operation from the queue
+            }
+            return;
+        default:
+            return;
+    }
+}
+
+void OperandEngine::writeOperand(Instruction* instruction, Operand* operand, uint64_t value)
+{
+    DEBUG_LOG(debugLog("OperandEngine: Writing value " + std::to_string(value) + " to operand of type " + std::to_string(static_cast<uint8_t>(operand->getType())) + " for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
     OperandResult result;
     switch (operand->getType()) {
         case OperandType::REGISTER:
             result = setRegisterValue(operand, value);
-            return result;
+            return;
         case OperandType::MEMORY:
-            result = setMemoryValue(instruction, operand, value, context, callback);
-            return result;
+            result = setMemoryValue(instruction, operand, value, executeEngineEventHandler.getContext(), executeEngineEventHandler.getCallback(EventHandlerExecuteEngineEventType::MEMORY_DONE));
+            if(result.status == OperandStatus::OK)
+            {
+                DEBUG_LOG(debugLog("OperandEngine: Memory write completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE);
+                writeQueue.pop(); // Remove the completed write operation from the queue
+            }
+            return;
         case OperandType::IMMEDIATE:
             result = setImmediateValue(operand, value);
-            return result;
+            return;
         default:
-            return {OperandStatus::ERROR, 0};
+            return;
     }
 
 }
@@ -49,6 +111,7 @@ OperandResult OperandEngine::writeOperand(Instruction* instruction, Operand* ope
 
 OperandResult OperandEngine::setRegisterValue(Operand* operand, uint64_t value) 
 {
+    DEBUG_LOG(debugLog("OperandEngine: Setting register value to " + std::to_string(value) + " for operand of type " + std::to_string(static_cast<uint8_t>(operand->getType()))));
     RegOperand* regOperand = static_cast<RegOperand*>(operand);
 
     Result result;
@@ -72,7 +135,7 @@ OperandResult OperandEngine::setRegisterValue(Operand* operand, uint64_t value)
     
 }
 
-OperandResult OperandEngine::getRegisterValue(Operand* operand) 
+OperandResult OperandEngine::getRegisterValue(Instruction* instruction, Operand* operand, WhichOperand whichoperand) 
 {
     RegOperand* regOperand = static_cast<RegOperand*>(operand);
     Result result;
@@ -90,6 +153,17 @@ OperandResult OperandEngine::getRegisterValue(Operand* operand)
     result.errorInfo.source = ComponentType::OPERAND;
     result.errorInfo.event = EventType::OPERAND_GET_VALUE;
     result.errorInfo.error = ErrorType::NONE;
+    switch(whichoperand)
+    {
+        case WhichOperand::SOURCE:
+            instruction->getTemporaryValuesRef().srcValue = value;
+            instruction->getTemporaryValuesRef().isSrcValueReady = true;
+            break;
+        case WhichOperand::DESTINATION:
+            instruction->getTemporaryValuesRef().destValue = value;
+            instruction->getTemporaryValuesRef().isDestValueReady = true;
+            break;
+    }
     EventLog::getInstance().pushOperandDataLogEntry(std::move(result), value);
 
 
@@ -115,20 +189,32 @@ OperandResult OperandEngine::setImmediateValue(Operand* operand, uint64_t value)
 }
 
 
-OperandResult OperandEngine::getImmediateValue(Operand* operand) 
+OperandResult OperandEngine::getImmediateValue(Instruction* instruction, Operand* operand, WhichOperand whichoperand) 
 {
     ImmediateOperand* immOperand = static_cast<ImmediateOperand*>(operand);
   
     Result result;
     result.success = true;
     result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_GET_VALUE, ErrorType::NONE };
+    switch(whichoperand)
+    {
+        case WhichOperand::SOURCE:
+            instruction->getTemporaryValuesRef().srcValue = immOperand->getValue();
+            instruction->getTemporaryValuesRef().isSrcValueReady = true;
+            break;
+        case WhichOperand::DESTINATION:
+            instruction->getTemporaryValuesRef().destValue = immOperand->getValue();
+            instruction->getTemporaryValuesRef().isDestValueReady = true;
+            break;
+    }
+
     EventLog::getInstance().pushOperandDataLogEntry(std::move(result), immOperand->getValue());
     return {OperandStatus::OK, immOperand->getValue()};
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* operand, void* callbackContext, void(*callback)(void* context))
+OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* operand, void* callbackContext, void(*callback)(void* context), WhichOperand whichoperand)
 {
     InstructionCore& core = instruction->getCore();
     MemOperand* memOperand = static_cast<MemOperand*>(operand);
@@ -203,6 +289,17 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
             result.success = true;
             result.errorInfo = {ComponentType::OPERAND, EventType::OPERAND_GET_VALUE, ErrorType::NONE};
             EventLog::getInstance().pushOperandDataLogEntry(std::move(result), value);
+            switch(whichoperand)
+            {
+                case WhichOperand::SOURCE:
+                    instruction->getTemporaryValuesRef().srcValue = value;
+                    instruction->getTemporaryValuesRef().isSrcValueReady = true;
+                    break;
+                case WhichOperand::DESTINATION:
+                    instruction->getTemporaryValuesRef().destValue = value;
+                    instruction->getTemporaryValuesRef().isDestValueReady = true;
+                    break;
+            }
 
             return {OperandStatus::OK, value};
         }
