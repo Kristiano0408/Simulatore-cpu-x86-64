@@ -133,7 +133,13 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
 
     //getting the type and adressing mode of the instruction
     
-    auto it = instructionMap.find(instruction.opcode)->second;
+    auto mapIt = instructionMap.find(instruction.opcode);
+    if (mapIt == instructionMap.end())
+    {
+        std::cerr << "Unknown instruction in instructionMap: " << std::hex << instruction.opcode << std::endl;
+        return nullptr;
+    }
+    auto& it = mapIt->second;
 
     DEBUG_LOG(debugLog("Decoding instruction: " + to_string_hex(instruction.opcode) + " - " + std::to_string(static_cast<int>(it.mode))));
 

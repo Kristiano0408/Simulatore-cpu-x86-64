@@ -10,8 +10,9 @@ ExecuteEngine::ExecuteEngine(CPU& cpu, RegisterFile& registerFile, ALU& alu, Cac
     executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::MEMORY_DONE, &triggerPipelineMemoryDoneExecuteCallback);
     executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::MEMORY_WAITING_EXECUTE, &triggerPipelineMemoryWaitingExecuteCallback);
     executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::MEMORY_DONE_EXECUTE, &triggerPipelineMemoryDoneExecuteCallback);
-    executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ, &completeExecutionCallback);
-    executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE, &completeMemoryAccessCallback);
+    executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ_EXECUTION, &completeExecutionCallback);
+    executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE_MEMORY, &completeMemoryAccessCallback);
+    executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE_WRITEBACK, &completeWriteBackCallback);
     
 }
 
@@ -63,17 +64,17 @@ void ExecuteEngine::completeExecutionCallback(void* context)
 void ExecuteEngine::completeMemoryAccessCallback(void* context) 
 {
     ExecuteEngine* engine = static_cast<ExecuteEngine*>(context);
-    engine->accessMemory(engine->getExecutionQueue().front());
+    engine->accessMemory(engine->getMemoryAccessQueue().front());
     engine->resetMemoryAccessState();
     engine->pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE);
 }
 
-void ExecuteEngine::onOperandCompleteReadCallback(void* context) 
+
+void ExecuteEngine::completeWriteBackCallback(void* context) 
 {
     ExecuteEngine* engine = static_cast<ExecuteEngine*>(context);
-    
+    engine->pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -217,7 +218,7 @@ void ExecuteEngine::startExecution(Instruction* instruction)
 {   
     if(isExecuting)
     {
-        DEBUG_LOG(debugLog("ExecuteEngine is already executing an instruction. Cannot execute another instruction simultaneously."));
+        DEBUG_LOG(debugLog("ExecuteEngine is already executing an instruction. Cannot execute another instruction simultaneously with ID " + std::to_string(instruction->getCore().InstructionId)));
         return;
     }
     DEBUG_LOG(debugLog("ExecuteEngine: Starting execution for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
@@ -240,7 +241,10 @@ void ExecuteEngine::startExecution(Instruction* instruction)
 
 void ExecuteEngine::executeInstruction(Instruction* instruction)
 {
-    isExecuting = true;
+
+    DEBUG_LOG(debugLog("ExecuteEngine: Executing instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+    DEBUG_LOG(debugLog("ExecuteEngine: Source Operand Value: " + std::to_string(instruction->getTemporaryValuesRef().srcValue)));
+    DEBUG_LOG(debugLog("ExecuteEngine: Destination Operand Value: " + std::to_string(instruction->getTemporaryValuesRef().destValue)));
 
 
     InstructionCore& core = instruction->getCore();
@@ -273,7 +277,7 @@ void ExecuteEngine::requestMemoryAccess(Instruction* instruction)
 {
     if(isAccessingMemory)
     {
-        DEBUG_LOG(debugLog("ExecuteEngine is already accessing memory. Cannot access memory for another instruction simultaneously."));
+        DEBUG_LOG(debugLog("ExecuteEngine is already accessing memory. Cannot access memory for another instruction simultaneously with ID " + std::to_string(instruction->getCore().InstructionId)));
         return;
     }
     isAccessingMemory = true;
@@ -283,6 +287,7 @@ void ExecuteEngine::requestMemoryAccess(Instruction* instruction)
     if(!flags.regToMem)
     {
         DEBUG_LOG(debugLog("No memory access needed for SubInstruction (not register to memory)."));
+        resetMemoryAccessState();
         pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE);
         return;
     }
@@ -350,6 +355,5 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
     flags.setFlag(Flagbit::PF, instruction->getTemporaryValues().PF);
     flags.setFlag(Flagbit::AF, instruction->getTemporaryValues().AF);  
 
-    pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
 
 }

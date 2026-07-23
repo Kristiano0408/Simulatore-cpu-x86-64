@@ -62,8 +62,7 @@ class ExecuteEngine : public TickedDevice, public FaultDevice
         static void completeExecutionCallback(void* context);
         static void completeMemoryAccessCallback(void* context);
 
-        static void onOperandCompleteReadCallback(void* context);
-        static void onOperandCompleteWriteCallback(void* context);
+        static void completeWriteBackCallback(void* context);
 
         void executeInstruction(Instruction* instruction);
 
@@ -71,6 +70,7 @@ class ExecuteEngine : public TickedDevice, public FaultDevice
         void resetMemoryAccessState();
 
         const FixedSizeQueueCacheFriendly<Instruction*, 10>& getExecutionQueue() const { return executionQueue; }
+        const FixedSizeQueueCacheFriendly<Instruction*, 10>& getMemoryAccessQueue() const { return memoryAccessQueue; }
 
         void sendOperandFetchRequest(Instruction* instruction);
         void sendExecutionRequest(Instruction* instruction);

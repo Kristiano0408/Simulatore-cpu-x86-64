@@ -124,8 +124,6 @@ class FixedSizeQueueCacheFriendly
 
         bool empty() const
         {
-            DEBUG_LOG(debugLog2("FixedSizeQueueCacheFriendly: Checking if queue is empty."));
-            DEBUG_LOG(debugLog2("FixedSizeQueueCacheFriendly: Head index: " + std::to_string(head) + ", Tail index: " + std::to_string(tail) + ", Size: " + std::to_string(size())));
             return (size() == 0 || head == tail); // Check if the queue is empty
         }
      

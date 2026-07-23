@@ -24,10 +24,10 @@ void OperandEngine::execute_operation()
         OperandContextRead context = readQueue.front();
         temporaryValues& tempValues = context.instruction->getTemporaryValuesRef();
 
-        if(tempValues.isSrcValueReady)
+        if(!tempValues.isSrcValueReady)
             readOperand(context.instruction, context.srcOperand, WhichOperand::SOURCE);
         
-        if(tempValues.isDestValueReady)
+        if(!tempValues.isDestValueReady)
             readOperand(context.instruction, context.destOperand, WhichOperand::DESTINATION);
     }
 
@@ -50,7 +50,7 @@ void OperandEngine::readOperand(Instruction* instruction, Operand* operand, Whic
             if(result.status == OperandStatus::OK && instruction->getTemporaryValuesRef().isSrcValueReady && instruction->getTemporaryValuesRef().isDestValueReady)
             {
                 DEBUG_LOG(debugLog("OperandEngine: Register read completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
-                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ);
+                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ_EXECUTION);
                 readQueue.pop(); // Remove the completed read operation from the queue
             }
             return;
@@ -61,7 +61,7 @@ void OperandEngine::readOperand(Instruction* instruction, Operand* operand, Whic
             if(result.status == OperandStatus::OK && instruction->getTemporaryValuesRef().isSrcValueReady && instruction->getTemporaryValuesRef().isDestValueReady)
             {
                 DEBUG_LOG(debugLog("OperandEngine: Memory read completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
-                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ);
+                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ_EXECUTION);
                 readQueue.pop(); // Remove the completed read operation from the queue
             }
             return;
@@ -71,7 +71,7 @@ void OperandEngine::readOperand(Instruction* instruction, Operand* operand, Whic
             if(result.status == OperandStatus::OK && instruction->getTemporaryValuesRef().isSrcValueReady && instruction->getTemporaryValuesRef().isDestValueReady)
             {
                 DEBUG_LOG(debugLog("OperandEngine: Immediate read completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
-                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ);
+                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ_EXECUTION);
                 readQueue.pop(); // Remove the completed read operation from the queue
             }
             return;
@@ -87,18 +87,28 @@ void OperandEngine::writeOperand(Instruction* instruction, Operand* operand, uin
     switch (operand->getType()) {
         case OperandType::REGISTER:
             result = setRegisterValue(operand, value);
+            if(result.status == OperandStatus::OK)
+            {
+                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE_WRITEBACK);
+                writeQueue.pop();
+            }
             return;
         case OperandType::MEMORY:
             result = setMemoryValue(instruction, operand, value, executeEngineEventHandler.getContext(), executeEngineEventHandler.getCallback(EventHandlerExecuteEngineEventType::MEMORY_DONE));
             if(result.status == OperandStatus::OK)
             {
                 DEBUG_LOG(debugLog("OperandEngine: Memory write completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
-                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE);
+                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE_MEMORY);
                 writeQueue.pop(); // Remove the completed write operation from the queue
             }
             return;
         case OperandType::IMMEDIATE:
-            result = setImmediateValue(operand, value);
+            /*result = setImmediateValue(operand, value);
+            if(result.status == OperandStatus::OK)
+            {
+                executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE);
+                writeQueue.pop();
+            }*/
             return;
         default:
             return;
