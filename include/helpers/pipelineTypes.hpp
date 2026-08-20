@@ -21,12 +21,13 @@ enum class StageStatus : uint8_t
 
 enum class StageType : uint8_t 
 {
-    FETCH,
-    DECODE,
-    OPERAND_FETCH,
-    EXECUTE,
-    MEMORY,
-    WRITE_BACK
+    FETCH = 0,
+    DECODE = 1,
+    OPERAND_FETCH = 2,
+    EXECUTE = 3,
+    MEMORY = 4,
+    WRITE_BACK = 5,
+    COUNT = 6
 };
 
 

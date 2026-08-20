@@ -59,9 +59,9 @@ class FlagReg : public Reg {
 
         inline void setFlag(Flagbit flag, bool value) {
             if (value) {
-                raw() |= (1 << static_cast<int>(flag)); //set the flag bit
+                raw() |= (1ULL << static_cast<int>(flag)); //set the flag bit
             } else {
-                raw() &= ~(1 << static_cast<int>(flag)); //clear the flag bit
+                raw() &= ~(1ULL << static_cast<int>(flag)); //clear the flag bit
             }
         }
 

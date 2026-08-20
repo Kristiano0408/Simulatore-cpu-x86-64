@@ -1,13 +1,10 @@
-#include <unordered_map>
 #include <cstdint>
 #include "instruction_code_map.hpp"
 #include "instruction.hpp"
 #include "decoder.hpp"
 
 
-
-
-std::unordered_map<uint32_t, InstructionType_and_addMode> instructionMap 
+ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionMap =
 {
     
     {0xB0, {TypeofInstruction::MOV, AddressingMode::OI, InstructionExecutionMode::DATA_TRANSFER}},
@@ -62,20 +59,19 @@ std::unordered_map<uint32_t, InstructionType_and_addMode> instructionMap
 
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//definition of the map for the decode functions
-std::unordered_map<AddressingMode, DecodeFunc> Addressing_modes
+const std::array<DecodeFunc,(size_t)AddressingMode::COUNT> addressingModes =
 {
-    {AddressingMode::OI, &Decoder::decodeInstructionOI},
-    {AddressingMode::MI, &Decoder::decodeInstructionMI},
-    {AddressingMode::MR, &Decoder::decodeInstructionMR},
-    {AddressingMode::RM, &Decoder::decodeInstructionRM},
-    {AddressingMode::FD, &Decoder::decodeInstructionFD},
-    {AddressingMode::TD, &Decoder::decodeInstructionTD},
-    {AddressingMode::I, &Decoder::decodeInstructionI},
+    //the order MUST be the same of the enum
+    &Decoder::decodeInstructionI,
+    &Decoder::decodeInstructionOI,
+    &Decoder::decodeInstructionMI,
+    &Decoder::decodeInstructionMR,
+    &Decoder::decodeInstructionRM,
+    &Decoder::decodeInstructionFD,
+    &Decoder::decodeInstructionTD,
     
-
-   
 };
 
 

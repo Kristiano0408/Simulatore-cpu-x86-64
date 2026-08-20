@@ -6,7 +6,8 @@
 #include "addressCalculator.hpp"
 #include "controlUnit.hpp"
 #include "bus.hpp"
-#include "registerFile.hpp"
+
+#include <fstream>
 
 #include <string>
 #include <vector>
@@ -16,7 +17,6 @@
 
 #include <termios.h>
 #include <unistd.h>
-
 
 void setNonCanonical(bool enable) {
     static termios oldt;
@@ -40,6 +40,7 @@ using namespace std;
 
 int main()
 {
+   
     setNonCanonical(true); // Abilita modalità non canonica per l'input
 
     DEBUG_LOG(debugLog("inizializzazione bus"));
@@ -306,7 +307,7 @@ int main()
 
 }*/
     
-
+    return 0;
 }
 
 

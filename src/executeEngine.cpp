@@ -90,6 +90,43 @@ void ExecuteEngine::tick()
 
 void ExecuteEngine::execute_operation() 
 {
+    if (!writeBackQueue.empty()) 
+    {
+        Instruction* instruction = writeBackQueue.front();
+        if(instruction == nullptr)
+        {
+            writeBackQueue.pop(); // Remove the null instruction from the queue
+            return;
+        }
+        writeBackInstruction(instruction);
+        writeBackQueue.pop();
+    }
+
+    if (!memoryAccessQueue.empty()) 
+    {
+        Instruction* instruction = memoryAccessQueue.front();
+        if(instruction == nullptr)
+        {
+            memoryAccessQueue.pop(); // Remove the null instruction from the queue
+            return;
+        }
+        requestMemoryAccess(instruction);
+    } 
+
+    if (!executionQueue.empty())
+    {
+        
+        
+        Instruction* instruction = executionQueue.front();
+        if(instruction == nullptr)
+        {
+            executionQueue.pop(); // Remove the null instruction from the queue
+            return;
+        }
+        DEBUG_LOG(debugLog("ExecuteEngine: Starting execution for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+        startExecution(instruction);
+    } 
+
     // Check if there are any pending operations in the queues
     if (!operandFetchQueue.empty())
     {
@@ -105,41 +142,10 @@ void ExecuteEngine::execute_operation()
         operandFetchQueue.pop(); // Remove the completed operation from the queue
         DEBUG_LOG(debugLog("ExecuteEngine: Operands fetched for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
     } 
-    if (!executionQueue.empty())
-    {
-        
-        
-        Instruction* instruction = executionQueue.front();
-        if(instruction == nullptr)
-        {
-            executionQueue.pop(); // Remove the null instruction from the queue
-            return;
-        }
-        DEBUG_LOG(debugLog("ExecuteEngine: Starting execution for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
-        startExecution(instruction);
-    } 
+   
 
-    if (!memoryAccessQueue.empty()) 
-    {
-        Instruction* instruction = memoryAccessQueue.front();
-        if(instruction == nullptr)
-        {
-            memoryAccessQueue.pop(); // Remove the null instruction from the queue
-            return;
-        }
-        requestMemoryAccess(instruction);
-    } 
-    if (!writeBackQueue.empty()) 
-    {
-        Instruction* instruction = writeBackQueue.front();
-        if(instruction == nullptr)
-        {
-            writeBackQueue.pop(); // Remove the null instruction from the queue
-            return;
-        }
-        writeBackInstruction(instruction);
-        writeBackQueue.pop();
-    }
+   
+    
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -252,7 +258,7 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
     switch(core.executionMode)
     {
         case InstructionExecutionMode::ALU:
-            alu.executeOperation(instruction->getTemporaryValuesRef(), core.type);
+            alu.executeOperation(instruction->getTemporaryValuesRef(), core.type, core.nbit);
             break;
         case InstructionExecutionMode::DATA_TRANSFER:
             //nothing to do here, the data transfer is handled by other parts of the execute engine

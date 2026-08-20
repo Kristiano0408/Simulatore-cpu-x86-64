@@ -18,6 +18,13 @@ void OperandEngine::sendWriteRequest(Instruction* instruction, Operand* operand,
 
 void OperandEngine::execute_operation()
 {
+    // Process write operations
+    if (!writeQueue.empty())
+    {
+        OperandContextWrite context = writeQueue.front();
+        writeOperand(context.instruction, context.operand, context.value);
+    }
+    
     // Process read operations
     if (!readQueue.empty())
     {
@@ -31,12 +38,7 @@ void OperandEngine::execute_operation()
             readOperand(context.instruction, context.destOperand, WhichOperand::DESTINATION);
     }
 
-    // Process write operations
-    if (!writeQueue.empty())
-    {
-        OperandContextWrite context = writeQueue.front();
-        writeOperand(context.instruction, context.operand, context.value);
-    }
+    
 }
 
 void OperandEngine::readOperand(Instruction* instruction, Operand* operand, WhichOperand whichoperand)
@@ -108,8 +110,8 @@ void OperandEngine::writeOperand(Instruction* instruction, Operand* operand, uin
             {
                 executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE);
                 writeQueue.pop();
-            }*/
-            return;
+            }
+            return;*/
         default:
             return;
     }
@@ -131,7 +133,11 @@ OperandResult OperandEngine::setRegisterValue(Operand* operand, uint64_t value)
     // Applica la maschera coerente alla size del tipo
     const uint64_t valueMasked = value & mask;
 
-    regOperand->getReg() = (regOperand->getReg() & ~mask) | valueMasked;
+    uint64_t& regValue = regOperand->getReg();
+    if(bitCount == 32)
+        regValue = valueMasked; // For 32-bit registers, overwrite the entire register
+    else
+        regValue = (regValue & ~mask) | valueMasked; // Altrimenti, sovrascrivi l'intero registro
 
 
     result.success = true;

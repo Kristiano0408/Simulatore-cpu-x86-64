@@ -7,12 +7,9 @@ enum class FaultType : uint8_t
     NONE = 0,
     READ_ERROR = 1,
     WRITE_ERROR = 2,
-    TIMEOUT = 3,
-    POWER_FAILURE = 4,
-    OVERHEATING = 5,
-    MEMORY_CORRUPTION = 6,
-    BUS_ERROR = 7,
-    DEVICE_NOT_RESPONDING = 8,
+    MEMORY_CORRUPTION = 3,
+    BUS_ERROR = 4,
+    DEVICE_NOT_RESPONDING = 5,
     UNKNOWN_ERROR = 254,
     SIZE = 255
 };

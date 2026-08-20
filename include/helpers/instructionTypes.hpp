@@ -29,13 +29,14 @@ enum class TypeofInstruction : uint8_t
 //enum for the addressing mode of the instruction
 enum class AddressingMode : uint8_t
 {
-    I,  //move immediate to accumulator
-    OI, //move immediate to register
-    MI, //move immediate to memory/register
-    MR, //move register to R/M
-    RM, //move R/M to register
-    FD, //move from offset to Rax
-    TD, //move from Rax to offset
+    I = 0,  //move immediate to accumulator
+    OI = 1, //move immediate to register
+    MI = 2, //move immediate to memory/register
+    MR = 3, //move register to R/M
+    RM = 4, //move R/M to register
+    FD = 5, //move from offset to Rax
+    TD = 6, //move from Rax to offset
+    COUNT = 7
 
 };
 

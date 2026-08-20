@@ -1,12 +1,11 @@
-#include <vector>
-#include <unordered_map>
-#include <cstdint>
 #include "opcode_map.hpp"
 
 //REMINDER: the legth of the instruction(for 16/32/64 bit mode)  is standardized to 32bit , the others sizes are modified with prefixes
 
 //REMINDER: the sign extension is set  by the flag in the instruction details struct, with the rex there isa alway
-std::unordered_map<uint32_t, InstructionDetails> opcodeMap = {
+//std::unordered_map<uint32_t, InstructionDetails> opcodeMap = 
+ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
+{
 
     // Istruzioni MOV
 

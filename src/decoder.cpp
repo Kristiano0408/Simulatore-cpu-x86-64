@@ -3,23 +3,11 @@
 #include <memory>
 #include "opcode_map.hpp"
 
-Decoder::Decoder()
-{
-
-    //nothing to do here
-}
-
-Decoder::~Decoder()
-{
-    //nothing to do here
-}
-
-
 
 
 InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],int numPrefixes, bool rex, uint16_t rexprefix)
 {
-    InstructionInfo info;
+    InstructionInfo info = {};
     info.opcode = opcode;
     info.prefixCount = numPrefixes;
     info.rex = rex;
@@ -162,24 +150,21 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
 
 
     //getting the corrisponding function for the addressing mode
-    auto it2 = Addressing_modes.find(mode);
+    auto decoderFunction = addressingModes[static_cast<size_t>(mode)];
+    //auto it2 = Addressing_modes.find(mode);
 
-    
-
-    if (it2 != Addressing_modes.end())
+    if(decoderFunction != nullptr)
     {
-        DecodeFunc decodeFunc = it2->second;
-        //calling the function for decoding the instruction
-        decodeFunc(instructionPtr.get(), instruction, position);
+        decoderFunction(instructionPtr.get(), instruction, position);
 
-        //setting the addressing mode of the instruction
         core.addressingMode = mode;
 
         return instructionPtr;
+
     }
     else
     {
-        std::cerr << "Unknown addressing mode" << std::endl;
+        DEBUG_LOG(debugLog("Unknown addressing mode"));
         return nullptr;
     }
 
@@ -288,8 +273,6 @@ void Decoder::decodeImmediateValue(InstructionInfo instructionInfo, Instruction*
     InstructionCore& core = instruction->getCore();
     core.value = value;
 
-
-    
 }
 
 void Decoder::settingInstructionParameters(Instruction* instruction, InstructionInfo instructionInfo)
@@ -319,6 +302,33 @@ uint64_t Decoder::decodeDisplacement(InstructionInfo instruction, int& position,
     return displacement;
 }
 
+
+/// MACROS FOR SIMPLIFYING THE CODE AND AVOIDING REPETITION (do-while(0) is used to ensure the macro behaves like a single statement)
+#define DECODE_SIB_IF_NEEDED() \
+    do { \
+        flags.hasSIB = 1; \
+        SIB sib = decodeSIB(instructionInfo.instruction[position]); \
+        position++; \
+        core.sib = sib; \
+    } while (0)
+
+#define DECODE_DISPLACEMENT_IF_NEEDED(size) \
+    do { \
+        flags.hasDisplacement = 1; \
+        displacement = decodeDisplacement(instructionInfo, position, size); \
+        core.displacement = displacement; \
+    } while (0)
+
+#define DECODE_SIB_DISPLACEMENT_IF_NEEDED(size) \
+    do { \
+        flags.hasDisplacement = 1; \
+        displacement = decodeDisplacement(instructionInfo, position, size); \
+        core.SIBdisplacement = static_cast<uint32_t>(displacement); \
+    } while (0)
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Decoder::decode_RM_instruction(Instruction* instruction, InstructionInfo instructionInfo, int& position)
 {
     InstructionCore& core = instruction->getCore();
@@ -332,96 +342,55 @@ void Decoder::decode_RM_instruction(Instruction* instruction, InstructionInfo in
 
     core.rm = rm;
     flags.hasModRM = 1;
-   //control of the varius cases of addressing mode
-    if(rm.mod == 0b11)
-    {   
-        //the operand is a register
-        flags.hasDisplacement = 0;
-        flags.hasSIB = 0;
-        flags.regToReg = 1;
-        flags.memToReg = 0;
-        flags.regToMem = 0;
-    }
-    else if (rm.mod == 0b00)
-    {
 
-        if(rm.r_m == 0b100)
-        {
-            //there is SIB
-            flags.hasSIB = 1;
-            SIB sib = decodeSIB(instructionInfo.instruction[position]);
-            position++;
-            core.sib = sib;
-            if(sib.base == 0b101)
+    switch (rm.mod)
+    {
+        case 0b11:
+            flags.hasDisplacement = 0;
+            flags.hasSIB = 0;
+            flags.regToReg = 1;
+            flags.memToReg = 0;
+            flags.regToMem = 0;
+            break;
+
+        case 0b00:
+            if (rm.r_m == 0b100) 
             {
-                //the operand is a displacement
-                flags.hasDisplacement = 1;
-                //the displacement is 32 bit
-                displacement = decodeDisplacement(instructionInfo, position, 4);
-                //set the displacement
-                core.SIBdisplacement = static_cast<uint32_t>(displacement);
-            }
-   
+                DECODE_SIB_IF_NEEDED();
 
-        }
-        else if (rm.r_m == 0b101)
-        {
-            //the operand is a displacement
-            flags.hasDisplacement = 1;
-            //the displacement is 32 bit
-            displacement = decodeDisplacement(instructionInfo, position, 4);
-            //set the displacement
-            core.displacement = displacement;
-        }
-        else 
-        {
-           //the operand is a register/mem without displacement
-        }
-       
+                if (core.sib.base == 0b101) 
+                    DECODE_SIB_DISPLACEMENT_IF_NEEDED(4);
+            } 
+            else if (rm.r_m == 0b101) 
+                DECODE_DISPLACEMENT_IF_NEEDED(4);
+        
+            break;
+        
+        case 0b01:
+            //the operand is a register/mem with 8 bit displacement
+            if (rm.r_m == 0b100)
+                DECODE_SIB_IF_NEEDED();
+
+            DECODE_DISPLACEMENT_IF_NEEDED(1);
+
+            break;
+
+        case 0b10:
+            //the operand is a register/mem with 32 bit displacement
+            if (rm.r_m == 0b100)
+                DECODE_SIB_IF_NEEDED();
+
+            DECODE_DISPLACEMENT_IF_NEEDED(4);
+
+            break;
+
+        
+        default:
+            break;
+    
+
     }
    
-    else if (rm.mod == 0b01)
-    {
-        //the operand is a register/mem with 8 bit displacement
-        flags.hasDisplacement = 1;
-       
-        if (rm.r_m == 0b100)
-        {
-           //there is SIB
-           flags.hasSIB = 1;
-           SIB sib = decodeSIB(instructionInfo.instruction[position]);
-           position++;
-           core.sib = sib;
-
-        }
-
-        displacement = 0;
-        displacement += instructionInfo.instruction[position];
-        position++;
-        core.displacement = displacement;
-       
-    }
-
-    else if (rm.mod == 0b10)
-    {
-        //the operand is a register/mem with 32 bit displacement
-        flags.hasDisplacement = 1;
-        if (rm.r_m == 0b100)
-        {
-           //there is SIB
-           flags.hasSIB = 1;
-           SIB sib = decodeSIB(instructionInfo.instruction[position]);
-           position++;
-           core.sib = sib;
-
-        }
-
-        displacement = 0;
-
-        displacement = decodeDisplacement(instructionInfo, position, 4);
-
-        core.displacement = displacement;
-    }
 
     if(instructionInfo.hasImmediate)
     {

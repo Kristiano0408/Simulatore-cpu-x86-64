@@ -8,18 +8,30 @@
 #endif
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include "instructionTypes.hpp"
 #include "pipelineTypes.hpp"
 #include "operandTypes.hpp"
 #include "cacheTypes.hpp"
 
+#ifdef DEBUG
+    inline std::ofstream debugFile("debug.log", std::ios::trunc);
+#endif
+
 //debuging functions
 inline void debugLog([[maybe_unused]] const std::string& message) 
 {
-
-    #ifdef DEBUG
-    std::cout << "[DEBUG] " << message << std::endl;    
+    //print on a file
+   
+    
+    
+    #ifdef DEBUG    
+    if (debugFile.is_open()) {
+        debugFile << "[DEBUG] " << message << std::endl;
+    } else {
+        std::cerr << "Unable to open debug.log for writing." << std::endl;
+    }
     #endif
 }
 

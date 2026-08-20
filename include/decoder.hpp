@@ -18,8 +18,8 @@ class Decoder : public FaultDevice
 {
     
     public:
-        Decoder();
-        ~Decoder();
+        Decoder() = default;
+        ~Decoder() = default;
         
         //decode the instruction
         InstructionInfo LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4], int numPrefixes, bool rex, uint16_t rexprefix);

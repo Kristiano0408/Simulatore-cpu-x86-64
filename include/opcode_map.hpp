@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <cstdint>
+#include "third_party/unordered_dense.h"
 
 // Struct for memorizing instruction details
 struct InstructionDetails {
@@ -22,7 +23,7 @@ struct InstructionDetails {
 };
 
 // Dichiarazione esterna
-extern std::unordered_map<uint32_t, InstructionDetails> opcodeMap;
+extern ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap;
 
 
 
