@@ -1955,3 +1955,279 @@
 [DEBUG] n di richeiste dopo esecuzione: 0
 [DEBUG] executing operation for cacheL1D
 [DEBUG] CacheManager ticked
+[DEBUG] Bus Tick Start
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Executing pipeline operation for the current cycle...
+[DEBUG] WRITEBACK STAGE has no valid instruction to process.
+[DEBUG] MEMORY STAGE has no valid instruction to process.
+[DEBUG] EXECUTE STAGE has no valid instruction to process.
+[DEBUG] OPERAND FETCH STAGE processing...
+[DEBUG] Decode-OperandFetch buffer has valid instruction.
+[DEBUG] Operand Fetchstage processing...
+[DEBUG] Instruction is empty. No Operand Fetch needed.
+[DEBUG] DECODE STAGE is not ready.
+[DEBUG] FETCH STAGE instruction fetch completed.
+[DEBUG] Fetching instruction...
+[DEBUG] Fetching instruction from memory...
+[DEBUG] Searching for cache response for instruction ID: 17
+[DEBUG] Byte 0: 0x00000000
+[DEBUG] Byte 1: 0x00000000
+[DEBUG] Byte 2: 0x00000000
+[DEBUG] Byte 3: 0x00000000
+[DEBUG] Byte 4: 0x00000000
+[DEBUG] Byte 5: 0x00000000
+[DEBUG] Byte 6: 0x00000000
+[DEBUG] Byte 7: 0x00000000
+[DEBUG] Byte 8: 0x00000000
+[DEBUG] Byte 9: 0x00000000
+[DEBUG] Byte 10: 0x00000000
+[DEBUG] Byte 11: 0x00000000
+[DEBUG] Byte 12: 0x00000000
+[DEBUG] Byte 13: 0x00000000
+[DEBUG] Byte 14: 0x00000000
+[DEBUG] Byte 15: 0x00000000
+[DEBUG] Mod: 0x00000000
+[DEBUG] Reg: 0x00000000
+[DEBUG] R/M: 0x00000000
+[DEBUG] Opcode: 0x00000000
+[DEBUG] Prefix Count: 0
+[DEBUG] Total Length: 2
+[DEBUG] Opcode Length: 1
+[DEBUG] Additional Bytes: 1
+[DEBUG] Description: ADD r/m8, r8
+[DEBUG] Number of Operands: 2
+[DEBUG] Operand Length: 1
+[DEBUG] Instruction: 
+[DEBUG] Byte: 0x00000000
+[DEBUG] Byte: 0x00000000
+[DEBUG] IR: 0x000000000000002b
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Pipeline ticked
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] executing operation for cacheL3
+[DEBUG] executing operation for cacheL2
+[DEBUG] executing operation for cacheL1I
+[DEBUG] executing operation for cacheL1D
+[DEBUG] CacheManager ticked
+[DEBUG] Bus Tick Start
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Executing pipeline operation for the current cycle...
+[DEBUG] WRITEBACK STAGE has no valid instruction to process.
+[DEBUG] MEMORY STAGE has no valid instruction to process.
+[DEBUG] EXECUTE STAGE has no valid instruction to process.
+[DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
+[DEBUG] DECODE STAGE processing...
+[DEBUG] Fetch-Decode buffer has valid instruction.
+[DEBUG] Decoding instruction...
+[DEBUG] Decoding instruction: 0x00000000 - 3
+[DEBUG] Instruction type: ADD
+[DEBUG] Decoded instruction type: ADD
+[DEBUG] Instruction decoded and DECODE_COMPLETE event triggered.
+[DEBUG] FETCH STAGE processing...
+[DEBUG] Incrementing counter
+[DEBUG] FetchstageInstructionId: 18
+[DEBUG] Starting instruction fetch...
+[DEBUG] Starting instruction fetch...
+[DEBUG] Fetching instruction at address: 0x000000000000002b
+[DEBUG] Cache request sent for instruction fetch.
+[DEBUG] FETCH STAGE fetch started.
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Pipeline ticked
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] richiesta inserita
+[DEBUG] executing operation for cacheL3
+[DEBUG] executing operation for cacheL2
+[DEBUG] executing operation for cacheL1I
+[DEBUG] n di richeiste: 1
+[DEBUG] callback scheduler
+[DEBUG] processing request 18
+[DEBUG] lookup cache
+[DEBUG] hit cache
+[DEBUG] read single line
+[DEBUG] n di richeiste dopo esecuzione: 0
+[DEBUG] executing operation for cacheL1D
+[DEBUG] CacheManager ticked
+[DEBUG] Bus Tick Start
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Executing pipeline operation for the current cycle...
+[DEBUG] WRITEBACK STAGE has no valid instruction to process.
+[DEBUG] MEMORY STAGE has no valid instruction to process.
+[DEBUG] EXECUTE STAGE has no valid instruction to process.
+[DEBUG] OPERAND FETCH STAGE processing...
+[DEBUG] Decode-OperandFetch buffer has valid instruction.
+[DEBUG] Operand Fetchstage processing...
+[DEBUG] Instruction is empty. No Operand Fetch needed.
+[DEBUG] DECODE STAGE is not ready.
+[DEBUG] FETCH STAGE instruction fetch completed.
+[DEBUG] Fetching instruction...
+[DEBUG] Fetching instruction from memory...
+[DEBUG] Searching for cache response for instruction ID: 18
+[DEBUG] Byte 0: 0x00000000
+[DEBUG] Byte 1: 0x00000000
+[DEBUG] Byte 2: 0x00000000
+[DEBUG] Byte 3: 0x00000000
+[DEBUG] Byte 4: 0x00000000
+[DEBUG] Byte 5: 0x00000000
+[DEBUG] Byte 6: 0x00000000
+[DEBUG] Byte 7: 0x00000000
+[DEBUG] Byte 8: 0x00000000
+[DEBUG] Byte 9: 0x00000000
+[DEBUG] Byte 10: 0x00000000
+[DEBUG] Byte 11: 0x00000000
+[DEBUG] Byte 12: 0x00000000
+[DEBUG] Byte 13: 0x00000000
+[DEBUG] Byte 14: 0x00000000
+[DEBUG] Byte 15: 0x00000000
+[DEBUG] Mod: 0x00000000
+[DEBUG] Reg: 0x00000000
+[DEBUG] R/M: 0x00000000
+[DEBUG] Opcode: 0x00000000
+[DEBUG] Prefix Count: 0
+[DEBUG] Total Length: 2
+[DEBUG] Opcode Length: 1
+[DEBUG] Additional Bytes: 1
+[DEBUG] Description: ADD r/m8, r8
+[DEBUG] Number of Operands: 2
+[DEBUG] Operand Length: 1
+[DEBUG] Instruction: 
+[DEBUG] Byte: 0x00000000
+[DEBUG] Byte: 0x00000000
+[DEBUG] IR: 0x000000000000002d
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Pipeline ticked
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] executing operation for cacheL3
+[DEBUG] executing operation for cacheL2
+[DEBUG] executing operation for cacheL1I
+[DEBUG] executing operation for cacheL1D
+[DEBUG] CacheManager ticked
+[DEBUG] Bus Tick Start
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Executing pipeline operation for the current cycle...
+[DEBUG] WRITEBACK STAGE has no valid instruction to process.
+[DEBUG] MEMORY STAGE has no valid instruction to process.
+[DEBUG] EXECUTE STAGE has no valid instruction to process.
+[DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
+[DEBUG] DECODE STAGE processing...
+[DEBUG] Fetch-Decode buffer has valid instruction.
+[DEBUG] Decoding instruction...
+[DEBUG] Decoding instruction: 0x00000000 - 3
+[DEBUG] Instruction type: ADD
+[DEBUG] Decoded instruction type: ADD
+[DEBUG] Instruction decoded and DECODE_COMPLETE event triggered.
+[DEBUG] FETCH STAGE processing...
+[DEBUG] Incrementing counter
+[DEBUG] FetchstageInstructionId: 19
+[DEBUG] Starting instruction fetch...
+[DEBUG] Starting instruction fetch...
+[DEBUG] Fetching instruction at address: 0x000000000000002d
+[DEBUG] Cache request sent for instruction fetch.
+[DEBUG] FETCH STAGE fetch started.
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Pipeline ticked
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] richiesta inserita
+[DEBUG] executing operation for cacheL3
+[DEBUG] executing operation for cacheL2
+[DEBUG] executing operation for cacheL1I
+[DEBUG] n di richeiste: 1
+[DEBUG] callback scheduler
+[DEBUG] processing request 19
+[DEBUG] lookup cache
+[DEBUG] hit cache
+[DEBUG] read single line
+[DEBUG] n di richeiste dopo esecuzione: 0
+[DEBUG] executing operation for cacheL1D
+[DEBUG] CacheManager ticked
+[DEBUG] Bus Tick Start
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Executing pipeline operation for the current cycle...
+[DEBUG] WRITEBACK STAGE has no valid instruction to process.
+[DEBUG] MEMORY STAGE has no valid instruction to process.
+[DEBUG] EXECUTE STAGE has no valid instruction to process.
+[DEBUG] OPERAND FETCH STAGE processing...
+[DEBUG] Decode-OperandFetch buffer has valid instruction.
+[DEBUG] Operand Fetchstage processing...
+[DEBUG] Instruction is empty. No Operand Fetch needed.
+[DEBUG] DECODE STAGE is not ready.
+[DEBUG] FETCH STAGE instruction fetch completed.
+[DEBUG] Fetching instruction...
+[DEBUG] Fetching instruction from memory...
+[DEBUG] Searching for cache response for instruction ID: 19
+[DEBUG] Byte 0: 0x00000000
+[DEBUG] Byte 1: 0x00000000
+[DEBUG] Byte 2: 0x00000000
+[DEBUG] Byte 3: 0x00000000
+[DEBUG] Byte 4: 0x00000000
+[DEBUG] Byte 5: 0x00000000
+[DEBUG] Byte 6: 0x00000000
+[DEBUG] Byte 7: 0x00000000
+[DEBUG] Byte 8: 0x00000000
+[DEBUG] Byte 9: 0x00000000
+[DEBUG] Byte 10: 0x00000000
+[DEBUG] Byte 11: 0x00000000
+[DEBUG] Byte 12: 0x00000000
+[DEBUG] Byte 13: 0x00000000
+[DEBUG] Byte 14: 0x00000000
+[DEBUG] Byte 15: 0x00000000
+[DEBUG] Mod: 0x00000000
+[DEBUG] Reg: 0x00000000
+[DEBUG] R/M: 0x00000000
+[DEBUG] Opcode: 0x00000000
+[DEBUG] Prefix Count: 0
+[DEBUG] Total Length: 2
+[DEBUG] Opcode Length: 1
+[DEBUG] Additional Bytes: 1
+[DEBUG] Description: ADD r/m8, r8
+[DEBUG] Number of Operands: 2
+[DEBUG] Operand Length: 1
+[DEBUG] Instruction: 
+[DEBUG] Byte: 0x00000000
+[DEBUG] Byte: 0x00000000
+[DEBUG] IR: 0x000000000000002f
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Pipeline ticked
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] executing operation for cacheL3
+[DEBUG] executing operation for cacheL2
+[DEBUG] executing operation for cacheL1I
+[DEBUG] executing operation for cacheL1D
+[DEBUG] CacheManager ticked
+[DEBUG] Bus Tick Start
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Executing pipeline operation for the current cycle...
+[DEBUG] WRITEBACK STAGE has no valid instruction to process.
+[DEBUG] MEMORY STAGE has no valid instruction to process.
+[DEBUG] EXECUTE STAGE has no valid instruction to process.
+[DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
+[DEBUG] DECODE STAGE processing...
+[DEBUG] Fetch-Decode buffer has valid instruction.
+[DEBUG] Decoding instruction...
+[DEBUG] Decoding instruction: 0x00000000 - 3
+[DEBUG] Instruction type: ADD
+[DEBUG] Decoded instruction type: ADD
+[DEBUG] Instruction decoded and DECODE_COMPLETE event triggered.
+[DEBUG] FETCH STAGE processing...
+[DEBUG] Incrementing counter
+[DEBUG] FetchstageInstructionId: 20
+[DEBUG] Starting instruction fetch...
+[DEBUG] Starting instruction fetch...
+[DEBUG] Fetching instruction at address: 0x000000000000002f
+[DEBUG] Cache request sent for instruction fetch.
+[DEBUG] FETCH STAGE fetch started.
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Pipeline ticked
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] richiesta inserita
+[DEBUG] executing operation for cacheL3
+[DEBUG] executing operation for cacheL2
+[DEBUG] executing operation for cacheL1I
+[DEBUG] n di richeiste: 1
+[DEBUG] callback scheduler
+[DEBUG] processing request 20
+[DEBUG] lookup cache
+[DEBUG] hit cache
+[DEBUG] read single line
+[DEBUG] n di richeiste dopo esecuzione: 0
+[DEBUG] executing operation for cacheL1D
+[DEBUG] CacheManager ticked
