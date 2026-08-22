@@ -21,7 +21,7 @@ inline void debugLog2([[maybe_unused]] const std::string& message)
 {
 
     #ifdef DEBUG
-    std::cout << "[DEBUG] " << message << std::endl;    
+    std::cout << "[DEBUG] " << message << '\n';    
     #endif
 }
 
@@ -38,7 +38,7 @@ struct TypeWrapper
 
 };
 
-
+struct IndexTag {};
 struct CacheAssociativityTag {};
 struct CacheSizeTag {};
 struct CacheLatencyTag {};
@@ -46,13 +46,17 @@ struct AddressTag {};
 struct OffsetTag {};
 struct TagLineTag {};
 
+using index8_t = TypeWrapper<std::uint8_t, IndexTag>;
+using index16_t = TypeWrapper<std::uint16_t, IndexTag>;
+using index32_t = TypeWrapper<std::uint32_t, IndexTag>;
+using index64_t = TypeWrapper<std::uint64_t, IndexTag>;
 
-using CacheSize = TypeWrapper<std::uint32_t, CacheSizeTag>;
-using CacheAssociativity = TypeWrapper<std::uint8_t, CacheAssociativityTag>;
-using CacheLatency = TypeWrapper<std::uint8_t, CacheLatencyTag>;
-using Address = TypeWrapper<std::uint64_t, AddressTag>; //or use std::uintptr_t if you want to ensure it's the same size as a pointer
-using Offset = TypeWrapper<std::uint64_t, OffsetTag>; //or use std::uintptr_t if you want to ensure it's the same size as a pointer
-using LineTag = TypeWrapper<std::uint64_t, TagLineTag>; //or use std::uintptr_t if you want to ensure it's the same size as a pointer
+using cacheSize_t = TypeWrapper<std::uint32_t, CacheSizeTag>;
+using cacheAssociativity_t = TypeWrapper<std::uint8_t, CacheAssociativityTag>;
+using cacheLatency_t = TypeWrapper<std::uint8_t, CacheLatencyTag>;
+using Address_t = TypeWrapper<std::uint64_t, AddressTag>; //or use std::uintptr_t if you want to ensure it's the same size as a pointer
+using Offset_t = TypeWrapper<std::uint64_t, OffsetTag>; //or use std::uintptr_t if you want to ensure it's the same size as a pointer
+using LineTag_t = TypeWrapper<std::uint64_t, TagLineTag>; //or use std::uintptr_t if you want to ensure it's the same size as a pointer
 
 
 template<typename T>
@@ -112,7 +116,6 @@ class FixedSizeQueueCacheFriendly
 
 
     public:
-        FixedSizeQueueCacheFriendly(){}
 
         size_t size() const
         {
@@ -179,7 +182,6 @@ class QueueCacheFriendly
         uint64_t tail = 0; // Index of the tail of the queue
 
     public:
-        QueueCacheFriendly(){}
 
         void reserve(size_t size)
         {

@@ -1,3 +1,0 @@
-prova;[unknown] 5050505
-prova;_start;__libc_start_main_impl;__libc_start_call_main;main;main;___printf_chk;__vfprintf_internal;__printf_buffer 4001963
-prova;_start;__libc_start_main_impl;__libc_start_call_main;main;std::ostream::operator<<;std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >;std::ostream::put;_IO_new_file_overflow;_IO_new_do_write;new_do_write;_IO_new_file_write;__GI___libc_write;[unknown];[unknown];[unknown];[unknown];[unknown];[unknown];[unknown];[unknown];[unknown];[unknown] 5050505
