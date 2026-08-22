@@ -8,3 +8,8 @@
 .clang-format
 .clang-tidy
 out.*
+perf.data
+flame.svg
+debug.log
+cose_da_fare.txt
+comandi.txt
