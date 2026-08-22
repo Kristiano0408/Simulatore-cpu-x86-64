@@ -12,8 +12,7 @@ void bind_instruction(py::module &m) {
 
 
     py::class_<Instruction>(m, "Instruction")
-        .def("calculating_number_of_bits", &Instruction::calculating_number_of_bits)
-        .def("mask", &Instruction::mask)
+        .def("calculating_number_of_bits", &Instruction::calculatingNumberOfBits)
         .def("getTemporaryValues", &Instruction::getTemporaryValues)
         .def("getCore", &Instruction::getCore, py::return_value_policy::reference_internal)
         .def("getFlags", &Instruction::getFlags, py::return_value_policy::reference_internal)

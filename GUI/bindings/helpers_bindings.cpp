@@ -1,8 +1,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <cstdint>
+#include "../include/helpers/pipelineTypes.hpp"
+#include "../include/helpers/instructionTypes.hpp"
 
-#include "../include/helpers.hpp"
 
 namespace py = pybind11;
 

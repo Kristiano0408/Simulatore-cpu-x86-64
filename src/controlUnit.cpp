@@ -97,13 +97,12 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Pip
 
     //extracting the instruction from the buffer
 
-    std::vector<uint8_t> Instructionbytes; //bytes of the instruction()
-    int byteCounter {0}; //counter of the byte (for IR)
+    int byteCounter {}; //counter of the byte (for IR)
 
     //fetch the prefix
-    uint8_t prefix[4] {0}; //prefix of the instruction
-    int numbersOfPrefix {0}; //number of prefix
-    fetchPrefix(buffer, prefix, numbersOfPrefix, Instructionbytes, byteCounter);
+    uint8_t prefix[4] {}; //prefix of the instruction
+    int numbersOfPrefix {}; //number of prefix
+    fetchPrefix(buffer, prefix, numbersOfPrefix, byteCounter);
 
     
 
@@ -111,13 +110,13 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Pip
     //fetch the REX prefix
     bool rex = false; //rex prefix flag
     uint8_t rexprefix{0}; //rex prefix
-    fetchREX(static_cast<uint8_t>(buffer[byteCounter]), rex, rexprefix, byteCounter, Instructionbytes);
+    fetchREX(static_cast<uint8_t>(buffer[byteCounter]), rex, rexprefix, byteCounter);
 
     
 
     //fetch the opcode
     uint32_t opcode; //opcode of the instruction
-    fetchOpcode(buffer, opcode, byteCounter, Instructionbytes);
+    fetchOpcode(buffer, opcode, byteCounter);
 
 
     //decode the opcode and get the length of the instruction
@@ -131,7 +130,7 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Pip
     //searching for the sib and displacement
     if (info.hasModRM)
     {
-        uint8_t byteRM = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
+        std::byte byteRM = buffer[byteCounter]; //fetch the byte from the buffer
         byteCounter++; //increment the byte counter
         r_m rm = decoder.decodeRM(byteRM);
 
@@ -139,23 +138,14 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Pip
         DEBUG_LOG(debugLog("Reg: " + to_string_hex(static_cast<int>(rm.reg))));
         DEBUG_LOG(debugLog("R/M: " + to_string_hex(static_cast<int>(rm.r_m))));
 
-        Instructionbytes.push_back(byteRM); //add the byte to the instruction bytes
+        
 
-        searchingSIB_Displacement(buffer, Instructionbytes, info, byteCounter, rm);
+        searchingSIB_Displacement(buffer, info, byteCounter, rm);
 
         
 
        
     }
-
-
-    //calculate the number of bytes to be fetched
-    int bytesToFetch = static_cast<int>(info.totalLength) - byteCounter;
-
-
-
-    //fetch the remaining bytes (the immediate value or the rest of the instruction) from the buffer
-    fetchRemainingBytes(buffer, Instructionbytes, byteCounter, bytesToFetch);
 
     
 
@@ -168,12 +158,11 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Pip
     DEBUG_LOG(debugLog("Number of Operands: " + std::to_string(info.numOperands)));
     DEBUG_LOG(debugLog("Operand Length: " + std::to_string(info.operandLength)));
 
-    //load the bytes in the struct of the instruction
-    info.instruction = Instructionbytes;
+    std::memcpy(info.instruction.data(), buffer.data(), info.totalLength); // Copy the instruction bytes into the info structure
 
     DEBUG_LOG(debugLog("Instruction: "));
 
-    for (size_t i = 0; i < info.instruction.size(); i++)
+    for (size_t i = 0; i < info.totalLength; i++)
     {
         DEBUG_LOG(debugLog("Byte: " + to_string_hex(static_cast<int>(info.instruction[i]))));
     }
@@ -205,24 +194,10 @@ void CU::decodeInstruction(InstructionInfo instruction, std::unique_ptr<Instruct
 
 //helpers function for making the code more readable
 
-void CU::fetchRemainingBytes(const MaxCPUInstructionLength& buffer, std::vector<uint8_t>& bytes, int& byteCounter, int bytesToFetch)
-{
-    //fetch the remaining bytes (the immediate value or the rest of the instruction) from the buffer
-    for (int i = 0; i < bytesToFetch; i++)
-    {
-        uint8_t byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
-        byteCounter++; //increment the byte counter
-        //std::cout << "Byte: " << std::hex << static_cast<int>(byte) << std::endl;
-        bytes.push_back(byte);
-    }
-
-    
-}
 
 //function for searching the SIB and displacement
-void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm) 
+void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, InstructionInfo& info, int& byteCounter, r_m& rm) 
 {
-    
     
     uint8_t byte;
 
@@ -238,7 +213,6 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
                 //if the r/m is 100, there is the SIB byte
             byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
             byteCounter++; //increment the byte counter
-            bytes.push_back(byte);
             DEBUG_LOG(debugLog("SIB: " + to_string_hex(static_cast<int>(byte))));
             info.hasSIB = true;
             info.totalLength += 1;
@@ -248,17 +222,7 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
             if ((byte & 0b111) == 0b101 && rm.mod == 0b00)
             {
                 //the base of th SIB indicates a displacement of 32 bit
-
-
-                for (int i = 0; i < 4; i++)
-                {
-                    byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
-                    byteCounter++; //increment the byte counter
-                    DEBUG_LOG(debugLog("Displacement: " + to_string_hex(static_cast<int>(byte))));
-                    bytes.push_back(byte);
-                    
-                }
-
+                byteCounter += 4; //increment the byte counter
                 info.totalLength += 4;
                 info.additionalBytes += 4;
             }
@@ -267,26 +231,15 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
         }
         if (rm.mod == 0b01)
         {
-            //there is a displacement of 8 bit
-            byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
             byteCounter++; //increment the byte counter
-            bytes.push_back(byte);
             info.hasDisplacement = true;
             info.totalLength += 1;
             info.additionalBytes += 1;
-            DEBUG_LOG(debugLog("Displacement: " + to_string_hex(static_cast<int>(byte))));
         }
 
         if (rm.mod == 0b10)
         {
-            //there is a displacement of 32 bit
-            for (int i = 0; i < 4; i++)
-            {
-                byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
-                byteCounter++; //increment the byte counter
-                DEBUG_LOG(debugLog("Displacement: " + to_string_hex(static_cast<int>(byte))));
-                bytes.push_back(byte);
-            }
+            byteCounter += 4; //increment the byte counter
             info.totalLength += 4;
             info.additionalBytes += 4;
             info.hasDisplacement = true;
@@ -295,15 +248,7 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
 
         if (rm.mod == 0b00 and rm.r_m == 0b101)
         {
-            //there is a displacement of 32 bit
-            for (int i = 0; i < 4; i++)
-            {
-                byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the byte from the buffer
-                byteCounter++; //increment the byte counter
-                DEBUG_LOG(debugLog("Displacement: " + to_string_hex(static_cast<int>(byte))));
-                bytes.push_back(byte);
-                
-            }
+            byteCounter += 4; //increment the byte counter
             info.totalLength += 4;
             info.additionalBytes += 4;
             info.hasDisplacement = true;
@@ -316,7 +261,7 @@ void CU::searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::v
 }
 
 //function for fetching the opcode
-void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, int& byteCounter, std::vector<uint8_t>& bytes)
+void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, int& byteCounter)
 {
     uint8_t byte; //byte fetched from buffer
 
@@ -328,7 +273,6 @@ void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, in
     {
                 //the opcode has two bytes
                 opcode = static_cast<uint32_t>(byte); //set the opcode
-                bytes.push_back(byte);
                 byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the next byte
                 byteCounter++; //increment the byte counter
 
@@ -336,17 +280,14 @@ void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, in
                 {
                     //the opcode has three bytes
                     opcode = (opcode << 8) | static_cast<uint32_t>(byte);
-                    bytes.push_back(byte);
                     byte = static_cast<uint8_t>(buffer[byteCounter]); //fetch the next byte
                     byteCounter++; //increment the byte counter
                     opcode = (opcode << 8) | static_cast<uint32_t>(byte);
-                    bytes.push_back(byte);
                 }
                 else
                 {
                     //the opcode has two bytes
                     opcode = (opcode << 8) | static_cast<uint32_t>(byte);
-                    bytes.push_back(byte);
                 }
 
     }
@@ -355,7 +296,6 @@ void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, in
     {
         //the opcode has one byte
         opcode = static_cast<uint32_t>(byte);
-        bytes.push_back(byte);
     }
 
     //checking if the opcode  is part of a group of instructions (the opcode is followed by a ModRM byte)
@@ -388,7 +328,7 @@ void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, in
 }
 
 //function for fetching the prefix
-void CU::fetchPrefix(const MaxCPUInstructionLength& buffer, uint8_t prefix[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes, int& byteCounter)
+void CU::fetchPrefix(const MaxCPUInstructionLength& buffer, uint8_t prefix[4], int& numbersOfPrefix, int& byteCounter)
 {
     int i = 0; //index for the buffer
 
@@ -397,7 +337,6 @@ void CU::fetchPrefix(const MaxCPUInstructionLength& buffer, uint8_t prefix[4], i
         if(isPrefix(static_cast<uint8_t>(buffer[i])))
         {
             prefix[numbersOfPrefix] = static_cast<uint8_t>(buffer[i]); //set the prefix
-            bytes.push_back(static_cast<uint8_t>(buffer[i])); //add the prefix to the bytes vector
             numbersOfPrefix++; //increment the number of prefix
             i++; //increment the index of the buffer
         }
@@ -411,7 +350,7 @@ void CU::fetchPrefix(const MaxCPUInstructionLength& buffer, uint8_t prefix[4], i
     byteCounter += numbersOfPrefix; //increment the byte counter by the number of prefix
 }
 
-void CU::fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter, std::vector<uint8_t>& bytes)
+void CU::fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter)
 {
     //fetch the REX prefix
     
@@ -419,7 +358,6 @@ void CU::fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter,
     if ((byte & 0xF0) == 0x40) 
     { 
         rex = true;
-        bytes.push_back(byte);
         rexprefix = byte;
         byteCounter++; //increment the byte counter
     }

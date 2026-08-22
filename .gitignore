@@ -1,3 +1,11 @@
-
+/.cache
+/.continue
+/.github
+/.vscode
+/.VSCodeCounter
+/build
 /pybind11
 /venv
+.clang-format
+.clang-tidy
+out.*

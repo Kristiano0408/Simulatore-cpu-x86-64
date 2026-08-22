@@ -5,15 +5,13 @@
 #define CPU_HPP
 
 #include <cstdint>
-#include <array>
-#include <string>
-
 #include "controlUnit.hpp"
 #include "alu.hpp"
 #include "registerFile.hpp"
 #include "cache/cacheManager.hpp"
 #include "pipeline.hpp"
 #include "pipelineController.hpp"
+#include "third_party/unordered_dense.h"
 
 class Bus;
 class PipelineEventHandler;
@@ -32,9 +30,9 @@ class CPU: public TickedDevice, public FaultDevice
         uint64_t L1_cache_size = 1024;
         uint64_t L2_cache_size = 8192;
         uint64_t L3_cache_size = 65536;
-        uint64_t L1_cache_assoc = 2;
-        uint64_t L2_cache_assoc = 4;
-        uint64_t L3_cache_assoc = 8;
+        uint8_t L1_cache_assoc = 2;
+        uint8_t L2_cache_assoc = 4;
+        uint8_t L3_cache_assoc = 8;
 
 
         //instructionId counter for unique identification of instructions
@@ -59,7 +57,7 @@ class CPU: public TickedDevice, public FaultDevice
     public:
 
         //constructor that receives a pointer to the bus
-        CPU(Bus& bus);
+        CPU(Bus& busRef);
         ~CPU();
 
         //cpu operations
@@ -85,11 +83,11 @@ class CPU: public TickedDevice, public FaultDevice
 
         void sendCacheRequest(CacheRequest&& request, CacheLevelType cacheType); //send a cache request
 
-        void eraseCacheResponseIfFound(int requestID); //erase a cache response from the queue
+        void eraseCacheResponseIfFound(uint64_t requestID); //erase a cache response from the queue
 
-        void findCacheResponse(int requestID, MaxCPUInstructionLength& response, bool& found); //find a cache response in the queue
+        void findCacheResponse(uint64_t requestID, MaxCPUInstructionLength& response, bool& found); //find a cache response in the queue
 
-        std::unordered_map<int, MaxCPUInstructionLength> cacheResponseQueue; //map for cache responses
+        ankerl::unordered_dense::map<uint64_t, MaxCPUInstructionLength> cacheResponseQueue; //map for cache responses
 
         void incrementInstructionIdCounter() { instructionIdCounter++; }
 

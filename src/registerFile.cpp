@@ -1,7 +1,7 @@
 #include "registerFile.hpp"
 #include <string>
 #include <iostream>
-#include "helpers.hpp"
+#include "helpers/debug.hpp"
 RegisterFile::RegisterFile()
 {
     DEBUG_LOG(debugLog("Register File created"));
@@ -25,7 +25,7 @@ RegisterFile::~RegisterFile()
 Reg& RegisterFile::getReg(Register reg)
 {
     //returns the register at the index of the enum value
-    return GPregisters[static_cast<int>(reg)];
+    return GPregisters[static_cast<size_t>(reg)];
 }
 
 
@@ -57,23 +57,23 @@ void RegisterFile::reset()
 
 void RegisterFile::printRegisters()
 {
-    std::cout << "RAX: " << (GPregisters[static_cast<int>(Register::RAX)]).raw() << std::endl;
-    std::cout << "RBX: " << (GPregisters[static_cast<int>(Register::RBX)]).raw() << std::endl;
-    std::cout << "RCX: " << (GPregisters[static_cast<int>(Register::RCX)]).raw() << std::endl;
-    std::cout << "RDX: " << (GPregisters[static_cast<int>(Register::RDX)]).raw() << std::endl;
-    std::cout << "RSI: " << (GPregisters[static_cast<int>(Register::RSI)]).raw() << std::endl;
-    std::cout << "RDI: " << (GPregisters[static_cast<int>(Register::RDI)]).raw() << std::endl;
-    std::cout << "R8: " << (GPregisters[static_cast<int>(Register::R8)]).raw() << std::endl;
-    std::cout << "R9: " << (GPregisters[static_cast<int>(Register::R9)]).raw() << std::endl;
-    std::cout << "R10: " << (GPregisters[static_cast<int>(Register::R10)]).raw() << std::endl;
-    std::cout << "R11: " << (GPregisters[static_cast<int>(Register::R11)]).raw() << std::endl;
-    std::cout << "R12: " << (GPregisters[static_cast<int>(Register::R12)]).raw() << std::endl;
-    std::cout << "R13: " << (GPregisters[static_cast<int>(Register::R13)]).raw() << std::endl;
-    std::cout << "R14: " << (GPregisters[static_cast<int>(Register::R14)]).raw() << std::endl;
-    std::cout << "R15: " << (GPregisters[static_cast<int>(Register::R15)]).raw() << std::endl;
-    std::cout << "RSP: " << (GPregisters[static_cast<int>(Register::RSP)]).raw() << std::endl;
-    std::cout << "RBP: " << (GPregisters[static_cast<int>(Register::RBP)]).raw() << std::endl;
-    std::cout << "RIP: " << (GPregisters[static_cast<int>(Register::RIP)]).raw() << std::endl;
+    std::cout << "RAX: " << (GPregisters[static_cast<int>(Register::RAX)]).raw() << '\n';
+    std::cout << "RBX: " << (GPregisters[static_cast<int>(Register::RBX)]).raw() << '\n';
+    std::cout << "RCX: " << (GPregisters[static_cast<int>(Register::RCX)]).raw() << '\n';
+    std::cout << "RDX: " << (GPregisters[static_cast<int>(Register::RDX)]).raw() << '\n';
+    std::cout << "RSI: " << (GPregisters[static_cast<int>(Register::RSI)]).raw() << '\n';
+    std::cout << "RDI: " << (GPregisters[static_cast<int>(Register::RDI)]).raw() << '\n';
+    std::cout << "R8: " << (GPregisters[static_cast<int>(Register::R8)]).raw() << '\n';
+    std::cout << "R9: " << (GPregisters[static_cast<int>(Register::R9)]).raw() << '\n';
+    std::cout << "R10: " << (GPregisters[static_cast<int>(Register::R10)]).raw() << '\n';
+    std::cout << "R11: " << (GPregisters[static_cast<int>(Register::R11)]).raw() << '\n';
+    std::cout << "R12: " << (GPregisters[static_cast<int>(Register::R12)]).raw() << '\n';
+    std::cout << "R13: " << (GPregisters[static_cast<int>(Register::R13)]).raw() << '\n';
+    std::cout << "R14: " << (GPregisters[static_cast<int>(Register::R14)]).raw() << '\n';
+    std::cout << "R15: " << (GPregisters[static_cast<int>(Register::R15)]).raw() << '\n';
+    std::cout << "RSP: " << (GPregisters[static_cast<int>(Register::RSP)]).raw() << '\n';
+    std::cout << "RBP: " << (GPregisters[static_cast<int>(Register::RBP)]).raw() << '\n';
+    std::cout << "RIP: " << (GPregisters[static_cast<int>(Register::RIP)]).raw() << '\n';
     
 
 }

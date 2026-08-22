@@ -238,7 +238,7 @@ void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo
 
 //helper methods for decoding the instruction
 
-SIB Decoder::decodeSIB(uint8_t sib)
+SIB Decoder::decodeSIB(std::byte sib)
 {
     SIB sibStruct;
     sibStruct.byte_sib = sib;
@@ -249,7 +249,7 @@ SIB Decoder::decodeSIB(uint8_t sib)
     return sibStruct;
 }
 
-r_m Decoder::decodeRM(uint8_t R_M)
+r_m Decoder::decodeRM(std::byte R_M)
 {
     r_m rm;
     rm.byte_r_m = R_M;

@@ -3,11 +3,10 @@
 #define OPERANDS_HPP
 
 
+#include "helpers/operandTypes.hpp"
 #include <cstdint>
-#include <memory>
-#include "helpers.hpp"
-#include "cache/cacheManager.hpp"
-#include <functional>
+
+
 
 class RegisterFile;
 class Memory;
@@ -21,23 +20,21 @@ namespace operandFetch {
     void fetchOI(Instruction* i, RegisterFile& registers, uint32_t opcode);
     void fetchMI(Instruction* i, RegisterFile& registers);
     void fetchI(Instruction* i, RegisterFile& registers);
-    uint64_t calculatingAddressR_M(Instruction* i, RegisterFile& registers);
+    uint64_t calculatingAddressRM(Instruction* i, RegisterFile& registers);
 }
 
 class Operand 
 {
     public:
         Operand() : size(0), type(OperandType::NONE) {} // Default constructor initializing size to 0
-        void setSize(int s);
-        int getSize() const;
-        OperandType getType() const;
-        void setType(OperandType t);
 
-        //virtual OperandResult setValue(uint64_t v, std::function<void()> callback) = 0; // Pure virtual function
-        //virtual OperandResult getValue(std::function<void()> callback) = 0; // Pure virtual function
+        void setSize(uint8_t s);
+        uint8_t getSize() const { return size; }
+        OperandType getType() const { return type; }
+        void setType(OperandType t) { this->type = t; }
 
     protected:
-        int size; // Size of the operand in bytes
+        uint8_t size; // Size of the operand in bit
         OperandType type; // Type of the operand
      
     
@@ -53,16 +50,13 @@ class EmptyOperand : public Operand {
     public:
         EmptyOperand() = default;
 
-        //OperandResult setValue([[maybe_unused]] uint64_t v, [[maybe_unused]] std::function<void()> callback) override { return {OperandStatus::OK, 0}; }
-        //OperandResult getValue([[maybe_unused]] std::function<void()> callback) override { return {OperandStatus::OK, 0}; }
 };
 
 class RegOperand : public Operand 
 {
     public:
-        RegOperand(uint64_t& reg) : reg(reg) { setType(OperandType::REGISTER); } // Constructor to initialize register reference
-        //OperandResult setValue(uint64_t v, [[maybe_unused]] std::function<void()> callback) override;
-        //OperandResult getValue([[maybe_unused]] std::function<void()> callback) override;
+        RegOperand(uint64_t& registerValue) : reg(registerValue) { setType(OperandType::REGISTER); } // Constructor to initialize register reference
+
         uint64_t& getReg() { return reg; } // Getter for the register reference
 
 
@@ -74,9 +68,8 @@ class RegOperand : public Operand
 class MemOperand : public Operand 
 {
     public:
-        MemOperand(uint64_t address) : address(address) { setType(OperandType::MEMORY); } // Constructor to initialize memory and address
-        //OperandResult setValue(uint64_t v, std::function<void()> callback) override;
-        //OperandResult getValue(std::function<void()> callback) override;
+        MemOperand(uint64_t addressValue) : address(addressValue) { setType(OperandType::MEMORY); } // Constructor to initialize memory and address
+        
         uint64_t getAddress() const { return address; } // Getter for the memory address
         void setAddress(uint64_t addr) { address = addr; } // Setter for the memory address
 
@@ -94,7 +87,7 @@ class MemOperand : public Operand
 class ImmediateOperand : public Operand 
 {
     public:
-        ImmediateOperand(uint64_t value) : value(value) { setType(OperandType::IMMEDIATE); } // Constructor to initialize immediate value
+        ImmediateOperand(uint64_t immediateValue) : value(immediateValue) { setType(OperandType::IMMEDIATE); } // Constructor to initialize immediate value
         uint64_t getValue() const { return value; } // Getter for immediate value
         void setValue(uint64_t v) { value = v; } // Setter for immediate value
         

@@ -25,7 +25,13 @@
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
-[DEBUG] DECODE STAGE is not ready.
+[DEBUG] DECODE STAGE processing...
+[DEBUG] Fetch stage has valid instruction.
+[DEBUG] Decoding instruction...
+[DEBUG] Decoding instruction: 0x00000000 - 3
+[DEBUG] Instruction type: ADD
+[DEBUG] Decoded instruction type: ADD
+[DEBUG] Instruction decoded and DECODE_COMPLETE event triggered.
 [DEBUG] FETCH STAGE processing...
 [DEBUG] Incrementing counter
 [DEBUG] FetchstageInstructionId: 1
@@ -58,10 +64,13 @@
 [DEBUG] WRITEBACK STAGE has no valid instruction to process.
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
-[DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
+[DEBUG] OPERAND FETCH STAGE processing...
+[DEBUG] Decode-OperandFetch buffer has valid instruction.
+[DEBUG] Operand Fetchstage processing...
+[DEBUG] Instruction is empty. No Operand Fetch needed.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE is waiting for instruction fetch to complete.
-[DEBUG] Updating fetch stage...
+[DEBUG] Updating instruction fetch...
 [DEBUG] Updating fetch stage...
 [DEBUG] No cache response found for instruction ID: 1
 [DEBUG] Device ticked, progress: 1/1
@@ -81,7 +90,7 @@
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE is waiting for instruction fetch to complete.
-[DEBUG] Updating fetch stage...
+[DEBUG] Updating instruction fetch...
 [DEBUG] Updating fetch stage...
 [DEBUG] No cache response found for instruction ID: 1
 [DEBUG] Device ticked, progress: 1/1
@@ -110,27 +119,7 @@
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE is waiting for instruction fetch to complete.
-[DEBUG] Updating fetch stage...
-[DEBUG] Updating fetch stage...
-[DEBUG] No cache response found for instruction ID: 1
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Pipeline ticked
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] executing operation for cacheL3
-[DEBUG] executing operation for cacheL2
-[DEBUG] executing operation for cacheL1I
-[DEBUG] executing operation for cacheL1D
-[DEBUG] CacheManager ticked
-[DEBUG] Bus Tick Start
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Executing pipeline operation for the current cycle...
-[DEBUG] WRITEBACK STAGE has no valid instruction to process.
-[DEBUG] MEMORY STAGE has no valid instruction to process.
-[DEBUG] EXECUTE STAGE has no valid instruction to process.
-[DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
-[DEBUG] DECODE STAGE is not ready.
-[DEBUG] FETCH STAGE is waiting for instruction fetch to complete.
-[DEBUG] Updating fetch stage...
+[DEBUG] Updating instruction fetch...
 [DEBUG] Updating fetch stage...
 [DEBUG] No cache response found for instruction ID: 1
 [DEBUG] Device ticked, progress: 1/1
@@ -150,7 +139,27 @@
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE is waiting for instruction fetch to complete.
+[DEBUG] Updating instruction fetch...
 [DEBUG] Updating fetch stage...
+[DEBUG] No cache response found for instruction ID: 1
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Pipeline ticked
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] executing operation for cacheL3
+[DEBUG] executing operation for cacheL2
+[DEBUG] executing operation for cacheL1I
+[DEBUG] executing operation for cacheL1D
+[DEBUG] CacheManager ticked
+[DEBUG] Bus Tick Start
+[DEBUG] Device ticked, progress: 1/1
+[DEBUG] Executing pipeline operation for the current cycle...
+[DEBUG] WRITEBACK STAGE has no valid instruction to process.
+[DEBUG] MEMORY STAGE has no valid instruction to process.
+[DEBUG] EXECUTE STAGE has no valid instruction to process.
+[DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
+[DEBUG] DECODE STAGE is not ready.
+[DEBUG] FETCH STAGE is waiting for instruction fetch to complete.
+[DEBUG] Updating instruction fetch...
 [DEBUG] Updating fetch stage...
 [DEBUG] No cache response found for instruction ID: 1
 [DEBUG] Device ticked, progress: 1/1
@@ -179,7 +188,7 @@
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE is waiting for instruction fetch to complete.
-[DEBUG] Updating fetch stage...
+[DEBUG] Updating instruction fetch...
 [DEBUG] Updating fetch stage...
 [DEBUG] No cache response found for instruction ID: 1
 [DEBUG] Device ticked, progress: 1/1
@@ -243,7 +252,7 @@
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 1
 [DEBUG] Byte 0: 0x0000002c
@@ -328,10 +337,10 @@
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
+[DEBUG] Operand Fetchstage processing...
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 2
 [DEBUG] Byte 0: 0x0000002d
@@ -365,12 +374,9 @@
 [DEBUG] Byte: 0x00000000
 [DEBUG] Byte: 0x00000000
 [DEBUG] IR: 0x0000000000000007
-[DEBUG] ExecuteEngine: Fetching operands for instruction with ID 1
 [DEBUG] SUB_I
 [DEBUG] ExecuteEngine: Operands fetched for instruction with ID 1
 [DEBUG] ExecuteEngine: Triggered OPERAND_FETCH_COMPLETE  event for instruction with ID 1
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 1
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 1
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] Pipeline ticked
 [DEBUG] Device ticked, progress: 1/1
@@ -386,7 +392,7 @@
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE processing...
 [DEBUG] OperandFetch-Execute buffer has valid instruction.
-[DEBUG] Execute stage processing...
+[DEBUG] Executionstage processing...
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE processing...
 [DEBUG] Fetch-Decode buffer has valid instruction.
@@ -404,13 +410,12 @@
 [DEBUG] Cache request sent for instruction fetch.
 [DEBUG] FETCH STAGE fetch started.
 [DEBUG] ExecuteEngine: Starting execution for instruction with ID 1
-[DEBUG] ExecuteEngine: Starting execution for instruction with ID 1
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] OperandEngine: Reading operand of type 2 for instruction with ID 1
 [DEBUG] Reading from immediate operand.
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 1
 [DEBUG] Reading from register operand.
-[DEBUG] OperandEngine: Register read completed for instruction with ID 1
+[DEBUG] OperandEngine: register read completed for instruction with ID 1
 [DEBUG] ExecuteEngine: Executing instruction with ID 1
 [DEBUG] ExecuteEngine: Source Operand Value: 3
 [DEBUG] ExecuteEngine: Destination Operand Value: 0
@@ -438,14 +443,14 @@
 [DEBUG] WRITEBACK STAGE has no valid instruction to process.
 [DEBUG] MEMORY STAGE processing...
 [DEBUG] Execute-Memory buffer has valid instruction.
-[DEBUG] Memory stage processing...
+[DEBUG] Memory Accessstage processing...
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
+[DEBUG] Operand Fetchstage processing...
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 3
 [DEBUG] Byte 0: 0x00000080
@@ -483,12 +488,9 @@
 [DEBUG] Byte: 0x00000001
 [DEBUG] IR: 0x000000000000000a
 [DEBUG] No memory access needed for SubInstruction (not register to memory).
-[DEBUG] ExecuteEngine: Fetching operands for instruction with ID 2
 [DEBUG] SUB_I
 [DEBUG] ExecuteEngine: Operands fetched for instruction with ID 2
 [DEBUG] ExecuteEngine: Triggered OPERAND_FETCH_COMPLETE  event for instruction with ID 2
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 2
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 2
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] Pipeline ticked
 [DEBUG] Device ticked, progress: 1/1
@@ -502,11 +504,11 @@
 [DEBUG] Executing pipeline operation for the current cycle...
 [DEBUG] WRITEBACK STAGE processing...
 [DEBUG] Memory stage has valid instruction.
-[DEBUG] Write-Back stage processing...
+[DEBUG] Write Backstage processing...
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE processing...
 [DEBUG] OperandFetch-Execute buffer has valid instruction.
-[DEBUG] Execute stage processing...
+[DEBUG] Executionstage processing...
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE processing...
 [DEBUG] Fetch-Decode buffer has valid instruction.
@@ -525,15 +527,16 @@
 [DEBUG] FETCH STAGE fetch started.
 [DEBUG] Writing back result for SubInstruction.
 [DEBUG] ExecuteEngine: Starting execution for instruction with ID 2
-[DEBUG] ExecuteEngine: Starting execution for instruction with ID 2
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] OperandEngine: Writing value 253 to operand of type 0 for instruction with ID 1
+[DEBUG] Writing to register operand.
 [DEBUG] OperandEngine: Setting register value to 253 for operand of type 0
+[DEBUG] OperandEngine: register write completed for instruction with ID 1
 [DEBUG] OperandEngine: Reading operand of type 2 for instruction with ID 2
 [DEBUG] Reading from immediate operand.
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 2
 [DEBUG] Reading from register operand.
-[DEBUG] OperandEngine: Register read completed for instruction with ID 2
+[DEBUG] OperandEngine: register read completed for instruction with ID 2
 [DEBUG] ExecuteEngine: Executing instruction with ID 2
 [DEBUG] ExecuteEngine: Source Operand Value: 5
 [DEBUG] ExecuteEngine: Destination Operand Value: 253
@@ -561,14 +564,14 @@
 [DEBUG] WRITEBACK STAGE has no valid instruction to process.
 [DEBUG] MEMORY STAGE processing...
 [DEBUG] Execute-Memory buffer has valid instruction.
-[DEBUG] Memory stage processing...
+[DEBUG] Memory Accessstage processing...
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
+[DEBUG] Operand Fetchstage processing...
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 4
 [DEBUG] Byte 0: 0x00000081
@@ -609,12 +612,9 @@
 [DEBUG] Byte: 0x000000ff
 [DEBUG] IR: 0x0000000000000010
 [DEBUG] No memory access needed for SubInstruction (not register to memory).
-[DEBUG] ExecuteEngine: Fetching operands for instruction with ID 3
 [DEBUG] SUB_MI
 [DEBUG] ExecuteEngine: Operands fetched for instruction with ID 3
 [DEBUG] ExecuteEngine: Triggered OPERAND_FETCH_COMPLETE  event for instruction with ID 3
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 3
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 3
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] Pipeline ticked
 [DEBUG] Device ticked, progress: 1/1
@@ -628,11 +628,11 @@
 [DEBUG] Executing pipeline operation for the current cycle...
 [DEBUG] WRITEBACK STAGE processing...
 [DEBUG] Memory stage has valid instruction.
-[DEBUG] Write-Back stage processing...
+[DEBUG] Write Backstage processing...
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE processing...
 [DEBUG] OperandFetch-Execute buffer has valid instruction.
-[DEBUG] Execute stage processing...
+[DEBUG] Executionstage processing...
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE processing...
 [DEBUG] Fetch-Decode buffer has valid instruction.
@@ -651,15 +651,16 @@
 [DEBUG] FETCH STAGE fetch started.
 [DEBUG] Writing back result for SubInstruction.
 [DEBUG] ExecuteEngine: Starting execution for instruction with ID 3
-[DEBUG] ExecuteEngine: Starting execution for instruction with ID 3
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] OperandEngine: Writing value 248 to operand of type 0 for instruction with ID 2
+[DEBUG] Writing to register operand.
 [DEBUG] OperandEngine: Setting register value to 248 for operand of type 0
+[DEBUG] OperandEngine: register write completed for instruction with ID 2
 [DEBUG] OperandEngine: Reading operand of type 2 for instruction with ID 3
 [DEBUG] Reading from immediate operand.
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 3
 [DEBUG] Reading from register operand.
-[DEBUG] OperandEngine: Register read completed for instruction with ID 3
+[DEBUG] OperandEngine: register read completed for instruction with ID 3
 [DEBUG] ExecuteEngine: Executing instruction with ID 3
 [DEBUG] ExecuteEngine: Source Operand Value: 1
 [DEBUG] ExecuteEngine: Destination Operand Value: 0
@@ -687,14 +688,14 @@
 [DEBUG] WRITEBACK STAGE has no valid instruction to process.
 [DEBUG] MEMORY STAGE processing...
 [DEBUG] Execute-Memory buffer has valid instruction.
-[DEBUG] Memory stage processing...
+[DEBUG] Memory Accessstage processing...
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
+[DEBUG] Operand Fetchstage processing...
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 5
 [DEBUG] Byte 0: 0x00000083
@@ -732,12 +733,9 @@
 [DEBUG] Byte: 0x00000002
 [DEBUG] IR: 0x0000000000000013
 [DEBUG] No memory access needed for SubInstruction (not register to memory).
-[DEBUG] ExecuteEngine: Fetching operands for instruction with ID 4
 [DEBUG] SUB_MI
 [DEBUG] ExecuteEngine: Operands fetched for instruction with ID 4
 [DEBUG] ExecuteEngine: Triggered OPERAND_FETCH_COMPLETE  event for instruction with ID 4
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 4
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 4
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] Pipeline ticked
 [DEBUG] Device ticked, progress: 1/1
@@ -751,11 +749,11 @@
 [DEBUG] Executing pipeline operation for the current cycle...
 [DEBUG] WRITEBACK STAGE processing...
 [DEBUG] Memory stage has valid instruction.
-[DEBUG] Write-Back stage processing...
+[DEBUG] Write Backstage processing...
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE processing...
 [DEBUG] OperandFetch-Execute buffer has valid instruction.
-[DEBUG] Execute stage processing...
+[DEBUG] Executionstage processing...
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE processing...
 [DEBUG] Fetch-Decode buffer has valid instruction.
@@ -774,15 +772,16 @@
 [DEBUG] FETCH STAGE fetch started.
 [DEBUG] Writing back result for SubInstruction.
 [DEBUG] ExecuteEngine: Starting execution for instruction with ID 4
-[DEBUG] ExecuteEngine: Starting execution for instruction with ID 4
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] OperandEngine: Writing value 255 to operand of type 0 for instruction with ID 3
+[DEBUG] Writing to register operand.
 [DEBUG] OperandEngine: Setting register value to 255 for operand of type 0
+[DEBUG] OperandEngine: register write completed for instruction with ID 3
 [DEBUG] OperandEngine: Reading operand of type 2 for instruction with ID 4
 [DEBUG] Reading from immediate operand.
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 4
 [DEBUG] Reading from register operand.
-[DEBUG] OperandEngine: Register read completed for instruction with ID 4
+[DEBUG] OperandEngine: register read completed for instruction with ID 4
 [DEBUG] ExecuteEngine: Executing instruction with ID 4
 [DEBUG] ExecuteEngine: Source Operand Value: 4294967295
 [DEBUG] ExecuteEngine: Destination Operand Value: 0
@@ -810,14 +809,14 @@
 [DEBUG] WRITEBACK STAGE has no valid instruction to process.
 [DEBUG] MEMORY STAGE processing...
 [DEBUG] Execute-Memory buffer has valid instruction.
-[DEBUG] Memory stage processing...
+[DEBUG] Memory Accessstage processing...
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
+[DEBUG] Operand Fetchstage processing...
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 6
 [DEBUG] Byte 0: 0x00000028
@@ -852,12 +851,9 @@
 [DEBUG] Byte: 0x000000d8
 [DEBUG] IR: 0x0000000000000015
 [DEBUG] No memory access needed for SubInstruction (not register to memory).
-[DEBUG] ExecuteEngine: Fetching operands for instruction with ID 5
 [DEBUG] SUB_MI
 [DEBUG] ExecuteEngine: Operands fetched for instruction with ID 5
 [DEBUG] ExecuteEngine: Triggered OPERAND_FETCH_COMPLETE  event for instruction with ID 5
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 5
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 5
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] Pipeline ticked
 [DEBUG] Device ticked, progress: 1/1
@@ -871,11 +867,11 @@
 [DEBUG] Executing pipeline operation for the current cycle...
 [DEBUG] WRITEBACK STAGE processing...
 [DEBUG] Memory stage has valid instruction.
-[DEBUG] Write-Back stage processing...
+[DEBUG] Write Backstage processing...
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE processing...
 [DEBUG] OperandFetch-Execute buffer has valid instruction.
-[DEBUG] Execute stage processing...
+[DEBUG] Executionstage processing...
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE processing...
 [DEBUG] Fetch-Decode buffer has valid instruction.
@@ -894,15 +890,16 @@
 [DEBUG] FETCH STAGE fetch started.
 [DEBUG] Writing back result for SubInstruction.
 [DEBUG] ExecuteEngine: Starting execution for instruction with ID 5
-[DEBUG] ExecuteEngine: Starting execution for instruction with ID 5
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] OperandEngine: Writing value 1 to operand of type 0 for instruction with ID 4
+[DEBUG] Writing to register operand.
 [DEBUG] OperandEngine: Setting register value to 1 for operand of type 0
+[DEBUG] OperandEngine: register write completed for instruction with ID 4
 [DEBUG] OperandEngine: Reading operand of type 2 for instruction with ID 5
 [DEBUG] Reading from immediate operand.
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 5
 [DEBUG] Reading from register operand.
-[DEBUG] OperandEngine: Register read completed for instruction with ID 5
+[DEBUG] OperandEngine: register read completed for instruction with ID 5
 [DEBUG] ExecuteEngine: Executing instruction with ID 5
 [DEBUG] ExecuteEngine: Source Operand Value: 2
 [DEBUG] ExecuteEngine: Destination Operand Value: 0
@@ -930,14 +927,14 @@
 [DEBUG] WRITEBACK STAGE has no valid instruction to process.
 [DEBUG] MEMORY STAGE processing...
 [DEBUG] Execute-Memory buffer has valid instruction.
-[DEBUG] Memory stage processing...
+[DEBUG] Memory Accessstage processing...
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
+[DEBUG] Operand Fetchstage processing...
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 7
 [DEBUG] Byte 0: 0x00000029
@@ -972,12 +969,9 @@
 [DEBUG] Byte: 0x000000d8
 [DEBUG] IR: 0x0000000000000017
 [DEBUG] No memory access needed for SubInstruction (not register to memory).
-[DEBUG] ExecuteEngine: Fetching operands for instruction with ID 6
 [DEBUG] SUB_MR
 [DEBUG] ExecuteEngine: Operands fetched for instruction with ID 6
 [DEBUG] ExecuteEngine: Triggered OPERAND_FETCH_COMPLETE  event for instruction with ID 6
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 6
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 6
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] Pipeline ticked
 [DEBUG] Device ticked, progress: 1/1
@@ -991,11 +985,11 @@
 [DEBUG] Executing pipeline operation for the current cycle...
 [DEBUG] WRITEBACK STAGE processing...
 [DEBUG] Memory stage has valid instruction.
-[DEBUG] Write-Back stage processing...
+[DEBUG] Write Backstage processing...
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE processing...
 [DEBUG] OperandFetch-Execute buffer has valid instruction.
-[DEBUG] Execute stage processing...
+[DEBUG] Executionstage processing...
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE processing...
 [DEBUG] Fetch-Decode buffer has valid instruction.
@@ -1014,15 +1008,16 @@
 [DEBUG] FETCH STAGE fetch started.
 [DEBUG] Writing back result for SubInstruction.
 [DEBUG] ExecuteEngine: Starting execution for instruction with ID 6
-[DEBUG] ExecuteEngine: Starting execution for instruction with ID 6
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] OperandEngine: Writing value 4294967294 to operand of type 0 for instruction with ID 5
+[DEBUG] Writing to register operand.
 [DEBUG] OperandEngine: Setting register value to 4294967294 for operand of type 0
+[DEBUG] OperandEngine: register write completed for instruction with ID 5
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 6
 [DEBUG] Reading from register operand.
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 6
 [DEBUG] Reading from register operand.
-[DEBUG] OperandEngine: Register read completed for instruction with ID 6
+[DEBUG] OperandEngine: register read completed for instruction with ID 6
 [DEBUG] ExecuteEngine: Executing instruction with ID 6
 [DEBUG] ExecuteEngine: Source Operand Value: 255
 [DEBUG] ExecuteEngine: Destination Operand Value: 248
@@ -1050,14 +1045,14 @@
 [DEBUG] WRITEBACK STAGE has no valid instruction to process.
 [DEBUG] MEMORY STAGE processing...
 [DEBUG] Execute-Memory buffer has valid instruction.
-[DEBUG] Memory stage processing...
+[DEBUG] Memory Accessstage processing...
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
+[DEBUG] Operand Fetchstage processing...
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 8
 [DEBUG] Byte 0: 0x0000002a
@@ -1092,12 +1087,9 @@
 [DEBUG] Byte: 0x000000d8
 [DEBUG] IR: 0x0000000000000019
 [DEBUG] No memory access needed for SubInstruction (not register to memory).
-[DEBUG] ExecuteEngine: Fetching operands for instruction with ID 7
 [DEBUG] SUB_MR
 [DEBUG] ExecuteEngine: Operands fetched for instruction with ID 7
 [DEBUG] ExecuteEngine: Triggered OPERAND_FETCH_COMPLETE  event for instruction with ID 7
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 7
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 7
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] Pipeline ticked
 [DEBUG] Device ticked, progress: 1/1
@@ -1111,11 +1103,11 @@
 [DEBUG] Executing pipeline operation for the current cycle...
 [DEBUG] WRITEBACK STAGE processing...
 [DEBUG] Memory stage has valid instruction.
-[DEBUG] Write-Back stage processing...
+[DEBUG] Write Backstage processing...
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE processing...
 [DEBUG] OperandFetch-Execute buffer has valid instruction.
-[DEBUG] Execute stage processing...
+[DEBUG] Executionstage processing...
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE processing...
 [DEBUG] Fetch-Decode buffer has valid instruction.
@@ -1134,15 +1126,16 @@
 [DEBUG] FETCH STAGE fetch started.
 [DEBUG] Writing back result for SubInstruction.
 [DEBUG] ExecuteEngine: Starting execution for instruction with ID 7
-[DEBUG] ExecuteEngine: Starting execution for instruction with ID 7
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] OperandEngine: Writing value 249 to operand of type 0 for instruction with ID 6
+[DEBUG] Writing to register operand.
 [DEBUG] OperandEngine: Setting register value to 249 for operand of type 0
+[DEBUG] OperandEngine: register write completed for instruction with ID 6
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 7
 [DEBUG] Reading from register operand.
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 7
 [DEBUG] Reading from register operand.
-[DEBUG] OperandEngine: Register read completed for instruction with ID 7
+[DEBUG] OperandEngine: register read completed for instruction with ID 7
 [DEBUG] ExecuteEngine: Executing instruction with ID 7
 [DEBUG] ExecuteEngine: Source Operand Value: 255
 [DEBUG] ExecuteEngine: Destination Operand Value: 249
@@ -1170,14 +1163,14 @@
 [DEBUG] WRITEBACK STAGE has no valid instruction to process.
 [DEBUG] MEMORY STAGE processing...
 [DEBUG] Execute-Memory buffer has valid instruction.
-[DEBUG] Memory stage processing...
+[DEBUG] Memory Accessstage processing...
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
+[DEBUG] Operand Fetchstage processing...
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 9
 [DEBUG] Byte 0: 0x0000002b
@@ -1212,12 +1205,9 @@
 [DEBUG] Byte: 0x000000d8
 [DEBUG] IR: 0x000000000000001b
 [DEBUG] No memory access needed for SubInstruction (not register to memory).
-[DEBUG] ExecuteEngine: Fetching operands for instruction with ID 8
 [DEBUG] SUB_RM
 [DEBUG] ExecuteEngine: Operands fetched for instruction with ID 8
 [DEBUG] ExecuteEngine: Triggered OPERAND_FETCH_COMPLETE  event for instruction with ID 8
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 8
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 8
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] Pipeline ticked
 [DEBUG] Device ticked, progress: 1/1
@@ -1231,11 +1221,11 @@
 [DEBUG] Executing pipeline operation for the current cycle...
 [DEBUG] WRITEBACK STAGE processing...
 [DEBUG] Memory stage has valid instruction.
-[DEBUG] Write-Back stage processing...
+[DEBUG] Write Backstage processing...
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE processing...
 [DEBUG] OperandFetch-Execute buffer has valid instruction.
-[DEBUG] Execute stage processing...
+[DEBUG] Executionstage processing...
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE processing...
 [DEBUG] Fetch-Decode buffer has valid instruction.
@@ -1254,15 +1244,16 @@
 [DEBUG] FETCH STAGE fetch started.
 [DEBUG] Writing back result for SubInstruction.
 [DEBUG] ExecuteEngine: Starting execution for instruction with ID 8
-[DEBUG] ExecuteEngine: Starting execution for instruction with ID 8
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] OperandEngine: Writing value 4294967290 to operand of type 0 for instruction with ID 7
+[DEBUG] Writing to register operand.
 [DEBUG] OperandEngine: Setting register value to 4294967290 for operand of type 0
+[DEBUG] OperandEngine: register write completed for instruction with ID 7
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 8
 [DEBUG] Reading from register operand.
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 8
 [DEBUG] Reading from register operand.
-[DEBUG] OperandEngine: Register read completed for instruction with ID 8
+[DEBUG] OperandEngine: register read completed for instruction with ID 8
 [DEBUG] ExecuteEngine: Executing instruction with ID 8
 [DEBUG] ExecuteEngine: Source Operand Value: 250
 [DEBUG] ExecuteEngine: Destination Operand Value: 255
@@ -1290,14 +1281,14 @@
 [DEBUG] WRITEBACK STAGE has no valid instruction to process.
 [DEBUG] MEMORY STAGE processing...
 [DEBUG] Execute-Memory buffer has valid instruction.
-[DEBUG] Memory stage processing...
+[DEBUG] Memory Accessstage processing...
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
+[DEBUG] Operand Fetchstage processing...
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 10
 [DEBUG] Byte 0: 0x00000000
@@ -1332,12 +1323,9 @@
 [DEBUG] Byte: 0x00000000
 [DEBUG] IR: 0x000000000000001d
 [DEBUG] No memory access needed for SubInstruction (not register to memory).
-[DEBUG] ExecuteEngine: Fetching operands for instruction with ID 9
 [DEBUG] SUB_RM
 [DEBUG] ExecuteEngine: Operands fetched for instruction with ID 9
 [DEBUG] ExecuteEngine: Triggered OPERAND_FETCH_COMPLETE  event for instruction with ID 9
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 9
-[DEBUG] ExecuteEngine: Operands fetched for instruction with ID 9
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] Pipeline ticked
 [DEBUG] Device ticked, progress: 1/1
@@ -1351,11 +1339,11 @@
 [DEBUG] Executing pipeline operation for the current cycle...
 [DEBUG] WRITEBACK STAGE processing...
 [DEBUG] Memory stage has valid instruction.
-[DEBUG] Write-Back stage processing...
+[DEBUG] Write Backstage processing...
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE processing...
 [DEBUG] OperandFetch-Execute buffer has valid instruction.
-[DEBUG] Execute stage processing...
+[DEBUG] Executionstage processing...
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
 [DEBUG] DECODE STAGE processing...
 [DEBUG] Fetch-Decode buffer has valid instruction.
@@ -1374,15 +1362,16 @@
 [DEBUG] FETCH STAGE fetch started.
 [DEBUG] Writing back result for SubInstruction.
 [DEBUG] ExecuteEngine: Starting execution for instruction with ID 9
-[DEBUG] ExecuteEngine: Starting execution for instruction with ID 9
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] OperandEngine: Writing value 5 to operand of type 0 for instruction with ID 8
+[DEBUG] Writing to register operand.
 [DEBUG] OperandEngine: Setting register value to 5 for operand of type 0
+[DEBUG] OperandEngine: register write completed for instruction with ID 8
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 9
 [DEBUG] Reading from register operand.
 [DEBUG] OperandEngine: Reading operand of type 0 for instruction with ID 9
 [DEBUG] Reading from register operand.
-[DEBUG] OperandEngine: Register read completed for instruction with ID 9
+[DEBUG] OperandEngine: register read completed for instruction with ID 9
 [DEBUG] ExecuteEngine: Executing instruction with ID 9
 [DEBUG] ExecuteEngine: Source Operand Value: 4294967290
 [DEBUG] ExecuteEngine: Destination Operand Value: 5
@@ -1410,15 +1399,15 @@
 [DEBUG] WRITEBACK STAGE has no valid instruction to process.
 [DEBUG] MEMORY STAGE processing...
 [DEBUG] Execute-Memory buffer has valid instruction.
-[DEBUG] Memory stage processing...
+[DEBUG] Memory Accessstage processing...
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
-[DEBUG] Instruction is empty. No operand fetch needed.
+[DEBUG] Operand Fetchstage processing...
+[DEBUG] Instruction is empty. No Operand Fetch needed.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 11
 [DEBUG] Byte 0: 0x00000000
@@ -1466,7 +1455,7 @@
 [DEBUG] Executing pipeline operation for the current cycle...
 [DEBUG] WRITEBACK STAGE processing...
 [DEBUG] Memory stage has valid instruction.
-[DEBUG] Write-Back stage processing...
+[DEBUG] Write Backstage processing...
 [DEBUG] MEMORY STAGE has no valid instruction to process.
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
@@ -1488,7 +1477,9 @@
 [DEBUG] Writing back result for SubInstruction.
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] OperandEngine: Writing value 11 to operand of type 0 for instruction with ID 9
+[DEBUG] Writing to register operand.
 [DEBUG] OperandEngine: Setting register value to 11 for operand of type 0
+[DEBUG] OperandEngine: register write completed for instruction with ID 9
 [DEBUG] Pipeline ticked
 [DEBUG] Device ticked, progress: 1/1
 [DEBUG] richiesta inserita
@@ -1512,11 +1503,11 @@
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
-[DEBUG] Instruction is empty. No operand fetch needed.
+[DEBUG] Operand Fetchstage processing...
+[DEBUG] Instruction is empty. No Operand Fetch needed.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 12
 [DEBUG] Byte 0: 0x00000000
@@ -1604,11 +1595,11 @@
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
-[DEBUG] Instruction is empty. No operand fetch needed.
+[DEBUG] Operand Fetchstage processing...
+[DEBUG] Instruction is empty. No Operand Fetch needed.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 13
 [DEBUG] Byte 0: 0x00000000
@@ -1696,11 +1687,11 @@
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
-[DEBUG] Instruction is empty. No operand fetch needed.
+[DEBUG] Operand Fetchstage processing...
+[DEBUG] Instruction is empty. No Operand Fetch needed.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 14
 [DEBUG] Byte 0: 0x00000000
@@ -1788,11 +1779,11 @@
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
-[DEBUG] Instruction is empty. No operand fetch needed.
+[DEBUG] Operand Fetchstage processing...
+[DEBUG] Instruction is empty. No Operand Fetch needed.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 15
 [DEBUG] Byte 0: 0x00000000
@@ -1880,11 +1871,11 @@
 [DEBUG] EXECUTE STAGE has no valid instruction to process.
 [DEBUG] OPERAND FETCH STAGE processing...
 [DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
-[DEBUG] Instruction is empty. No operand fetch needed.
+[DEBUG] Operand Fetchstage processing...
+[DEBUG] Instruction is empty. No Operand Fetch needed.
 [DEBUG] DECODE STAGE is not ready.
 [DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
+[DEBUG] Fetching instruction...
 [DEBUG] Fetching instruction from memory...
 [DEBUG] Searching for cache response for instruction ID: 16
 [DEBUG] Byte 0: 0x00000000
@@ -1962,335 +1953,5 @@
 [DEBUG] hit cache
 [DEBUG] read single line
 [DEBUG] n di richeiste dopo esecuzione: 0
-[DEBUG] executing operation for cacheL1D
-[DEBUG] CacheManager ticked
-[DEBUG] Bus Tick Start
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Executing pipeline operation for the current cycle...
-[DEBUG] WRITEBACK STAGE has no valid instruction to process.
-[DEBUG] MEMORY STAGE has no valid instruction to process.
-[DEBUG] EXECUTE STAGE has no valid instruction to process.
-[DEBUG] OPERAND FETCH STAGE processing...
-[DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
-[DEBUG] Instruction is empty. No operand fetch needed.
-[DEBUG] DECODE STAGE is not ready.
-[DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
-[DEBUG] Fetching instruction from memory...
-[DEBUG] Searching for cache response for instruction ID: 17
-[DEBUG] Byte 0: 0x00000000
-[DEBUG] Byte 1: 0x00000000
-[DEBUG] Byte 2: 0x00000000
-[DEBUG] Byte 3: 0x00000000
-[DEBUG] Byte 4: 0x00000000
-[DEBUG] Byte 5: 0x00000000
-[DEBUG] Byte 6: 0x00000000
-[DEBUG] Byte 7: 0x00000000
-[DEBUG] Byte 8: 0x00000000
-[DEBUG] Byte 9: 0x00000000
-[DEBUG] Byte 10: 0x00000000
-[DEBUG] Byte 11: 0x00000000
-[DEBUG] Byte 12: 0x00000000
-[DEBUG] Byte 13: 0x00000000
-[DEBUG] Byte 14: 0x00000000
-[DEBUG] Byte 15: 0x00000000
-[DEBUG] Mod: 0x00000000
-[DEBUG] Reg: 0x00000000
-[DEBUG] R/M: 0x00000000
-[DEBUG] Opcode: 0x00000000
-[DEBUG] Prefix Count: 0
-[DEBUG] Total Length: 2
-[DEBUG] Opcode Length: 1
-[DEBUG] Additional Bytes: 1
-[DEBUG] Description: ADD r/m8, r8
-[DEBUG] Number of Operands: 2
-[DEBUG] Operand Length: 1
-[DEBUG] Instruction: 
-[DEBUG] Byte: 0x00000000
-[DEBUG] Byte: 0x00000000
-[DEBUG] IR: 0x000000000000002b
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Pipeline ticked
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] executing operation for cacheL3
-[DEBUG] executing operation for cacheL2
-[DEBUG] executing operation for cacheL1I
-[DEBUG] executing operation for cacheL1D
-[DEBUG] CacheManager ticked
-[DEBUG] Bus Tick Start
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Executing pipeline operation for the current cycle...
-[DEBUG] WRITEBACK STAGE has no valid instruction to process.
-[DEBUG] MEMORY STAGE has no valid instruction to process.
-[DEBUG] EXECUTE STAGE has no valid instruction to process.
-[DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
-[DEBUG] DECODE STAGE processing...
-[DEBUG] Fetch-Decode buffer has valid instruction.
-[DEBUG] Decoding instruction...
-[DEBUG] Decoding instruction: 0x00000000 - 3
-[DEBUG] Instruction type: ADD
-[DEBUG] Decoded instruction type: ADD
-[DEBUG] Instruction decoded and DECODE_COMPLETE event triggered.
-[DEBUG] FETCH STAGE processing...
-[DEBUG] Incrementing counter
-[DEBUG] FetchstageInstructionId: 18
-[DEBUG] Starting instruction fetch...
-[DEBUG] Starting instruction fetch...
-[DEBUG] Fetching instruction at address: 0x000000000000002b
-[DEBUG] Cache request sent for instruction fetch.
-[DEBUG] FETCH STAGE fetch started.
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Pipeline ticked
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] richiesta inserita
-[DEBUG] executing operation for cacheL3
-[DEBUG] executing operation for cacheL2
-[DEBUG] executing operation for cacheL1I
-[DEBUG] n di richeiste: 1
-[DEBUG] callback scheduler
-[DEBUG] processing request 18
-[DEBUG] lookup cache
-[DEBUG] hit cache
-[DEBUG] read single line
-[DEBUG] n di richeiste dopo esecuzione: 0
-[DEBUG] executing operation for cacheL1D
-[DEBUG] CacheManager ticked
-[DEBUG] Bus Tick Start
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Executing pipeline operation for the current cycle...
-[DEBUG] WRITEBACK STAGE has no valid instruction to process.
-[DEBUG] MEMORY STAGE has no valid instruction to process.
-[DEBUG] EXECUTE STAGE has no valid instruction to process.
-[DEBUG] OPERAND FETCH STAGE processing...
-[DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
-[DEBUG] Instruction is empty. No operand fetch needed.
-[DEBUG] DECODE STAGE is not ready.
-[DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
-[DEBUG] Fetching instruction from memory...
-[DEBUG] Searching for cache response for instruction ID: 18
-[DEBUG] Byte 0: 0x00000000
-[DEBUG] Byte 1: 0x00000000
-[DEBUG] Byte 2: 0x00000000
-[DEBUG] Byte 3: 0x00000000
-[DEBUG] Byte 4: 0x00000000
-[DEBUG] Byte 5: 0x00000000
-[DEBUG] Byte 6: 0x00000000
-[DEBUG] Byte 7: 0x00000000
-[DEBUG] Byte 8: 0x00000000
-[DEBUG] Byte 9: 0x00000000
-[DEBUG] Byte 10: 0x00000000
-[DEBUG] Byte 11: 0x00000000
-[DEBUG] Byte 12: 0x00000000
-[DEBUG] Byte 13: 0x00000000
-[DEBUG] Byte 14: 0x00000000
-[DEBUG] Byte 15: 0x00000000
-[DEBUG] Mod: 0x00000000
-[DEBUG] Reg: 0x00000000
-[DEBUG] R/M: 0x00000000
-[DEBUG] Opcode: 0x00000000
-[DEBUG] Prefix Count: 0
-[DEBUG] Total Length: 2
-[DEBUG] Opcode Length: 1
-[DEBUG] Additional Bytes: 1
-[DEBUG] Description: ADD r/m8, r8
-[DEBUG] Number of Operands: 2
-[DEBUG] Operand Length: 1
-[DEBUG] Instruction: 
-[DEBUG] Byte: 0x00000000
-[DEBUG] Byte: 0x00000000
-[DEBUG] IR: 0x000000000000002d
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Pipeline ticked
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] executing operation for cacheL3
-[DEBUG] executing operation for cacheL2
-[DEBUG] executing operation for cacheL1I
-[DEBUG] executing operation for cacheL1D
-[DEBUG] CacheManager ticked
-[DEBUG] Bus Tick Start
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Executing pipeline operation for the current cycle...
-[DEBUG] WRITEBACK STAGE has no valid instruction to process.
-[DEBUG] MEMORY STAGE has no valid instruction to process.
-[DEBUG] EXECUTE STAGE has no valid instruction to process.
-[DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
-[DEBUG] DECODE STAGE processing...
-[DEBUG] Fetch-Decode buffer has valid instruction.
-[DEBUG] Decoding instruction...
-[DEBUG] Decoding instruction: 0x00000000 - 3
-[DEBUG] Instruction type: ADD
-[DEBUG] Decoded instruction type: ADD
-[DEBUG] Instruction decoded and DECODE_COMPLETE event triggered.
-[DEBUG] FETCH STAGE processing...
-[DEBUG] Incrementing counter
-[DEBUG] FetchstageInstructionId: 19
-[DEBUG] Starting instruction fetch...
-[DEBUG] Starting instruction fetch...
-[DEBUG] Fetching instruction at address: 0x000000000000002d
-[DEBUG] Cache request sent for instruction fetch.
-[DEBUG] FETCH STAGE fetch started.
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Pipeline ticked
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] richiesta inserita
-[DEBUG] executing operation for cacheL3
-[DEBUG] executing operation for cacheL2
-[DEBUG] executing operation for cacheL1I
-[DEBUG] n di richeiste: 1
-[DEBUG] callback scheduler
-[DEBUG] processing request 19
-[DEBUG] lookup cache
-[DEBUG] hit cache
-[DEBUG] read single line
-[DEBUG] n di richeiste dopo esecuzione: 0
-[DEBUG] executing operation for cacheL1D
-[DEBUG] CacheManager ticked
-[DEBUG] Bus Tick Start
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Executing pipeline operation for the current cycle...
-[DEBUG] WRITEBACK STAGE has no valid instruction to process.
-[DEBUG] MEMORY STAGE has no valid instruction to process.
-[DEBUG] EXECUTE STAGE has no valid instruction to process.
-[DEBUG] OPERAND FETCH STAGE processing...
-[DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
-[DEBUG] Instruction is empty. No operand fetch needed.
-[DEBUG] DECODE STAGE is not ready.
-[DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
-[DEBUG] Fetching instruction from memory...
-[DEBUG] Searching for cache response for instruction ID: 19
-[DEBUG] Byte 0: 0x00000000
-[DEBUG] Byte 1: 0x00000000
-[DEBUG] Byte 2: 0x00000000
-[DEBUG] Byte 3: 0x00000000
-[DEBUG] Byte 4: 0x00000000
-[DEBUG] Byte 5: 0x00000000
-[DEBUG] Byte 6: 0x00000000
-[DEBUG] Byte 7: 0x00000000
-[DEBUG] Byte 8: 0x00000000
-[DEBUG] Byte 9: 0x00000000
-[DEBUG] Byte 10: 0x00000000
-[DEBUG] Byte 11: 0x00000000
-[DEBUG] Byte 12: 0x00000000
-[DEBUG] Byte 13: 0x00000000
-[DEBUG] Byte 14: 0x00000000
-[DEBUG] Byte 15: 0x00000000
-[DEBUG] Mod: 0x00000000
-[DEBUG] Reg: 0x00000000
-[DEBUG] R/M: 0x00000000
-[DEBUG] Opcode: 0x00000000
-[DEBUG] Prefix Count: 0
-[DEBUG] Total Length: 2
-[DEBUG] Opcode Length: 1
-[DEBUG] Additional Bytes: 1
-[DEBUG] Description: ADD r/m8, r8
-[DEBUG] Number of Operands: 2
-[DEBUG] Operand Length: 1
-[DEBUG] Instruction: 
-[DEBUG] Byte: 0x00000000
-[DEBUG] Byte: 0x00000000
-[DEBUG] IR: 0x000000000000002f
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Pipeline ticked
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] executing operation for cacheL3
-[DEBUG] executing operation for cacheL2
-[DEBUG] executing operation for cacheL1I
-[DEBUG] executing operation for cacheL1D
-[DEBUG] CacheManager ticked
-[DEBUG] Bus Tick Start
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Executing pipeline operation for the current cycle...
-[DEBUG] WRITEBACK STAGE has no valid instruction to process.
-[DEBUG] MEMORY STAGE has no valid instruction to process.
-[DEBUG] EXECUTE STAGE has no valid instruction to process.
-[DEBUG] OPERAND FETCH STAGE has no valid instruction to process.
-[DEBUG] DECODE STAGE processing...
-[DEBUG] Fetch-Decode buffer has valid instruction.
-[DEBUG] Decoding instruction...
-[DEBUG] Decoding instruction: 0x00000000 - 3
-[DEBUG] Instruction type: ADD
-[DEBUG] Decoded instruction type: ADD
-[DEBUG] Instruction decoded and DECODE_COMPLETE event triggered.
-[DEBUG] FETCH STAGE processing...
-[DEBUG] Incrementing counter
-[DEBUG] FetchstageInstructionId: 20
-[DEBUG] Starting instruction fetch...
-[DEBUG] Starting instruction fetch...
-[DEBUG] Fetching instruction at address: 0x000000000000002f
-[DEBUG] Cache request sent for instruction fetch.
-[DEBUG] FETCH STAGE fetch started.
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Pipeline ticked
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] richiesta inserita
-[DEBUG] executing operation for cacheL3
-[DEBUG] executing operation for cacheL2
-[DEBUG] executing operation for cacheL1I
-[DEBUG] n di richeiste: 1
-[DEBUG] callback scheduler
-[DEBUG] processing request 20
-[DEBUG] lookup cache
-[DEBUG] hit cache
-[DEBUG] read single line
-[DEBUG] n di richeiste dopo esecuzione: 0
-[DEBUG] executing operation for cacheL1D
-[DEBUG] CacheManager ticked
-[DEBUG] Bus Tick Start
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Executing pipeline operation for the current cycle...
-[DEBUG] WRITEBACK STAGE has no valid instruction to process.
-[DEBUG] MEMORY STAGE has no valid instruction to process.
-[DEBUG] EXECUTE STAGE has no valid instruction to process.
-[DEBUG] OPERAND FETCH STAGE processing...
-[DEBUG] Decode-OperandFetch buffer has valid instruction.
-[DEBUG] Operand Fetch stage processing...
-[DEBUG] Instruction is empty. No operand fetch needed.
-[DEBUG] DECODE STAGE is not ready.
-[DEBUG] FETCH STAGE instruction fetch completed.
-[DEBUG] Fetching instruction from memory...
-[DEBUG] Fetching instruction from memory...
-[DEBUG] Searching for cache response for instruction ID: 20
-[DEBUG] Byte 0: 0x00000000
-[DEBUG] Byte 1: 0x00000000
-[DEBUG] Byte 2: 0x00000000
-[DEBUG] Byte 3: 0x00000000
-[DEBUG] Byte 4: 0x00000000
-[DEBUG] Byte 5: 0x00000000
-[DEBUG] Byte 6: 0x00000000
-[DEBUG] Byte 7: 0x00000000
-[DEBUG] Byte 8: 0x00000000
-[DEBUG] Byte 9: 0x00000000
-[DEBUG] Byte 10: 0x00000000
-[DEBUG] Byte 11: 0x00000000
-[DEBUG] Byte 12: 0x00000000
-[DEBUG] Byte 13: 0x00000000
-[DEBUG] Byte 14: 0x00000000
-[DEBUG] Byte 15: 0x00000000
-[DEBUG] Mod: 0x00000000
-[DEBUG] Reg: 0x00000000
-[DEBUG] R/M: 0x00000000
-[DEBUG] Opcode: 0x00000000
-[DEBUG] Prefix Count: 0
-[DEBUG] Total Length: 2
-[DEBUG] Opcode Length: 1
-[DEBUG] Additional Bytes: 1
-[DEBUG] Description: ADD r/m8, r8
-[DEBUG] Number of Operands: 2
-[DEBUG] Operand Length: 1
-[DEBUG] Instruction: 
-[DEBUG] Byte: 0x00000000
-[DEBUG] Byte: 0x00000000
-[DEBUG] IR: 0x0000000000000031
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] Pipeline ticked
-[DEBUG] Device ticked, progress: 1/1
-[DEBUG] executing operation for cacheL3
-[DEBUG] executing operation for cacheL2
-[DEBUG] executing operation for cacheL1I
 [DEBUG] executing operation for cacheL1D
 [DEBUG] CacheManager ticked

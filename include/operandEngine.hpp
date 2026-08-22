@@ -4,14 +4,13 @@
 #include "operands.hpp"
 #include "memoryInterface.hpp"
 #include "device.hpp"
-#include "helpers.hpp"
 
 class Instruction;
 class CacheManager;
 class CPU;
 class ExecuteEngineEventHandler;
 
-enum class WhichOperand
+enum class WhichOperand : uint8_t
 {
     SOURCE,
     DESTINATION
@@ -23,6 +22,7 @@ struct OperandContextWrite
     Operand* operand;
     uint64_t value;
 };
+
 struct OperandContextRead
 {
     Instruction* instruction;
@@ -58,11 +58,11 @@ class OperandEngine : public TickedDevice, public FaultDevice
 
         void execute_operation() override; // Override of the pure virtual function from Device class
 
-        OperandResult setRegisterValue(Operand* operand, uint64_t value);
-        OperandResult getRegisterValue(Instruction* instruction, Operand* operand, WhichOperand whichoperand);
+        static OperandResult setRegisterValue(Operand* operand, uint64_t value);
+        static OperandResult getRegisterValue(Instruction* instruction, Operand* operand, WhichOperand whichoperand);
 
-        OperandResult setImmediateValue(Operand* operand, uint64_t value);
-        OperandResult getImmediateValue(Instruction* instruction, Operand* operand, WhichOperand whichoperand);
+        static OperandResult setImmediateValue(Operand* operand, uint64_t value);
+        static OperandResult getImmediateValue(Instruction* instruction, Operand* operand, WhichOperand whichoperand);
 
         OperandResult getMemoryValue(Instruction* instruction, Operand* operand, void* callbackContext, void(*callback)(void* context), WhichOperand whichoperand);
         OperandResult setMemoryValue(Instruction* instruction, Operand* operand, uint64_t value, void* callbackContext, void(*callback)(void* context));

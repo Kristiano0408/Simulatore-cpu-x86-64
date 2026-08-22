@@ -26,19 +26,19 @@ namespace ModRMMask
     inline constexpr uint8_t REG_SHIFT = 3;
     inline constexpr uint8_t RM_SHIFT  = 0;
 
-    [[nodiscard]] inline constexpr uint8_t extractMod(uint8_t byte) 
+    [[nodiscard]] inline constexpr uint8_t extractMod(std::byte byte) 
     {
-        return (byte & MOD_MASK) >> MOD_SHIFT;
+        return (static_cast<uint8_t>(byte) & MOD_MASK) >> MOD_SHIFT;
     }
 
-    [[nodiscard]] inline constexpr uint8_t extractReg(uint8_t byte) 
+    [[nodiscard]] inline constexpr uint8_t extractReg(std::byte byte) 
     {
-        return (byte & REG_MASK) >> REG_SHIFT;
+        return (static_cast<uint8_t>(byte) & REG_MASK) >> REG_SHIFT;
     }
 
-    [[nodiscard]] inline constexpr uint8_t extractRM(uint8_t byte) 
+    [[nodiscard]] inline constexpr uint8_t extractRM(std::byte byte) 
     {
-        return (byte & RM_MASK) >> RM_SHIFT;
+        return (static_cast<uint8_t>(byte) & RM_MASK) >> RM_SHIFT;
     }
 
 } // namespace ModRMMask
@@ -51,19 +51,19 @@ namespace SIBMask
     inline constexpr uint8_t BASE_MASK  = 0b00000111; // Mask for the BASE field (bits 0-2)
 
 
-    [[nodiscard]] inline constexpr uint8_t extractScale(uint8_t byte) 
+    [[nodiscard]] inline constexpr uint8_t extractScale(std::byte byte) 
     {
-        return (byte & SCALE_MASK) >> 6;
+        return (static_cast<uint8_t>(byte) & SCALE_MASK) >> 6;
     }
 
-    [[nodiscard]] inline constexpr uint8_t extractIndex(uint8_t byte) 
+    [[nodiscard]] inline constexpr uint8_t extractIndex(std::byte byte) 
     {
-        return (byte & INDEX_MASK) >> 3;
+        return (static_cast<uint8_t>(byte) & INDEX_MASK) >> 3;
     }
 
-    [[nodiscard]] inline constexpr uint8_t extractBase(uint8_t byte) 
+    [[nodiscard]] inline constexpr uint8_t extractBase(std::byte byte) 
     {
-        return (byte & BASE_MASK);
+        return (static_cast<uint8_t>(byte) & BASE_MASK);
     }
 
 } // namespace SIBMask

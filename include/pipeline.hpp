@@ -1,259 +1,272 @@
 #ifndef PIPELINE_HPP
 #define PIPELINE_HPP
 
-
-#include <cstdint>
-#include <array>
-#include <string>
-#include <memory>
-#include "helpers.hpp"
 #include "eventHandler.hpp"
 #include "executeEngine.hpp"
+#include "helpers/pipelineTypes.hpp"
 #include "pipelineScheduler.hpp"
+#include <memory>
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Base Stage class
 
 class Stage
 {
-    public:
+public:
+    virtual ~Stage() = default;
 
-        Stage() {};
+    bool isStageReady() const { return status == StageStatus::READY; }
 
-        virtual ~Stage() = default;
+    static bool isInstructionEmpty(Instruction* instr);
 
-        inline bool isStageReady() const {return status == StageStatus::READY; }
+    StageStatus getStatus() const { return status; }
 
-        bool isInstructionEmpty(Instruction* instr) const;
+    void setStatus(StageStatus newStatus) { status = newStatus; }
 
-        inline StageStatus getStatus() const { return status; }
+    bool isStalledGUI() const { return StalledGUI; }
 
-        inline void setStatus(StageStatus newStatus) { status = newStatus; }
+    void setStalledGUI(bool stalled) { StalledGUI = stalled; }
 
-        inline bool isStalledGUI() const { return StalledGUI; }
-
-        inline void setStalledGUI(bool stalled) { StalledGUI = stalled; }
-
-    private:
-
-        bool StalledGUI = false; // Flag to indicate if the stage is stalled due to GUI interaction
-        StageStatus status = StageStatus::READY;
-
+private:
+    bool StalledGUI = false; // Flag to indicate if the stage is stalled due to GUI interaction
+    StageStatus status = StageStatus::READY;
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////7  
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////7
 
 // FetchStage class
 
-class FetchStage : public Stage {
+class FetchStage : public Stage
+{
 
-    public:
+public:
+    FetchStage() : Stage()  {}
 
-        FetchStage();
+    ~FetchStage() {};
 
-        ~FetchStage() {};
+    InstructionInfo getCurrentInstructionInfo() const { return currentInstructionInfo; }
 
-        inline InstructionInfo getCurrentInstructionInfo() const { return currentInstructionInfo; }
+    void setCurrentInstructionInfo(InstructionInfo info) { currentInstructionInfo = info; }
 
-        inline void setCurrentInstructionInfo(InstructionInfo info) { currentInstructionInfo = info; }
-
-    private:
-        //any additional members specific to the fetch stage
-        InstructionInfo currentInstructionInfo; //information about the current instruction being fetched
+private:
+    // any additional members specific to the fetch stage
+    InstructionInfo currentInstructionInfo; // information about the current instruction being fetched
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // DecodeStage class
 
-class  DecodeStage : public Stage {
+class DecodeStage : public Stage
+{
 
-    public:
+public:
+    DecodeStage() : Stage(), decoded_instruction(std::make_unique<Instruction>()) {}
 
-        DecodeStage();
+    ~DecodeStage() {};
 
-        ~DecodeStage() {};
+     void setInstructionToDecode(const InstructionInfo& info) { instruction_info_to_decode = info; }
 
-        inline void setInstructionToDecode(const InstructionInfo& info) { instruction_info_to_decode = info; }
-        
-        inline InstructionInfo getInstructionToDecode() const { return instruction_info_to_decode; }
+    InstructionInfo getInstructionToDecode() const { return instruction_info_to_decode; }
 
-        inline InstructionInfo& getInstructionToDecodeRef() { return instruction_info_to_decode; }
+    InstructionInfo& getInstructionToDecodeRef() { return instruction_info_to_decode; }
 
+    std::unique_ptr<Instruction> getDecodedInstruction() { return std::move(decoded_instruction); }
 
-        inline std::unique_ptr<Instruction> getDecodedInstruction() { return std::move(decoded_instruction);}
+    std::unique_ptr<Instruction>& getDecodedInstructionRef() { return decoded_instruction; }
 
-        inline std::unique_ptr<Instruction>& getDecodedInstructionRef() { return decoded_instruction; }
+    Instruction* peekInstruction() const { return decoded_instruction.get(); }
 
-        inline Instruction* peekInstruction() const {return decoded_instruction.get();}
+private:
+    // any additional members specific to the decode stage
+    InstructionInfo instruction_info_to_decode; // information about the instruction being decoded
 
-    private:
-        //any additional members specific to the decode stage
-        InstructionInfo  instruction_info_to_decode; //information about the instruction being decoded
-
-        std::unique_ptr<Instruction> decoded_instruction; //pointer to the decoded instruction
+    std::unique_ptr<Instruction> decoded_instruction; // pointer to the decoded instruction
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // OperandFetchStage class
 
-class OperandFetchStage : public Stage {
+class OperandFetchStage : public Stage
+{
 
-    public:
+public:
+    OperandFetchStage() : Stage(), instruction_with_fetched_operands(std::make_unique<Instruction>()) {}
 
-        OperandFetchStage();
+    ~OperandFetchStage() {};
 
-        ~OperandFetchStage() {};
+    std::unique_ptr<Instruction> getInstructionWithFetchedOperands()
+    {
+        return std::move(instruction_with_fetched_operands);
+    }
 
-        std::unique_ptr<Instruction> getInstructionWithFetchedOperands();
+    void setInstructionWithFetchedOperands(std::unique_ptr<Instruction> instruction)
+    {
+        instruction_with_fetched_operands = std::move(instruction);
+    }
 
-        void setInstructionWithFetchedOperands(std::unique_ptr<Instruction> instruction);
+    Instruction& peekInstructionRef() const { return *instruction_with_fetched_operands; }
+    Instruction* peekInstruction() const { return instruction_with_fetched_operands.get(); }
 
-        inline Instruction& peekInstructionRef() const {return *instruction_with_fetched_operands.get();}
-        inline Instruction* peekInstruction() const {return instruction_with_fetched_operands.get();}
-
-
-    private:
-        //any additional members specific to the operand fetch stage
-        std::unique_ptr<Instruction> instruction_with_fetched_operands; //pointer to the instruction with fetched operands
+private:
+    // any additional members specific to the operand fetch stage
+    std::unique_ptr<Instruction> instruction_with_fetched_operands; // pointer to the instruction with fetched operands
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // ExecuteStage class
 
-class ExecuteStage : public Stage {
+class ExecuteStage : public Stage
+{
 
-    public:
+public:
+    ExecuteStage() : Stage(), instruction_to_execute(std::make_unique<Instruction>()) {}
 
-        ExecuteStage();
+    ~ExecuteStage() {};
 
-        ~ExecuteStage() {};
+     void setInstructionToExecute(std::unique_ptr<Instruction> instruction)
+    {
+        instruction_to_execute = std::move(instruction);
+    }
 
-        void setInstructionToExecute(std::unique_ptr<Instruction> instruction);
-        std::unique_ptr<Instruction> getInstructionToExecute();
-        
-        inline Instruction& peekInstructionRef() const {return *instruction_to_execute.get();}
-        inline Instruction* peekInstruction() const {return instruction_to_execute.get();}
+    std::unique_ptr<Instruction> getInstructionToExecute() { return std::move(instruction_to_execute); }
 
+    Instruction& peekInstructionRef() const { return *instruction_to_execute; }
+    Instruction* peekInstruction() const { return instruction_to_execute.get(); }
 
-    private:
-        //any additional members specific to the execute stage
-        std::unique_ptr<Instruction> instruction_to_execute; //pointer to the instruction being executed
-
+private:
+    // any additional members specific to the execute stage
+    std::unique_ptr<Instruction> instruction_to_execute; // pointer to the instruction being executed
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // MemoryStage class
 
-class MemoryStage : public Stage {
+class MemoryStage : public Stage
+{
 
-    public:
+public:
+    MemoryStage() : Stage(), instruction_to_memory(std::make_unique<Instruction>()) {}
 
-        MemoryStage();
+    ~MemoryStage() {};
 
-        ~MemoryStage() {};
+    void setInstructionToMemory(std::unique_ptr<Instruction> instruction)
+    {
+        instruction_to_memory = std::move(instruction);
+    }
 
-        void setInstructionToMemory(std::unique_ptr<Instruction> instruction);
-        std::unique_ptr<Instruction> getInstructionToMemory();
+    std::unique_ptr<Instruction> getInstructionToMemory() { return std::move(instruction_to_memory); }
 
-        inline Instruction* peekInstruction() const {return instruction_to_memory.get();}
-        inline Instruction& peekInstructionRef() const {return *instruction_to_memory.get();}
+    Instruction* peekInstruction() const { return instruction_to_memory.get(); }
+    Instruction& peekInstructionRef() const { return *instruction_to_memory; }
 
-
-    private:
-        //any additional members specific to the memory stage
-        std::unique_ptr<Instruction> instruction_to_memory; //pointer to the instruction being processed in memory stage
-
+private:
+    // any additional members specific to the memory stage
+    std::unique_ptr<Instruction> instruction_to_memory; // pointer to the instruction being processed in memory stage
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // WriteBackStage class
 
-class WriteBackStage : public Stage {
+class WriteBackStage : public Stage
+{
 
-    public:
+public:
+    WriteBackStage() : Stage(), instruction_to_writeback(std::make_unique<Instruction>()) {}
 
-        WriteBackStage();
-        
-        ~WriteBackStage() {};
+    ~WriteBackStage() {};
 
-        void setInstructionToWriteBack(std::unique_ptr<Instruction> instruction);
-        
-        std::unique_ptr<Instruction> getInstructionToWriteBack();
+    void setInstructionToWriteBack(std::unique_ptr<Instruction> instruction)
+    {
+        instruction_to_writeback = std::move(instruction);
+    }
 
-        inline Instruction* peekInstruction() const {return instruction_to_writeback.get();}
-        inline Instruction& peekInstructionRef() const {return *instruction_to_writeback.get();}
+    std::unique_ptr<Instruction> getInstructionToWriteBack() { return std::move(instruction_to_writeback); }
 
+    Instruction* peekInstruction() const { return instruction_to_writeback.get(); }
+    Instruction& peekInstructionRef() const { return *instruction_to_writeback; }
 
-    private:
-        //any additional members specific to the write-back stage
-         std::unique_ptr<Instruction> instruction_to_writeback;
+private:
+    // any additional members specific to the write-back stage
+    std::unique_ptr<Instruction> instruction_to_writeback;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//buffers between stages
+// buffers between stages
 
-struct FetchDecodeBuffer {
-    
+struct FetchDecodeBuffer
+{
+
     bool valid{};
     bool stalled{};
     bool flushed{};
-    InstructionInfo instructionInfo{};
+    InstructionInfo instructionInfo;
 
-    FetchDecodeBuffer() : valid(false), stalled(false), flushed(false), instructionInfo() {}
 };
 
-struct DecodeOperandFetchBuffer {
-    
+struct DecodeOperandFetchBuffer
+{
+
     bool valid{};
     bool stalled{};
     bool flushed{};
     std::unique_ptr<Instruction> decodedInstruction;
-    Instruction* peekInstruction() const {return decodedInstruction.get();}
+    Instruction* peekInstruction() const { return decodedInstruction.get(); }
 
-    DecodeOperandFetchBuffer() : valid(false), stalled(false), flushed(false), decodedInstruction(std::make_unique<Instruction>()) {}
-
+    DecodeOperandFetchBuffer()
+        : valid(false), stalled(false), flushed(false), decodedInstruction(std::make_unique<Instruction>())
+    {
+    }
 };
 
-struct OperandFetchExecuteBuffer {
-    
+struct OperandFetchExecuteBuffer
+{
+
     bool valid{};
     bool stalled{};
     bool flushed{};
     std::unique_ptr<Instruction> instructionWithOperands;
-    Instruction* peekInstruction() const {return instructionWithOperands.get();}
+    Instruction* peekInstruction() const { return instructionWithOperands.get(); }
 
-    OperandFetchExecuteBuffer() : valid(false), stalled(false), flushed(false), instructionWithOperands(std::make_unique<Instruction>()) {}
-
+    OperandFetchExecuteBuffer()
+        : valid(false), stalled(false), flushed(false), instructionWithOperands(std::make_unique<Instruction>())
+    {
+    }
 };
 
-struct ExecuteMemoryBuffer {
-    
+struct ExecuteMemoryBuffer
+{
+
     bool valid{};
     bool stalled{};
     bool flushed{};
     std::unique_ptr<Instruction> executedInstruction;
-    Instruction* peekInstruction() const {return executedInstruction.get();}
+    Instruction* peekInstruction() const { return executedInstruction.get(); }
 
-    ExecuteMemoryBuffer() : valid(false), stalled(false), flushed(false), executedInstruction(std::make_unique<Instruction>()) {}
-
+    ExecuteMemoryBuffer()
+        : valid(false), stalled(false), flushed(false), executedInstruction(std::make_unique<Instruction>())
+    {
+    }
 };
 
-struct MemoryWriteBackBuffer {
+struct MemoryWriteBackBuffer
+{
 
     bool valid{};
     bool stalled{};
     bool flushed{};
     std::unique_ptr<Instruction> memoryAccessedInstruction;
-    Instruction* peekInstruction() const {return memoryAccessedInstruction.get();}
+    Instruction* peekInstruction() const { return memoryAccessedInstruction.get(); }
 
-    MemoryWriteBackBuffer() : valid(false), stalled(false), flushed(false), memoryAccessedInstruction(std::make_unique<Instruction>()) {}
-
+    MemoryWriteBackBuffer()
+        : valid(false), stalled(false), flushed(false), memoryAccessedInstruction(std::make_unique<Instruction>())
+    {
+    }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -263,82 +276,57 @@ struct MemoryWriteBackBuffer {
 class Pipeline : public TickedDevice, public FaultDevice
 {
 
-    public:
+public:
+    Pipeline(CPU& cpuRef, PipelineEventHandler* eventHandlerPtr);
 
-        Pipeline(CPU& cpu, PipelineEventHandler* eventHandler);
+    ~Pipeline() {};
 
-        ~Pipeline() {};
+    void execute_operation() override; // execute the operation for the current cycle
 
-        void execute_operation() override; //execute the operation for the current cycle
+    void tick() override; // tick the pipeline for the current cycle
 
-        void tick() override; //tick the pipeline for the current cycle
+    FetchStage& getFetchStage() { return fetchStage; }
+    DecodeStage& getDecodeStage() { return decodeStage; }
+    OperandFetchStage& getOperandFetchStage() { return operandFetchStage; }
+    ExecuteStage& getExecuteStage() { return executeStage; }
+    MemoryStage& getMemoryStage() { return memoryStage; }
+    WriteBackStage& getWriteBackStage() { return writeBackStage; }
 
-        inline FetchStage& getFetchStage() { return fetchStage; }
-        inline DecodeStage& getDecodeStage() { return decodeStage; }
-        inline OperandFetchStage& getOperandFetchStage() { return operandFetchStage; }
-        inline ExecuteStage& getExecuteStage() { return executeStage; }
-        inline MemoryStage& getMemoryStage() { return memoryStage; }
-        inline WriteBackStage& getWriteBackStage() { return writeBackStage; }
+    Stage* getStage(StageType stageType) { return stageMap[static_cast<size_t>(stageType)]; }
 
-        inline Stage* getStage(StageType stageType) {return stageMap[static_cast<size_t>(stageType)]; }
+    FetchDecodeBuffer& getFetchDecodeBuffer() { return fetchDecodeBuffer; }
+    DecodeOperandFetchBuffer& getDecodeOperandFetchBuffer() { return decodeOperandFetchBuffer; }
+    OperandFetchExecuteBuffer& getOperandFetchExecuteBuffer() { return operandFetchExecuteBuffer; }
+    ExecuteMemoryBuffer& getExecuteMemoryBuffer() { return executeMemoryBuffer; }
+    MemoryWriteBackBuffer& getMemoryWriteBackBuffer() { return memoryWriteBackBuffer; }
 
-        inline FetchDecodeBuffer& getFetchDecodeBuffer() { return fetchDecodeBuffer; }
-        inline DecodeOperandFetchBuffer& getDecodeOperandFetchBuffer() { return decodeOperandFetchBuffer; }
-        inline OperandFetchExecuteBuffer& getOperandFetchExecuteBuffer() { return operandFetchExecuteBuffer; }
-        inline ExecuteMemoryBuffer& getExecuteMemoryBuffer() { return executeMemoryBuffer; }
-        inline MemoryWriteBackBuffer& getMemoryWriteBackBuffer() { return memoryWriteBackBuffer; }
+    void setEventHandler(PipelineEventHandler* handler);
 
-        void setEventHandler(PipelineEventHandler* handler);
-    
- 
-    private:
+private:
+    CPU& cpu;
+    PipelineScheduler pipelineScheduler;
+    ExecuteEngine executeEngine;
+    FetchStage fetchStage;
+    DecodeStage decodeStage;
+    OperandFetchStage operandFetchStage;
+    ExecuteStage executeStage;
+    MemoryStage memoryStage;
+    WriteBackStage writeBackStage;
 
-        CPU& cpu;
-        PipelineScheduler pipelineScheduler;
-        ExecuteEngine executeEngine;
-        FetchStage fetchStage;
-        DecodeStage decodeStage;
-        OperandFetchStage operandFetchStage;
-        ExecuteStage executeStage;
-        MemoryStage memoryStage;
-        WriteBackStage writeBackStage;
+    // buffer between stages
+    FetchDecodeBuffer fetchDecodeBuffer;
+    DecodeOperandFetchBuffer decodeOperandFetchBuffer;
+    OperandFetchExecuteBuffer operandFetchExecuteBuffer;
+    ExecuteMemoryBuffer executeMemoryBuffer;
+    MemoryWriteBackBuffer memoryWriteBackBuffer;
 
-        //buffer between stages 
-        FetchDecodeBuffer fetchDecodeBuffer;
-        DecodeOperandFetchBuffer decodeOperandFetchBuffer;
-        OperandFetchExecuteBuffer operandFetchExecuteBuffer;
-        ExecuteMemoryBuffer executeMemoryBuffer;
-        MemoryWriteBackBuffer memoryWriteBackBuffer;
+    std::array<Stage*, static_cast<size_t>(StageType::COUNT)> stageMap = {
+        &fetchStage, &decodeStage, &operandFetchStage, &executeStage, &memoryStage, &writeBackStage};
 
-        std::array<Stage*, static_cast<size_t>(StageType::COUNT)> stageMap = {
-            &fetchStage, 
-            &decodeStage, 
-            &operandFetchStage, 
-            &executeStage, 
-            &memoryStage, 
-            &writeBackStage
-        };
+    friend class PipelineScheduler; // Allow PipelineScheduler to access private members of Pipeline
 
-        friend class PipelineScheduler; // Allow PipelineScheduler to access private members of Pipeline
-        
-
-        //event handler for pipeline events with callbacks from pipeline controller
-        PipelineEventHandler* eventHandler;
-
-        
-
-        
-
-        
+    // event handler for pipeline events with callbacks from pipeline controller
+    PipelineEventHandler* eventHandler;
 };
-
-
-
-
-
-
-
-
-
 
 #endif // PIPELINE_HPP

@@ -9,7 +9,7 @@
 #include <vector>
 #include "helpers.hpp"
 #include "device.hpp"
-
+#include <cstddef>
 
 
 
@@ -26,9 +26,9 @@ class Decoder : public FaultDevice
         void fixTotalLengthPrefix(InstructionInfo& info);
         std::unique_ptr<Instruction> decodeInstruction(InstructionInfo instruction);
          //decode the  r/m operand
-        static r_m decodeRM(uint8_t r_m);
+        static r_m decodeRM(std::byte r_m);
         //decode the SIB operand
-        static SIB decodeSIB(uint8_t sib);
+        static SIB decodeSIB(std::byte sib);
 
         static void decodeInstructionOI(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
         static void decodeInstructionMI(Instruction* instruction, const InstructionInfo& instructionInfo, int position);

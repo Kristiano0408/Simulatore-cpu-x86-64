@@ -1,6 +1,8 @@
 #ifndef PIPELINE_TYPES_HPP
 #define PIPELINE_TYPES_HPP
 
+#include <cstdint>
+
 enum class StageStatus : uint8_t 
 {
     READY,

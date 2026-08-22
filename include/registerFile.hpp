@@ -4,8 +4,6 @@
 #ifndef REGISTERFILE_HPP
 #define REGISTERFILE_HPP
 #include <cstdint>
-#include <string>
-#include <memory>
 #include <array>
 
 enum class Register : uint8_t
@@ -33,13 +31,13 @@ class Reg{
         Reg() : value(0) {};
         Reg(uint64_t val) : value(val) {};
 
-        inline operator uint64_t() const { return value; } //conversion operator to uint64_t
+        operator uint64_t() const { return value; } //conversion operator to uint64_t
 
-        inline Reg& operator=(uint64_t val) { value = val; return *this; } //assignment operator (you can assign a uint64_t to a Reg object)
+        Reg& operator=(uint64_t val) { value = val; return *this; } //assignment operator (you can assign a uint64_t to a Reg object)
 
-        inline uint64_t& raw() { return value; } //get the raw value of the register
+        uint64_t& raw() { return value; } //get the raw value of the register
 
-        inline const uint64_t& raw() const { return value; } //get the raw value of the register (const version)
+        const uint64_t& raw() const { return value; } //get the raw value of the register (const version)
 
 
     private:
@@ -53,12 +51,12 @@ class Reg{
 
 class FlagReg : public Reg {
     public:
-        FlagReg() : Reg() {};
+        FlagReg() : Reg(0) {} //initialize the register to 0
 
-        inline bool getFlag(Flagbit flag) const { return (raw() >> static_cast<int>(flag)) & 1; } //get the flag bit
+        bool getFlag(Flagbit flag) const { return (bool)(raw() >> static_cast<int>(flag) & 1); } //get the flag bit
 
-        inline void setFlag(Flagbit flag, bool value) {
-            if (value) {
+        void setFlag(Flagbit flag, bool v) {
+            if (v) {
                 raw() |= (1ULL << static_cast<int>(flag)); //set the flag bit
             } else {
                 raw() &= ~(1ULL << static_cast<int>(flag)); //clear the flag bit

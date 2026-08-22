@@ -16,3 +16,7 @@ source /opt/intel/oneapi/setvars.sh
 sudo sysctl kernel.yama.ptrace_scope=0 (/etc/sysctl.d/10-ptrace.conf)
 sudo sysctl kernel.perf_event_paranoid=1
 sudo sysctl kernel.kptr_restrict=0
+
+
+
+cmake -B build -D etc...

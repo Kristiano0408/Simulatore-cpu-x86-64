@@ -37,12 +37,11 @@ class CU : public FaultDevice
         
 
         //helpers function for making the code more readable
-        void searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, std::vector<uint8_t>& bytes, InstructionInfo& info, int& byteCounter, r_m& rm);
-        void fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, int& byteCounter, std::vector<uint8_t>& bytes);
+        void searchingSIB_Displacement(const MaxCPUInstructionLength& buffer, InstructionInfo& info, int& byteCounter, r_m& rm);
+        void fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, int& byteCounter);
 
-        void fetchPrefix(const MaxCPUInstructionLength& buffer, uint8_t prefix[4], int& numbersOfPrefix, std::vector<uint8_t>& bytes, int& byteCounter);
-        void fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter, std::vector<uint8_t>& bytes);
-        void fetchRemainingBytes(const MaxCPUInstructionLength& buffer, std::vector<uint8_t>& bytes, int& byteCounter, int bytesToFetch);
+        void fetchPrefix(const MaxCPUInstructionLength& buffer, uint8_t prefix[4], int& numbersOfPrefix, int& byteCounter);
+        void fetchREX(uint8_t byte, bool& rex, uint8_t& rexprefix, int& byteCounter);
         
 
 };

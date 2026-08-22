@@ -1,19 +1,21 @@
 #ifndef INSTRUCTION_TYPES_HPP
 #define INSTRUCTION_TYPES_HPP
 
+#include "types.hpp"
+#include <cstdint>
 
 struct r_m {
     uint8_t r_m : 3;
     uint8_t mod : 2;
     uint8_t reg : 3;
-    uint8_t byte_r_m;
+    std::byte byte_r_m;
 };
 
 struct SIB {
     uint8_t base : 3;
     uint8_t index : 3;
     uint8_t scale : 2;
-    uint8_t byte_sib;
+    std::byte byte_sib;
 };
 
 //enum for the type of instruction
@@ -91,7 +93,7 @@ struct InstructionCore
     uint32_t opcode;
     uint32_t SIBdisplacement;
     std::array<uint8_t, 4> prefix;
-    int8_t rexprefix;
+    uint8_t rexprefix;
     uint8_t numPrefixes;
     uint8_t nbit; //number of bits of the value/operand
     r_m rm;
@@ -134,7 +136,7 @@ struct InstructionInfo {
     uint8_t dest_operand_length; // Lunghezza dell'operando destinazione
     uint8_t bit_extension; // Estensione in bit (0 se non esteso, 1 per 0 extension, 2 per sign extension)
    
-    std::vector<uint8_t> instruction;
+    MaxCPUInstructionLength instruction; // Rappresentazione dell'istruzione in formato testuale
     const char* description; // Descrizione dell'istruzione (opzionale)
     bool rex_w_sensitive; // Indica se l'istruzione è sensibile al prefisso REX.W (se 0 sorgente e destinazione sono 64 bit, se 1 sign extension a 64 bit per sorgente)
     bool rex;            // Flag REX

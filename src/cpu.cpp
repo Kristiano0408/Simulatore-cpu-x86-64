@@ -2,7 +2,7 @@
 #include "bus.hpp"
 
 //constructor for the CPU
-CPU::CPU(Bus& bus): bus(bus), controlUnit(bus), alu(), registers(), cacheManager(bus, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc), pipeline(*this, nullptr), pipelineController(pipeline)
+CPU::CPU(Bus& busRef): bus(busRef), controlUnit(busRef),registers(), cacheManager(busRef, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc), pipeline(*this, nullptr), pipelineController(pipeline)
 {
     DEBUG_LOG(debugLog("CPU created"));
     pipeline.setEventHandler(pipelineController.getEventHandler());
@@ -77,7 +77,7 @@ void CPU::sendCacheRequest(CacheRequest&& request, CacheLevelType cacheType)
     cacheManager.enqueRequest(std::move(request), cacheType); //send a cache request to the cache manager
 }
 
-void CPU::eraseCacheResponseIfFound(int requestID)
+void CPU::eraseCacheResponseIfFound(uint64_t requestID)
 {
     auto it = cacheResponseQueue.find(requestID);
     if (it != cacheResponseQueue.end()) {
@@ -85,7 +85,7 @@ void CPU::eraseCacheResponseIfFound(int requestID)
     }
 }
 
-void CPU::findCacheResponse(int requestID, MaxCPUInstructionLength& response, bool& found)
+void CPU::findCacheResponse(uint64_t requestID, MaxCPUInstructionLength& response, bool& found)
 {
     auto it = cacheResponseQueue.find(requestID);
     if (it != cacheResponseQueue.end()) {

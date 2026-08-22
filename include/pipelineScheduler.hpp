@@ -10,7 +10,7 @@ class InstructionInfo;
 class PipelineScheduler 
 {
     public:
-        PipelineScheduler(Pipeline& pipeline) : pipeline(pipeline) {}
+        PipelineScheduler(Pipeline& p) : pipeline(p) {}
 
         void processFetchStage(CPU& cpu);
         void processDecodeStage(CPU& cpu);

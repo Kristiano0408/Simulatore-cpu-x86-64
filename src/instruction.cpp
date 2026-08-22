@@ -1,9 +1,7 @@
 #include "../include/instruction.hpp"
 #include <cstdint>
 #include "controlUnit.hpp"
-#include "bus.hpp"
-#include "registerFile.hpp"
-#include "cpu.hpp"
+#include <unordered_set>
 
 Instruction::Instruction()
 {
@@ -18,29 +16,9 @@ bool Instruction::isEmpty() const
     return (core.opcode == 0 || core.InstructionId == 0);
 }
 
-uint64_t Instruction::castingValue(uint64_t value, uint8_t nbit) 
-{
-    switch (nbit)
-    {
-        case 8:
-            return castTo<uint8_t>(value);
-        case 16:
-            return castTo<uint16_t>(value);
-        case 32:
-            return castTo<uint32_t>(value);
-        case 64:
-            return castTo<uint64_t>(value);
-        default:
-            std::cerr << "Invalid number of bits" << std::endl;
-            return 0; // or throw an exception 
-
-    }
-}
-
-
 //getters and setters for the operands
-void Instruction::setSourceOperand(std::unique_ptr<Operand> sourceOperand) {
-    this->sourceOperand = std::move(sourceOperand); // move the unique_ptr to the member variable
+void Instruction::setSourceOperand(std::unique_ptr<Operand> sOperand) {
+    this->sourceOperand = std::move(sOperand); // move the unique_ptr to the member variable
 
 }
 
@@ -48,9 +26,9 @@ Operand* Instruction::getSourceOperand() {
     return sourceOperand.get(); // return the raw pointer of the unique_ptr
 }
 
-void Instruction::setDestinationOperand(std::unique_ptr<Operand> destinationOperand) 
+void Instruction::setDestinationOperand(std::unique_ptr<Operand> dOperand) 
 {
-    this->destinationOperand = std::move(destinationOperand); // move the unique_ptr to the member variable
+    this->destinationOperand = std::move(dOperand); // move the unique_ptr to the member variable
 }
 
 Operand* Instruction::getDestinationOperand() {
@@ -59,16 +37,16 @@ Operand* Instruction::getDestinationOperand() {
 
 
 //calculate the number of bits of the value/operand
-uint8_t Instruction::calculating_number_of_bits() 
+uint8_t Instruction::calculatingNumberOfBits() 
 {
     uint32_t opcode = core.opcode;
 
-    if (core.rexprefix & 0x08)
+    if ((core.rexprefix & 0x08) != 0)
     {
         return 64;
     }
 
-    for (int i = 0; i < core.numPrefixes; i++)
+    for (size_t i = 0; i < core.numPrefixes; i++)
     {
         if (core.prefix[i] == 0x66)
         {
@@ -82,7 +60,7 @@ uint8_t Instruction::calculating_number_of_bits()
                                                             0x8005, 0x2C, 0x28, 0x2A, //sub
                                                             };
 
-    if(opcode_8bit.count(opcode))
+    if(opcode_8bit.contains(opcode))
     {
         return 8;
     }
@@ -90,34 +68,5 @@ uint8_t Instruction::calculating_number_of_bits()
 
     return 32;
 }
-
-//get the addressing mode
-
-uint64_t Instruction::mask(uint8_t nbit) 
-{
-    switch (nbit)
-    {
-        case 8:
-            return 0xFF;
-        case 16:
-            return 0xFFFF;
-        case 32:
-            return 0xFFFFFFFF;
-        case 64:
-            return 0xFFFFFFFFFFFFFFFF;
-        default:
-            std::cerr << "Invalid number of bits" << std::endl;
-            return 0; // or throw an exception 
-
-    }
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
-
 
 

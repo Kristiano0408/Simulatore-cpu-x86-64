@@ -10,10 +10,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <iomanip>
 #include "instructionTypes.hpp"
-#include "pipelineTypes.hpp"
-#include "operandTypes.hpp"
-#include "cacheTypes.hpp"
+#include "result.hpp"
 
 #ifdef DEBUG
     inline std::ofstream debugFile("debug.log", std::ios::trunc);

@@ -3,29 +3,47 @@
 #include "cpu.hpp"
 #include "eventHandler.hpp"
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+#define sendRequestToExecuteEngine(instruction, function, stageName) \
+    DEBUG_LOG(debugLog(std::string(stageName) + "stage processing...")); \
+    if (instruction) \
+    { \
+        if (instruction->isEmpty()) \
+        { \
+            DEBUG_LOG(debugLog("Instruction is empty. No " + std::string(stageName) + " needed.")); \
+            return; \
+        } \
+        function(instruction); \
+    } \
+    else \
+    { \
+        DEBUG_LOG(debugLog("No instruction to " + std::string(stageName) + ".")); \
+    }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
+
 void PipelineScheduler::startFetch(CPU& cpu) 
 {
-    PipelineEventHandler& eventHandler = *pipeline.eventHandler;
     DEBUG_LOG(debugLog("Starting instruction fetch..."));
-    cpu.getControlUnit().startFetch(fetchStageInstructionId, index, eventHandler);
+    cpu.getControlUnit().startFetch(fetchStageInstructionId, index, *pipeline.eventHandler);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////7
 
 void PipelineScheduler::updateFetch(CPU& cpu) 
 {
-    PipelineEventHandler& eventHandler = *pipeline.eventHandler;
-    DEBUG_LOG(debugLog("Updating fetch stage..."));
-    cpu.getControlUnit().updateFetch(fetchStageInstructionId, eventHandler);
+    DEBUG_LOG(debugLog("Updating instruction fetch..."));
+    cpu.getControlUnit().updateFetch(fetchStageInstructionId, *pipeline.eventHandler);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 InstructionInfo PipelineScheduler::fetchInstruction(CPU& cpu) 
 {
-    PipelineEventHandler& eventHandler = *pipeline.eventHandler;
-    DEBUG_LOG(debugLog("Fetching instruction from memory..."));
-    return cpu.getControlUnit().fetchInstruction(fetchStageInstructionId, index, eventHandler);
+    DEBUG_LOG(debugLog("Fetching instruction..."));
+    return cpu.getControlUnit().fetchInstruction(fetchStageInstructionId, index, *pipeline.eventHandler);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,17 +64,7 @@ void PipelineScheduler::sendOperandFetchRequestToExecuteEngine()
     OperandFetchStage& operandFetchStage = pipeline.operandFetchStage;
     ExecuteEngine& executeEngine = pipeline.executeEngine;
     Instruction* instructionToFetchOperands = operandFetchStage.peekInstruction();
-    DEBUG_LOG(debugLog("Operand Fetch stage processing..."));
-
-    if (instructionToFetchOperands) {
-        if (instructionToFetchOperands->isEmpty()) {
-            DEBUG_LOG(debugLog("Instruction is empty. No operand fetch needed."));
-            return;
-        }
-        executeEngine.sendOperandFetchRequest(instructionToFetchOperands);
-    } else {
-        DEBUG_LOG(debugLog("No instruction to fetch operands."));
-    }
+    sendRequestToExecuteEngine(instructionToFetchOperands, executeEngine.sendOperandFetchRequest, "Operand Fetch");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
@@ -66,17 +74,7 @@ void PipelineScheduler::sendExecutionRequestToExecuteEngine()
     ExecuteStage& executeStage = pipeline.executeStage;
     ExecuteEngine& executeEngine = pipeline.executeEngine;
     Instruction* instructionToExecute = executeStage.peekInstruction();
-    DEBUG_LOG(debugLog("Execute stage processing..."));
-
-    if (instructionToExecute) {
-        if (instructionToExecute->isEmpty()) {
-            DEBUG_LOG(debugLog("Instruction is empty. No execution needed."));
-            return;
-        }
-        executeEngine.sendExecutionRequest(instructionToExecute);
-    } else {
-        DEBUG_LOG(debugLog("No instruction to execute."));
-    }
+    sendRequestToExecuteEngine(instructionToExecute, executeEngine.sendExecutionRequest, "Execution");
 
 }
 
@@ -87,17 +85,7 @@ void PipelineScheduler::sendMemoryAccessRequestToExecuteEngine()
     MemoryStage& memoryStage = pipeline.memoryStage;
     ExecuteEngine& executeEngine = pipeline.executeEngine;
     Instruction* instructionToMemory = memoryStage.peekInstruction();
-    DEBUG_LOG(debugLog("Memory stage processing..."));
-
-    if (instructionToMemory) {
-        if (instructionToMemory->isEmpty()) {
-            DEBUG_LOG(debugLog("Instruction is empty. No memory access needed."));
-            return;
-        }
-        executeEngine.sendMemoryAccessRequest(instructionToMemory);
-    } else {
-        DEBUG_LOG(debugLog("No instruction to access memory."));
-    }
+    sendRequestToExecuteEngine(instructionToMemory, executeEngine.sendMemoryAccessRequest, "Memory Access");
     
 }
 
@@ -108,17 +96,7 @@ void PipelineScheduler::sendWriteBackRequestToExecuteEngine()
     WriteBackStage& writeBackStage = pipeline.writeBackStage;
     ExecuteEngine& executeEngine = pipeline.executeEngine;
     Instruction* instructionToWriteBack = writeBackStage.peekInstruction();
-    DEBUG_LOG(debugLog("Write-Back stage processing..."));
-
-    if (instructionToWriteBack) {
-        if (instructionToWriteBack->isEmpty()) {
-            DEBUG_LOG(debugLog("Instruction is empty. No write-back needed."));
-            return;
-        }
-        executeEngine.sendWriteBackRequest(instructionToWriteBack);
-    } else {
-        DEBUG_LOG(debugLog("No instruction to write back."));
-    }
+    sendRequestToExecuteEngine(instructionToWriteBack, executeEngine.sendWriteBackRequest, "Write Back");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

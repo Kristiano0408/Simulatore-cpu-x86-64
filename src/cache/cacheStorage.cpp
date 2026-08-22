@@ -1,11 +1,11 @@
 #include "cache/cacheStorage.hpp"
 
 
-CacheStorage::CacheStorage(uint8_t numSets, uint8_t associativity)
+CacheStorage::CacheStorage(uint32_t numSets, uint8_t associativity)
 {
     sets.resize(numSets); // Resize the vector of cache sets based on the number of sets
 
-    for (uint8_t i = 0; i < numSets; ++i)
+    for (uint32_t i = 0; i < numSets; ++i)
     {
         sets[i].setIndex = i; // Initialize the set index for each cache set
         sets[i].lines.resize(associativity); // Resize the vector of cache lines in each set based on the associativity
@@ -20,7 +20,7 @@ CacheStorage::CacheStorage(uint8_t numSets, uint8_t associativity)
     }
 }
 
-CacheLine* CacheStorage::findLine(uint8_t setIndex, uint64_t tag)
+CacheLine* CacheStorage::findLine(uint32_t setIndex, uint64_t tag)
 {
     CacheSet& set = sets[setIndex]; // Get the cache set based on the set index
 
@@ -35,17 +35,17 @@ CacheLine* CacheStorage::findLine(uint8_t setIndex, uint64_t tag)
     return nullptr; // Return nullptr if no matching line is found
 }
 
-int8_t CacheStorage::findLineIndex(uint8_t setIndex, uint64_t tag)
+int8_t CacheStorage::findLineIndex(uint32_t setIndex, uint64_t tag)
 {
     CacheSet& set = sets[setIndex];
-    for (uint8_t i = 0; i < set.lines.size(); ++i)
+    for (size_t i = 0; i < set.lines.size(); ++i)
         if (set.lines[i].valid && set.lines[i].tag == tag)
-            return i;
+            return static_cast<int8_t>(i);
 
     return -1; // miss
 }
 
-void CacheStorage::invalidateLine(uint8_t setIndex, uint8_t lineIndex)
+void CacheStorage::invalidateLine(uint32_t setIndex, uint8_t lineIndex)
 {
     CacheSet& set = sets[setIndex]; // Get the cache set based on the set index
     CacheLine& line = set.lines[lineIndex]; // Get the cache line based on the line index
@@ -59,9 +59,9 @@ void CacheStorage::invalidateLine(uint8_t setIndex, uint8_t lineIndex)
 
 void CacheStorage::invalidateAllLines()
 {
-    for (uint8_t i = 0; i < sets.size(); ++i) // Loop through all cache sets
+    for (uint32_t i = 0; i < sets.size(); ++i) // Loop through all cache sets
     {
-        for (uint8_t j = 0; j < sets[i].lines.size(); ++j) // Loop through all lines in the cache set
+        for (uint8_t j = 0; j < uint8_t(sets[i].lines.size()); ++j) // Loop through all lines in the cache set
         {
             invalidateLine(i, j); // Invalidate each line in the cache set
         }
@@ -76,11 +76,11 @@ void CacheStorage::invalidateLineByAddress(AddressInfo addressInfo)
     if (lineIndex < 0) [[unlikely]] // If no matching line is found, return without invalidating
         return;
 
-    invalidateLine(addressInfo.setIndex, lineIndex); // Invalidate the specific cache line based on the set index and line index
+    invalidateLine(addressInfo.setIndex, (uint8_t)lineIndex); // Invalidate the specific cache line based on the set index and line index
 }
 
 
-void CacheStorage::loadLine(uint8_t setIndex, const CacheLine& line, uint8_t lineIndex)
+void CacheStorage::loadLine(uint32_t setIndex, const CacheLine& line, uint8_t lineIndex)
 {
     CacheSet& set = sets[setIndex]; // Get the cache set based on the set index
     CacheLine& targetLine = set.lines[lineIndex]; // Get the target cache line based on the line index

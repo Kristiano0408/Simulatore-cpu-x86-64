@@ -1,12 +1,11 @@
 #ifndef CACHE_TYPES_HPP
 #define CACHE_TYPES_HPP
 
-#include <cstdint>
-#include <functional>
-#include "types.hpp"
 #include "result.hpp"
+#include "types.hpp"
+#include <cstdint>
 
-// Request type enumeration 
+// Request type enumeration
 enum class RequestType : uint8_t
 {
     READ,
@@ -18,12 +17,12 @@ enum class RequestType : uint8_t
     PREFETCH, // For prefetching cache lines
     NONE,
     WRITE_BACK, // For writing back dirty cache lines to lower levels or RAM
-    //LINE_FROM_RAM // For getting lines on l3 misses
+    // LINE_FROM_RAM // For getting lines on l3 misses
 };
 
 ////////////////////////////////////////////////////////////////////////////7
 
-//RequestState enum class 
+// RequestState enum class
 enum class RequestState : uint8_t
 {
     WAITING_LATENCY,
@@ -55,14 +54,13 @@ enum class TypeofData : uint8_t
 struct AddressInfo
 {
     uint64_t address;
-    uint64_t setIndex;
+    uint32_t setIndex;
     uint64_t tag;
     uint64_t offset;
 
-    AddressInfo(uint64_t addr, uint64_t setIdx, uint64_t tg, uint64_t off)
-        : address(addr), setIndex(setIdx), tag(tg), offset(off) {}
+    AddressInfo(uint64_t addr, uint32_t setIdx, uint64_t tg, uint64_t off) : address(addr), setIndex(setIdx), tag(tg), offset(off) {}
 
-    ///AddressInfo() : address(0), setIndex(0), tag(0), offset(0) {}
+    /// AddressInfo() : address(0), setIndex(0), tag(0), offset(0) {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +71,7 @@ enum class CacheLevelType : uint8_t
     L1D,
     L2,
     L3,
-    NONE //placeholder for basic class
+    NONE // placeholder for basic class
 
 };
 
@@ -89,24 +87,20 @@ enum class LookUpResult : uint8_t
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//basic structure for the cache line
-//it contains the data, the tag, the valid bit and the dirty bit
+// basic structure for the cache line
+// it contains the data, the tag, the valid bit and the dirty bit
 struct CacheLine // in caso separare metadati da dati per cache locability
 {
-    alignas(CACHE_LINE_SIZE) LineData data;  // Data stored in the cache line
+    alignas(CACHE_LINE_SIZE) LineData data; // Data stored in the cache line
 
     uint64_t tag;
     uint64_t lastAccessTime; // use it as a counter for replacement policy, syncronized with clock when access
 
     bool valid;
     bool dirty; // Indicates if the line has been modified
-   
 
     CacheLine() : data{}, tag{}, lastAccessTime{}, valid(false), dirty(false) {}
-
-
 };
-
 
 /// Cache set structure
 /// Contains multiple cache lines and the set index
@@ -120,46 +114,43 @@ struct CacheSet
 
 struct CacheRequest
 {
-    using CallbackType = void(*)(void* context); // Callback function type for request completion
+    using CallbackType = void (*)(void* context); // Callback function type for request completion
 
-    uint64_t address = 0; // Memory address
-    MaxCPUInstructionLength data{}; // Data for write requests (up to 15 bytes, maximun size for an instruction with prefixes and opcode, 16 bytes to align)
-    uint64_t requestID = 0; // Unique ID for the request
-    void* callbackContext = nullptr; // Context pointer for the callback function
-    CallbackType callback = nullptr; // Callback function to be called when the request is completed
-    bool completed = false; // Indicates if the request has been completed
-    RequestType type = RequestType::NONE; // Type of request (READ or WRITE)
+    uint64_t address = 0;                      // Memory address
+    MaxCPUInstructionLength data{};            // Data for write requests (up to 15 bytes, maximun size for an instruction with prefixes and opcode, 16 bytes to align)
+    uint64_t requestID = 0;                    // Unique ID for the request
+    void* callbackContext = nullptr;           // Context pointer for the callback function
+    CallbackType callback = nullptr;           // Callback function to be called when the request is completed
+    bool completed = false;                    // Indicates if the request has been completed
+    RequestType type = RequestType::NONE;      // Type of request (READ or WRITE)
     TypeofData dataType = TypeofData::UNKNOWN; // Type of data for the request
     CacheLevelType typeofL1 = CacheLevelType::NONE;
 
-    CacheRequest():  address(0), data{}, requestID(0), callbackContext(nullptr), callback(nullptr), completed(false), type(RequestType::NONE), dataType(TypeofData::UNKNOWN), typeofL1(CacheLevelType::NONE){}
+    CacheRequest(RequestType requestType, TypeofData tData, CacheLevelType L1Type, uint64_t addr, const MaxCPUInstructionLength& d, bool requestCompleted, uint64_t ID,
+                 void* ctx, CallbackType callbackFunc)
+        : address(addr), data(d), requestID(ID), callbackContext(ctx), callback(callbackFunc), completed(requestCompleted), type(requestType), dataType(tData),
+          typeofL1(L1Type)
+    {
+    }
 
-    CacheRequest(RequestType type, TypeofData dataType, CacheLevelType typeofL1, uint64_t address, const MaxCPUInstructionLength& data, bool completed, uint64_t requestID, void* callbackContext, CallbackType callback)
-        : address(address), data(data), requestID(requestID), callbackContext(callbackContext), callback(callback), completed(completed), type(type), dataType(dataType), typeofL1(typeofL1) {}
+    CacheRequest() : type(RequestType::NONE), dataType(TypeofData::UNKNOWN), typeofL1(CacheLevelType::NONE) {}
 };
 
 struct PendingRequest
-{   
-    
-    CacheLine line= CacheLine{}; //copy of the line 
+{
+
+    CacheLine line; // copy of the line
     CacheRequest request;
     uint16_t remainingLatency; // Remaining latency in ticks
     RequestState state = RequestState::IDLE;
-    
-    
 
-    PendingRequest(CacheRequest&& req, uint16_t latency)
-        : request(std::move(req)), remainingLatency(latency) {}
+    PendingRequest(CacheRequest&& req, uint16_t latency) : request(req), remainingLatency(latency) {}
 
-    PendingRequest(CacheRequest&& req, uint16_t latency, CacheLine res)
-        : line(std::move(res)), request(std::move(req)), remainingLatency(latency)  {}
-    PendingRequest(CacheRequest&& req, uint16_t latency, RequestState st)
-        : request(std::move(req)), remainingLatency(latency), state(st) {}
-    PendingRequest(CacheRequest&& req, CacheLine res)
-        : line(std::move(res)), request(std::move(req)) {}
-    PendingRequest() = default;
+    PendingRequest(CacheRequest&& req, uint16_t latency, CacheLine res) : line(res), request(req), remainingLatency(latency) {}
+    PendingRequest(CacheRequest&& req, uint16_t latency, RequestState st) : request(req), remainingLatency(latency), state(st) {}
+    PendingRequest(CacheRequest&& req, CacheLine res) : line(res), request(req) {}
+    PendingRequest() : remainingLatency(0) {}
 };
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -183,20 +174,6 @@ struct CacheLookupPayload
     CacheLookupPayload(const AddressInfo& addrInfo, TypeofData dt) : addressInfo(addrInfo), dataType(dt) {}
 };
 
-
-
-
-
-
-
 ComponentType getComponentTypeFromCacheLevelType(CacheLevelType type);
-
-
-
-
-
-
-
-
 
 #endif // CACHE_TYPES_HPP

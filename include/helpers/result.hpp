@@ -1,7 +1,7 @@
 #ifndef RESULT_HPP
 #define RESULT_HPP
 
-#include <string>
+
 #include <cstdint>
 
 enum class ComponentType : uint8_t

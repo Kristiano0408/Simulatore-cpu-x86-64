@@ -1,192 +1,121 @@
 #include "memory.hpp"
-#include "cpu.hpp"
-#include <cmath>
 #include "bus.hpp"
+#include "cpu.hpp"
 #include "eventLog.hpp"
-//ricordarsi di convertire indirizzi dec per accedere al vettore e in binario per utilizzare l'indirizzo
+#include <algorithm>
+#include <cmath>
+// ricordarsi di convertire indirizzi dec per accedere al vettore e in binario per utilizzare l'indirizzo
 
-//ricordasri controllo offset e size per evitare buffer overflow
+// ricordasri controllo offset e size per evitare buffer overflow
 
-//Constructor
-Memory::Memory(size_t size, Bus& bus): data{}, RSP(bus.getCPU().getRegisters().getReg(Register::RSP).raw()), RBP(bus.getCPU().getRegisters().getReg(Register::RBP).raw())
+// Constructor
+Memory::Memory(size_t memorySize, Bus& busRef) : RSP(busRef.getCPU().getRegisters().getReg(Register::RSP).raw()), RBP(busRef.getCPU().getRegisters().getReg(Register::RBP).raw())
 {
 
-    data.resize(size, 0); //initialize the memory with 0
-    this->size = size;
-    size_stack = size / 4; //initialize the stack size to 1/4 of the memory size
-    RSP = this->size - 1; //initialize the stack pointer to the end of the memory
-    RBP = this->size - 1; //initialize the base pointer to the end of the memory
-
-
+    data.resize(memorySize, 0); // initialize the memory with 0
+    this->size = memorySize;
+    size_stack = memorySize / 4; // initialize the stack size to 1/4 of the memory size
+    RSP = this->size - 1;  // initialize the stack pointer to the end of the memory
+    RBP = this->size - 1;  // initialize the base pointer to the end of the memory
 };
 
-
-//get the size of the memory
-size_t Memory::getSize() const
+void Memory::setDataPartial(const std::vector<uint8_t>& newData, size_t offset)
 {
-    return size;
-};
-
-//get the data of the memory
-const std::vector<uint8_t>& Memory::getData() const
-{
-    return data;
-};
-
-//set the data of the memory
-void Memory::setData(const std::vector<uint8_t>& data)
-{
-    this->data = data;
-};
-
-void Memory::setDataPartial(const std::vector<uint8_t>& newData, size_t offset) {
-    std::copy(newData.begin(), newData.end(), data.begin() + offset);
+    std::ranges::copy(newData, data.begin() + static_cast<std::ptrdiff_t>(offset));
 }
 
-
-//clear the memory
+// clear the memory
 void Memory::clear()
 {
     data.clear();
     data.resize(size, 0);
 };
 
-void Memory::setStackPointer(uint64_t value)
-{
-    RSP = value;
-};
+#define pushResultSuccess(line, address)                                                                                                                                           \
+    result.success = true;                                                                                                                                                         \
+    result.errorInfo.source = ComponentType::RAM;                                                                                                                                  \
+    result.errorInfo.event = EventType::RAM_ACCESS;                                                                                                                                \
+    result.errorInfo.error = ErrorType::NONE;                                                                                                                                      \
+    EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), &(line), address);
 
-uint64_t Memory::getStackPointer() const
-{
-    return RSP;
-};
+#define pushResultFailure(address)                                                                                                                                                 \
+    result.success = false;                                                                                                                                                        \
+    result.errorInfo.source = ComponentType::RAM;                                                                                                                                  \
+    result.errorInfo.event = EventType::ERROR;                                                                                                                                     \
+    result.errorInfo.error = ErrorType::INVALID_ADDRESS;                                                                                                                           \
+    EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), address);
 
-void Memory::setBasePointer(uint64_t value)
-{
-    RBP = value;
-};
-
-uint64_t Memory::getBasePointer() const
-{
-    return RBP;
-};
-
-
-
-//da sistemare
-void Memory::push( uint64_t value)
+// da sistemare
+void Memory::push(uint64_t value)
 {
     Result result{};
 
-
-    //controllo overflow
-    if (RSP - 8 < size - size_stack) //check if the stack pointer is out of bounds
+    // controllo overflow
+    if (RSP - 8 < size - size_stack) // check if the stack pointer is out of bounds
     {
-        result.success = false;
-        result.errorInfo.source = ComponentType::RAM;
-        result.errorInfo.event = EventType::ERROR;
-        result.errorInfo.error = ErrorType::STACK_OVERFLOW;
-        EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), RSP);
-
-        return;
+        pushResultFailure(RSP) return;
     }
 
-    RSP -= 8; //decrement the stack pointer
-    uint64_t lineAddress = RSP - (RSP % CACHE_LINE_SIZE); //calculate the start of the line address to write to the stack
-    LineData lineData = read(lineAddress); //read the line from memory
-    std::memcpy(&lineData[RSP % CACHE_LINE_SIZE], &value, sizeof(value)); //copy the value to the line data
-    write(lineAddress, lineData); 
+    RSP -= 8;                                                             // decrement the stack pointer
+    uint64_t lineAddress = RSP - (RSP % CACHE_LINE_SIZE);                 // calculate the start of the line address to write to the stack
+    LineData lineData = read(lineAddress);                                // read the line from memory
+    std::memcpy(&lineData[RSP % CACHE_LINE_SIZE], &value, sizeof(value)); // copy the value to the line data
+    write(lineAddress, lineData);
 
-    result.success = true;
-    result.errorInfo.source = ComponentType::RAM;
-    result.errorInfo.event = EventType::RAM_ACCESS;
-    result.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), &lineData, RSP);
-
+    pushResultSuccess(lineData, RSP);
 };
 
-
-
-///da sistemare
+/// da sistemare
 uint64_t Memory::pop()
 {
     uint64_t value{};
     LineData readResult{};
     Result result{};
 
-    //controllo underflow
-    if (RSP > size - 8) //check if the stack pointer is out of bounds
+    // controllo underflow
+    if (RSP > size - 8) // check if the stack pointer is out of bounds
     {
-        result.success = false;
-        result.errorInfo.source = ComponentType::RAM;
-        result.errorInfo.event = EventType::ERROR;
-        result.errorInfo.error = ErrorType::STACK_OVERFLOW;
-        EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), RSP);
-        return value;
+        pushResultFailure(RSP) return value;
     }
 
-    //calculating the start of the line address to read from the stack
+    // calculating the start of the line address to read from the stack
 
-    uint64_t lineAddress = RSP - (RSP % CACHE_LINE_SIZE); //calculate the start of the line address to read from the stack
+    uint64_t lineAddress = RSP - (RSP % CACHE_LINE_SIZE); // calculate the start of the line address to read from the stack
 
     readResult = read(lineAddress);
 
-    result.success = true;
-    result.errorInfo.source = ComponentType::RAM;
-    result.errorInfo.event = EventType::RAM_ACCESS;
-    result.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), &readResult, RSP);
-   
-    return value;
-   
+    pushResultSuccess(readResult, RSP)
+
+        return value;
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-LineData Memory::read(uint64_t addressLine) 
+LineData Memory::read(uint64_t addressLine)
 {
-    LineData lineData {};
+    LineData lineData{};
     Result result{};
-    
-    if (addressLine + sizeof(LineData) > size) //check if the address is out of bounds
+
+    if (addressLine + sizeof(LineData) > size) // check if the address is out of bounds
     {
-        result.success = false;
-        result.errorInfo.source = ComponentType::RAM;
-        result.errorInfo.event = EventType::ERROR;
-        result.errorInfo.error = ErrorType::INVALID_ADDRESS;
-        EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), addressLine);
-        return lineData;
-        
+        pushResultFailure(addressLine) return lineData;
     }
     std::memcpy(lineData.data(), &data[addressLine], sizeof(LineData));
-   
-    result.success = true;
-    result.errorInfo.source = ComponentType::RAM;
-    result.errorInfo.event = EventType::RAM_ACCESS;
-    result.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), &lineData, addressLine);
-    return lineData;
+
+    pushResultSuccess(lineData, addressLine)
+
+        return lineData;
 }
 
 void Memory::write(uint64_t addressLine, LineData line)
 {
     Result result{};
-    if (addressLine + sizeof(LineData) > size) //check if the address is out of bounds
+    if (addressLine + sizeof(LineData) > size) // check if the address is out of bounds
     {
-        result.success = false;
-        result.errorInfo.source = ComponentType::RAM;
-        result.errorInfo.event = EventType::ERROR;
-        result.errorInfo.error = ErrorType::INVALID_ADDRESS;
-        EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), addressLine);
-        return;
+        pushResultFailure(addressLine) return;
     }
 
     std::memcpy(&data[addressLine], &line, sizeof(LineData));
 
-    result.success = true;
-    result.errorInfo.source = ComponentType::RAM;
-    result.errorInfo.event = EventType::RAM_ACCESS;
-    result.errorInfo.error = ErrorType::NONE;
-    EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), &line, addressLine);
-  
+    pushResultSuccess(line, addressLine)
 }

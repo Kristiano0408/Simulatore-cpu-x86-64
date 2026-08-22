@@ -1,9 +1,11 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 #include <cstddef>
-#include <compare>
 #include "maskAndConst.hpp"
-#include "debug.hpp"
+#include <array>
+#include <cstdint>
+#include <vector>
+#include <iostream>
 
 #ifdef DEBUG
 #define DEBUG_LOG(x) x
@@ -114,7 +116,7 @@ class FixedSizeQueueCacheFriendly
 
         size_t size() const
         {
-            return tail - head; // Return the current size of the queue
+            return (tail - head + N) % N; // Return the current size of the queue
         }
 
         bool isFull() const

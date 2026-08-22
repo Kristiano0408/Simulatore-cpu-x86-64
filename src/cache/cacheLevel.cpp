@@ -2,8 +2,8 @@
 #include "bus.hpp"
 #include "eventLog.hpp"
 
-CacheLevel::CacheLevel(uint32_t size, uint8_t associativity, uint8_t latency, uint8_t fillLatency, Bus& bus, CacheLevel *nextLevel, CacheLevel* parentLevel1, CacheLevel* parentLevel2, CacheLevelType cacheType, std::array<CacheLevel*, 2> L1Ipath, std::array<CacheLevel*, 2> L1Dpath)
-    : cacheSize(size), numSets(size / (associativity * CACHE_LINE_SIZE)), bus(bus), nextLevel(nextLevel), parentLevel1(parentLevel1), parentLevel2(parentLevel2), L1Ipath(L1Ipath), L1Dpath(L1Dpath), associativity(associativity), latencyCycles(latency), latencyFill(fillLatency), type(cacheType),
+CacheLevel::CacheLevel(uint64_t size, uint8_t associativity, uint8_t latency, uint8_t fillLatency, Bus& bus, CacheLevel *nextLevel, CacheLevel* parentLevel1, CacheLevel* parentLevel2, CacheLevelType type, std::array<CacheLevel*, 2> L1Icourse, std::array<CacheLevel*, 2> L1Dcourse)
+    : cacheSize(size), numSets((uint32_t)(size / (associativity * CACHE_LINE_SIZE))), bus(bus), nextLevel(nextLevel), parentLevel1(parentLevel1), parentLevel2(parentLevel2), L1Ipath(L1Icourse), L1Dpath(L1Dcourse), associativity(associativity), latencyCycles(latency), latencyFill(fillLatency), type(type),
     storage(numSets, associativity), controller(eventHandler, numSets), scheduler(latencyCycles, fillLatency, &CacheController::CallBackWrapperScheduler, static_cast<void*>(&this->controller))
 {
     DEBUG_LOG(debugLog("inizializzazione cache level"));
@@ -16,7 +16,7 @@ CacheLevel::CacheLevel(uint32_t size, uint8_t associativity, uint8_t latency, ui
     eventHandler.registerHandleRequestEvent(EventHandlerCacheEventType::CACHE_MISS, &CacheLevel::onMissWrapper); // Register the onMissWrapper function to handle cache miss events
     eventHandler.registerHandleRequestEvent(EventHandlerCacheEventType::CACHE_HIT_CROSS_LINES, &CacheLevel::onHitCrossLinesWrapper); // Register the onHitCrossLinesWrapper function to handle cache hit cross lines events
     eventHandler.registerHandleRequestEvent(EventHandlerCacheEventType::CACHE_FILL, &CacheLevel::onFillWrapper); // Register the onFillWrapper function to handle filling a cache line with data from the next level or memory based on the cache request and address
-    eventHandler.registerLookupCacheEvent(&CacheLevel::LookupWrapper); // Register the LookupWrapper function to handle cache lookup events
+    eventHandler.registerLookupCacheEvent(&CacheLevel::lookupWrapper); // Register the lookupWrapper function to handle cache lookup events
 
     
     DEBUG_LOG(debugLog("inizializzazione cache level completata"));
@@ -50,7 +50,7 @@ void CacheLevel::onFillWrapper(void* context, CacheEventPayload& payload)
     cacheLevel->onFill(payload.addressInfo1, payload.request, *(payload.line)); // Call the onFill function to handle filling a cache line with data from the next level or memory based on the cache request and address information
 }
 
-LookUpResult CacheLevel::LookupWrapper(void* context, CacheLookupPayload& payload)
+LookUpResult CacheLevel::lookupWrapper(void* context, CacheLookupPayload& payload)
 {
     DEBUG_LOG(debugLog("lookup cache"));
     CacheLevel* cacheLevel = static_cast<CacheLevel*>(context); // Cast the context pointer to a CacheLevel pointer
@@ -116,8 +116,7 @@ LookUpResult CacheLevel::lookupCache(const AddressInfo& addressInfo, TypeofData 
             EventLog::getInstance().pushCacheDataLogEntry({std::move(result)}, nullptr, nullptr, addressInfo, AddressInfo(0, 0, 0, 0)); // Log the cache hit event with the address and data from the cache line
             return LookUpResult::HIT; // Return HIT if it's a hit within a single cache line
         }
-        else
-        {
+        
             AddressInfo addressInfo2 = controller.decodeAddress(addressInfo.address + (CACHE_LINE_SIZE - addressInfo.offset)); // Decode the address of the second cache line for cross-line access
             line2 = storage.findLine(addressInfo2.setIndex, addressInfo2.tag); // Find the second cache line for cross-line access based on the next set index and the same tag
             if (line2 != nullptr) // If a matching second cache line is found for cross-line access
@@ -136,17 +135,16 @@ LookUpResult CacheLevel::lookupCache(const AddressInfo& addressInfo, TypeofData 
             EventLog& log = EventLog::getInstance();
             log.pushCacheDataLogEntry({std::move(result)}, static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo(uint64_t(0), uint64_t(0), uint64_t(0), uint64_t(0))); // Log the cache miss event with the address and data from the first cache line
             return LookUpResult::MISS; // Return MISS if the second cache line for cross-line access is not found, indicating a miss across two cache lines
-        }
+       
     }
-    else
-    {
+    
         result.success = false; // Set the result to failure for a miss within a single cache line
         result.errorInfo.source = getComponentTypeFromCacheLevelType(type); // Set the source of the error information based on the cache level type
         result.errorInfo.event = EventType::CACHE_MISS;
         result.errorInfo.error = ErrorType::OUT_OF_BOUNDS;
         EventLog::getInstance().pushCacheDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), static_cast<LineData*>(nullptr), addressInfo, AddressInfo(uint64_t(0), uint64_t(0), uint64_t(0), uint64_t(0))); // Log the cache miss event with the address and data from the first cache line
         return LookUpResult::MISS; // Return MISS if no matching cache line is found
-    }
+   
 }
 
 void CacheLevel::onHit(const AddressInfo& addressInfo, CacheRequest& request)
@@ -169,7 +167,7 @@ void CacheLevel::onHit(const AddressInfo& addressInfo, CacheRequest& request)
         {
             //error Hendling
         }
-        replacementPolicy->updateOnAccess(storage.getSet(addressInfo.setIndex), lineIndex);
+        replacementPolicy->updateOnAccess(storage.getSet(addressInfo.setIndex), (uint8_t)lineIndex);
         CacheLine* line = storage.findLine(addressInfo.setIndex, addressInfo.tag);
 
         
@@ -254,7 +252,7 @@ void CacheLevel::onHitCrossLines(const AddressInfo& addressInfo1, const AddressI
         {
             //error Hendling
         }
-        replacementPolicy->updateOnAccess(storage.getSet(addressInfo1.setIndex), lineIndex1);
+        replacementPolicy->updateOnAccess(storage.getSet(addressInfo1.setIndex), (uint8_t)lineIndex1);
         CacheLine* line1 = storage.findLine(addressInfo1.setIndex, addressInfo1.tag);
 
 
@@ -263,7 +261,7 @@ void CacheLevel::onHitCrossLines(const AddressInfo& addressInfo1, const AddressI
         {
             //error Hendling
         }
-        replacementPolicy->updateOnAccess(storage.getSet(addressInfo2.setIndex), lineIndex2);
+        replacementPolicy->updateOnAccess(storage.getSet(addressInfo2.setIndex), (uint8_t)lineIndex2);
         CacheLine* line2 = storage.findLine(addressInfo2.setIndex, addressInfo2.tag);
 
         request.typeofL1 == CacheLevelType::L1I ? fillToL1Idouble(line1, line2, addressInfo1, addressInfo2) : fillToL1Ddouble(line1, line2, addressInfo1, addressInfo2);
@@ -430,7 +428,7 @@ void CacheLevel::readCrossLines(const AddressInfo& addressInfo1, const AddressIn
 
     bus.getCPU().cacheResponseQueue[request.requestID] =std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
 
-    if(success && request.callback) // If the request was successful and there is a callback function defined for the request
+    if(success && (request.callback != nullptr)) // If the request was successful and there is a callback function defined for the request
     {
         request.callback(request.callbackContext);
     }
@@ -478,7 +476,7 @@ void CacheLevel::writeSingleLine(const AddressInfo& addressInfo, CacheRequest& r
 
     bus.getCPU().cacheResponseQueue[request.requestID] = std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
 
-    if(success && request.callback) // If the request was successful and there is a callback function defined for the request
+    if(success && (request.callback != nullptr)) // If the request was successful and there is a callback function defined for the request
     {
         request.callback(request.callbackContext);
     }
@@ -529,7 +527,7 @@ void CacheLevel::writeCrossLines(const AddressInfo& addressInfo1, const AddressI
 
     bus.getCPU().cacheResponseQueue[request.requestID] = std::move(response); // Add the completed request to the CPU's cache response queue for further processing by the CPU
 
-    if(success && request.callback) // If the request was successful and there is a callback function defined for the request
+    if(success && (request.callback != nullptr)) // If the request was successful and there is a callback function defined for the request
     {
         request.callback(request.callbackContext);
     }
@@ -548,8 +546,8 @@ void CacheLevel::onFill(const AddressInfo& addressInfo, [[maybe_unused]] CacheRe
     if(victim.valid && victim.dirty)
     {
         Result resultEviction{};
-        uint8_t offsetBits = std::countr_zero(CACHE_LINE_SIZE); // Calculate the number of offset bits based on the cache line size using std::countr_zero to count trailing zeros
-        uint8_t setIndexBits = std::countr_zero(numSets); // Calculate the number of set index bits based on the number of sets in the cache using std::countr_zero to count trailing zeros
+        auto offsetBits = (uint8_t)std::countr_zero(CACHE_LINE_SIZE); // Calculate the number of offset bits based on the cache line size using std::countr_zero to count trailing zeros
+        auto setIndexBits = (uint8_t)std::countr_zero(numSets); // Calculate the number of set index bits based on the number of sets in the cache using std::countr_zero to count trailing zeros
         uint64_t victimAddress = (victim.tag << (offsetBits + setIndexBits)) | (addressInfo.setIndex << offsetBits);
         resultEviction.success = true;
         resultEviction.errorInfo.source = getComponentTypeFromCacheLevelType(type);
@@ -609,7 +607,7 @@ void CacheLevel::fillToL1D(CacheLine* line, const AddressInfo& addressInfo)
             fillRequest.typeofL1 = CacheLevelType::NONE;
             PendingRequest fillPendingRequest = PendingRequest();
             fillPendingRequest.line = *line;
-            fillPendingRequest.request = std::move(fillRequest);
+            fillPendingRequest.request = fillRequest;
             
             return fillPendingRequest;
         };
@@ -634,7 +632,7 @@ void CacheLevel::fillToL1I(CacheLine* line, const AddressInfo& addressInfo)
             fillRequest.typeofL1 = CacheLevelType::NONE;
             PendingRequest fillPendingRequest = PendingRequest();
             fillPendingRequest.line = *line;
-            fillPendingRequest.request = std::move(fillRequest);
+            fillPendingRequest.request = fillRequest;
             
             return fillPendingRequest;
         };
@@ -659,7 +657,7 @@ void CacheLevel::fillToL1Idouble(CacheLine* line1, CacheLine* line2, const Addre
             fillRequest.typeofL1 = CacheLevelType::NONE;
             PendingRequest fillPendingRequest = PendingRequest();
             fillPendingRequest.line = *line1;
-            fillPendingRequest.request = std::move(fillRequest);
+            fillPendingRequest.request = fillRequest;
             
             return fillPendingRequest;
         };
@@ -673,7 +671,7 @@ void CacheLevel::fillToL1Idouble(CacheLine* line1, CacheLine* line2, const Addre
             fillRequest.typeofL1 = CacheLevelType::NONE;
             PendingRequest fillPendingRequest = PendingRequest();
             fillPendingRequest.line = *line2;
-            fillPendingRequest.request = std::move(fillRequest);
+            fillPendingRequest.request = fillRequest;
             
             return fillPendingRequest;
         };
@@ -699,7 +697,7 @@ void CacheLevel::fillToL1Ddouble(CacheLine* line1, CacheLine* line2, const Addre
             fillRequest.typeofL1 = CacheLevelType::NONE;
             PendingRequest fillPendingRequest = PendingRequest();
             fillPendingRequest.line = *line1;
-            fillPendingRequest.request = std::move(fillRequest);
+            fillPendingRequest.request = fillRequest;
             
             return fillPendingRequest;
         };
@@ -713,7 +711,7 @@ void CacheLevel::fillToL1Ddouble(CacheLine* line1, CacheLine* line2, const Addre
             fillRequest.typeofL1 = CacheLevelType::NONE;
             PendingRequest fillPendingRequest = PendingRequest();
             fillPendingRequest.line = *line2;
-            fillPendingRequest.request = std::move(fillRequest);
+            fillPendingRequest.request = fillRequest;
             
             return fillPendingRequest;
         };

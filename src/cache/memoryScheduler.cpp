@@ -6,17 +6,17 @@ void MemoryScheduler::scheduleMemoryRequest(CacheRequest&& request)
 {
     DEBUG_LOG(debugLog("richeista inserita in ram"));
     PendingRequest pendingRequest = PendingRequest(); // Create a new pending memory request to be scheduled for processing by the memory scheduler
-    pendingRequest.request = std::move(request);   
+    pendingRequest.request = request;   
     pendingRequest.remainingLatency = memoryLatency; // Set the remaining latency for the memory request based on the specified memory latency
     pendingRequest.state = RequestState::WAITING_LATENCY; // Set the initial state of the memory request to WAITING_LATENCY to indicate that it is waiting for the specified memory latency before being processed
-    memoryRequestQueue.push_back(std::move(pendingRequest)); // Add the pending memory request to the queue of pending requests to be processed by the memory scheduler
+    memoryRequestQueue.push_back(pendingRequest); // Add the pending memory request to the queue of pending requests to be processed by the memory scheduler
 }
 
 void MemoryScheduler::schedulePendingRequest(PendingRequest&& pendingRequest)
 {
     pendingRequest.remainingLatency = memoryLatency; // Set the remaining latency for the pending request based on the specified memory latency
     pendingRequest.state = RequestState::WAITING_LATENCY; // Set the initial state of the pending request to WAITING_LATENCY to indicate that it is waiting for the specified memory latency before being processed
-    memoryRequestQueue.push_back(std::move(pendingRequest)); // Add the pending request to the queue of pending requests to be processed by the memory scheduler
+    memoryRequestQueue.push_back(pendingRequest); // Add the pending request to the queue of pending requests to be processed by the memory scheduler
 }
 
 void MemoryScheduler::processMemoryRequests()
@@ -79,8 +79,8 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
                     line.data = readResponse;
 
                     auto fillPendingRequest = PendingRequest();
-                    fillPendingRequest.line= std::move(line);
-                    fillPendingRequest.request = std::move(fillRequest);
+                    fillPendingRequest.line= line;
+                    fillPendingRequest.request = fillRequest;
 
                     return fillPendingRequest;
 
@@ -138,8 +138,8 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
                 line.data = readResponse;
 
                 auto fillPendingRequest = PendingRequest();
-                fillPendingRequest.request = std::move(fillRequest);
-                fillPendingRequest.line = std::move(line);
+                fillPendingRequest.request = fillRequest;
+                fillPendingRequest.line = line;
 
                 DEBUG_LOG(debugLog("invio fill L3"));
                 bus.getCPU().getCacheManager().getL3Cache().schedulePendingRequest(std::move(fillPendingRequest));

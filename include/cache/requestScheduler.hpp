@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include <vector>
-#include "helpers.hpp"
 #include "device.hpp"
 
 class RequestScheduler : public FaultDevice
@@ -19,7 +18,7 @@ class RequestScheduler : public FaultDevice
         void* CallbackContext; // Context pointer to be passed to the callback function for additional information or state management
         
         public:
-        RequestScheduler(uint8_t latency, uint8_t latencyFill, CallbackType cacheControllerCallback, void* context) : latency(latency), fillLatency(latencyFill), cacheControllerCallback(cacheControllerCallback), CallbackContext(context) {} // Constructor to initialize the request scheduler with a callback function for processing cache requests
+        RequestScheduler(uint8_t levelLatency, uint8_t fillL, CallbackType callback, void* context) : latency(levelLatency), fillLatency(fillL), cacheControllerCallback(callback), CallbackContext(context) {} // Constructor to initialize the request scheduler with a callback function for processing cache requests
         void processRequests(); // Function to be called every clock tick to process pending requests
         void scheduleRequest(CacheRequest&& request); // Function to schedule a cache request
         void schedulePendingRequest(PendingRequest&& pendingRequest); // Function to schedule a pending request
