@@ -1,5 +1,6 @@
 #include "operands.hpp"
 #include "addressCalculator.hpp"
+#include "helpers/decoderHelper.hpp"
 #include "instruction.hpp"
 #include "registerFile.hpp"
 // namespace for operand fetching

@@ -2,8 +2,8 @@
 
 int main() {
     
-    std::cout << sizeof(CacheManager) << std::endl;
-    std::cout << alignof(CacheManager) << std::endl;
+    std::cout << sizeof(CacheManager) << '\n';
+    std::cout << alignof(CacheManager) << '\n';
     
     return 0;
 }

@@ -4,10 +4,7 @@
 #ifndef DECODER_HPP
 #define DECODER_HPP
 
-#include <string>
 #include "instruction.hpp"
-#include <vector>
-#include "helpers.hpp"
 #include "device.hpp"
 #include <cstddef>
 
@@ -22,34 +19,34 @@ class Decoder : public FaultDevice
         ~Decoder() = default;
         
         //decode the instruction
-        InstructionInfo LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4], int numPrefixes, bool rex, uint16_t rexprefix);
-        void fixTotalLengthPrefix(InstructionInfo& info);
+        InstructionInfo lenghtOfInstruction(uint32_t opcode, const uint8_t prefix[4], uint8_t numPrefixes, bool rex, uint8_t rexprefix);
+        static void fixTotalLengthPrefix(InstructionInfo& info);
         std::unique_ptr<Instruction> decodeInstruction(InstructionInfo instruction);
          //decode the  r/m operand
         static r_m decodeRM(std::byte r_m);
         //decode the SIB operand
         static SIB decodeSIB(std::byte sib);
 
-        static void decodeInstructionOI(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
-        static void decodeInstructionMI(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
-        static void decodeInstructionMR(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
-        static void decodeInstructionRM(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
-        static void decodeInstructionFD(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
-        static void decodeInstructionTD(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
-        static void decodeInstructionI(Instruction* instruction, const InstructionInfo& instructionInfo, int position);
+        static void decodeInstructionOI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
+        static void decodeInstructionMI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
+        static void decodeInstructionMR(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
+        static void decodeInstructionRM(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
+        static void decodeInstructionFD(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
+        static void decodeInstructionTD(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
+        static void decodeInstructionI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
 
 
         
     private:
 
         //decode immediate value
-        static void decodeImmediateValue(InstructionInfo instructionInfo, Instruction* instruction, int position);
+        static void decodeImmediateValue(InstructionInfo instructionInfo, Instruction* instruction, uint8_t position);
         //setting the parameters of the instruction
-        void settingInstructionParameters(Instruction* instruction, InstructionInfo instructionInfo);
+        static void settingInstructionParameters(Instruction* instruction, InstructionInfo instructionInfo);
         //decode the displacement value
-        static uint64_t decodeDisplacement(InstructionInfo instruction, int& position, int size);
+        static uint64_t decodeDisplacement(InstructionInfo instruction, uint8_t& position, uint8_t size);
         //decode the RM type instruction
-        static void decode_RM_instruction(Instruction* instruction, InstructionInfo instructionInfo, int& position);
+        static void decodeRmInstruction(Instruction* instruction, InstructionInfo instructionInfo, uint8_t& position);
 
 
        

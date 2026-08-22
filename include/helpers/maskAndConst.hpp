@@ -2,6 +2,7 @@
 #define MASK_AND_CONST_HPP
 
 #include <cstdint>
+#include <cstddef>
 
 //defined constants
 inline constexpr size_t CACHE_LINE_SIZE = 64; // Size of a cache line in bytes
@@ -26,17 +27,17 @@ namespace ModRMMask
     inline constexpr uint8_t REG_SHIFT = 3;
     inline constexpr uint8_t RM_SHIFT  = 0;
 
-    [[nodiscard]] inline constexpr uint8_t extractMod(std::byte byte) 
+    [[nodiscard]]  constexpr uint8_t extractMod(std::byte byte) 
     {
         return (static_cast<uint8_t>(byte) & MOD_MASK) >> MOD_SHIFT;
     }
 
-    [[nodiscard]] inline constexpr uint8_t extractReg(std::byte byte) 
+    [[nodiscard]]  constexpr uint8_t extractReg(std::byte byte) 
     {
         return (static_cast<uint8_t>(byte) & REG_MASK) >> REG_SHIFT;
     }
 
-    [[nodiscard]] inline constexpr uint8_t extractRM(std::byte byte) 
+    [[nodiscard]]  constexpr uint8_t extractRM(std::byte byte) 
     {
         return (static_cast<uint8_t>(byte) & RM_MASK) >> RM_SHIFT;
     }
@@ -51,17 +52,17 @@ namespace SIBMask
     inline constexpr uint8_t BASE_MASK  = 0b00000111; // Mask for the BASE field (bits 0-2)
 
 
-    [[nodiscard]] inline constexpr uint8_t extractScale(std::byte byte) 
+    [[nodiscard]]  constexpr uint8_t extractScale(std::byte byte) 
     {
         return (static_cast<uint8_t>(byte) & SCALE_MASK) >> 6;
     }
 
-    [[nodiscard]] inline constexpr uint8_t extractIndex(std::byte byte) 
+    [[nodiscard]]  constexpr uint8_t extractIndex(std::byte byte) 
     {
         return (static_cast<uint8_t>(byte) & INDEX_MASK) >> 3;
     }
 
-    [[nodiscard]] inline constexpr uint8_t extractBase(std::byte byte) 
+    [[nodiscard]]  constexpr uint8_t extractBase(std::byte byte) 
     {
         return (static_cast<uint8_t>(byte) & BASE_MASK);
     }

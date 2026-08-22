@@ -26,7 +26,7 @@ uint8_t LRUReplacementPolicy::selectLineToReplace(CacheSet& set)
     DEBUG_LOG(debugLog("selezione linea"));
     LRUState& state = lruStates[set.setIndex];
 
-    for(uint8_t i = 0; i < set.lines.size(); ++i)
+    for(uint8_t i = 0; i < (uint8_t)set.lines.size(); ++i)
     {
         if (!set.lines[i].valid) // If there is an invalid line in the set, return its index for replacement
         {
@@ -55,22 +55,22 @@ uint8_t PLRUTree::selectLineToReplace()
 {
     uint8_t node = 0; // Start at the root of the PLRU tree
 
-    while (node < bits.size()) // Traverse the tree until reaching a leaf node
+    while (node < (uint8_t)bits.size()) // Traverse the tree until reaching a leaf node
     {
-        node = bits[node] ? (2 * node + 2) : (2 * node + 1); // Move left or right based on the bit value at the current node( 1 for right, 0 for left)
+        node = bits[node] ? (uint8_t)((2 * node) + 2) : (uint8_t)((2 * node) + 1); // Move left or right based on the bit value at the current node( 1 for right, 0 for left)
     }
 
-    return node - bits.size(); // Return the line index corresponding to the leaf node reached
+    return node - (uint8_t)bits.size(); // Return the line index corresponding to the leaf node reached
 }
 
 void PLRUTree::updateLine(uint8_t lineIndex)
 {
-    uint8_t node = lineIndex + bits.size(); // Start at the leaf node corresponding to the accessed line index
+    uint8_t node = lineIndex + (uint8_t)bits.size(); // Start at the leaf node corresponding to the accessed line index
 
     while (node > 0) // Traverse the tree until reaching a leaf node
     {
-        uint8_t parent = (node - 1) / 2; // Calculate the parent node index
-        bits[parent] = (node == 2 * parent + 1) ? 0 : 1; // Update the bit at the parent node to indicate the direction taken (1 for right, 0 for left) and move up to the parent node
+        auto parent = (uint8_t)((node - 1) / 2); // Calculate the parent node index
+        bits[parent] = (((node == (2 * parent) + 1) ? 0 : 1) != 0); // Update the bit at the parent node to indicate the direction taken (1 for right, 0 for left) and move up to the parent node
         
         node = parent;
     }
@@ -100,7 +100,7 @@ void PLRUReplacementPolicy::initializeSet(uint8_t associativity)
 uint8_t PLRUReplacementPolicy::selectLineToReplace(CacheSet& set)
 {
     auto& tree = plruTrees[set.setIndex]; // Get the PLRU tree for the cache set
-    for (uint8_t i = 0; i < set.lines.size(); ++i)
+    for (uint8_t i = 0; i < (uint8_t)set.lines.size(); ++i)
     {
         if (!set.lines[i].valid) // If there is an invalid line in the set, return its index for replacement
         {
@@ -130,8 +130,8 @@ uint8_t RandomReplacementPolicy::selectLineToReplace(CacheSet& set)
 {
     
     
-    std::uniform_int_distribution<> dis(0, set.lines.size() - 1); // Uniform distribution to select a random line index from the set
+    std::uniform_int_distribution<> dis(0, (uint8_t)set.lines.size() - 1); // Uniform distribution to select a random line index from the set
 
-    return dis(gen); // Return a randomly selected line index from the set
+    return (uint8_t)dis(gen); // Return a randomly selected line index from the set
 }
 

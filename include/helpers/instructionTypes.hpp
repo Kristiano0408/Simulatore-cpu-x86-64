@@ -5,16 +5,16 @@
 #include <cstdint>
 
 struct r_m {
-    uint8_t r_m : 3;
-    uint8_t mod : 2;
-    uint8_t reg : 3;
+    uint8_t r_m;
+    uint8_t mod;
+    uint8_t reg;
     std::byte byte_r_m;
 };
 
 struct SIB {
-    uint8_t base : 3;
-    uint8_t index : 3;
-    uint8_t scale : 2;
+    uint8_t base;
+    uint8_t index;
+    uint8_t scale;
     std::byte byte_sib;
 };
 
@@ -122,35 +122,28 @@ struct InstructionFlags
 };
 
 struct InstructionInfo {
-    uint64_t instructionId; // Unique ID for the instruction
-    size_t totalLength;  // Lunghezza totale dell'istruzione
-    size_t opcodeLength; // Lunghezza dell'opcode (1, 2 o 3 byte)
-    size_t prefixCount;  // Numero di prefissi
-    std::array<uint8_t, 4> prefix; // Array dei prefissi (max 4)
-    uint32_t opcode;     // Opcode completo (1, 2 o 3 byte)
-    uint16_t rexprefix;   // Prefisso REX
-    uint8_t additionalBytes; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
-    uint8_t numOperands; // Numero di operandi
-    uint8_t operandLength; // Lunghezza degli operandi
-    uint8_t src_operand_length; // Lunghezza dell'operando sorgente
-    uint8_t dest_operand_length; // Lunghezza dell'operando destinazione
-    uint8_t bit_extension; // Estensione in bit (0 se non esteso, 1 per 0 extension, 2 per sign extension)
+    uint64_t instructionId{}; // Unique ID for the instruction
+    size_t totalLength{};  // Lunghezza totale dell'istruzione
+    size_t opcodeLength{}; // Lunghezza dell'opcode (1, 2 o 3 byte)
+    std::array<uint8_t, 4> prefix{}; // Array dei prefissi (max 4)
+    uint32_t opcode{};     // Opcode completo (1, 2 o 3 byte)
+    uint8_t rexprefix{};   // Prefisso REX
+    uint8_t additionalBytes{}; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
+    uint8_t numOperands{}; // Numero di operandi
+    uint8_t operandLength{}; // Lunghezza degli operandi
+    uint8_t src_operand_length{}; // Lunghezza dell'operando sorgente
+    uint8_t dest_operand_length{}; // Lunghezza dell'operando destinazione
+    uint8_t bit_extension{}; // Estensione in bit (0 se non esteso, 1 per 0 extension, 2 per sign extension)
+    uint8_t prefixCount{};  // Numero di prefissi
    
     MaxCPUInstructionLength instruction; // Rappresentazione dell'istruzione in formato testuale
-    const char* description; // Descrizione dell'istruzione (opzionale)
-    bool rex_w_sensitive; // Indica se l'istruzione è sensibile al prefisso REX.W (se 0 sorgente e destinazione sono 64 bit, se 1 sign extension a 64 bit per sorgente)
-    bool rex;            // Flag REX
-    bool hasModRM;            // Presenza del byte ModR/M
-    bool hasSIB;              // Presenza del byte SIBs
-    bool hasDisplacement;     // Presenza di un displacement
-    bool hasImmediate;        // Presenza di un valore immediato
-
-    // Costruttore di default
-    InstructionInfo() : instructionId(0), totalLength(0), opcodeLength(0), prefixCount(0), prefix{0},
-                        opcode(0),rexprefix(0),additionalBytes(0), numOperands(0), operandLength(0),
-                        src_operand_length(0), dest_operand_length(0), bit_extension(0), instruction(), description(""), rex_w_sensitive(false),
-                        rex(false),hasModRM(false), hasSIB(false), hasDisplacement(false), hasImmediate(false)
-                         {}
+    const char* description{}; // Descrizione dell'istruzione (opzionale)
+    bool rex_w_sensitive{}; // Indica se l'istruzione è sensibile al prefisso REX.W (se 0 sorgente e destinazione sono 64 bit, se 1 sign extension a 64 bit per sorgente)
+    bool rex{};            // Flag REX
+    bool hasModRM{};            // Presenza del byte ModR/M
+    bool hasSIB{};              // Presenza del byte SIBs
+    bool hasDisplacement{};     // Presenza di un displacement
+    bool hasImmediate{};        // Presenza di un valore immediato
 
 };
 

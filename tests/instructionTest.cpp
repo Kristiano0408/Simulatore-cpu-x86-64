@@ -1,11 +1,10 @@
-#include "../include/instruction.hpp"
-#include <array>
+#include "../include/helpers/instructionTypes.hpp"
+
 int main() {
     // Create an instance of the Instruction class
 
-   InstructionInfo info{};
-   std::cout<< sizeof(info)<<std::endl;
-   std::cout<< alignof(info)<<std::endl;
+   std::cout<< sizeof(InstructionInfo)<<'\n';
+   std::cout<< alignof(InstructionInfo)<<'\n';
 
 
 }

@@ -70,8 +70,8 @@ private:
     // from the next level or memory based on the cache request and address information
 
 public:
-    CacheLevel(uint64_t size, uint8_t associativity, uint8_t latency, uint8_t fillLatency, Bus& bus, CacheLevel* nextLevel = nullptr, CacheLevel* parentLevel1 = nullptr,
-               CacheLevel* parentLevel2 = nullptr, CacheLevelType type = CacheLevelType::NONE, std::array<CacheLevel*, 2> L1Icourse = {nullptr, nullptr},
+    CacheLevel(uint64_t size, uint8_t associativityValue, uint8_t latency, uint8_t fillLatency, Bus& busRef, CacheLevel* nextLevelPtr = nullptr, CacheLevel* parentLevel1Ptr = nullptr,
+               CacheLevel* parentLevel2Ptr = nullptr, CacheLevelType cacheType = CacheLevelType::NONE, std::array<CacheLevel*, 2> L1Icourse = {nullptr, nullptr},
                std::array<CacheLevel*, 2> L1Dcourse = {nullptr, nullptr}); // Constructor to initialize the cache level with size, associativity, latency, fill latency, bus
                                                                            // reference, next level reference, parent level references, cache level type and L1 courses
     ~CacheLevel() = default;

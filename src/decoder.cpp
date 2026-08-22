@@ -1,11 +1,12 @@
 #include "decoder.hpp"
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include "opcode_map.hpp"
 
 
 
-InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],int numPrefixes, bool rex, uint16_t rexprefix)
+InstructionInfo Decoder::lenghtOfInstruction(uint32_t opcode,const uint8_t prefix[4],uint8_t numPrefixes, bool rex, uint8_t rexprefix)
 {
     InstructionInfo info = {};
     info.opcode = opcode;
@@ -20,16 +21,16 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
     {
         info.totalLength = it->second.totalLength; //the lenght is satndard for 32 bits
         info.opcodeLength = it->second.opcodeLength;
-        info.additionalBytes = it->second.additionalBytes; //additional bytes standars for 32 bits
+        info.additionalBytes = uint8_t(it->second.additionalBytes); //additional bytes standars for 32 bits
         info.description = it->second.description;
-        info.numOperands = it->second.numOperands;
-        info.operandLength = it->second.operandLength;
+        info.numOperands = uint8_t(it->second.numOperands);
+        info.operandLength = uint8_t(it->second.operandLength);
         info.hasModRM = it->second.hasModRM;
         info.hasDisplacement = it->second.hasDisplacement;
         info.hasImmediate = it->second.hasImmediate;
-        info.src_operand_length = it->second.src_operand_length;
-        info.dest_operand_length = it->second.dest_operand_length;
-        info.bit_extension = it->second.bit_extension;
+        info.src_operand_length = uint8_t(it->second.src_operand_length);
+        info.dest_operand_length = uint8_t(it->second.dest_operand_length);
+        info.bit_extension = uint8_t(it->second.bit_extension);
         info.rex_w_sensitive = it->second.rex_w_sensitive;
 
         
@@ -39,13 +40,13 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
         //if the opcode is not found
         info.description = "Unknown instruction";
 
-        std::cerr << "Unknown instruction: " << std::hex << opcode << std::endl;
+        std::cerr << "Unknown instruction: " << std::hex << opcode << '\n';
 
         return info;
     }
 
     //setting the prefix and changing the lenght of the instruction if there is IO or offset
-    for (int i = 0; i < numPrefixes; i++)
+    for (uint8_t i = 0; i < numPrefixes; i++)
     {
         //if there is the prefix for 16bits opernads
         if(prefix[i] == LegacyPrefixMask::OPERAND_SIZE_OVERRIDE and (info.hasImmediate))
@@ -63,7 +64,7 @@ InstructionInfo Decoder::LenghtOfInstruction(uint32_t opcode, uint8_t prefix[4],
         
     }
 
-    if (rex and (rexprefix & RexMask::REX_W) and (info.hasImmediate or info.hasDisplacement))
+    if (rex and ((rexprefix & RexMask::REX_W) != 0) and (info.hasImmediate or info.hasDisplacement))
     {
         //the lenght is increased by 4 bytes 
         info.totalLength += 4;
@@ -106,7 +107,7 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
     //creating the constructor of the instruction based on the type of instruction
     std::unique_ptr<Instruction> instructionPtr = std::make_unique<Instruction>();
 
-    int position = 0;
+    uint8_t position = 0;
 
     position = instruction.prefixCount;
 
@@ -124,7 +125,7 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
     auto mapIt = instructionMap.find(instruction.opcode);
     if (mapIt == instructionMap.end())
     {
-        std::cerr << "Unknown instruction in instructionMap: " << std::hex << instruction.opcode << std::endl;
+        std::cerr << "Unknown instruction in instructionMap: " << std::hex << instruction.opcode << '\n';
         return nullptr;
     }
     auto& it = mapIt->second;
@@ -162,11 +163,10 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
         return instructionPtr;
 
     }
-    else
-    {
-        DEBUG_LOG(debugLog("Unknown addressing mode"));
+    
+            DEBUG_LOG(debugLog("Unknown addressing mode"));
         return nullptr;
-    }
+   
 
 
 
@@ -174,7 +174,7 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
 }
 
 //methods for decoding the instructions based on the addressing mode
-void Decoder::decodeInstructionOI(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+void Decoder::decodeInstructionOI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
 {
     //decode the immediate value
     decodeImmediateValue(instructionInfo, instruction, position);
@@ -184,26 +184,26 @@ void Decoder::decodeInstructionOI(Instruction* instruction, const InstructionInf
     
 }
 
-void Decoder::decodeInstructionMI(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+void Decoder::decodeInstructionMI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
 {
-    decode_RM_instruction(instruction, instructionInfo, position);
+    decodeRmInstruction(instruction, instructionInfo, position);
 }
 
-void Decoder::decodeInstructionMR(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+void Decoder::decodeInstructionMR(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
 {
     InstructionFlags& flags = instruction->getFlags();
     flags.regToMem = 1;
-    decode_RM_instruction(instruction, instructionInfo, position);
+    decodeRmInstruction(instruction, instructionInfo, position);
 }
 
-void Decoder::decodeInstructionRM(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+void Decoder::decodeInstructionRM(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
 {
     InstructionFlags& flags = instruction->getFlags();
     flags.memToReg = 1;
-    decode_RM_instruction(instruction, instructionInfo, position);
+    decodeRmInstruction(instruction, instructionInfo, position);
 }
 
-void Decoder::decodeInstructionFD(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+void Decoder::decodeInstructionFD(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
 {
     //decode 
     InstructionFlags& flags = instruction->getFlags();
@@ -213,7 +213,7 @@ void Decoder::decodeInstructionFD(Instruction* instruction, const InstructionInf
     core.displacement = decodeDisplacement(instructionInfo, position, 4);
 }
 
-void Decoder::decodeInstructionTD(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+void Decoder::decodeInstructionTD(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
 {
     //decode 
     InstructionFlags& flags = instruction->getFlags();
@@ -223,7 +223,7 @@ void Decoder::decodeInstructionTD(Instruction* instruction, const InstructionInf
     core.displacement = decodeDisplacement(instructionInfo, position, 4);
 }
 
-void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo& instructionInfo, int position)
+void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
 {
     InstructionFlags& flags = instruction->getFlags();
     flags.hasImmediate = 1;
@@ -260,7 +260,7 @@ r_m Decoder::decodeRM(std::byte R_M)
     return rm;
 }
 
-void Decoder::decodeImmediateValue(InstructionInfo instructionInfo, Instruction* instruction, int position)
+void Decoder::decodeImmediateValue(InstructionInfo instructionInfo, Instruction* instruction, uint8_t position)
 {
     uint64_t value = 0;
     //decode the immediate value
@@ -289,10 +289,10 @@ void Decoder::settingInstructionParameters(Instruction* instruction, Instruction
     flags.rex = instructionInfo.rex;
 }
 
-uint64_t Decoder::decodeDisplacement(InstructionInfo instruction, int& position, int size)
+uint64_t Decoder::decodeDisplacement(InstructionInfo instruction, uint8_t& position, uint8_t size)
 {
     uint64_t displacement = 0;
-    for (int i = 0; i < size; i++)
+    for (uint8_t i = 0; i < size; i++)
     {
         displacement |= static_cast<uint64_t>(instruction.instruction[position + i]) << (i * 8);
     }
@@ -329,7 +329,7 @@ uint64_t Decoder::decodeDisplacement(InstructionInfo instruction, int& position,
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Decoder::decode_RM_instruction(Instruction* instruction, InstructionInfo instructionInfo, int& position)
+void Decoder::decodeRmInstruction(Instruction* instruction, InstructionInfo instructionInfo, uint8_t& position)
 {
     InstructionCore& core = instruction->getCore();
     InstructionFlags& flags = instruction->getFlags();
