@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/prova.dir/src/prova.cpp.o -o prova  libcpu_core.a 

@@ -18,12 +18,12 @@ struct LogEntry {
 
 struct CacheDataLogEntry {
     LogEntry logEntry; // Log entry containing the result and timestamp
-    LineData* line1; // Data of the first cache line
-    LineData* line2; // Data of the second cache line (if applicable)
+    LineData* line1{}; // Data of the first cache line
+    LineData* line2{}; // Data of the second cache line (if applicable)
     AddressInfo addressInfo1; // Address information of the first cache line
     AddressInfo addressInfo2; // Address information of the second cache line (if applicable)
 
-    CacheDataLogEntry() : line1(nullptr), line2(nullptr), addressInfo1(0, 0, 0, 0), addressInfo2(0, 0, 0, 0) {}
+    CacheDataLogEntry() :  addressInfo1(0, 0, 0, 0), addressInfo2(0, 0, 0, 0) {}
 };
 
 struct MemoryDataLogEntry {
@@ -46,16 +46,28 @@ struct LogStorage {
 
     LogStorage();
 
-    
-
+    void reset();
 };
 
 
 class EventLog
 {
+    private:
+        static EventLog* instance;
+
+
     public:
         static EventLog& getInstance();
-        void bindTicks(uint64_t* ticks); // Bind the clock ticks reference to the EventLog
+        
+        void pushCacheDataLogEntry(const CacheDataLogEntry& entry);
+        void pushMemoryDataLogEntry(const MemoryDataLogEntry& entry);
+        void pushOperandDataLogEntry(const OperandDataLogEntry& entry);
+        void pushGeneralDataLogEntry(const LogEntry& entry);
+
+        void bindTicks(uint64_t* ticks); // Bind the clock ticks to the event log for timestamping
+
+        // Reset all log queues - called when CPU is reset or at simulation boundaries
+        void reset();
         
         bool isLogEmpty() const; // Check if the log is empty
 

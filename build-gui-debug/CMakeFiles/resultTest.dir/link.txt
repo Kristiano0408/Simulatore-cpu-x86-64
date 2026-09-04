@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/resultTest.dir/tests/resultTest.cpp.o -o resultTest  libcpu_core.a 

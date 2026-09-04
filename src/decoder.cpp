@@ -186,7 +186,13 @@ void Decoder::decodeInstructionOI(Instruction* instruction, const InstructionInf
 
 void Decoder::decodeInstructionMI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
 {
+    InstructionFlags& flags = instruction->getFlags();
     decodeRmInstruction(instruction, instructionInfo, position);
+
+    if (instruction->getCore().rm.mod != 0b11)
+    {
+        flags.regToMem = 1;
+    }
 }
 
 void Decoder::decodeInstructionMR(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)

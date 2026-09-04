@@ -1,6 +1,6 @@
 #ifndef EVENT_HELPER_HPP
 #define EVENT_HELPER_HPP
-
+#include <cstdint>
 
 enum class EventHandlerCacheEventType : uint8_t 
 {

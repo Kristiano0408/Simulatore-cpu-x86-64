@@ -37,7 +37,7 @@ void CacheStorage::flush(auto&& memoryWriteFunction)
                 auto offsetBits = (uint8_t)std::countr_zero(CACHE_LINE_SIZE); // Calculate the number of bits for the offset based on the cache line size
                 auto setIndexBits = (uint8_t)std::countr_zero(sets.size());   // Calculate the number of bits for the set index based on the number of cache sets
                 uint64_t address = (line.tag << (offsetBits + setIndexBits)) | (i << offsetBits);
-                memoryWriteFunction(address, line.data);
+                memoryWriteFunction(address, line);
                 // Example: memory.write(line.tag * CACHE_LINE_SIZE, line.data);
                 line.dirty = false; // Mark the line as not dirty after flushing
             }

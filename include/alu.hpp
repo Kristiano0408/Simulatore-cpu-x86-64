@@ -4,8 +4,6 @@
 #ifndef ALU_HPP
 #define ALU_HPP
 #include <cstdint>
-
-#include "helpers.hpp"
 #include "device.hpp"
 
 
@@ -15,8 +13,8 @@ class ALU : public FaultDevice
     // Implementation of the ALU class
 
     public:
-        ALU();
-        ~ALU();
+        ALU() = default;
+        ~ALU() = default;
 
         //arithmetic operations
         void executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t nbit); //executes the operation based on the opcode

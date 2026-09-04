@@ -2,6 +2,7 @@
 #include "pipeline.hpp"
 #include "cpu.hpp"
 #include "eventHandler.hpp"
+#include <string>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -107,13 +108,13 @@ void PipelineScheduler::sendWriteBackRequestToExecuteEngine()
 
 
 #define STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(stage, buffer) \
-    stage.isStageReady() && buffer.valid
+    stage.isStageReady() && (buffer).valid
 
 #define STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(stage2, stage1) \
-    stage2.isStageReady() && stage1.isStageReady() && !stage1.isInstructionEmpty(stage1.peekInstruction())
+    stage2.isStageReady() && (stage1).isStageReady() && !(stage1).isInstructionEmpty((stage1).peekInstruction())
 
 #define STAGE_HAS_NOT_INSTRUCTION_TO_PROCESS(stage2, stage1, buffer) \
-    stage2.isStageReady() && buffer.valid == false && (stage1.isInstructionEmpty(stage1.peekInstruction()) || stage1.isStageReady() == false)
+    stage2.isStageReady() && (buffer).valid == false && ((stage1).isInstructionEmpty((stage1).peekInstruction()) || (stage1).isStageReady() == false)
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,6 +175,10 @@ void PipelineScheduler::processDecodeStage(CPU& cpu)
     DecodeStage& decodeStage = pipeline.decodeStage;
     FetchStage& fetchStage = pipeline.fetchStage;
     FetchDecodeBuffer& fetchDecodeBuffer = pipeline.fetchDecodeBuffer;
+    #ifdef GUI_ENABLED
+        DecodeOperandFetchBuffer& decodeOperandFetchBuffer = pipeline.decodeOperandFetchBuffer;
+    #endif
+
 
     if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(decodeStage, fetchDecodeBuffer)) 
     {
@@ -188,8 +193,9 @@ void PipelineScheduler::processDecodeStage(CPU& cpu)
         decodeInstruction(cpu);
         #endif
     }
-    else if(decodeStage.isStageReady() && fetchStage.isStageReady() && fetchStage.getCurrentInstructionInfo().instruction.size() > 0)
+    else if(decodeStage.isStageReady() && fetchStage.isStageReady() && fetchStage.getCurrentInstructionInfo().totalLength > 0)
     {
+        DEBUG_LOG(debugLog(std::to_string(fetchStage.getCurrentInstructionInfo().totalLength)));
         DEBUG_LOG(debugLog("DECODE STAGE processing..."));
         DEBUG_LOG(debugLog("Fetch stage has valid instruction."));
         decodeStage.setInstructionToDecode(fetchStage.getCurrentInstructionInfo());
@@ -200,7 +206,7 @@ void PipelineScheduler::processDecodeStage(CPU& cpu)
         decodeInstruction(cpu);
         #endif
     }
-    else if(!decodeStage.isStageReady() && !fetchDecodeBuffer.valid && (fetchStage.getCurrentInstructionInfo().instruction.size() == 0 || !fetchStage.isStageReady()))
+    else if(decodeStage.isStageReady() && !fetchDecodeBuffer.valid && (fetchStage.getCurrentInstructionInfo().totalLength == 0 || !fetchStage.isStageReady()))
     {
         DEBUG_LOG(debugLog("DECODE STAGE has no valid instruction to process."));
     }
@@ -240,6 +246,9 @@ void PipelineScheduler::processOperandFetchStage()
     OperandFetchStage& operandFetchStage = pipeline.operandFetchStage;
     DecodeStage& decodeStage = pipeline.decodeStage;
     DecodeOperandFetchBuffer& decodeOperandFetchBuffer = pipeline.decodeOperandFetchBuffer;
+    #ifdef GUI_ENABLED
+        OperandFetchExecuteBuffer& operandFetchExecuteBuffer = pipeline.operandFetchExecuteBuffer;  
+    #endif
 
 
     if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(operandFetchStage, decodeOperandFetchBuffer)) 
@@ -309,6 +318,9 @@ void PipelineScheduler::processExecuteStage()
     ExecuteStage& executeStage = pipeline.executeStage;
     OperandFetchStage& operandFetchStage = pipeline.operandFetchStage;
     OperandFetchExecuteBuffer& operandFetchExecuteBuffer = pipeline.operandFetchExecuteBuffer;
+    #ifdef GUI_ENABLED
+        ExecuteMemoryBuffer& executeMemoryBuffer = pipeline.executeMemoryBuffer;
+    #endif
 
     if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(executeStage, operandFetchExecuteBuffer))
     {
@@ -383,6 +395,10 @@ void PipelineScheduler::processMemoryStage()
     MemoryStage& memoryStage = pipeline.memoryStage;
     ExecuteStage& executeStage = pipeline.executeStage;
     ExecuteMemoryBuffer& executeMemoryBuffer = pipeline.executeMemoryBuffer;
+    #ifdef GUI_ENABLED
+        MemoryWriteBackBuffer& memoryWriteBackBuffer = pipeline.memoryWriteBackBuffer;
+    #endif
+
 
     if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(memoryStage, executeMemoryBuffer)) 
     {
@@ -396,6 +412,7 @@ void PipelineScheduler::processMemoryStage()
         #else
         sendMemoryAccessRequestToExecuteEngine();
         #endif
+
     }
     else if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(memoryStage, executeStage))
     {
@@ -418,9 +435,9 @@ void PipelineScheduler::processMemoryStage()
     else if(memoryStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)
     {
             DEBUG_LOG(debugLog("Memory stage is waiting for GUI buffer update."));
-            memoryStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI execution
             sendMemoryAccessRequestToExecuteEngine();
             memoryStage.setStalledGUI(false); // Set the stalled flag
+            memoryStage.setStatus(StageStatus::WAITING_MEMORY); // Transition to waiting for memory completion
 
     }
     else if(memoryStage.getStatus() == StageStatus::WAITING_GUI_EXECUTION)
@@ -430,9 +447,9 @@ void PipelineScheduler::processMemoryStage()
             memoryWriteBackBuffer.valid = true;
             memoryWriteBackBuffer.stalled = false;
             memoryWriteBackBuffer.flushed = false;
-            memoryStage.setInstructionToMemory(nullptr); //reset the instruction of write back stage
-            memoryStage.setStatus(StageStatus::READY); // Set the status to waiting for GUI buffer update
             memoryStage.setStalledGUI(false); // Set the stalled flag
+            memoryStage.setStatus(StageStatus::READY); // Keep instruction for next cycle
+
     }
     #endif
     else if (memoryStage.getStatus() == StageStatus::WAITING_MEMORY)
@@ -452,6 +469,7 @@ void PipelineScheduler::processMemoryStage()
     }
 
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

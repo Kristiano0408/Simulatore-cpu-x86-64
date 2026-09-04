@@ -111,60 +111,63 @@ class FixedSizeQueueCacheFriendly
 {
     private:
         std::array<T, N> data;
-        uint64_t head = 0; // Index of the head of the queue
-        uint64_t tail = 0; // Index of the tail of the queue
+        size_t head = 0; // Index of the head of the queue
+        size_t tail = 0; // Index of the tail of the queue
+        size_t count = 0; // Number of elements in the queue
 
 
     public:
 
         size_t size() const
         {
-            return (tail - head + N) % N; // Return the current size of the queue
+            return count; // Return the current number of elements in the queue
         }
 
         bool isFull() const
         {
-            return size() == N; // Check if the queue is full
+            return count == N; // Check if the queue is full
         }
 
         bool empty() const
         {
-            return (size() == 0 || head == tail); // Check if the queue is empty
+            return count == 0; // Check if the queue is empty
         }
      
-        void push(T&& value)
+         void push(T&& value)
         {
+            if (isFull())
+                throw std::out_of_range("Queue is full");
+
             data[tail] = std::move(value);
-            tail = (tail + 1) % N; // Wrap around if we reach the end of the array
-            if (tail == head) // If the queue is full, move the head forward to overwrite the oldest element
-            {
-                head = (head + 1) % N;
-            }
+            tail = (tail + 1) % N;
+            ++count;
         }
+        
 
         void push(const T& value)
         {
+            if (isFull())
+                throw std::out_of_range("Queue is full");
+
             data[tail] = value;
-            tail = (tail + 1) % N; // Wrap around if we reach the end of the array
-            if (tail == head) // If the queue is full, move the head forward to overwrite the oldest element
-            {
-                head = (head + 1) % N;
-            }
+            tail = (tail + 1) % N;
+            ++count;
         }
 
         T front() const
         {
-            if (head == tail) 
+            if (empty()) 
                 throw std::out_of_range("Queue is empty");
             return data[head]; // Return the value at the head of the queue
         }
 
         T pop()   // rimuove l'elemento in testa logica (indexes.front())
         {
-            if (head == tail) 
+            if (empty()) 
                 throw std::out_of_range("Queue is empty");
             T value = std::move(data[head]); // Extract the value at the head of the queue
             head = (head + 1) % N; // Move the head forward, wrapping around if necessary
+            count--; // Decrease the count of elements in the queue
             return value; // Return the extracted value
         }
 

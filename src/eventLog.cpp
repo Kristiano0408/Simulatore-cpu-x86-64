@@ -61,3 +61,10 @@ void EventLog::pushGeneralLogEntry(Result&& result)
     entry.timestamp = (clockTicks != nullptr) ? *clockTicks : 0; // Use the current clock ticks if available, otherwise default to 0
     logs.generalLogs.push(std::move(entry));
 }
+
+void EventLog::reset() {
+    logs.cacheDataLogs = FixedSizeQueueCacheFriendly<CacheDataLogEntry, 1024>();
+    logs.memoryDataLogs = FixedSizeQueueCacheFriendly<MemoryDataLogEntry, 1024>();
+    logs.operandDataLogs = FixedSizeQueueCacheFriendly<OperandDataLogEntry, 1024>();
+    logs.generalLogs = FixedSizeQueueCacheFriendly<LogEntry, 1024>();
+}

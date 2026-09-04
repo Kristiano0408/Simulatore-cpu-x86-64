@@ -1,0 +1,12 @@
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/CMakeFiles/cpu_core.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/CMakeFiles/prova.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/CMakeFiles/cacheTest.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/CMakeFiles/instructionTest.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/CMakeFiles/resultTest.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/CMakeFiles/simulator.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/CMakeFiles/test.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/CMakeFiles/edit_cache.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/CMakeFiles/rebuild_cache.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/pybind11/CMakeFiles/test.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/pybind11/CMakeFiles/edit_cache.dir
+/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug/pybind11/CMakeFiles/rebuild_cache.dir

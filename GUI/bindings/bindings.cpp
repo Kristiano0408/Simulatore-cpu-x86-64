@@ -77,7 +77,8 @@ PYBIND11_MODULE(simulator, m) {
         .def("getBasePointer", &Memory::getBasePointer)
         .def("setBasePointer", &Memory::setBasePointer)
         .def("push", &Memory::push)
-        .def("pop", &Memory::pop);
+        .def("pop", &Memory::pop)
+        .def("readByte", &Memory::readTest);
        
     
 

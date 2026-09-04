@@ -181,12 +181,21 @@ void PipelineController::onExecuteCompleteWrapper(void* context)
 void PipelineController::onMemoryStageComplete()
 {
     MemoryStage& memoryStage = pipeline.getMemoryStage();
-    
+
     #ifdef GUI_ENABLED
-    memoryStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI buffer update
-    memoryStage.setStalledGUI(true); // Set the stalled flag
+   
+    memoryStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to memory done
+    memoryStage.setStalledGUI(true);
+
     #else
-    memoryStage.setStatus(StageStatus::READY);
+    MemoryWriteBackBuffer& memoryWriteBackBuffer = pipeline.getMemoryWriteBackBuffer();
+    memoryWriteBackBuffer.memoryAccessedInstruction = memoryStage.getInstructionToMemory();
+    memoryWriteBackBuffer.valid = true;
+    memoryWriteBackBuffer.stalled = false;
+    memoryWriteBackBuffer.flushed = false;
+    memoryStage.setInstructionToMemory(nullptr); //reset the instruction of write back stage
+    memoryStage.setStatus(StageStatus::READY); // Set the status to waiting for GUI buffer update
+    memoryStage.setStalledGUI(false); // Set the stalled flag
     #endif
 }
 

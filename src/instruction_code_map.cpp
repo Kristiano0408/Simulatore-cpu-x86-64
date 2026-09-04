@@ -53,8 +53,9 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     {0x28, {.type=TypeofInstruction::SUB, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
     {0x29, {.type=TypeofInstruction::SUB, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
     {0x2A, {.type=TypeofInstruction::SUB, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
-    {0x2B, {.type=TypeofInstruction::SUB, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}}
-
+    {0x2B, {.type=TypeofInstruction::SUB, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+    // Istruzioni LEA
+    {0x8D, {.type=TypeofInstruction::LEA, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
 
 };
 

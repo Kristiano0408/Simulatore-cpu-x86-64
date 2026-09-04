@@ -89,20 +89,21 @@ void ExecuteEngine::tick()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define processQueue(queue, operation)                                                                                                                                             \
-    do                                                                                                                                                                             \
-    {                                                                                                                                                                              \
-        Instruction* instruction = (queue).front();                                                                                                                                \
-        if (instruction == nullptr)                                                                                                                                                \
-        {                                                                                                                                                                          \
-            (queue).pop(); /* Remove the null instruction from the queue */                                                                                                        \
-            return;                                                                                                                                                                \
-        }                                                                                                                                                                          \
-        operation(instruction);                                                                                                                                                    \
+#define processQueue(queue, operation) \
+    do                                 \
+    {                                  \
+        Instruction* instruction = (queue).front(); \
+        if (instruction == nullptr)                 \
+        {                                           \
+            (queue).pop(); /* Remove the null instruction from the queue */ \
+            return;                                 \
+        }                                           \
+        this->operation(instruction);               \
     } while (0)
 
 void ExecuteEngine::execute_operation()
 {
+              
     if (!writeBackQueue.empty())
     {
         processQueue(writeBackQueue, writeBackInstruction);
@@ -123,6 +124,7 @@ void ExecuteEngine::execute_operation()
     if (!operandFetchQueue.empty())
     {
         processQueue(operandFetchQueue, fetchOperands);
+
         operandFetchQueue.pop(); // Remove the completed operation from the queue
     }
 }
@@ -153,8 +155,6 @@ void ExecuteEngine::sendWriteBackRequest(Instruction* instruction)
 void ExecuteEngine::fetchOperands(Instruction* instruction)
 {
     // fetch the operands
-    // std::cout << "Fetching operands for Sub Instruction" << std::endl;
-    // fetch the operands
     // using switch case to get the operands
     InstructionCore& core = instruction->getCore();
     switch (core.addressingMode)
@@ -162,10 +162,6 @@ void ExecuteEngine::fetchOperands(Instruction* instruction)
         case AddressingMode::MR: // sub register to R/M
             DEBUG_LOG(debugLog("SUB_MR"));
             operandFetch::fetchMR(instruction, registerFile);
-            break;
-        case AddressingMode::RM: // sub R/M to register
-            DEBUG_LOG(debugLog("SUB_RM"));
-            operandFetch::fetchRM(instruction, registerFile);
             break;
         case AddressingMode::MI: // sub immediate to memory/register
             DEBUG_LOG(debugLog("SUB_MI"));
@@ -186,6 +182,18 @@ void ExecuteEngine::fetchOperands(Instruction* instruction)
         case AddressingMode::TD:
             DEBUG_LOG(debugLog("SUB_TD"));
             operandFetch::fetchTD(instruction, registerFile);
+            break;
+        case AddressingMode::RM: // LEA uses RM addressing
+            if (core.type == TypeofInstruction::LEA)
+            {
+                DEBUG_LOG(debugLog("LEA_RM"));
+                operandFetch::fetchLEA(instruction, registerFile);
+            }
+            else
+            {
+                DEBUG_LOG(debugLog("SUB_RM"));
+                operandFetch::fetchRM(instruction, registerFile);
+            }
             break;
         default:
             break;
@@ -216,7 +224,12 @@ void ExecuteEngine::startExecution(Instruction* instruction)
     instruction->getSourceOperand()->setSize(bit);
     instruction->getDestinationOperand()->setSize(bit);
 
-    operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand());
+    if (core.type == TypeofInstruction::MOV)
+    {
+        instruction->getTemporaryValuesRef().isDestValueReady = true;
+    }
+
+    operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), this, &triggerPipelineMemoryWaitingExecuteCallback);
 }
 
 void ExecuteEngine::executeInstruction(Instruction* instruction)
@@ -233,25 +246,27 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
         case InstructionExecutionMode::ALU:
             alu.executeOperation(instruction->getTemporaryValuesRef(), core.type, core.nbit);
             break;
-        /*case InstructionExecutionMode::DATA_TRANSFER:
-            // nothing to do here, the data transfer is handled by other parts of the execute engine
+        case InstructionExecutionMode::DATA_TRANSFER:
+            if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::LEA)
+            {
+                instruction->getTemporaryValuesRef().resultValue = instruction->getTemporaryValuesRef().srcValue;
+            }
             break;
-        case InstructionExecutionMode::CONTROL_FLOW:
+        /*case InstructionExecutionMode::CONTROL_FLOW:
             // executeControlFlowOperation(instruction);
             break;
         case InstructionExecutionMode::SYSTEM:
             // executeSystemOperation(instruction);
-            break;*/
+            break*/
         default:
             break;
     }
-
-    DEBUG_LOG(debugLog("Subtraction executed"));
     DEBUG_LOG(debugLog("Result: " + to_string_hex(instruction->getTemporaryValuesRef().resultValue)));
 }
 
 void ExecuteEngine::requestMemoryAccess(Instruction* instruction)
 {
+    DEBUG_LOG(debugLog("ExecuteEngine: Requesting memory access for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
     if (isAccessingMemory)
     {
         DEBUG_LOG(debugLog("ExecuteEngine is already accessing memory. Cannot access memory for another instruction simultaneously with ID " +
@@ -272,7 +287,7 @@ void ExecuteEngine::requestMemoryAccess(Instruction* instruction)
 
     // writing result back to memory
 
-    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue);
+    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue, this, &triggerPipelineMemoryWaitingCallback);
 }
 
 void ExecuteEngine::accessMemory(Instruction* instruction)
@@ -308,16 +323,18 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
 
     DEBUG_LOG(debugLog("Writing back result for SubInstruction."));
 
-    // std::cout<< std::is_same_v(*a, RegOperand);
-    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue);
+    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue, nullptr, nullptr);
 
-    // update flags in CPU
-    FlagReg& flags = registerFile.getFlags();
+    // update flags in CPU only for ALU instructions
+    if (instruction->getCore().executionMode == InstructionExecutionMode::ALU)
+    {
+        FlagReg& flags = registerFile.getFlags();
 
-    flags.setFlag(Flagbit::ZF, instruction->getTemporaryValues().ZF);
-    flags.setFlag(Flagbit::SF, instruction->getTemporaryValues().SF);
-    flags.setFlag(Flagbit::OF, instruction->getTemporaryValues().OF);
-    flags.setFlag(Flagbit::CF, instruction->getTemporaryValues().CF);
-    flags.setFlag(Flagbit::PF, instruction->getTemporaryValues().PF);
-    flags.setFlag(Flagbit::AF, instruction->getTemporaryValues().AF);
+        flags.setFlag(Flagbit::ZF, instruction->getTemporaryValues().ZF);
+        flags.setFlag(Flagbit::SF, instruction->getTemporaryValues().SF);
+        flags.setFlag(Flagbit::OF, instruction->getTemporaryValues().OF);
+        flags.setFlag(Flagbit::CF, instruction->getTemporaryValues().CF);
+        flags.setFlag(Flagbit::PF, instruction->getTemporaryValues().PF);
+        flags.setFlag(Flagbit::AF, instruction->getTemporaryValues().AF);
+    }
 }

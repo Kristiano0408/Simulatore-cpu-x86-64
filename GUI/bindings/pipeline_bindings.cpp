@@ -1,19 +1,20 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "../include/bus.hpp"
-#include "../include/pipeline.hpp"
-#include "../include/eventHandler.hpp"
-#include "../include/helpers.hpp"
+#include "../../include/bus.hpp"
+#include "../../include/pipeline.hpp"
+#include "../../include/eventHandler.hpp"
+#include "../../include/helpers.hpp"
 namespace py = pybind11;
-
-
 void bind_pipeline(py::module &m) {
 
     // ------------------- STAGES -------------------
     py::class_<Stage>(m, "Stage")
         .def("isStageReady", &Stage::isStageReady)
         .def("getStatus", &Stage::getStatus)
-        .def("isInstructionEmpty", &Stage::isInstructionEmpty);
+        .def("isInstructionEmpty", [](Stage& stage, Instruction* instr) -> bool
+        {
+            return stage.isInstructionEmpty(instr);
+        });;
 
     py::class_<FetchStage, Stage>(m, "FetchStage")
         .def(py::init<>())
@@ -118,7 +119,6 @@ void bind_pipeline(py::module &m) {
 
     // ------------------- PIPELINE -------------------
     py::class_<Pipeline>(m, "Pipeline")
-        .def(py::init<CPU&, PipelineEventHandler*>())
         .def("execute_operation", &Pipeline::execute_operation)
         .def("getFetchStage", &Pipeline::getFetchStage, py::return_value_policy::reference_internal)
         .def("getDecodeStage", &Pipeline::getDecodeStage, py::return_value_policy::reference_internal)

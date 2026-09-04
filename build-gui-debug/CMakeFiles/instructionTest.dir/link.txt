@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/instructionTest.dir/tests/instructionTest.cpp.o -o instructionTest  libcpu_core.a 

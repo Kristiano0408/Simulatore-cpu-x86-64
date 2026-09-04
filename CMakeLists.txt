@@ -112,7 +112,9 @@ endforeach()
 # ============================================================================ #
 
 if(GUI_ENABLED)
-
+    target_compile_definitions(cpu_core PUBLIC GUI_ENABLED)
+    
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
     # Use bundled pybind11 if available, otherwise search the system.
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/pybind11/CMakeLists.txt")
         add_subdirectory(pybind11)
@@ -131,6 +133,7 @@ if(GUI_ENABLED)
     target_link_libraries(simulator
         PRIVATE
             cpu_core
+            Python3::Python
     )
 
     set_target_properties(simulator PROPERTIES

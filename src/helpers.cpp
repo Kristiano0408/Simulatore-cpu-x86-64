@@ -264,6 +264,7 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         case TypeofInstruction::MOV: return "MOV";
         case TypeofInstruction::ADD: return "ADD";
         case TypeofInstruction::SUB: return "SUB";
+        case TypeofInstruction::LEA: return "LEA";
         default: return "UNKNOWN";
         }
 }

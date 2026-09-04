@@ -71,6 +71,8 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0x2A, {2, 1, 1, 2, 1 , 8 , 8 , 0 , 0 ,true ,false ,false , "SUB r8 , r/m8"}},
     {0x2B, {2, 1, 1, 2, 1 ,32 ,32 ,0 ,0 ,true ,false ,false , "SUB r16/32/64 , r/m16/32/64"}},
 
+    // Istruzioni LEA
+    {0x8D, {3, 1, 2, 2, 1, 32, 32, 2, 0, true, false, false, "LEA r32, [r/m]"}},
 
     // Istruzioni AND
     

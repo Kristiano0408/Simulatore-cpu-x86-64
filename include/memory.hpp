@@ -18,6 +18,9 @@ public:
     LineData read(uint64_t address);
     void write(uint64_t address, LineData line);
 
+    uint8_t readTest(uint64_t addressLine);
+    void writeTest(uint64_t addressLine, uint8_t value);
+
     // get the size of the memory
     size_t getSize() const { return size; }
 

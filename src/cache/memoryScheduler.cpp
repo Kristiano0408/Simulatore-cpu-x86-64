@@ -1,5 +1,6 @@
 #include "cache/memoryScheduler.hpp"    
 #include "bus.hpp"
+#include "cache/cacheManager.hpp"
 
 
 void MemoryScheduler::scheduleMemoryRequest(CacheRequest&& request)
@@ -68,7 +69,7 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
             
             DEBUG_LOG(debugLog("lettura ram completata"));
 
-                auto makeFillPending =[&]() ->PendingRequest
+                auto makeFillPending =[&](CacheLevel& level) ->PendingRequest
                 {
                     auto fillRequest = CacheRequest();
                     fillRequest.address = lineAddress;
@@ -77,6 +78,7 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
 
                     CacheLine line = CacheLine();
                     line.data = readResponse;
+                    line.tag = level.getController().decodeAddress(lineAddress).tag;
 
                     auto fillPendingRequest = PendingRequest();
                     fillPendingRequest.line= line;
@@ -86,22 +88,22 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
 
                 };
 
-               
+                CacheManager& cacheManager = bus.getCPU().getCacheManager();
               
 
-                bus.getCPU().getCacheManager().getL3Cache().schedulePendingRequest(makeFillPending());
+                cacheManager.getL3Cache().schedulePendingRequest(makeFillPending(cacheManager.getL3Cache()));
 
         
-                bus.getCPU().getCacheManager().getL2Cache().schedulePendingRequest(makeFillPending());
+                cacheManager.getL2Cache().schedulePendingRequest(makeFillPending(cacheManager.getL2Cache()));
 
                 switch (originalRequest.typeofL1)
                 {
                     
                     case CacheLevelType::L1D:
-                        bus.getCPU().getCacheManager().getL1DCache().schedulePendingRequest(makeFillPending());
+                        cacheManager.getL1DCache().schedulePendingRequest(makeFillPending(cacheManager.getL1DCache()));
                         break;
                     case CacheLevelType::L1I:
-                        bus.getCPU().getCacheManager().getL1ICache().schedulePendingRequest(makeFillPending());
+                        cacheManager.getL1ICache().schedulePendingRequest(makeFillPending(cacheManager.getL1ICache()));
                         break;
                     default:
                         break;
@@ -112,10 +114,10 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
                 switch (originalRequest.typeofL1)
                 {
                 case CacheLevelType::L1D:
-                    bus.getCPU().getCacheManager().getL1DCache().schedulePendingRequest(std::move(pendingRequest));
+                    cacheManager.getL1DCache().schedulePendingRequest(std::move(pendingRequest));
                     break;
                 case CacheLevelType::L1I:
-                    bus.getCPU().getCacheManager().getL1ICache().schedulePendingRequest(std::move(pendingRequest));
+                    cacheManager.getL1ICache().schedulePendingRequest(std::move(pendingRequest));
                     break;
                 default:
                     break;
@@ -136,6 +138,7 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
 
                 CacheLine line = CacheLine();
                 line.data = readResponse;
+                line.tag = bus.getCPU().getCacheManager().getL3Cache().getController().decodeAddress(lineAddress).tag;
 
                 auto fillPendingRequest = PendingRequest();
                 fillPendingRequest.request = fillRequest;
@@ -153,7 +156,27 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
         }
         case RequestType::WRITE:
         {
-            bus.getMemory().write(lineAddress, pendingRequest.line.data);
+            const uint64_t offset = originalRequest.address - lineAddress;
+            const size_t byteCount = static_cast<size_t>(originalRequest.dataType);
+
+            if (offset + byteCount <= CACHE_LINE_SIZE)
+            {
+                LineData line = bus.getMemory().read(lineAddress);
+                std::memcpy(line.data() + offset, originalRequest.data.data(), byteCount);
+                bus.getMemory().write(lineAddress, line);
+            }
+            else
+            {
+                const size_t firstByteCount = CACHE_LINE_SIZE - offset;
+                LineData firstLine = bus.getMemory().read(lineAddress);
+                std::memcpy(firstLine.data() + offset, originalRequest.data.data(), firstByteCount);
+                bus.getMemory().write(lineAddress, firstLine);
+
+                const uint64_t nextLineAddress = lineAddress + CACHE_LINE_SIZE;
+                LineData nextLine = bus.getMemory().read(nextLineAddress);
+                std::memcpy(nextLine.data(), originalRequest.data.data() + firstByteCount, byteCount - firstByteCount);
+                bus.getMemory().write(nextLineAddress, nextLine);
+            }
 
             //gestire in futuro errori
 

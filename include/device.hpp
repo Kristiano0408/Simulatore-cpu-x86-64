@@ -3,8 +3,6 @@
 
 #include <cstdint>
 #include <atomic>
-#include <array>
-#include "helpers.hpp"
 #include "faultHandler.hpp"
 
 

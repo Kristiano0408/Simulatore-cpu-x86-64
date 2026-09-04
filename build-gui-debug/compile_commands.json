@@ -1,0 +1,272 @@
+[
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/addressCalculator.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/addressCalculator.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/addressCalculator.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/addressCalculator.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/alu.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/alu.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/alu.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/alu.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/bus.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/bus.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/bus.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/bus.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/cache/cacheController.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/cacheController.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/cacheController.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/cache/cacheController.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/cache/cacheLevel.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/cacheLevel.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/cacheLevel.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/cache/cacheLevel.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/cache/cacheManager.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/cacheManager.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/cacheManager.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/cache/cacheManager.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/cache/cacheStorage.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/cacheStorage.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/cacheStorage.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/cache/cacheStorage.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/cache/memoryScheduler.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/memoryScheduler.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/memoryScheduler.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/cache/memoryScheduler.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/cache/replacementPolicy.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/replacementPolicy.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/replacementPolicy.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/cache/replacementPolicy.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/cache/requestScheduler.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/requestScheduler.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cache/requestScheduler.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/cache/requestScheduler.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/clock.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/clock.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/clock.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/clock.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/controlUnit.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/controlUnit.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/controlUnit.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/controlUnit.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/cpu.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cpu.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/cpu.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/cpu.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/decoder.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/decoder.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/decoder.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/decoder.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/device.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/device.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/device.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/device.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/eventHandler.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/eventHandler.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/eventHandler.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/eventHandler.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/eventLog.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/eventLog.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/eventLog.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/eventLog.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/executeEngine.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/executeEngine.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/executeEngine.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/executeEngine.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/faultBus.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/faultBus.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/faultBus.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/faultBus.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/faultHandler.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/faultHandler.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/faultHandler.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/faultHandler.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/helpers.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/helpers.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/helpers.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/helpers.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/instruction.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/instruction.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/instruction.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/instruction.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/instruction_code_map.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/instruction_code_map.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/instruction_code_map.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/instruction_code_map.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/memory.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/memory.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/memory.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/memory.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/opcode_map.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/opcode_map.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/opcode_map.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/opcode_map.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/operandEngine.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/operandEngine.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/operandEngine.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/operandEngine.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/operands.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/operands.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/operands.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/operands.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/pipeline.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/pipeline.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/pipeline.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/pipeline.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/pipelineController.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/pipelineController.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/pipelineController.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/pipelineController.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/pipelineScheduler.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/pipelineScheduler.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/pipelineScheduler.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/pipelineScheduler.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIC -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cpu_core.dir/src/registerFile.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/registerFile.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/registerFile.cpp",
+  "output": "CMakeFiles/cpu_core.dir/src/registerFile.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/prova.dir/src/prova.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/prova.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/src/prova.cpp",
+  "output": "CMakeFiles/prova.dir/src/prova.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/cacheTest.dir/tests/cacheTest.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/tests/cacheTest.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/tests/cacheTest.cpp",
+  "output": "CMakeFiles/cacheTest.dir/tests/cacheTest.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/instructionTest.dir/tests/instructionTest.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/tests/instructionTest.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/tests/instructionTest.cpp",
+  "output": "CMakeFiles/instructionTest.dir/tests/instructionTest.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -std=c++23 -fPIE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/resultTest.dir/tests/resultTest.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/tests/resultTest.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/tests/resultTest.cpp",
+  "output": "CMakeFiles/resultTest.dir/tests/resultTest.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -Dsimulator_EXPORTS -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -isystem /usr/include/python3.12 -isystem /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/pybind11/include -std=c++23 -fPIC -fvisibility=hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow -flto=auto -fno-fat-lto-objects -o CMakeFiles/simulator.dir/GUI/bindings/bindings.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/bindings.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/bindings.cpp",
+  "output": "CMakeFiles/simulator.dir/GUI/bindings/bindings.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -Dsimulator_EXPORTS -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -isystem /usr/include/python3.12 -isystem /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/pybind11/include -std=c++23 -fPIC -fvisibility=hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow -flto=auto -fno-fat-lto-objects -o CMakeFiles/simulator.dir/GUI/bindings/cacheManager_bindings.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/cacheManager_bindings.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/cacheManager_bindings.cpp",
+  "output": "CMakeFiles/simulator.dir/GUI/bindings/cacheManager_bindings.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -Dsimulator_EXPORTS -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -isystem /usr/include/python3.12 -isystem /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/pybind11/include -std=c++23 -fPIC -fvisibility=hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow -flto=auto -fno-fat-lto-objects -o CMakeFiles/simulator.dir/GUI/bindings/cpu_bindings.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/cpu_bindings.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/cpu_bindings.cpp",
+  "output": "CMakeFiles/simulator.dir/GUI/bindings/cpu_bindings.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -Dsimulator_EXPORTS -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -isystem /usr/include/python3.12 -isystem /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/pybind11/include -std=c++23 -fPIC -fvisibility=hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow -flto=auto -fno-fat-lto-objects -o CMakeFiles/simulator.dir/GUI/bindings/eventLog_bindings.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/eventLog_bindings.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/eventLog_bindings.cpp",
+  "output": "CMakeFiles/simulator.dir/GUI/bindings/eventLog_bindings.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -Dsimulator_EXPORTS -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -isystem /usr/include/python3.12 -isystem /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/pybind11/include -std=c++23 -fPIC -fvisibility=hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow -flto=auto -fno-fat-lto-objects -o CMakeFiles/simulator.dir/GUI/bindings/helpers_bindings.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/helpers_bindings.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/helpers_bindings.cpp",
+  "output": "CMakeFiles/simulator.dir/GUI/bindings/helpers_bindings.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -Dsimulator_EXPORTS -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -isystem /usr/include/python3.12 -isystem /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/pybind11/include -std=c++23 -fPIC -fvisibility=hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow -flto=auto -fno-fat-lto-objects -o CMakeFiles/simulator.dir/GUI/bindings/instruction_bindings.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/instruction_bindings.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/instruction_bindings.cpp",
+  "output": "CMakeFiles/simulator.dir/GUI/bindings/instruction_bindings.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -Dsimulator_EXPORTS -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -isystem /usr/include/python3.12 -isystem /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/pybind11/include -std=c++23 -fPIC -fvisibility=hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow -flto=auto -fno-fat-lto-objects -o CMakeFiles/simulator.dir/GUI/bindings/operand_bindings.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/operand_bindings.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/operand_bindings.cpp",
+  "output": "CMakeFiles/simulator.dir/GUI/bindings/operand_bindings.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -Dsimulator_EXPORTS -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -isystem /usr/include/python3.12 -isystem /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/pybind11/include -std=c++23 -fPIC -fvisibility=hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow -flto=auto -fno-fat-lto-objects -o CMakeFiles/simulator.dir/GUI/bindings/pipeline_bindings.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/pipeline_bindings.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/pipeline_bindings.cpp",
+  "output": "CMakeFiles/simulator.dir/GUI/bindings/pipeline_bindings.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -Dsimulator_EXPORTS -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -isystem /usr/include/python3.12 -isystem /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/pybind11/include -std=c++23 -fPIC -fvisibility=hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow -flto=auto -fno-fat-lto-objects -o CMakeFiles/simulator.dir/GUI/bindings/registerFile_bindings.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/registerFile_bindings.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/registerFile_bindings.cpp",
+  "output": "CMakeFiles/simulator.dir/GUI/bindings/registerFile_bindings.cpp.o"
+},
+{
+  "directory": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/build-gui-debug",
+  "command": "/usr/bin/c++ -DDEBUG -DGUI_ENABLED -Dsimulator_EXPORTS -I/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/include -isystem /usr/include/python3.12 -isystem /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/pybind11/include -std=c++23 -fPIC -fvisibility=hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow -flto=auto -fno-fat-lto-objects -o CMakeFiles/simulator.dir/GUI/bindings/resultInfo_bindings.cpp.o -c /home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/resultInfo_bindings.cpp",
+  "file": "/home/franco/Documents/GitHub/Simulatore-cpu-x86-64/GUI/bindings/resultInfo_bindings.cpp",
+  "output": "CMakeFiles/simulator.dir/GUI/bindings/resultInfo_bindings.cpp.o"
+}
+]

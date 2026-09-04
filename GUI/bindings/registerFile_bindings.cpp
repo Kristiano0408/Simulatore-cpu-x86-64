@@ -56,6 +56,12 @@ void bind_registerFile(py::module &m) {
         .def("raw", 
              static_cast<uint64_t&(Reg::*)()>(&Reg::raw),
              py::return_value_policy::reference_internal)
+        .def("setRaw",
+            [](Reg& r, uint64_t value)
+            {
+                r.raw() = value;
+            })
+
 
         .def("raw_const",
              static_cast<const uint64_t&(Reg::*)() const>(&Reg::raw),

@@ -1,0 +1,73 @@
+SUBSET ISA x86-64 PROPOSTO PER IL SIMULATORE (pipeline 5 stadi, cache L1/L2/L3)
+===============================================================================
+Criterio: per ogni istruzione "capostipite" si implementano TUTTE le varianti
+di dimensione/operando (reg-reg, reg-mem, mem-reg, reg-imm, mem-imm, e le
+forme 8/16/32/64 bit dove esistono), non solo la forma base.
+
+1) DATA MOVEMENT
+-----------------
+- MOV        (r/m8,16,32,64 <-> r8,16,32,64 ; r/m,imm ; incl. mov con RIP-relative) DONE
+- MOVZX / MOVSX          (zero/sign extend, tutte le combinazioni 8/16/32->16/32/64)
+- MOVSXD                 (32->64 sign extend, specifica x86-64)
+- LEA                    (calcolo indirizzo, tutte le forme di addressing mode)
+- PUSH / POP             (reg, imm, r/m)
+- XCHG                   (incl. forma implicita con RAX)
+- CMOVcc                 (tutte le condizioni: CMOVE, CMOVNE, CMOVG, CMOVL, ecc.)
+
+2) ARITMETICA INTERA
+---------------------
+- ADD / SUB              (tutte le forme reg/mem/imm, tutte le size)  DONE
+- ADC / SBB              (con carry, per aritmetica multi-precisione)
+- INC / DEC
+- NEG
+- CMP                    (stessa logica di SUB ma senza scrittura risultato)
+- MUL / IMUL             (forma 1, 2 e 3 operandi per IMUL)
+- DIV / IDIV
+- CQO / CDQ / CWD        (sign-extend per divisione, tutte le size)
+
+3) LOGICA E BIT
+-----------------
+- AND / OR / XOR / NOT
+- TEST                   (come AND ma senza scrittura, solo flags)
+- SHL/SAL, SHR, SAR      (shift, tutte le forme: imm8, CL, 1 implicito)
+- ROL, ROR, RCL, RCR     (rotazioni, stesse forme di shift)
+- BT, BTS, BTR, BTC      (opzionali, se serve completezza sui bit test)
+
+4) CONTROLLO DI FLUSSO
+------------------------
+- JMP                    (relativo, indiretto reg, indiretto mem)
+- Jcc                    (tutte le condizioni: JE, JNE, JG, JL, JGE, JLE, JA, JB, ecc.)
+- CALL / RET             (relativo e indiretto; RET con imm16 per pulizia stack)
+- LOOP / LOOPE / LOOPNE  (opzionali, poco usate dai compilatori moderni)
+- SETcc                  (tutte le condizioni, per branchless code)
+
+5) STACK FRAME / SUPPORTO CHIAMATE
+-------------------------------------
+- ENTER / LEAVE          (o equivalenti PUSH RBP; MOV RBP,RSP; SUB RSP,imm)
+- NOP (incl. multi-byte NOP per allineamento)
+
+6) FLAG E STATO
+------------------
+- CLC, STC, CMC          (carry flag)
+- LAHF / SAHF            (se serve compatibilita con codice piu vecchio)
+
+7) MEMORIA / ADDRESSING MODE DA SUPPORTARE NEL DECODER
+----------------------------------------------------------
+- Diretto: [imm32]
+- Base: [reg]
+- Base+disp8/32: [reg+disp]
+- Base+indice*scala: [reg+reg*1,2,4,8]
+- Base+indice*scala+disp: forma completa SIB
+- RIP-relative: [rip+disp32]
+
+NOTE
+-----
+- Niente x87/FPU, niente MMX/SSE/AVX in questa fase: si resta su ISA intera
+  scalare, coerente con una pipeline didattica a 5 stadi.
+- Le istruzioni di stringa (MOVS, STOS, CMPS, SCAS, REP*) sono un buon
+  secondo step se vuoi testare microcode/loop impliciti, ma non sono
+  indispensabili per un primo subset funzionante.
+- Priorita di implementazione consigliata: (1) MOV+LEA+PUSH/POP,
+  (2) ADD/SUB/CMP/Jcc/JMP (basta gia per if/while/for compilati),
+  (3) MUL/IMUL/DIV/IDIV, (4) logica e shift, (5) CALL/RET e frame,
+  (6) CMOVcc/SETcc come rifinitura.

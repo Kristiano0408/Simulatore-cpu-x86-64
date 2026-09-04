@@ -31,6 +31,7 @@ void Memory::clear()
     data.resize(size, 0);
 };
 
+#ifdef GUI_ENABLED
 #define pushResultSuccess(line, address)                                                                                                                                           \
     result.success = true;                                                                                                                                                         \
     result.errorInfo.source = ComponentType::RAM;                                                                                                                                  \
@@ -44,16 +45,22 @@ void Memory::clear()
     result.errorInfo.event = EventType::ERROR;                                                                                                                                     \
     result.errorInfo.error = ErrorType::INVALID_ADDRESS;                                                                                                                           \
     EventLog::getInstance().pushMemoryDataLogEntry(std::move(result), static_cast<LineData*>(nullptr), address);
-
+#endif
 // da sistemare
 void Memory::push(uint64_t value)
 {
+    #ifdef GUI_ENABLED
     Result result{};
+    #endif
 
     // controllo overflow
     if (RSP - 8 < size - size_stack) // check if the stack pointer is out of bounds
     {
+        #ifdef GUI_ENABLED
         pushResultFailure(RSP) return;
+        #else
+        return;
+        #endif
     }
 
     RSP -= 8;                                                             // decrement the stack pointer
@@ -62,7 +69,9 @@ void Memory::push(uint64_t value)
     std::memcpy(&lineData[RSP % CACHE_LINE_SIZE], &value, sizeof(value)); // copy the value to the line data
     write(lineAddress, lineData);
 
+    #ifdef GUI_ENABLED
     pushResultSuccess(lineData, RSP);
+    #endif
 };
 
 /// da sistemare
@@ -70,12 +79,18 @@ uint64_t Memory::pop()
 {
     uint64_t value{};
     LineData readResult{};
+    #ifdef GUI_ENABLED
     Result result{};
+    #endif
 
     // controllo underflow
     if (RSP > size - 8) // check if the stack pointer is out of bounds
     {
+        #ifdef GUI_ENABLED
         pushResultFailure(RSP) return value;
+        #else
+        return value;
+        #endif
     }
 
     // calculating the start of the line address to read from the stack
@@ -83,39 +98,96 @@ uint64_t Memory::pop()
     uint64_t lineAddress = RSP - (RSP % CACHE_LINE_SIZE); // calculate the start of the line address to read from the stack
 
     readResult = read(lineAddress);
-
+    #ifdef GUI_ENABLED
     pushResultSuccess(readResult, RSP)
+    #endif
 
         return value;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+uint8_t Memory::readTest(uint64_t addressLine)
+{
+    uint8_t value{};
+    #ifdef GUI_ENABLED
+    Result result{};
+    #endif
+
+    if (addressLine + sizeof(value) > size) // check if the address is out of bounds
+    {
+        #ifdef GUI_ENABLED
+        pushResultFailure(addressLine) return value;
+        #else
+        return value;
+        #endif
+    }
+    std::memcpy(&value, &data[addressLine], sizeof(value));
+
+
+    return value;
+}
+
+
+void Memory::writeTest(uint64_t addressLine, uint8_t value)
+{
+    #ifdef GUI_ENABLED
+    Result result{};
+    #endif
+    if (addressLine + sizeof(value) > size) // check if the address is out of bounds
+    {
+        #ifdef GUI_ENABLED
+        pushResultFailure(addressLine) return;
+        #else
+        return;
+        #endif
+    }
+
+    std::memcpy(&data[addressLine], &value, sizeof(value));
+}
+
+
 LineData Memory::read(uint64_t addressLine)
 {
     LineData lineData{};
+    #ifdef GUI_ENABLED
     Result result{};
+    #endif
 
     if (addressLine + sizeof(LineData) > size) // check if the address is out of bounds
     {
+        #ifdef GUI_ENABLED
         pushResultFailure(addressLine) return lineData;
+        #else
+        return lineData;
+        #endif
     }
     std::memcpy(lineData.data(), &data[addressLine], sizeof(LineData));
 
+    #ifdef GUI_ENABLED
     pushResultSuccess(lineData, addressLine)
+    #endif
 
         return lineData;
 }
 
 void Memory::write(uint64_t addressLine, LineData line)
-{
+{   
+    #ifdef GUI_ENABLED
     Result result{};
+    #endif
     if (addressLine + sizeof(LineData) > size) // check if the address is out of bounds
     {
+        #ifdef GUI_ENABLED
         pushResultFailure(addressLine) return;
+        #else
+        return;
+        #endif
     }
 
     std::memcpy(&data[addressLine], &line, sizeof(LineData));
 
+    #ifdef GUI_ENABLED
     pushResultSuccess(line, addressLine)
+    #endif
 }

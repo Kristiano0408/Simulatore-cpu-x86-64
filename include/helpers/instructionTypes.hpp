@@ -24,6 +24,7 @@ enum class TypeofInstruction : uint8_t
     MOV, //move instruction
     ADD, //add instruction
     SUB, //sub instruction
+    LEA, //load effective address
 
    
 };

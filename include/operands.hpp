@@ -20,6 +20,7 @@ namespace operandFetch {
     void fetchOI(Instruction* i, RegisterFile& registers, uint32_t opcode);
     void fetchMI(Instruction* i, RegisterFile& registers);
     void fetchI(Instruction* i, RegisterFile& registers);
+    void fetchLEA(Instruction* i, RegisterFile& registers);
     uint64_t calculatingAddressRM(Instruction* i, RegisterFile& registers);
 }
 

@@ -62,7 +62,7 @@ void CPU::cpuReset()
 {
     //reset the CPU
     getRegisters().reset();
-    //memory->reset();
+    EventLog::getInstance().reset(); // Reset all event logs to prevent queue overflow
 }
 
 

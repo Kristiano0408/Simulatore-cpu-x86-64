@@ -13,10 +13,10 @@ enum class OperandStatus : uint8_t
 
 enum class OperandType : uint8_t 
 {
-    REGISTER,
-    MEMORY,
-    IMMEDIATE,
-    NONE // Placeholder for uninitialized operand
+    REGISTER = 0,
+    MEMORY = 1,
+    IMMEDIATE = 2,
+    NONE = 3 // Placeholder for uninitialized operand
 };
 
 

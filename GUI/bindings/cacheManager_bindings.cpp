@@ -90,7 +90,8 @@ void bind_cacheManager(py::module &m) {
         .def("getL1DRequestQueue", &CacheManager::getL1DRequestQueue, py::return_value_policy::reference_internal)
         .def("getL2RequestQueue", &CacheManager::getL2RequestQueue, py::return_value_policy::reference_internal)
         .def("getL3RequestQueue", &CacheManager::getL3RequestQueue, py::return_value_policy::reference_internal)
-        .def("getMemoryRequestQueue", &CacheManager::getMemoryRequestQueue, py::return_value_policy::reference_internal);
+        .def("getMemoryRequestQueue", &CacheManager::getMemoryRequestQueue, py::return_value_policy::reference_internal)
+        .def("flushAllCaches", &CacheManager::flushAllCaches);
 
 
     

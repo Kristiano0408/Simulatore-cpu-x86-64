@@ -1,16 +1,4 @@
 #include "alu.hpp"
-#include "cpu.hpp"
-#include "registerFile.hpp"
-
-ALU::ALU()
-{
-    //nothing to do here
-}
-
-ALU::~ALU()
-{
-    //nothing to do here
-}
 
 
 void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t nbit)
@@ -36,7 +24,7 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
         case TypeofInstruction::SUB:
             tmp = sub(dest, src);
             tempValues.CF = ((dest & widthMask) < (src & widthMask));
-            tempValues.AF = ((dest & 0xF) - (src & 0xF)) & 0x10;
+            tempValues.AF = ((((dest & 0xF) - (src & 0xF)) & 0x10) != 0U);
             tempValues.OF = ((((dest & signBit) != (src & signBit)) &&
                              (((tmp & signBit) != (dest & signBit)))));
             break;
@@ -49,7 +37,7 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
 
     tempValues.ZF = (truncatedResult == 0);
     tempValues.SF = (truncatedResult & signBit) != 0;
-    tempValues.PF = !__builtin_parity(truncatedResult & 0xFF);
+    tempValues.PF = (__builtin_parity(truncatedResult & 0xFF) == 0);
     tempValues.resultValue = truncatedResult;
 }
 

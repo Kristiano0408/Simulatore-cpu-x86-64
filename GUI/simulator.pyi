@@ -4,9 +4,24 @@ Bindings PyBind11 per il simulatore x86-64
 from __future__ import annotations
 import collections.abc
 import typing
-__all__: list[str] = ['ADD', 'AF', 'ALU', 'ALU_enum', 'AddressingMode', 'Bus', 'CACHE', 'CACHE_HIT', 'CACHE_L1', 'CACHE_L2', 'CACHE_L3', 'CACHE_MISS', 'CACHE_READ_ERROR', 'CACHE_WRITE_ERROR', 'CF', 'CPU', 'CU', 'CacheLevel', 'CacheLine', 'CacheManager', 'CacheRequest', 'Clock', 'ComponentType', 'DecodeOperandFetchBuffer', 'DecodeStage', 'DummyRegister', 'EMPTY', 'ERROR', 'EmptyOperand', 'ErrorType', 'Error_Event_Info', 'EventLog', 'EventType', 'ExecuteMemoryBuffer', 'ExecuteStage', 'FD', 'FLUSHED', 'FPU', 'FetchDecodeBuffer', 'FetchStage', 'FlagReg', 'Flagbit', 'I', 'INVALID_ADDRESS', 'INVALID_SIZE', 'ImmediateOperand', 'Instruction', 'InstructionCore', 'InstructionInfo', 'MEMORY_DONE', 'MI', 'MOV', 'MR', 'MemOperand', 'Memory', 'MemoryScheduler', 'MemoryStage', 'MemoryWriteBackBuffer', 'NONE', 'OF', 'OI', 'OPERAND', 'OUT_OF_BOUNDS', 'Operand', 'OperandFetchExecuteBuffer', 'OperandFetchStage', 'OperandType', 'PF', 'PendingRequest', 'Pipeline', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15', 'R8', 'R9', 'RAM', 'RAM_ACCESS', 'RAM_READ_ERROR', 'RAM_WRITE_ERROR', 'RAX', 'RBP', 'RBX', 'RCX', 'RDI', 'RDX', 'READY', 'READ_FAIL', 'RIP', 'RM', 'RSI', 'RSP', 'R_M', 'Reg', 'RegOperand', 'Register', 'RegisterFile', 'RequestState', 'RequestType', 'Result', 'SF', 'SIB', 'STALLED', 'SUB', 'Stage', 'TD', 'TypeofData', 'UNKNOWN', 'WAITING_DEST_OPERAND', 'WAITING_MEMORY', 'WAITING_SRC_OPERAND', 'WRITE_FAIL', 'WriteBackStage', 'ZF', 'stageStatus', 'temporaryValues', 'typeofInstruction']
+__all__: list[str] = ['ADD', 'AF', 'ALU', 'ALU_enum', 'AddressInfo', 'AddressingMode', 'Bus', 'CACHE', 'CACHE_HIT', 'CACHE_L1', 'CACHE_L2', 'CACHE_L3', 'CACHE_MISS', 'CACHE_READ_ERROR', 'CACHE_WRITE_ERROR', 'CF', 'CPU', 'CU', 'CacheDataLogEntry', 'CacheLevel', 'CacheLine', 'CacheManager', 'CacheRequest', 'Clock', 'ComponentType', 'DecodeOperandFetchBuffer', 'DecodeStage', 'DummyRegister', 'EMPTY', 'ERROR', 'EmptyOperand', 'ErrorType', 'Error_Event_Info', 'EventLog', 'EventType', 'ExecuteMemoryBuffer', 'ExecuteStage', 'FD', 'FLUSHED', 'FPU', 'FetchDecodeBuffer', 'FetchStage', 'FlagReg', 'Flagbit', 'I', 'IMMEDIATE_TO_ACCUMULATOR', 'IMMEDIATE_TO_MEMORY', 'IMMEDIATE_TO_REGISTER', 'INVALID_ADDRESS', 'INVALID_SIZE', 'ImmediateOperand', 'Instruction', 'InstructionCore', 'InstructionDataTransferMode', 'InstructionFlags', 'InstructionInfo', 'LogEntry', 'MEMORY_DONE', 'MEMORY_TO_MEMORY', 'MEMORY_TO_REGISTER', 'MI', 'MOV', 'MR', 'MemOperand', 'Memory', 'MemoryDataLogEntry', 'MemoryScheduler', 'MemoryStage', 'MemoryWriteBackBuffer', 'NONE', 'OF', 'OI', 'OPERAND', 'OUT_OF_BOUNDS', 'Operand', 'OperandDataLogEntry', 'OperandFetchExecuteBuffer', 'OperandFetchStage', 'OperandType', 'PF', 'PendingRequest', 'Pipeline', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15', 'R8', 'R9', 'RAM', 'RAM_ACCESS', 'RAM_READ_ERROR', 'RAM_WRITE_ERROR', 'RAX', 'RBP', 'RBX', 'RCX', 'RDI', 'RDX', 'READY', 'READ_FAIL', 'REGISTER_TO_MEMORY', 'REGISTER_TO_REGISTER', 'RIP', 'RM', 'RSI', 'RSP', 'R_M', 'Reg', 'RegOperand', 'Register', 'RegisterFile', 'RequestState', 'RequestType', 'Result', 'SF', 'SIB', 'STALLED', 'SUB', 'Stage', 'TD', 'TypeofData', 'UNKNOWN', 'WAITING_DEST_OPERAND', 'WAITING_MEMORY', 'WAITING_SRC_OPERAND', 'WRITE_FAIL', 'WriteBackStage', 'ZF', 'stageStatus', 'temporaryValues', 'typeofInstruction']
 class ALU:
     pass
+class AddressInfo:
+    def __init__(self, arg0: typing.SupportsInt | typing.SupportsIndex, arg1: typing.SupportsInt | typing.SupportsIndex, arg2: typing.SupportsInt | typing.SupportsIndex, arg3: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    @property
+    def address(self) -> int:
+        ...
+    @property
+    def offset(self) -> int:
+        ...
+    @property
+    def setIndex(self) -> int:
+        ...
+    @property
+    def tag(self) -> int:
+        ...
 class AddressingMode:
     """
     Members:
@@ -97,6 +112,22 @@ class CPU:
         ...
 class CU:
     pass
+class CacheDataLogEntry:
+    @property
+    def addressInfo1(self) -> AddressInfo:
+        ...
+    @property
+    def addressInfo2(self) -> AddressInfo:
+        ...
+    @property
+    def line1(self) -> bytearray:
+        ...
+    @property
+    def line2(self) -> bytearray:
+        ...
+    @property
+    def logEntry(self) -> LogEntry:
+        ...
 class CacheLevel:
     def getPendingRequests(self) -> list[PendingRequest]:
         ...
@@ -119,7 +150,13 @@ class CacheLine:
     def valid(self) -> bool:
         ...
 class CacheManager:
+    def flushAllCaches(self) -> None:
+        ...
     def getL1Cache(self) -> CacheLevel:
+        ...
+    def getL1DCache(self) -> CacheLevel:
+        ...
+    def getL1DRequestQueue(self) -> list[PendingRequest]:
         ...
     def getL1RequestQueue(self) -> list[PendingRequest]:
         ...
@@ -140,9 +177,6 @@ class CacheRequest:
         ...
     @property
     def address(self) -> int:
-        ...
-    @property
-    def callback(self) -> ...:
         ...
     @property
     def data(self) -> list[int]:
@@ -300,7 +334,6 @@ class ErrorType:
 class Error_Event_Info:
     error: ErrorType
     event: EventType
-    message: str
     source: ComponentType
     def __init__(self) -> None:
         ...
@@ -308,9 +341,21 @@ class EventLog:
     @staticmethod
     def getInstance() -> EventLog:
         ...
-    def getLogData(self) -> ...:
+    def getCacheDataLogEntry(self) -> CacheDataLogEntry:
         ...
-    def getLogEntry(self) -> Result:
+    def getCacheDataLogSize(self) -> int:
+        ...
+    def getGeneralLogEntry(self) -> LogEntry:
+        ...
+    def getGeneralLogSize(self) -> int:
+        ...
+    def getMemoryDataLogEntry(self) -> MemoryDataLogEntry:
+        ...
+    def getMemoryDataLogSize(self) -> int:
+        ...
+    def getOperandDataLogEntry(self) -> OperandDataLogEntry:
+        ...
+    def getOperandDataLogSize(self) -> int:
         ...
     def isLogEmpty(self) -> bool:
         ...
@@ -465,14 +510,98 @@ class Instruction:
         ...
     def getTemporaryValues(self) -> temporaryValues:
         ...
-    def mask(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> int:
-        ...
 class InstructionCore:
     @property
     def InstructionId(self) -> int:
         ...
     @property
     def value(self) -> int:
+        ...
+class InstructionDataTransferMode:
+    """
+    Members:
+    
+      REGISTER_TO_REGISTER
+    
+      REGISTER_TO_MEMORY
+    
+      MEMORY_TO_REGISTER
+    
+      IMMEDIATE_TO_REGISTER
+    
+      IMMEDIATE_TO_ACCUMULATOR
+    
+      IMMEDIATE_TO_MEMORY
+    
+      MEMORY_TO_MEMORY
+    """
+    IMMEDIATE_TO_ACCUMULATOR: typing.ClassVar[InstructionDataTransferMode]  # value = <InstructionDataTransferMode.IMMEDIATE_TO_ACCUMULATOR: 4>
+    IMMEDIATE_TO_MEMORY: typing.ClassVar[InstructionDataTransferMode]  # value = <InstructionDataTransferMode.IMMEDIATE_TO_MEMORY: 5>
+    IMMEDIATE_TO_REGISTER: typing.ClassVar[InstructionDataTransferMode]  # value = <InstructionDataTransferMode.IMMEDIATE_TO_REGISTER: 3>
+    MEMORY_TO_MEMORY: typing.ClassVar[InstructionDataTransferMode]  # value = <InstructionDataTransferMode.MEMORY_TO_MEMORY: 6>
+    MEMORY_TO_REGISTER: typing.ClassVar[InstructionDataTransferMode]  # value = <InstructionDataTransferMode.MEMORY_TO_REGISTER: 2>
+    REGISTER_TO_MEMORY: typing.ClassVar[InstructionDataTransferMode]  # value = <InstructionDataTransferMode.REGISTER_TO_MEMORY: 1>
+    REGISTER_TO_REGISTER: typing.ClassVar[InstructionDataTransferMode]  # value = <InstructionDataTransferMode.REGISTER_TO_REGISTER: 0>
+    __members__: typing.ClassVar[dict[str, InstructionDataTransferMode]]  # value = {'REGISTER_TO_REGISTER': <InstructionDataTransferMode.REGISTER_TO_REGISTER: 0>, 'REGISTER_TO_MEMORY': <InstructionDataTransferMode.REGISTER_TO_MEMORY: 1>, 'MEMORY_TO_REGISTER': <InstructionDataTransferMode.MEMORY_TO_REGISTER: 2>, 'IMMEDIATE_TO_REGISTER': <InstructionDataTransferMode.IMMEDIATE_TO_REGISTER: 3>, 'IMMEDIATE_TO_ACCUMULATOR': <InstructionDataTransferMode.IMMEDIATE_TO_ACCUMULATOR: 4>, 'IMMEDIATE_TO_MEMORY': <InstructionDataTransferMode.IMMEDIATE_TO_MEMORY: 5>, 'MEMORY_TO_MEMORY': <InstructionDataTransferMode.MEMORY_TO_MEMORY: 6>}
+    def __eq__(self, other: typing.Any) -> bool:
+        ...
+    def __getstate__(self) -> int:
+        ...
+    def __hash__(self) -> int:
+        ...
+    def __index__(self) -> int:
+        ...
+    def __init__(self, value: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __int__(self) -> int:
+        ...
+    def __ne__(self, other: typing.Any) -> bool:
+        ...
+    def __repr__(self) -> str:
+        ...
+    def __setstate__(self, state: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+    def __str__(self) -> str:
+        ...
+    @property
+    def name(self) -> str:
+        ...
+    @property
+    def value(self) -> int:
+        ...
+class InstructionFlags:
+    @property
+    def dataTransferMode(self) -> InstructionDataTransferMode:
+        ...
+    @property
+    def hasDisplacement(self) -> int:
+        ...
+    @property
+    def hasImmediate(self) -> int:
+        ...
+    @property
+    def hasModRM(self) -> int:
+        ...
+    @property
+    def hasSIB(self) -> int:
+        ...
+    @property
+    def isRex(self) -> int:
+        ...
+    @property
+    def isWaitingForDestValue(self) -> int:
+        ...
+    @property
+    def isWaitingForSrcValue(self) -> int:
+        ...
+    @property
+    def memToReg(self) -> int:
+        ...
+    @property
+    def regToMem(self) -> int:
+        ...
+    @property
+    def regToReg(self) -> int:
         ...
 class InstructionInfo:
     description: str
@@ -503,10 +632,7 @@ class InstructionInfo:
     def dest_operand_length(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
     @property
-    def instruction(self) -> list[int]:
-        ...
-    @instruction.setter
-    def instruction(self, arg0: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> None:
+    def instruction(self) -> bytearray:
         ...
     @property
     def instructionId(self) -> int:
@@ -565,6 +691,13 @@ class InstructionInfo:
     @totalLength.setter
     def totalLength(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
+class LogEntry:
+    @property
+    def result(self) -> Result:
+        ...
+    @property
+    def timestamp(self) -> int:
+        ...
 class MemOperand(Operand):
     def __init__(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
@@ -583,6 +716,8 @@ class Memory:
         ...
     def push(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
+    def readByte(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> int:
+        ...
     def setBasePointer(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
     def setData(self, arg0: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> None:
@@ -590,6 +725,16 @@ class Memory:
     def setDataPartial(self, arg0: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex], arg1: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
     def setStackPointer(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
+        ...
+class MemoryDataLogEntry:
+    @property
+    def addressLine(self) -> int:
+        ...
+    @property
+    def lineData(self) -> bytearray:
+        ...
+    @property
+    def logEntry(self) -> LogEntry:
         ...
 class MemoryScheduler:
     def getPendingRequests(self) -> list[PendingRequest]:
@@ -613,6 +758,13 @@ class Operand:
     def setSize(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
     def setType(self, arg0: OperandType) -> None:
+        ...
+class OperandDataLogEntry:
+    @property
+    def logEntry(self) -> LogEntry:
+        ...
+    @property
+    def operandValue(self) -> int:
         ...
 class OperandFetchExecuteBuffer:
     flushed: bool
@@ -684,8 +836,6 @@ class PendingRequest:
     def requestState(self) -> RequestState:
         ...
 class Pipeline:
-    def __init__(self, arg0: CPU, arg1: ...) -> None:
-        ...
     def execute_operation(self) -> None:
         ...
     def getDecodeOperandFetchBuffer(self) -> DecodeOperandFetchBuffer:
@@ -714,10 +864,7 @@ class R_M:
     def __init__(self) -> None:
         ...
     @property
-    def byte_r_m(self) -> int:
-        ...
-    @byte_r_m.setter
-    def byte_r_m(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
+    def byte_r_m(self) -> bytes:
         ...
     @property
     def mod(self) -> int:
@@ -751,6 +898,8 @@ class Reg:
     def raw(self) -> int:
         ...
     def raw_const(self) -> int:
+        ...
+    def setRaw(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
 class RegOperand(Operand):
     def __init__(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
@@ -973,10 +1122,7 @@ class SIB:
     def base(self, arg1: typing.SupportsInt | typing.SupportsIndex) -> None:
         ...
     @property
-    def byte_sib(self) -> int:
-        ...
-    @byte_sib.setter
-    def byte_sib(self, arg0: typing.SupportsInt | typing.SupportsIndex) -> None:
+    def byte_sib(self) -> bytes:
         ...
     @property
     def index(self) -> int:
@@ -1198,9 +1344,14 @@ FD: AddressingMode  # value = <AddressingMode.FD: 5>
 FLUSHED: stageStatus  # value = <stageStatus.FLUSHED: 6>
 FPU: ComponentType  # value = <ComponentType.FPU: 7>
 I: AddressingMode  # value = <AddressingMode.I: 0>
+IMMEDIATE_TO_ACCUMULATOR: InstructionDataTransferMode  # value = <InstructionDataTransferMode.IMMEDIATE_TO_ACCUMULATOR: 4>
+IMMEDIATE_TO_MEMORY: InstructionDataTransferMode  # value = <InstructionDataTransferMode.IMMEDIATE_TO_MEMORY: 5>
+IMMEDIATE_TO_REGISTER: InstructionDataTransferMode  # value = <InstructionDataTransferMode.IMMEDIATE_TO_REGISTER: 3>
 INVALID_ADDRESS: ErrorType  # value = <ErrorType.INVALID_ADDRESS: 1>
 INVALID_SIZE: ErrorType  # value = <ErrorType.INVALID_SIZE: 2>
 MEMORY_DONE: stageStatus  # value = <stageStatus.MEMORY_DONE: 1>
+MEMORY_TO_MEMORY: InstructionDataTransferMode  # value = <InstructionDataTransferMode.MEMORY_TO_MEMORY: 6>
+MEMORY_TO_REGISTER: InstructionDataTransferMode  # value = <InstructionDataTransferMode.MEMORY_TO_REGISTER: 2>
 MI: AddressingMode  # value = <AddressingMode.MI: 2>
 MOV: typeofInstruction  # value = <typeofInstruction.MOV: 0>
 MR: AddressingMode  # value = <AddressingMode.MR: 3>
@@ -1230,6 +1381,8 @@ RDI: Register  # value = <Register.RDI: 5>
 RDX: Register  # value = <Register.RDX: 3>
 READY: stageStatus  # value = <stageStatus.READY: 0>
 READ_FAIL: ErrorType  # value = <ErrorType.READ_FAIL: 5>
+REGISTER_TO_MEMORY: InstructionDataTransferMode  # value = <InstructionDataTransferMode.REGISTER_TO_MEMORY: 1>
+REGISTER_TO_REGISTER: InstructionDataTransferMode  # value = <InstructionDataTransferMode.REGISTER_TO_REGISTER: 0>
 RIP: Register  # value = <Register.RIP: 16>
 RM: AddressingMode  # value = <AddressingMode.RM: 4>
 RSI: Register  # value = <Register.RSI: 4>

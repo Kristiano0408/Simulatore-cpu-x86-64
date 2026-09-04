@@ -134,6 +134,8 @@ public:
     const std::array<CacheLevel*, 2>& getL1Dpath() const { return L1Dpath; }
 
     CacheStorage& getStorage() { return storage; }
+
+    CacheController& getController() { return controller; }
 };
 
 #endif // CACHELEVEL_HPP

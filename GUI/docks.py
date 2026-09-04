@@ -222,8 +222,10 @@ class MemoryDock(QDockWidget):
         mem_data = self.parent.memory.getData()
         rip = self.parent.registers.getReg(simulator.RIP).raw()
 
-        start = max(0, rip - 5)
-        end = min(len(mem_data), rip + 50)
+        #start = max(0, rip - 5)
+        #end = min(len(mem_data), rip + 50)
+        start = 0
+        end = 1100
 
         self.memory_table.setRowCount(end - start)
 

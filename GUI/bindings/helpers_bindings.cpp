@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 #include "../include/helpers/pipelineTypes.hpp"
 #include "../include/helpers/instructionTypes.hpp"
@@ -31,7 +32,7 @@ void bind_helpers(py::module &m)
             [](r_m &self, uint8_t v) { self.reg = v & 0b111; }  // 3 bit
         )
 
-        .def_readwrite("byte_r_m", &r_m::byte_r_m);
+        .def_property_readonly("byte_r_m", [](const r_m &self) { return py::bytes(reinterpret_cast<const char*>(&self.byte_r_m), sizeof(self.byte_r_m)); });
 
 
     // ----- SIB -----
@@ -56,7 +57,7 @@ void bind_helpers(py::module &m)
             [](SIB &self, uint8_t v) { self.scale = v & 0b11; } // 2 bit
         )
 
-        .def_readwrite("byte_sib", &SIB::byte_sib);
+        .def_property_readonly("byte_sib", [](const SIB &self) { return py::bytes(reinterpret_cast<const char*>(&self.byte_sib), sizeof(self.byte_sib)); });
 
     //instructionInfo
     py::class_<InstructionInfo>(m, "InstructionInfo")
@@ -83,7 +84,9 @@ void bind_helpers(py::module &m)
         .def_readwrite("hasSIB", &InstructionInfo::hasSIB)
         .def_readwrite("hasDisplacement", &InstructionInfo::hasDisplacement)
         .def_readwrite("hasImmediate", &InstructionInfo::hasImmediate)
-        .def_readwrite("instruction", &InstructionInfo::instruction)
+        .def_property_readonly("instruction", [](const InstructionInfo& info) {
+            return py::bytearray(reinterpret_cast<const char*>(info.instruction.data()), info.instruction.size());
+        })
         .def_readwrite("description", &InstructionInfo::description);   
 
 
