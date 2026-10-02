@@ -9,7 +9,7 @@ forme 8/16/32/64 bit dove esistono), non solo la forma base.
 - MOV        (r/m8,16,32,64 <-> r8,16,32,64 ; r/m,imm ; incl. mov con RIP-relative) DONE
 - MOVZX / MOVSX          (zero/sign extend, tutte le combinazioni 8/16/32->16/32/64)
 - MOVSXD                 (32->64 sign extend, specifica x86-64)
-- LEA                    (calcolo indirizzo, tutte le forme di addressing mode)
+- LEA                    (calcolo indirizzo, tutte le forme di addressing mode) DONE
 - PUSH / POP             (reg, imm, r/m)
 - XCHG                   (incl. forma implicita con RAX)
 - CMOVcc                 (tutte le condizioni: CMOVE, CMOVNE, CMOVG, CMOVL, ecc.)
@@ -17,8 +17,8 @@ forme 8/16/32/64 bit dove esistono), non solo la forma base.
 2) ARITMETICA INTERA
 ---------------------
 - ADD / SUB              (tutte le forme reg/mem/imm, tutte le size)  DONE
-- ADC / SBB              (con carry, per aritmetica multi-precisione)
-- INC / DEC
+- ADC / SBB              (con carry, per aritmetica multi-precisione) DONE (da controllare)
+- INC / DEC               DONE (da controllare)
 - NEG
 - CMP                    (stessa logica di SUB ma senza scrittura risultato)
 - MUL / IMUL             (forma 1, 2 e 3 operandi per IMUL)

@@ -183,6 +183,10 @@ void ExecuteEngine::fetchOperands(Instruction* instruction)
             DEBUG_LOG(debugLog("SUB_TD"));
             operandFetch::fetchTD(instruction, registerFile);
             break;
+        case AddressingMode::M: // single operand r/m (INC/DEC)
+            DEBUG_LOG(debugLog("FETCH_M"));
+            operandFetch::fetchM(instruction, registerFile);
+            break;
         case AddressingMode::RM: // LEA uses RM addressing
             if (core.type == TypeofInstruction::LEA)
             {
@@ -227,6 +231,11 @@ void ExecuteEngine::startExecution(Instruction* instruction)
     if (core.type == TypeofInstruction::MOV)
     {
         instruction->getTemporaryValuesRef().isDestValueReady = true;
+    }
+
+    if (core.type == TypeofInstruction::ADC || core.type == TypeofInstruction::SBB)
+    {
+        instruction->getTemporaryValuesRef().carryIn = registerFile.getFlags().getFlag(Flagbit::CF);
     }
 
     operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), this, &triggerPipelineMemoryWaitingExecuteCallback);
@@ -333,7 +342,12 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         flags.setFlag(Flagbit::ZF, instruction->getTemporaryValues().ZF);
         flags.setFlag(Flagbit::SF, instruction->getTemporaryValues().SF);
         flags.setFlag(Flagbit::OF, instruction->getTemporaryValues().OF);
-        flags.setFlag(Flagbit::CF, instruction->getTemporaryValues().CF);
+        // INC and DEC do NOT modify CF
+        if (instruction->getCore().type != TypeofInstruction::INC &&
+            instruction->getCore().type != TypeofInstruction::DEC)
+        {
+            flags.setFlag(Flagbit::CF, instruction->getTemporaryValues().CF);
+        }
         flags.setFlag(Flagbit::PF, instruction->getTemporaryValues().PF);
         flags.setFlag(Flagbit::AF, instruction->getTemporaryValues().AF);
     }

@@ -95,6 +95,10 @@ void bind_helpers(py::module &m)
         .value("ADD", TypeofInstruction::ADD)
         .value("MOV", TypeofInstruction::MOV)
         .value("SUB", TypeofInstruction::SUB)
+        .value("ADC", TypeofInstruction::ADC)
+        .value("SBB", TypeofInstruction::SBB)
+        .value("INC", TypeofInstruction::INC)
+        .value("DEC", TypeofInstruction::DEC)
         .export_values();
 
     // AddressingMode enum
@@ -106,6 +110,7 @@ void bind_helpers(py::module &m)
         .value("RM", AddressingMode::RM)
         .value("FD", AddressingMode::FD)
         .value("TD", AddressingMode::TD)
+        .value("M", AddressingMode::M)
         .export_values();
     
     // stageStatus enum

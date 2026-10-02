@@ -431,6 +431,193 @@ std::vector<TestCase> buildTestCases()
             {0x3003, 0x00}
         }
     });
+
+    // =========================================================================
+    // ADC - immediate to accumulator (I mode)
+    // =========================================================================
+
+    tests.push_back({
+        .description = "ADC AL, imm8 (CF=0)",
+        .program = {
+            0x14, 0x05
+        },
+        .initial_regs = {
+            {Register::RAX, 0x10}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x15}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "ADC AL, imm8 (CF=1, carry propagates)",
+        .program = {
+            0x14, 0x05
+        },
+        .initial_regs = {
+            {Register::RAX, 0x10}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x16}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "ADC AL, imm8 (overflow, 8-bit)",
+        .program = {
+            0x14, 0x00
+        },
+        .initial_regs = {
+            {Register::RAX, 0xFF}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x00}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "ADC RAX, RBX (64-bit multi-precision)",
+        .program = {
+            0x48, 0x11, 0xD8
+        },
+        .initial_regs = {
+            {Register::RAX, 0xFFFFFFFFFFFFFFFFULL},
+            {Register::RBX, 0x0}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x0000000000000000ULL},
+            {Register::RBX, 0x0}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "ADC QWORD [RSI], imm8 (memory)",
+        .program = {
+            0x48, 0x83, 0x16, 0x04
+        },
+        .initial_regs = {
+            {Register::RSI, 0x100}
+        },
+        .initial_mem = {
+            {0x100, 0x10}
+        },
+        .expected_regs = {
+            {Register::RSI, 0x100}
+        },
+        .expected_mem = {
+            {0x100, 0x15}
+        }
+    });
+
+    // =========================================================================
+    // SBB - immediate to accumulator (I mode)
+    // =========================================================================
+
+    tests.push_back({
+        .description = "SBB AL, imm8 (CF=0)",
+        .program = {
+            0x1C, 0x05
+        },
+        .initial_regs = {
+            {Register::RAX, 0x20}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x1B}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "SBB AL, imm8 (CF=1, borrow)",
+        .program = {
+            0x1C, 0x05
+        },
+        .initial_regs = {
+            {Register::RAX, 0x20}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x1A}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "SBB RAX, imm8 (underflow 64-bit)",
+        .program = {
+            0x48, 0x83, 0x18, 0x00
+        },
+        .initial_regs = {
+            {Register::RAX, 0x0}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0xFFFFFFFFFFFFFFFFULL}
+        },
+        .expected_mem = {}
+    });
+
+    // =========================================================================
+    // Catena 128-bit: ADD low + ADC high
+    // =========================================================================
+
+    tests.push_back({
+        .description = "Catena: ADD RAX,RBX then ADC RDX,RCX",
+        .program = {
+            0x48, 0x01, 0xD8, // ADD RAX, RBX
+            0x48, 0x11, 0xD2  // ADC RDX, RCX
+        },
+        .initial_regs = {
+            {Register::RAX, 0x0000000000000005ULL},
+            {Register::RBX, 0x0000000000000003ULL},
+            {Register::RDX, 0x0000000000000001ULL},
+            {Register::RCX, 0x0000000000000002ULL}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x0000000000000008ULL},
+            {Register::RBX, 0x0000000000000003ULL},
+            {Register::RDX, 0x0000000000000004ULL},
+            {Register::RCX, 0x0000000000000002ULL}
+        },
+        .expected_mem = {}
+    });
+
+    // =========================================================================
+    // Catena 128-bit: SUB low + SBB high
+    // =========================================================================
+
+    tests.push_back({
+        .description = "Catena: SUB RAX,RBX then SBB RDX,RCX",
+        .program = {
+            0x48, 0x29, 0xD8, // SUB RAX, RBX
+            0x48, 0x1B, 0xD2  // SBB RDX, RCX
+        },
+        .initial_regs = {
+            {Register::RAX, 0x00000000000000010ULL},
+            {Register::RBX, 0x00000000000000005ULL},
+            {Register::RDX, 0x0000000000000001ULL},
+            {Register::RCX, 0x0000000000000002ULL}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x0000000000000000BULL},
+            {Register::RBX, 0x00000000000000005ULL},
+            {Register::RDX, 0x00000000000000000ULL},
+            {Register::RCX, 0x0000000000000002ULL}
+        },
+        .expected_mem = {}
+    });
+
         // =========================================================================
     // LEA - Load Effective Address (opcode 0x8D)
     // =========================================================================
@@ -722,7 +909,163 @@ std::vector<TestCase> buildTestCases()
         },
         .expected_mem = {}
     });
-  
+
+    // =========================================================================
+    // INC - Single operand r/m instructions (Gruppo 4 e Gruppo 5)
+    //   FE /0 = INC r/m8,  FE /1 = DEC r/m8
+    //   FF /0 = INC r/m16/32/64,  FF /1 = DEC r/m16/32/64
+    // =========================================================================
+
+    tests.push_back({
+        .description = "INC AL (register)",
+        .program = {
+            0xFE, 0xC0 // FE C0 -> INC r/m8, mod=11, reg=0(INC), r/m=RAX(0)
+        },
+        .initial_regs = {
+            {Register::RAX, 0x0A}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x0B}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "INC RCX (register)",
+        .program = {
+            0xFF, 0xC1 // FF C1 -> INC r/m32/64, mod=11, reg=0(INC), r/m=RCX(1)
+        },
+        .initial_regs = {
+            {Register::RCX, 0x0A}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RCX, 0x0B}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "INC AX (operand size override)",
+        .program = {
+            0x66, 0xFF, 0xC0 // 66 FF C0 -> INC r/m16 with operand-size prefix
+        },
+        .initial_regs = {
+            {Register::RAX, 0x1234}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x1235} // only lower 16 bits change: AX goes from 0x1234 to 0x1235
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "INC RAX (64-bit with REX.W)",
+        .program = {
+            0x48, // REX.W for 64-bit operand size
+            0xFF, 0xC0 // FF C0 -> INC r/m64, mod=11, reg=0(INC), r/m=RAX(0)
+        },
+        .initial_regs = {
+            {Register::RAX, 0x0A}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x0B}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "DEC RAX (64-bit with REX.W)",
+        .program = {
+            0x48, // REX.W for 64-bit operand size
+            0xFF, 0xC8 // FF C8 -> DEC r/m64, mod=11, reg=1(DEC), r/m=RAX(0)
+        },
+        .initial_regs = {
+            {Register::RAX, 0x0B}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RAX, 0x0A}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "DEC RCX (register)",
+        .program = {
+            0xFF, 0xC9 // FF C9 -> DEC r/m32/64, mod=11, reg=1(DEC), r/m=RCX(1)
+        },
+        .initial_regs = {
+            {Register::RCX, 0x0B}
+        },
+        .initial_mem = {},
+        .expected_regs = {
+            {Register::RCX, 0x0A}
+        },
+        .expected_mem = {}
+    });
+
+    tests.push_back({
+        .description = "INC QWORD PTR [RSI] (memory)",
+        .program = {
+            0x48, // REX.W for 64-bit operand size
+            0xFF, 0x06 // FF 06 -> INC r/m64 at memory address in RSI
+        },
+        .initial_regs = {
+            {Register::RSI, 0x1000}
+        },
+        .initial_mem = {
+            {0x1000, static_cast<uint8_t>(0xFF)}, // value = 0x00...00FF at [RSI] -> after INC: 0x00...0100
+            {0x1001, 0x00},
+            {0x1002, 0x00},
+            {0x1003, 0x00},
+            {0x1004, 0x00},
+            {0x1005, 0x00},
+            {0x1006, 0x00},
+            {0x1007, 0x00}
+        },
+        .expected_regs = {
+            {Register::RSI, 0x1000} // RSI unchanged
+        },
+        .expected_mem = {
+            {0x1000, static_cast<uint8_t>(0x00)},
+            {0x1001, 0x00},
+            {0x1002, 0x00},
+            {0x1003, 0x00},
+            {0x1004, 0x00},
+            {0x1005, 0x00},
+            {0x1006, 0x00},
+            {0x1007, 0x00}
+        }
+    });
+
+    tests.push_back({
+        .description = "DEC DWORD PTR [RDI] (memory)",
+        .program = {
+            0xFF, 0x0F // FF OF -> DEC r/m32 at memory address in RDI (no operand-size prefix needed for default)
+        },
+        .initial_regs = {
+            {Register::RDI, 0x2000}
+        },
+        .initial_mem = {
+            {0x2000, static_cast<uint8_t>(0x05)}, // value = 0x05 at [RDI] -> after DEC: 0x04
+            {0x2001, 0x00},
+            {0x2002, 0x00},
+            {0x2003, 0x00}
+        },
+        .expected_regs = {
+            {Register::RDI, 0x2000} // RDI unchanged
+        },
+        .expected_mem = {
+            {0x2000, static_cast<uint8_t>(0x04)},
+            {0x2001, 0x00},
+            {0x2002, 0x00},
+            {0x2003, 0x00}
+        }
+    });
 
     return tests;
 }
@@ -739,7 +1082,7 @@ void runTest(const TestCase& tc)
     // Initialize program memory
     // -------------------------------------------------------------------------
 
-    bus.getMemory().setData(tc.program);
+    bus.getMemory().setDataPartial(tc.program, 0x0000);
 
     // -------------------------------------------------------------------------
     // Initialize registers
@@ -858,7 +1201,7 @@ void runTest(const TestCase& tc)
 int main()
 {
     std::cout
-        << "=== MOV / ADD / SUB Opcode Test Suite ===\n\n";
+        << "=== MOV / ADD / SUB / ADC / SBB / INC / DEC Opcode Test Suite ===\n\n";
 
     const auto tests = buildTestCases();
 

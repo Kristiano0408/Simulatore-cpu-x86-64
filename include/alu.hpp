@@ -18,11 +18,13 @@ class ALU : public FaultDevice
 
         //arithmetic operations
         void executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t nbit); //executes the operation based on the opcode
-        //etc 
+        //etc
     private:
         //private members if needed
         uint64_t add(uint64_t dest, uint64_t src);
         uint64_t sub(uint64_t dest, uint64_t src);
+        uint64_t adc(uint64_t dest, uint64_t src, uint64_t c);
+        uint64_t sbb(uint64_t dest, uint64_t src, uint64_t c);
         
 
 };

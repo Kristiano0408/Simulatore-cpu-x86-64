@@ -71,6 +71,34 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0x2A, {2, 1, 1, 2, 1 , 8 , 8 , 0 , 0 ,true ,false ,false , "SUB r8 , r/m8"}},
     {0x2B, {2, 1, 1, 2, 1 ,32 ,32 ,0 ,0 ,true ,false ,false , "SUB r16/32/64 , r/m16/32/64"}},
 
+    // Istruzioni ADC
+    {0x14, {2, 1, 1, 1, 1, 8, 8, 0, 0, false, false, true, "ADC AL, imm8"}},
+    {0x15, {5, 1, 4, 1, 4, 32, 32, 2, 1, false, false, true, "ADC EAX/RAX, imm16/imm32/imm64"}},
+    {0x8002, {3, 1, 2, 2, 1, 8, 8, 0, 0, true, false, true, "ADC r/m8, imm8"}},
+    {0x8102, {6, 1, 5, 2, 4, 32, 32, 2, 1, true, false, true, "ADC r/m16/32/64, imm16/32/64"}},
+    {0x8302, {3, 1, 2, 2, 1, 8, 32, 2, 0, true, false, true, "ADC r/m16/32/64, imm8"}},
+    {0x10, {2, 1, 1, 2, 1, 8, 8, 0, 0, true, false, false, "ADC r/m8, r8"}},
+    {0x11, {2, 1, 1, 2, 1, 32, 32, 0, 0, true, false, false, "ADC r/m16/32/64, r16/32/64"}},
+    {0x12, {2, 1, 1, 2, 1, 8, 8, 0, 0, true, false, false, "ADC r8, r/m8"}},
+    {0x13, {2, 1, 1, 2, 1, 32, 32, 0, 0, true, false, false, "ADC r16/32/64, r/m16/32/64"}},
+
+    // Istruzioni SBB
+    {0x1C, {2, 1, 1, 1, 1, 8, 8, 0, 0, false, false, true, "SBB AL, imm8"}},
+    {0x1D, {5, 1, 4, 1, 4, 32, 32, 2, 1, false, false, true, "SBB AX/EAX/RAX, imm16/imm32/imm64"}},
+    {0x8003, {3, 1, 2, 2, 1, 8, 8, 0, 0, true, false, true, "SBB r/m8, imm8"}},
+    {0x8103, {6, 1, 5, 2, 4, 32, 32, 2, 1, true, false, true, "SBB r/m16/32/64, imm16/32/64"}},
+    {0x8303, {3, 1, 2, 2, 1, 8, 8, 2, 0, true, false, true, "SBB r/m16/32/64, imm8"}},
+    {0x18, {2, 1, 1, 2, 1, 8, 8, 0, 0, true, false, false, "SBB r/m8, r8"}},
+    {0x19, {2, 1, 1, 2, 1, 32, 32, 0, 0, true, false, false, "SBB r/m16/32/64, r16/32/64"}},
+    {0x1A, {2, 1, 1, 2, 1, 8, 8, 0, 0, true, false, false, "SBB r8, r/m8"}},
+    {0x1B, {2, 1, 1, 2, 1, 32, 32, 0, 0, true, false, false, "SBB r16/32/64, r/m16/32/64"}},
+
+    // Istruzioni INC / DEC (Gruppo 4 per 8-bit, Gruppo 5 per 16/32/64-bit)
+    {0xFE00, {2, 1, 1, 1, 1, 8, 8, 0, 0, true, false, false, "INC r/m8"}},
+    {0xFE01, {2, 1, 1, 1, 1, 8, 8, 0, 0, true, false, false, "DEC r/m8"}},
+    {0xFF00, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "INC r/m16/32/64"}},
+    {0xFF01, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "DEC r/m16/32/64"}},
+
     // Istruzioni LEA
     {0x8D, {3, 1, 2, 2, 1, 32, 32, 2, 0, true, false, false, "LEA r32, [r/m]"}},
 

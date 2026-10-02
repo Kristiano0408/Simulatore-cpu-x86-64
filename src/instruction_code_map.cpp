@@ -54,6 +54,35 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     {0x29, {.type=TypeofInstruction::SUB, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
     {0x2A, {.type=TypeofInstruction::SUB, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
     {0x2B, {.type=TypeofInstruction::SUB, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+
+    // Istruzioni ADC
+    {0x14, {.type=TypeofInstruction::ADC, .mode=AddressingMode::I,  .executionMode=InstructionExecutionMode::ALU}},
+    {0x15, {.type=TypeofInstruction::ADC, .mode=AddressingMode::I,  .executionMode=InstructionExecutionMode::ALU}},
+    {0x8002, {.type=TypeofInstruction::ADC, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8102, {.type=TypeofInstruction::ADC, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8302, {.type=TypeofInstruction::ADC, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x10, {.type=TypeofInstruction::ADC, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x11, {.type=TypeofInstruction::ADC, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x12, {.type=TypeofInstruction::ADC, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+    {0x13, {.type=TypeofInstruction::ADC, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+
+    // Istruzioni SBB
+    {0x1C, {.type=TypeofInstruction::SBB, .mode=AddressingMode::I,  .executionMode=InstructionExecutionMode::ALU}},
+    {0x1D, {.type=TypeofInstruction::SBB, .mode=AddressingMode::I,  .executionMode=InstructionExecutionMode::ALU}},
+    {0x8003, {.type=TypeofInstruction::SBB, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8103, {.type=TypeofInstruction::SBB, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8303, {.type=TypeofInstruction::SBB, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x18, {.type=TypeofInstruction::SBB, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x19, {.type=TypeofInstruction::SBB, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x1A, {.type=TypeofInstruction::SBB, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+    {0x1B, {.type=TypeofInstruction::SBB, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+
+    // Istruzioni INC / DEC
+    {0xFE00, {.type=TypeofInstruction::INC, .mode=AddressingMode::M,  .executionMode=InstructionExecutionMode::ALU}},
+    {0xFF00, {.type=TypeofInstruction::INC, .mode=AddressingMode::M,  .executionMode=InstructionExecutionMode::ALU}},
+    {0xFE01, {.type=TypeofInstruction::DEC, .mode=AddressingMode::M,  .executionMode=InstructionExecutionMode::ALU}},
+    {0xFF01, {.type=TypeofInstruction::DEC, .mode=AddressingMode::M,  .executionMode=InstructionExecutionMode::ALU}},
+
     // Istruzioni LEA
     {0x8D, {.type=TypeofInstruction::LEA, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
 
@@ -71,7 +100,7 @@ const std::array<DecodeFunc,(size_t)AddressingMode::COUNT> addressingModes =
     &Decoder::decodeInstructionRM,
     &Decoder::decodeInstructionFD,
     &Decoder::decodeInstructionTD,
-    
+    &Decoder::decodeInstructionM,
 };
 
 

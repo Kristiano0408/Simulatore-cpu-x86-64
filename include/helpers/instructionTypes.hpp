@@ -25,6 +25,10 @@ enum class TypeofInstruction : uint8_t
     ADD, //add instruction
     SUB, //sub instruction
     LEA, //load effective address
+    ADC, // Add with carry
+    SBB, // Subtract with borrow
+    INC, //increment instruction
+    DEC, //decrement instruction
 
    
 };
@@ -39,7 +43,8 @@ enum class AddressingMode : uint8_t
     RM = 4, //move R/M to register
     FD = 5, //move from offset to Rax
     TD = 6, //move from Rax to offset
-    COUNT = 7
+    M = 7,  //single operand r/m (used for unary instructions like INC/DEC)
+    COUNT = 8
 
 };
 
@@ -78,6 +83,7 @@ struct temporaryValues {
         uint64_t resultValue; //result of the operation
         bool isSrcValueReady = false; //flag to indicate if the source value is ready
         bool isDestValueReady = false; //flag to indicate if the destination value is ready
+        bool carryIn = false; // Carry/Borrow in ingresso per ADC/SBB
         bool CF; //Carry Flag
         bool ZF; //Zero Flag
         bool SF; //Sign Flag

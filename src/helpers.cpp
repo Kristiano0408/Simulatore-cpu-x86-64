@@ -265,6 +265,10 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         case TypeofInstruction::ADD: return "ADD";
         case TypeofInstruction::SUB: return "SUB";
         case TypeofInstruction::LEA: return "LEA";
+        case TypeofInstruction::ADC: return "ADC";
+        case TypeofInstruction::SBB: return "SBB";
+        case TypeofInstruction::INC: return "INC";
+        case TypeofInstruction::DEC: return "DEC";
         default: return "UNKNOWN";
         }
 }

@@ -235,12 +235,32 @@ void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo
     flags.hasImmediate = 1;
     flags.regToReg = 1;  //immediate to register (the flag is reused implicitly for this purpose for simplicity)
     decodeImmediateValue(instructionInfo, instruction, position);
-    
 }
 
+void Decoder::decodeInstructionM(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
+{
+    decodeRmInstruction(instruction, instructionInfo, position);
+    InstructionFlags& flags = instruction->getFlags();
+    InstructionCore& core = instruction->getCore();
 
+    if(core.type == TypeofInstruction::INC || core.type == TypeofInstruction::DEC)
+    {
+        core.value = 1; //for INC and DEC the value is always 1
+    }
 
-
+    if (instruction->getCore().rm.mod == 0b11)
+    {
+        // register operand
+        flags.regToReg = 1;
+        flags.regToMem = 0;
+    }
+    else
+    {
+        // memory operand
+        flags.regToMem = 1;
+        flags.regToReg = 0;
+    }
+}
 
 //helper methods for decoding the instruction
 

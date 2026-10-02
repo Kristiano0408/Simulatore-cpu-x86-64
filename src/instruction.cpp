@@ -58,7 +58,11 @@ uint8_t Instruction::calculatingNumberOfBits()
     static const std::unordered_set<uint32_t> opcode_8bit = {0xA0, 0xA2, 0xC6, 0x88, 0x8A, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, //mov
                                                             0x04, 0x8000,0x8300, 0x00, 0x02, //add
                                                             0x8005, 0x2C, 0x28, 0x2A, //sub
-                                                            };
+                                                            0xFE00, 0xFE01, //inc/dec r/m8
+                                                            0x14, 0x8002, 0x10, 0x12, //adc
+                                                            0x1C, 0x8003, 0x18, 0x1A //sbb
+                                                        
+                                                        }; 
 
     if(opcode_8bit.contains(opcode))
     {

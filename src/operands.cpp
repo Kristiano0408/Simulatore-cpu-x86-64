@@ -208,6 +208,34 @@ void fetchLEA(Instruction* i, RegisterFile& registers)
     i->setDestinationOperand(std::move(destinationOperand));
 }
 
+void fetchM(Instruction* i, RegisterFile& registers)
+{
+    InstructionCore& core = i->getCore();
+    r_m rm = core.rm;
+    uint8_t rex = core.rexprefix;
+
+    auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
+    if (rm.mod == 0b11)
+    {
+        // register operand as destination, immediate(1) as source for infrastructure compatibility
+        Register dest_reg = decodeRegisterRM(rm.r_m, rex, false);
+       
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(dest_reg).raw());
+
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+    }
+    else
+    {
+        // memory operand as destination, immediate(1) as source for infrastructure compatibility
+        uint64_t address = calculatingAddressRM(i, registers);
+        auto destinationOperand = std::make_unique<MemOperand>(address);
+
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+    }
+}
+
 uint64_t calculatingAddressRM(Instruction* i, RegisterFile& registers)
 {
     InstructionCore& core = i->getCore();
