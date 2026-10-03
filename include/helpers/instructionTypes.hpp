@@ -29,6 +29,8 @@ enum class TypeofInstruction : uint8_t
     SBB, // Subtract with borrow
     INC, //increment instruction
     DEC, //decrement instruction
+    NEG, //two's complement negate
+    CMP, //compare two operands (flags only, result discarded)
 
    
 };

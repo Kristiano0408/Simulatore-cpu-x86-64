@@ -17,10 +17,10 @@ forme 8/16/32/64 bit dove esistono), non solo la forma base.
 2) ARITMETICA INTERA
 ---------------------
 - ADD / SUB              (tutte le forme reg/mem/imm, tutte le size)  DONE
-- ADC / SBB              (con carry, per aritmetica multi-precisione) DONE (da controllare)
-- INC / DEC               DONE (da controllare)
-- NEG
-- CMP                    (stessa logica di SUB ma senza scrittura risultato)
+- ADC / SBB              (con carry, per aritmetica multi-precisione) DONE 
+- INC / DEC               DONE
+- NEG                    DONE
+- CMP                    (stessa logica di SUB ma senza scrittura risultato) DONE
 - MUL / IMUL             (forma 1, 2 e 3 operandi per IMUL)
 - DIV / IDIV
 - CQO / CDQ / CWD        (sign-extend per divisione, tutte le size)

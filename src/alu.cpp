@@ -23,6 +23,10 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
             break;
 
         case TypeofInstruction::SUB:
+        case TypeofInstruction::CMP:
+            // CMP calcola dest - src esattamente come SUB:
+            // il risultato viene troncato e usato solo per i flag,
+            // la scrittura sull'operando di destinazione e' soppressa nella pipeline
             tmp = sub(dest, src);
             tempValues.CF = ((dest & widthMask) < (src & widthMask));
             tempValues.AF = ((((dest & 0xF) - (src & 0xF)) & 0x10) != 0U);
@@ -78,6 +82,21 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
             // OF: overflow if negative → positive (most negative to max positive of the width)
             tempValues.OF = (((dest & signBit) != 0) && ((tmp & signBit) == 0));
             break;
+
+        case TypeofInstruction::NEG: {
+            // NEG dest = 0 - dest = (~dest) + 1
+            tmp = (~dest) + 1ULL;
+
+            // CF: 1 for every operand different from 0 (0 - dest needs a borrow)
+            tempValues.CF = ((dest & widthMask) != 0ULL);
+
+            // AF: borrow from bit 4 in 0 - (dest & 0xF)
+            tempValues.AF = ((dest & 0xFULL) != 0ULL);
+
+            // OF: 1 only if dest is the most negative representable value (-2^(nbit-1))
+            tempValues.OF = ((dest & widthMask) == signBit);
+            break;
+        }
 
         default:
             throw std::runtime_error("ALU: operazione non supportata");

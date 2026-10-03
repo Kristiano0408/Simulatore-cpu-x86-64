@@ -286,7 +286,9 @@ void ExecuteEngine::requestMemoryAccess(Instruction* instruction)
 
     InstructionFlags& flags = instruction->getFlags();
 
-    if (!flags.regToMem)
+    // CMP confronta gli operandi tramite una sottrazione logica: il risultato non viene
+    // mai scritto ne' in memoria ne' nei registri, vanno aggiornati solo i flag.
+    if (!flags.regToMem || instruction->getCore().type == TypeofInstruction::CMP)
     {
         DEBUG_LOG(debugLog("No memory access needed for SubInstruction (not register to memory)."));
         resetMemoryAccessState();
@@ -312,29 +314,16 @@ void ExecuteEngine::accessMemory(Instruction* instruction)
 
     cpu.eraseCacheResponseIfFound(core.InstructionId);
 
-    pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE);
+    //pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE);
 }
 
 void ExecuteEngine::writeBackInstruction(Instruction* instruction)
 {
     InstructionFlags& instructionFlags = instruction->getFlags();
 
-    // writing back the result to destination operand if it's register
-    if (!instructionFlags.regToReg && !instructionFlags.memToReg)
-    {
-        DEBUG_LOG(debugLog("getRegToReg(): " + std::to_string(instructionFlags.regToReg)));
-        DEBUG_LOG(debugLog("getMemToReg(): " + std::to_string(instructionFlags.memToReg)));
-        DEBUG_LOG(debugLog("getRegToMem(): " + std::to_string(instructionFlags.regToMem)));
-        DEBUG_LOG(debugLog("No write-back needed for SubInstruction (not register to register or memory to register)."));
-        pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
-        return;
-    }
-
-    DEBUG_LOG(debugLog("Writing back result for SubInstruction."));
-
-    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue, nullptr, nullptr);
-
     // update flags in CPU only for ALU instructions
+    // (done before the write-back check so that ALU instructions with a memory
+    //  destination, like NEG r/m, still commit their flags)
     if (instruction->getCore().executionMode == InstructionExecutionMode::ALU)
     {
         FlagReg& flags = registerFile.getFlags();
@@ -351,4 +340,28 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         flags.setFlag(Flagbit::PF, instruction->getTemporaryValues().PF);
         flags.setFlag(Flagbit::AF, instruction->getTemporaryValues().AF);
     }
+
+    // CMP aggiorna esclusivamente i flag di stato: la scrittura della differenza
+    // calcolata dall'ALU sull'operando di destinazione va sempre soppressa
+    if (instruction->getCore().type == TypeofInstruction::CMP)
+    {
+        DEBUG_LOG(debugLog("CMP instruction: flags updated, destination write suppressed."));
+        pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
+        return;
+    }
+
+    // writing back the result to destination operand if it's register
+    if (!instructionFlags.regToReg && !instructionFlags.memToReg)
+    {
+        DEBUG_LOG(debugLog("getRegToReg(): " + std::to_string(instructionFlags.regToReg)));
+        DEBUG_LOG(debugLog("getMemToReg(): " + std::to_string(instructionFlags.memToReg)));
+        DEBUG_LOG(debugLog("getRegToMem(): " + std::to_string(instructionFlags.regToMem)));
+        DEBUG_LOG(debugLog("No write-back needed for SubInstruction (not register to register or memory to register)."));
+        pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
+        return;
+    }
+
+    DEBUG_LOG(debugLog("Writing back result for SubInstruction."));
+
+    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue, nullptr, nullptr);
 }

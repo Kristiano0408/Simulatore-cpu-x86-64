@@ -60,8 +60,9 @@ uint8_t Instruction::calculatingNumberOfBits()
                                                             0x8005, 0x2C, 0x28, 0x2A, //sub
                                                             0xFE00, 0xFE01, //inc/dec r/m8
                                                             0x14, 0x8002, 0x10, 0x12, //adc
-                                                            0x1C, 0x8003, 0x18, 0x1A //sbb
-                                                        
+                                                            0x1C, 0x8003, 0x18, 0x1A, //sbb
+                                                            0xF603, //neg r/m8
+                                                            0x3C, 0x8007, 0x38, 0x3A //cmp
                                                         }; 
 
     if(opcode_8bit.contains(opcode))

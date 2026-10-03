@@ -55,6 +55,17 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     {0x2A, {.type=TypeofInstruction::SUB, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
     {0x2B, {.type=TypeofInstruction::SUB, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
 
+    // Istruzioni CMP
+    {0x3C, {.type=TypeofInstruction::CMP, .mode=AddressingMode::I,  .executionMode=InstructionExecutionMode::ALU}},
+    {0x3D, {.type=TypeofInstruction::CMP, .mode=AddressingMode::I,  .executionMode=InstructionExecutionMode::ALU}},
+    {0x8007, {.type=TypeofInstruction::CMP, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8107, {.type=TypeofInstruction::CMP, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8307, {.type=TypeofInstruction::CMP, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x38, {.type=TypeofInstruction::CMP, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x39, {.type=TypeofInstruction::CMP, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x3A, {.type=TypeofInstruction::CMP, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+    {0x3B, {.type=TypeofInstruction::CMP, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+
     // Istruzioni ADC
     {0x14, {.type=TypeofInstruction::ADC, .mode=AddressingMode::I,  .executionMode=InstructionExecutionMode::ALU}},
     {0x15, {.type=TypeofInstruction::ADC, .mode=AddressingMode::I,  .executionMode=InstructionExecutionMode::ALU}},
@@ -82,6 +93,10 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     {0xFF00, {.type=TypeofInstruction::INC, .mode=AddressingMode::M,  .executionMode=InstructionExecutionMode::ALU}},
     {0xFE01, {.type=TypeofInstruction::DEC, .mode=AddressingMode::M,  .executionMode=InstructionExecutionMode::ALU}},
     {0xFF01, {.type=TypeofInstruction::DEC, .mode=AddressingMode::M,  .executionMode=InstructionExecutionMode::ALU}},
+
+    // Istruzioni NEG (Gruppo 3, reg = 011b)
+    {0xF603, {.type=TypeofInstruction::NEG, .mode=AddressingMode::M,  .executionMode=InstructionExecutionMode::ALU}},
+    {0xF703, {.type=TypeofInstruction::NEG, .mode=AddressingMode::M,  .executionMode=InstructionExecutionMode::ALU}},
 
     // Istruzioni LEA
     {0x8D, {.type=TypeofInstruction::LEA, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},

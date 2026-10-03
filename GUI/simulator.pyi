@@ -4,7 +4,7 @@ Bindings PyBind11 per il simulatore x86-64
 from __future__ import annotations
 import collections.abc
 import typing
-__all__: list[str] = ['ADD', 'AF', 'ALU', 'ALU_enum', 'AddressInfo', 'AddressingMode', 'Bus', 'CACHE', 'CACHE_HIT', 'CACHE_L1', 'CACHE_L2', 'CACHE_L3', 'CACHE_MISS', 'CACHE_READ_ERROR', 'CACHE_WRITE_ERROR', 'CF', 'CPU', 'CU', 'CacheDataLogEntry', 'CacheLevel', 'CacheLine', 'CacheManager', 'CacheRequest', 'Clock', 'ComponentType', 'DecodeOperandFetchBuffer', 'DecodeStage', 'DEC', 'DummyRegister', 'EMPTY', 'ERROR', 'EmptyOperand', 'ErrorType', 'Error_Event_Info', 'EventLog', 'EventType', 'ExecuteMemoryBuffer', 'ExecuteStage', 'FD', 'FLUSHED', 'FPU', 'FetchDecodeBuffer', 'FetchStage', 'FlagReg', 'Flagbit', 'I', 'IMMEDIATE_TO_ACCUMULATOR', 'IMMEDIATE_TO_MEMORY', 'IMMEDIATE_TO_REGISTER', 'INC', 'INVALID_ADDRESS', 'INVALID_SIZE', 'ImmediateOperand', 'Instruction', 'InstructionCore', 'InstructionDataTransferMode', 'InstructionFlags', 'InstructionInfo', 'LogEntry', 'MEMORY_DONE', 'MEMORY_TO_MEMORY', 'MEMORY_TO_REGISTER', 'MI', 'MOV', 'MR', 'MemOperand', 'Memory', 'MemoryDataLogEntry', 'MemoryScheduler', 'MemoryStage', 'MemoryWriteBackBuffer', 'NONE', 'OF', 'OI', 'OPERAND', 'OUT_OF_BOUNDS', 'Operand', 'OperandDataLogEntry', 'OperandFetchExecuteBuffer', 'OperandFetchStage', 'OperandType', 'PF', 'PendingRequest', 'Pipeline', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15', 'R8', 'R9', 'RAM', 'RAM_ACCESS', 'RAM_READ_ERROR', 'RAM_WRITE_ERROR', 'RAX', 'RBP', 'RBX', 'RCX', 'RDI', 'RDX', 'READY', 'READ_FAIL', 'REGISTER_TO_MEMORY', 'REGISTER_TO_REGISTER', 'RIP', 'RM', 'RSI', 'RSP', 'R_M', 'Reg', 'RegOperand', 'Register', 'RegisterFile', 'RequestState', 'RequestType', 'Result', 'SF', 'SIB', 'STALLED', 'SUB', 'Stage', 'TD', 'TypeofData', 'UNKNOWN', 'WAITING_DEST_OPERAND', 'WAITING_MEMORY', 'WAITING_SRC_OPERAND', 'WRITE_FAIL', 'WriteBackStage', 'ZF', 'stageStatus', 'temporaryValues', 'typeofInstruction']
+__all__: list[str] = ['ADD', 'AF', 'ALU', 'ALU_enum', 'AddressInfo', 'AddressingMode', 'Bus', 'CACHE', 'CACHE_HIT', 'CACHE_L1', 'CACHE_L2', 'CACHE_L3', 'CACHE_MISS', 'CACHE_READ_ERROR', 'CACHE_WRITE_ERROR', 'CF', 'CPU', 'CU', 'CacheDataLogEntry', 'CacheLevel', 'CacheLine', 'CacheManager', 'CacheRequest', 'Clock', 'ComponentType', 'DecodeOperandFetchBuffer', 'DecodeStage', 'DEC', 'DummyRegister', 'EMPTY', 'ERROR', 'EmptyOperand', 'ErrorType', 'Error_Event_Info', 'EventLog', 'EventType', 'ExecuteMemoryBuffer', 'ExecuteStage', 'FD', 'FLUSHED', 'FPU', 'FetchDecodeBuffer', 'FetchStage', 'FlagReg', 'Flagbit', 'I', 'IMMEDIATE_TO_ACCUMULATOR', 'IMMEDIATE_TO_MEMORY', 'IMMEDIATE_TO_REGISTER', 'INC', 'INVALID_ADDRESS', 'INVALID_SIZE', 'ImmediateOperand', 'Instruction', 'InstructionCore', 'InstructionDataTransferMode', 'InstructionFlags', 'InstructionInfo', 'LogEntry', 'MEMORY_DONE', 'MEMORY_TO_MEMORY', 'MEMORY_TO_REGISTER', 'MI', 'MOV', 'MR', 'MemOperand', 'Memory', 'MemoryDataLogEntry', 'MemoryScheduler', 'MemoryStage', 'MemoryWriteBackBuffer', 'NEG', 'NONE', 'OF', 'OI', 'OPERAND', 'OUT_OF_BOUNDS', 'Operand', 'OperandDataLogEntry', 'OperandFetchExecuteBuffer', 'OperandFetchStage', 'OperandType', 'PF', 'PendingRequest', 'Pipeline', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15', 'R8', 'R9', 'RAM', 'RAM_ACCESS', 'RAM_READ_ERROR', 'RAM_WRITE_ERROR', 'RAX', 'RBP', 'RBX', 'RCX', 'RDI', 'RDX', 'READY', 'READ_FAIL', 'REGISTER_TO_MEMORY', 'REGISTER_TO_REGISTER', 'RIP', 'RM', 'RSI', 'RSP', 'R_M', 'Reg', 'RegOperand', 'Register', 'RegisterFile', 'RequestState', 'RequestType', 'Result', 'SF', 'SIB', 'STALLED', 'SUB', 'Stage', 'TD', 'TypeofData', 'UNKNOWN', 'WAITING_DEST_OPERAND', 'WAITING_MEMORY', 'WAITING_SRC_OPERAND', 'WRITE_FAIL', 'WriteBackStage', 'ZF', 'stageStatus', 'temporaryValues', 'typeofInstruction']
 class ALU:
     pass
 class AddressInfo:
@@ -1301,13 +1301,22 @@ class typeofInstruction:
       ADC
     
       SBB
+    
+      INC
+    
+      DEC
+    
+      NEG
     """
     ADD: typing.ClassVar[typeofInstruction]  # value = <typeofInstruction.ADD: 1>
     MOV: typing.ClassVar[typeofInstruction]  # value = <typeofInstruction.MOV: 0>
     SUB: typing.ClassVar[typeofInstruction]  # value = <typeofInstruction.SUB: 2>
     ADC: typing.ClassVar[typeofInstruction]  # value = <typeofInstruction.ADC: 4>
     SBB: typing.ClassVar[typeofInstruction]  # value = <typeofInstruction.SBB: 5>
-    __members__: typing.ClassVar[dict[str, typeofInstruction]]  # value = {'ADD': <typeofInstruction.ADD: 1>, 'MOV': <typeofInstruction.MOV: 0>, 'SUB': <typeofInstruction.SUB: 2>, 'ADC': <typeofInstruction.ADC: 4>, 'SBB': <typeofInstruction.SBB: 5>}
+    INC: typing.ClassVar[typeofInstruction]  # value = <typeofInstruction.INC: 6>
+    DEC: typing.ClassVar[typeofInstruction]  # value = <typeofInstruction.DEC: 7>
+    NEG: typing.ClassVar[typeofInstruction]  # value = <typeofInstruction.NEG: 8>
+    __members__: typing.ClassVar[dict[str, typeofInstruction]]  # value = {'ADD': <typeofInstruction.ADD: 1>, 'MOV': <typeofInstruction.MOV: 0>, 'SUB': <typeofInstruction.SUB: 2>, 'ADC': <typeofInstruction.ADC: 4>, 'SBB': <typeofInstruction.SBB: 5>, 'INC': <typeofInstruction.INC: 6>, 'DEC': <typeofInstruction.DEC: 7>, 'NEG': <typeofInstruction.NEG: 8>}
     def __eq__(self, other: typing.Any) -> bool:
         ...
     def __getstate__(self) -> int:

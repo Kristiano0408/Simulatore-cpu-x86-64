@@ -247,6 +247,10 @@ void Decoder::decodeInstructionM(Instruction* instruction, const InstructionInfo
     {
         core.value = 1; //for INC and DEC the value is always 1
     }
+    else if(core.type == TypeofInstruction::NEG)
+    {
+        core.value = 0; //for NEG the source operand is always 0 (NEG dest = 0 - dest)
+    }
 
     if (instruction->getCore().rm.mod == 0b11)
     {

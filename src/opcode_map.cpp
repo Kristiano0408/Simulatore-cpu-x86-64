@@ -71,6 +71,18 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0x2A, {2, 1, 1, 2, 1 , 8 , 8 , 0 , 0 ,true ,false ,false , "SUB r8 , r/m8"}},
     {0x2B, {2, 1, 1, 2, 1 ,32 ,32 ,0 ,0 ,true ,false ,false , "SUB r16/32/64 , r/m16/32/64"}},
 
+    // Istruzioni CMP (nessuna scrittura del risultato, aggiorna solo i flag)
+    {0x3C, {2, 1, 1, 1, 1, 8, 8, 0, 0, false, false, true, "CMP AL, imm8"}},
+    {0x3D, {5, 1, 4, 1, 4, 32, 32, 2, 1, false, false, true, "CMP AX/EAX/RAX, imm16/imm32/imm64"}},
+    {0x8007, {3, 1, 2, 2, 1, 8, 8, 0, 0, true, false, true, "CMP r/m8, imm8"}},
+    {0x8107, {6, 1, 5, 2, 4, 32, 32, 2, 1, true, false, true, "CMP r/m16/32/64, imm16/32/64"}},
+    {0x8307, {3, 1, 2, 2, 1, 8, 32, 2, 0, true, false, true, "CMP r/m16/32/64, imm8"}},
+
+    {0x38, {2, 1, 1, 2, 1, 8, 8, 0, 0, true, false, false, "CMP r/m8, r8"}},
+    {0x39, {2, 1, 1, 2, 1, 32, 32, 0, 0, true, false, false, "CMP r/m16/32/64, r16/32/64"}},
+    {0x3A, {2, 1, 1, 2, 1, 8, 8, 0, 0, true, false, false, "CMP r8, r/m8"}},
+    {0x3B, {2, 1, 1, 2, 1, 32, 32, 0, 0, true, false, false, "CMP r16/32/64, r/m16/32/64"}},
+
     // Istruzioni ADC
     {0x14, {2, 1, 1, 1, 1, 8, 8, 0, 0, false, false, true, "ADC AL, imm8"}},
     {0x15, {5, 1, 4, 1, 4, 32, 32, 2, 1, false, false, true, "ADC EAX/RAX, imm16/imm32/imm64"}},
@@ -98,6 +110,10 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0xFE01, {2, 1, 1, 1, 1, 8, 8, 0, 0, true, false, false, "DEC r/m8"}},
     {0xFF00, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "INC r/m16/32/64"}},
     {0xFF01, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "DEC r/m16/32/64"}},
+
+    // Istruzioni NEG (Gruppo 3, reg = 011b)
+    {0xF603, {2, 1, 1, 1, 1, 8, 8, 0, 0, true, false, false, "NEG r/m8"}},
+    {0xF703, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "NEG r/m16/32/64"}},
 
     // Istruzioni LEA
     {0x8D, {3, 1, 2, 2, 1, 32, 32, 2, 0, true, false, false, "LEA r32, [r/m]"}},

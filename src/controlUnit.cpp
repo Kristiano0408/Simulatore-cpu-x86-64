@@ -258,7 +258,9 @@ void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, ui
     }
 
     // checking if the opcode  is part of a group of instructions (the opcode is followed by a ModRM byte)
-    if (opcode == 0x80 || opcode == 0x81 || opcode == 0x83 || opcode == 0xFE || opcode == 0xFF)
+    // 0x80/0x81/0x83 -> group 1, 0xF6/0xF7 -> group 3 (TEST/NOT/MUL/IMUL/DIV/IDIV/NEG), 0xFE/0xFF -> group 4/5 (INC/DEC)
+    if (opcode == 0x80 || opcode == 0x81 || opcode == 0x83 || opcode == 0xFE || opcode == 0xFF ||
+        opcode == 0xF6 || opcode == 0xF7)
     {
         // the opcode is part of a group of instructions
         // the real opcode is in the ModRM byte

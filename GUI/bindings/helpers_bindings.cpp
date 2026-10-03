@@ -99,6 +99,8 @@ void bind_helpers(py::module &m)
         .value("SBB", TypeofInstruction::SBB)
         .value("INC", TypeofInstruction::INC)
         .value("DEC", TypeofInstruction::DEC)
+        .value("NEG", TypeofInstruction::NEG)
+        .value("CMP", TypeofInstruction::CMP)
         .export_values();
 
     // AddressingMode enum
