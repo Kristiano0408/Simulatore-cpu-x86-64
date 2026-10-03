@@ -95,6 +95,21 @@ foreach(test_src ${TEST_SOURCES})
         "${test_src}"
     )
 
+    # Optional helper translation units for a test: tests/<test_name>/*.cpp
+    # (e.g. instructionTest is split one file per instruction group)
+    set(test_helper_dir "${CMAKE_CURRENT_SOURCE_DIR}/tests/${test_name}")
+
+    if(IS_DIRECTORY "${test_helper_dir}")
+        file(GLOB TEST_HELPER_SOURCES CONFIGURE_DEPENDS
+            "${test_helper_dir}/*.cpp"
+        )
+
+        target_sources(${test_name}
+            PRIVATE
+                ${TEST_HELPER_SOURCES}
+        )
+    endif()
+
     target_link_libraries(${test_name}
         PRIVATE
             cpu_core
