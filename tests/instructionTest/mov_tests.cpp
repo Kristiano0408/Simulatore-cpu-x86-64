@@ -8,6 +8,17 @@ std::vector<TestCase> buildMovTests()
 {
     std::vector<TestCase> tests{};
 
+    // MOV does not modify the status flags: with the flags initialized to 0,
+    // every flag must remain 0 after execution.
+    const std::vector<std::pair<Flagbit, bool>> flagsUnchanged = {
+        {Flagbit::CF, false},
+        {Flagbit::PF, false},
+        {Flagbit::AF, false},
+        {Flagbit::ZF, false},
+        {Flagbit::SF, false},
+        {Flagbit::OF, false}
+    };
+
     // =========================================================================
     // MOV - immediate -> register
     // =========================================================================
@@ -23,7 +34,8 @@ std::vector<TestCase> buildMovTests()
         .expected_regs = {
             {Register::RAX, 0x11}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     tests.push_back({
@@ -37,7 +49,8 @@ std::vector<TestCase> buildMovTests()
         .expected_regs = {
             {Register::RCX, 0x22}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     tests.push_back({
@@ -53,7 +66,8 @@ std::vector<TestCase> buildMovTests()
         .expected_regs = {
             {Register::R8, 0x12345678ULL}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     // =========================================================================
@@ -74,7 +88,8 @@ std::vector<TestCase> buildMovTests()
             {Register::RAX, 0x12345678ULL},
             {Register::RBX, 0x12345678ULL}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     tests.push_back({
@@ -91,7 +106,8 @@ std::vector<TestCase> buildMovTests()
             {Register::RBX, 0xCAFEBABEULL},
             {Register::RAX, 0xCAFEBABEULL}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     // =========================================================================
@@ -132,7 +148,8 @@ std::vector<TestCase> buildMovTests()
             {0x1001, 0xBA},
             {0x1002, 0xFE},
             {0x1003, 0xCA}
-        }
+        },
+        .expected_flags = flagsUnchanged
     });
 
     // =========================================================================
@@ -158,7 +175,8 @@ std::vector<TestCase> buildMovTests()
             {Register::RSI, 0x1000},
             {Register::RBX, 0xCAFEBABEULL}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
 

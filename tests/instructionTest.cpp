@@ -90,7 +90,7 @@ std::vector<TestCase> buildTestCases()
 // Run single test
 // -----------------------------------------------------------------------------
 
-void runTest(const TestCase& tc)
+bool runTest(const TestCase& tc)
 {
     Bus bus;
 
@@ -236,6 +236,8 @@ void runTest(const TestCase& tc)
         << " -> "
         << (success ? "TEST PASSED!" : "TEST FAILED!")
         << '\n';
+
+    return success;
 }
 
 // -----------------------------------------------------------------------------
@@ -249,9 +251,19 @@ int main()
 
     const auto tests = buildTestCases();
 
+    size_t failedCount = 0;
     for (const auto& test : tests)
     {
-        runTest(test);
+        if (!runTest(test))
+        {
+            ++failedCount;
+        }
+    }
+
+    if (failedCount > 0)
+    {
+        std::cerr << "\n" << failedCount << " test(s) FAILED!\n";
+        return 1;
     }
 
     return 0;

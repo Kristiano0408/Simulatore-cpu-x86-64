@@ -8,6 +8,17 @@ std::vector<TestCase> buildLeaTests()
 {
     std::vector<TestCase> tests{};
 
+    // LEA does not modify the status flags: with the flags initialized to 0,
+    // every flag must remain 0 after execution.
+    const std::vector<std::pair<Flagbit, bool>> flagsUnchanged = {
+        {Flagbit::CF, false},
+        {Flagbit::PF, false},
+        {Flagbit::AF, false},
+        {Flagbit::ZF, false},
+        {Flagbit::SF, false},
+        {Flagbit::OF, false}
+    };
+
     // =========================================================================
     // LEA - Load Effective Address (opcode 0x8D)
     // =========================================================================
@@ -63,7 +74,8 @@ std::vector<TestCase> buildLeaTests()
             {Register::RAX, 0x1000},
             {Register::RBX, 0x1000}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     // -------------------------------------------------------------------------
@@ -99,7 +111,8 @@ std::vector<TestCase> buildLeaTests()
             {Register::RAX, 0x1020},
             {Register::RBX, 0x1000}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     // -------------------------------------------------------------------------
@@ -142,7 +155,8 @@ std::vector<TestCase> buildLeaTests()
             {Register::RBX, 0x2000},
             {Register::RCX, 0x0100}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     // -------------------------------------------------------------------------
@@ -181,7 +195,8 @@ std::vector<TestCase> buildLeaTests()
             {Register::RBX, 0x2000},
             {Register::RCX, 0x0100}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     // -------------------------------------------------------------------------
@@ -220,7 +235,8 @@ std::vector<TestCase> buildLeaTests()
             {Register::RBX, 0x2000},
             {Register::RDX, 0x0050}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     // -------------------------------------------------------------------------
@@ -259,7 +275,8 @@ std::vector<TestCase> buildLeaTests()
             {Register::RAX, 0x12345678ULL},
             {Register::RSI, 0x0000}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     // -------------------------------------------------------------------------
@@ -304,7 +321,8 @@ std::vector<TestCase> buildLeaTests()
             {Register::RAX, 0x0A00},
             {Register::R8, 0x0A00}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = flagsUnchanged
     });
 
     return tests;

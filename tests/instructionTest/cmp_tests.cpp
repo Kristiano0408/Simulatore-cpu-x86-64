@@ -100,6 +100,8 @@ std::vector<TestCase> buildCmpTests()
         .expected_flags = {
             {Flagbit::ZF, false},
             {Flagbit::CF, false},
+            {Flagbit::PF, false},  // 0xB0: 4 set bits -> even parity
+            {Flagbit::AF, false},  // 0 - 0: no borrow from bit 4
             {Flagbit::SF, false},
             {Flagbit::OF, false}
         }
@@ -129,6 +131,8 @@ std::vector<TestCase> buildCmpTests()
         .expected_flags = {
             {Flagbit::ZF, false},
             {Flagbit::CF, true},
+            {Flagbit::PF, true},   // 0xFF...FFB0: low byte 0xB0, 4 set bits -> even parity
+            {Flagbit::AF, false},  // 0 - 0: no borrow from bit 4
             {Flagbit::SF, true},
             {Flagbit::OF, false}
         }
@@ -175,6 +179,8 @@ std::vector<TestCase> buildCmpTests()
         .expected_flags = {
             {Flagbit::ZF, true},
             {Flagbit::CF, false},
+            {Flagbit::PF, true},   // 0x00: 0 set bits -> even parity
+            {Flagbit::AF, false},   // 5 - 5 = 0, no borrow from bit 4
             {Flagbit::SF, false},
             {Flagbit::OF, false}
         }
@@ -213,6 +219,8 @@ std::vector<TestCase> buildCmpTests()
         .expected_flags = {
             {Flagbit::ZF, false},
             {Flagbit::CF, true},
+            {Flagbit::PF, true},   // 0xFFFF...FFF9: low byte 0xF9, 6 set bits -> even parity
+            {Flagbit::AF, true},  // nibble: 3 - 0 = 3, borrow from bit 4 -> AF set
             {Flagbit::SF, true},
             {Flagbit::OF, false}
         }
@@ -249,6 +257,8 @@ std::vector<TestCase> buildCmpTests()
         .expected_flags = {
             {Flagbit::ZF, false},
             {Flagbit::CF, false},
+            {Flagbit::PF, true},   // 0x05: 2 set bits -> even parity
+            {Flagbit::AF, false},  // 7 - 2 = 5, no borrow from bit 4
             {Flagbit::SF, false},
             {Flagbit::OF, false}
         }
@@ -432,6 +442,8 @@ std::vector<TestCase> buildCmpTests()
         .expected_flags = {
             {Flagbit::ZF, true},
             {Flagbit::CF, false},
+            {Flagbit::PF, true},   // 0x00: 0 set bits -> even parity
+            {Flagbit::AF, false},
             {Flagbit::SF, false},
             {Flagbit::OF, false}
         }
@@ -464,6 +476,8 @@ std::vector<TestCase> buildCmpTests()
         .expected_flags = {
             {Flagbit::ZF, false},
             {Flagbit::CF, true},
+            {Flagbit::PF, true},   // 0xFFFFFFFFFFFFFFF0: low byte 0xF0, 4 set bits -> even parity
+            {Flagbit::AF, false},  // bit3: 0 - 0 = 0, no borrow out of bit 3
             {Flagbit::SF, true},
             {Flagbit::OF, false}
         }
@@ -497,6 +511,8 @@ std::vector<TestCase> buildCmpTests()
         .expected_flags = {
             {Flagbit::ZF, false},
             {Flagbit::CF, true},
+            {Flagbit::PF, false},  // 0x02: 1 set bit -> odd parity
+            {Flagbit::AF, true},   // bit3: 1 - 15 -> borrow out of bit 3
             {Flagbit::SF, false},
             {Flagbit::OF, false}
         }
@@ -530,6 +546,8 @@ std::vector<TestCase> buildCmpTests()
         .expected_flags = {
             {Flagbit::ZF, false},
             {Flagbit::CF, false},
+            {Flagbit::PF, false},  // 0xFE: 7 set bits -> odd parity
+            {Flagbit::AF, false},  // 1 - 1: no borrow from bit 4
             {Flagbit::SF, true},
             {Flagbit::OF, false}
         }

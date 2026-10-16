@@ -27,7 +27,15 @@ std::vector<TestCase> buildUnaryTests()
         .expected_regs = {
             {Register::RAX, 0x0B}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = {
+            {Flagbit::CF, false},  // INC never modifies CF
+            {Flagbit::PF, false},  // 0x0B: 3 set bits -> odd parity
+            {Flagbit::AF, false},  // 0xA + 1 = 0xB, no carry out of bit 3
+            {Flagbit::ZF, false},
+            {Flagbit::SF, false},
+            {Flagbit::OF, false}
+        }
     });
 
     tests.push_back({
@@ -43,7 +51,15 @@ std::vector<TestCase> buildUnaryTests()
         .expected_regs = {
             {Register::RCX, 0x0B}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = {
+            {Flagbit::CF, false},  // INC never modifies CF
+            {Flagbit::PF, false},  // 0x0B: 3 set bits -> odd parity
+            {Flagbit::AF, false},  // 0xA + 1 = 0xB, no carry out of bit 3
+            {Flagbit::ZF, false},
+            {Flagbit::SF, false},
+            {Flagbit::OF, false}
+        }
     });
 
     tests.push_back({
@@ -59,7 +75,15 @@ std::vector<TestCase> buildUnaryTests()
         .expected_regs = {
             {Register::RAX, 0x1235} // only lower 16 bits change: AX goes from 0x1234 to 0x1235
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = {
+            {Flagbit::CF, false},  // INC never modifies CF
+            {Flagbit::PF, true},   // 0x35: 4 set bits -> even parity
+            {Flagbit::AF, false},  // 4 + 1 = 5, no carry out of bit 3
+            {Flagbit::ZF, false},
+            {Flagbit::SF, false},
+            {Flagbit::OF, false}
+        }
     });
 
     tests.push_back({
@@ -76,7 +100,15 @@ std::vector<TestCase> buildUnaryTests()
         .expected_regs = {
             {Register::RAX, 0x0B}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = {
+            {Flagbit::CF, false},  // INC never modifies CF
+            {Flagbit::PF, false},  // 0x0B: 3 set bits -> odd parity
+            {Flagbit::AF, false},  // 0xA + 1 = 0xB, no carry out of bit 3
+            {Flagbit::ZF, false},
+            {Flagbit::SF, false},
+            {Flagbit::OF, false}
+        }
     });
 
     tests.push_back({
@@ -93,7 +125,15 @@ std::vector<TestCase> buildUnaryTests()
         .expected_regs = {
             {Register::RAX, 0x0A}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = {
+            {Flagbit::CF, false},  // DEC never modifies CF
+            {Flagbit::PF, true},   // 0x0A: 2 set bits -> even parity
+            {Flagbit::AF, false},  // 0xB - 1 = 0xA, no borrow from bit 4
+            {Flagbit::ZF, false},
+            {Flagbit::SF, false},
+            {Flagbit::OF, false}
+        }
     });
 
     tests.push_back({
@@ -109,7 +149,15 @@ std::vector<TestCase> buildUnaryTests()
         .expected_regs = {
             {Register::RCX, 0x0A}
         },
-        .expected_mem = {}
+        .expected_mem = {},
+        .expected_flags = {
+            {Flagbit::CF, false},  // DEC never modifies CF
+            {Flagbit::PF, true},   // 0x0A: 2 set bits -> even parity
+            {Flagbit::AF, false},  // 0xB - 1 = 0xA, no borrow from bit 4
+            {Flagbit::ZF, false},
+            {Flagbit::SF, false},
+            {Flagbit::OF, false}
+        }
     });
 
     tests.push_back({
@@ -144,6 +192,14 @@ std::vector<TestCase> buildUnaryTests()
             {0x1005, 0x00},
             {0x1006, 0x00},
             {0x1007, 0x00}
+        },
+        .expected_flags = {
+            {Flagbit::CF, false},  // INC never modifies CF
+            {Flagbit::PF, true},   // 0x100: low byte 0x00 -> even parity
+            {Flagbit::AF, true},   // 0xF + 1: carry out of bit 3
+            {Flagbit::ZF, false},
+            {Flagbit::SF, false},
+            {Flagbit::OF, false}   // 64-bit: 0xFF + 1 does not overflow
         }
     });
 
@@ -170,6 +226,14 @@ std::vector<TestCase> buildUnaryTests()
             {0x2001, 0x00},
             {0x2002, 0x00},
             {0x2003, 0x00}
+        },
+        .expected_flags = {
+            {Flagbit::CF, false},  // DEC never modifies CF
+            {Flagbit::PF, false},  // 0x04: 1 set bit -> odd parity
+            {Flagbit::AF, false},  // 5 - 1 = 4, no borrow from bit 4
+            {Flagbit::ZF, false},
+            {Flagbit::SF, false},
+            {Flagbit::OF, false}
         }
     });
 
@@ -207,6 +271,8 @@ std::vector<TestCase> buildUnaryTests()
         .expected_mem = {},
         .expected_flags = {
             {Flagbit::CF, true},  // dest != 0 -> borrow from a higher bit
+            {Flagbit::PF, false},  // 0xFB: 7 set bits -> odd parity
+            {Flagbit::AF, true},   // 0 - 5: borrow out of bit 3 (nibble 5 != 0)
             {Flagbit::OF, false},
             {Flagbit::ZF, false},
             {Flagbit::SF, true}
@@ -229,6 +295,8 @@ std::vector<TestCase> buildUnaryTests()
         .expected_mem = {},
         .expected_flags = {
             {Flagbit::CF, false}, // 0 - 0 needs no borrow
+            {Flagbit::PF, true},   // 0x00: 0 set bits -> even parity
+            {Flagbit::AF, false},
             {Flagbit::OF, false},
             {Flagbit::ZF, true},
             {Flagbit::SF, false}
@@ -251,6 +319,8 @@ std::vector<TestCase> buildUnaryTests()
         .expected_mem = {},
         .expected_flags = {
             {Flagbit::CF, true},
+            {Flagbit::PF, false},  // 0x80: 1 set bit -> odd parity
+            {Flagbit::AF, false},  // low nibble 0: no borrow out of bit 3
             {Flagbit::OF, true}, // overflow: operand is -2^(N-1)
             {Flagbit::ZF, false},
             {Flagbit::SF, true}
@@ -280,6 +350,8 @@ std::vector<TestCase> buildUnaryTests()
         .expected_mem = {},
         .expected_flags = {
             {Flagbit::CF, true},
+            {Flagbit::PF, true},   // 0xFF: 8 set bits -> even parity
+            {Flagbit::AF, true},   // 0 - 1: borrow out of bit 3 (nibble 1 != 0)
             {Flagbit::OF, false},
             {Flagbit::ZF, false},
             {Flagbit::SF, true}
@@ -308,6 +380,8 @@ std::vector<TestCase> buildUnaryTests()
         .expected_mem = {},
         .expected_flags = {
             {Flagbit::CF, true},
+            {Flagbit::PF, false},  // 0xD6: 5 set bits -> odd parity
+            {Flagbit::AF, true},   // 0 - 0xA: borrow out of bit 3 (nibble A != 0)
             {Flagbit::OF, false},
             {Flagbit::ZF, false},
             {Flagbit::SF, true}
@@ -337,6 +411,8 @@ std::vector<TestCase> buildUnaryTests()
         .expected_mem = {},
         .expected_flags = {
             {Flagbit::CF, true},
+            {Flagbit::PF, true},   // 0xFF: 8 set bits -> even parity
+            {Flagbit::AF, true},   // 0 - 1: borrow out of bit 3 (nibble 1 != 0)
             {Flagbit::OF, false},
             {Flagbit::ZF, false},
             {Flagbit::SF, true}
@@ -360,6 +436,8 @@ std::vector<TestCase> buildUnaryTests()
         .expected_mem = {},
         .expected_flags = {
             {Flagbit::CF, true},
+            {Flagbit::PF, true},   // 0x00: low byte 0x00 -> even parity
+            {Flagbit::AF, false},  // 0 - 0: no borrow from bit 4
             {Flagbit::OF, true}, // overflow: operand is -2^(N-1)
             {Flagbit::ZF, false},
             {Flagbit::SF, true}
@@ -398,6 +476,8 @@ std::vector<TestCase> buildUnaryTests()
         },
         .expected_flags = {
             {Flagbit::CF, true},
+            {Flagbit::PF, true},   // 0xF6: 6 set bits -> even parity
+            {Flagbit::AF, true},   // 0 - 0xA: borrow out of bit 3 (nibble A != 0)
             {Flagbit::OF, false},
             {Flagbit::ZF, false},
             {Flagbit::SF, true}
@@ -469,6 +549,8 @@ std::vector<TestCase> buildUnaryTests()
         },
         .expected_flags = {
             {Flagbit::CF, true},
+            {Flagbit::PF, true},   // 0x00: low byte 0x00 -> even parity
+            {Flagbit::AF, false},  // 0 - 0: no borrow from bit 4
             {Flagbit::OF, false},
             {Flagbit::ZF, false},
             {Flagbit::SF, true}

@@ -26,6 +26,15 @@ class ALU : public FaultDevice
         uint64_t adc(uint64_t dest, uint64_t src, uint64_t c);
         uint64_t sbb(uint64_t dest, uint64_t src, uint64_t c);
         
+        void calculateCF_add(temporaryValues& tempValues, uint64_t dest, uint64_t src, uint64_t mask,  bool carryIn);
+        void calculateCF_sub(temporaryValues& tempValues, uint64_t dest, uint64_t src, bool carryIn);
+        void calculateOF_add(temporaryValues& tempValues, uint64_t dest, uint64_t src, uint64_t result, uint64_t signBit);
+        void calculateOF_sub(temporaryValues& tempValues, uint64_t dest, uint64_t src, uint64_t result, uint64_t signBit);
+        void calculateAF(temporaryValues& tempValues, uint64_t destMasked, uint64_t srcMasked, uint64_t resultMasked);
+        void calculateZF(temporaryValues& tempValues, uint64_t resultMasked);
+        void calculateSF(temporaryValues& tempValues, uint64_t resultMasked, uint64_t signBit);
+        void calculatePF(temporaryValues& tempValues, uint64_t resultMasked);
+        
 
 };
 
@@ -35,14 +44,8 @@ class ALU : public FaultDevice
 
 
 /*Istruzioni Aritmetiche
-ADD
 
-Descrizione: Aggiunge due operandi.
-Registri: RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, e registri generali.
-SUB
 
-Descrizione: Sottrae un operando da un altro.
-Registri: RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, e registri generali.
 MUL
 
 Descrizione: Moltiplica due operandi (solo senza segno).
@@ -57,17 +60,7 @@ Descrizione: Divide un operando per un altro (solo senza segno).
 Registri: RAX (dividendo), RDX (rimanente).
 IDIV
 
-Descrizione: Divide un operando per un altro (supporta segno).
-Registri: RAX (dividendo), RDX (rimanente).
-INC
 
-Descrizione: Incrementa un operando di 1.
-Registri: RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, e registri generali.
-DEC
-
-Descrizione: Decrementa un operando di 1.
-Registri: RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, e registri generali.
-NEG
 
 Descrizione: Negazione di un operando.
 Registri: RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, e registri generali.
@@ -86,10 +79,7 @@ Descrizione: Esegue l'operazione XOR bit a bit tra due operandi.
 Registri: RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, e registri generali.
 NOT
 
-Descrizione: Inverte i bit di un operando.
-Registri: RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, e registri generali.
-Istruzioni di Spostamento e Caricamento
-MOV
+
 
 Descrizione: Copia un valore da un operando a un altro.
 Registri: RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, e registri generali.
@@ -99,9 +89,7 @@ Descrizione: Aggiunge un valore allo stack.
 Registri: RSP (cambia il puntatore allo stack).
 POP
 
-Descrizione: Rimuove un valore dallo stack.
-Registri: RSP (cambia il puntatore allo stack).
-LEA
+
 
 Descrizione: Carica l'indirizzo efficace di un operando in un registro.
 Registri: RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP.
@@ -131,11 +119,6 @@ CALL
 Descrizione: Chiama una funzione.
 Registri: RIP (aggiorna il puntatore dell'istruzione), RSP (per lo stack).
 RET
-
-Descrizione: Restituisce da una funzione.
-Registri: RIP (aggiorna il puntatore dell'istruzione), RSP (per lo stack).
-Istruzioni di Comparazione
-CMP
 
 Descrizione: Confronta due operandi e imposta i flag della CPU.
 Registri: RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP, e registri generali.
