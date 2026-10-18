@@ -82,6 +82,7 @@ std::vector<TestCase> buildTestCases()
     append(buildLeaTests());
     append(buildUnaryTests());
     append(buildCmpTests());
+    append(buildMulTests());
 
     return tests;
 }

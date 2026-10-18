@@ -17,7 +17,7 @@ class ALU : public FaultDevice
         ~ALU() = default;
 
         //arithmetic operations
-        void executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t nbit); //executes the operation based on the opcode
+        void executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t nbit, uint8_t nOperands); //executes the operation based on the opcode
         //etc
     private:
         //private members if needed
@@ -25,6 +25,9 @@ class ALU : public FaultDevice
         uint64_t sub(uint64_t dest, uint64_t src);
         uint64_t adc(uint64_t dest, uint64_t src, uint64_t c);
         uint64_t sbb(uint64_t dest, uint64_t src, uint64_t c);
+        int64_t imul(uint64_t dest, uint64_t src);
+        uint64_t mul(uint64_t dest, uint64_t src);
+
         
         void calculateCF_add(temporaryValues& tempValues, uint64_t dest, uint64_t src, uint64_t mask,  bool carryIn);
         void calculateCF_sub(temporaryValues& tempValues, uint64_t dest, uint64_t src, bool carryIn);

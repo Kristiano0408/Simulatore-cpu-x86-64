@@ -64,7 +64,7 @@ InstructionInfo Decoder::lenghtOfInstruction(uint32_t opcode,const uint8_t prefi
         
     }
 
-    if (rex and ((rexprefix & RexMask::REX_W) != 0) and (info.hasImmediate or info.hasDisplacement))
+    if (rex and ((rexprefix & RexMask::REX_W) != 0) and !info.hasModRM and (info.hasImmediate or info.hasDisplacement))
     {
         //the lenght is increased by 4 bytes 
         info.totalLength += 4;
@@ -143,6 +143,7 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
     InstructionCore& core = instructionPtr->getCore();
 
     core.type = type_instruction;
+    core.numOperands = instruction.numOperands;
 
     core.executionMode = executionMode;
 
@@ -207,6 +208,16 @@ void Decoder::decodeInstructionRM(Instruction* instruction, const InstructionInf
     InstructionFlags& flags = instruction->getFlags();
     flags.memToReg = 1;
     decodeRmInstruction(instruction, instructionInfo, position);
+
+    // IMUL reg, r/m (RM mode): the destination is always the ModRM.reg register.
+    // When r/m is a memory operand it is only read as source, so no memory write
+    // must happen in the Memory stage.
+    if (instruction->getCore().type == TypeofInstruction::IMUL && instruction->getCore().rm.mod != 0b11)
+    {
+        flags.regToMem = 0;
+        flags.regToReg = 0;
+        flags.memToReg = 1;
+    }
 }
 
 void Decoder::decodeInstructionFD(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
@@ -261,8 +272,19 @@ void Decoder::decodeInstructionM(Instruction* instruction, const InstructionInfo
     else
     {
         // memory operand
-        flags.regToMem = 1;
-        flags.regToReg = 0;
+        if (core.type == TypeofInstruction::MUL || core.type == TypeofInstruction::IMUL)
+        {
+            // M_ACC (MUL/IMUL 1-op): memory is only the SOURCE operand, the result
+            // always goes to the implicit accumulator (RAX), never back to memory.
+            flags.regToMem = 0;
+            flags.regToReg = 0;
+            flags.memToReg = 1;
+        }
+        else
+        {
+            flags.regToMem = 1;
+            flags.regToReg = 0;
+        }
     }
 }
 

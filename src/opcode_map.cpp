@@ -118,7 +118,21 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     // Istruzioni LEA
     {0x8D, {3, 1, 2, 2, 1, 32, 32, 2, 0, true, false, false, "LEA r32, [r/m]"}},
 
-    // Istruzioni AND
+    
+    // MUL (1 operando, Gruppo 3, reg = 4)
+    {0xF604, {2, 1, 1, 1, 1, 8, 8, 0, 0, true, false, false, "MUL r/m8"}},
+    {0xF704, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "MUL r/m16/32/64"}},
+
+    // IMUL (1 operando, Gruppo 3, reg = 5)
+    {0xF605, {2, 1, 1, 1, 1, 8, 8, 0, 0, true, false, false, "IMUL r/m8"}},
+    {0xF705, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "IMUL r/m16/32/64"}},
+
+    // IMUL (2 operandi: IMUL reg, r/m)
+    {0x0FAF, {3, 2, 1, 2, 4, 32, 32, 0, 0, true, false, false, "IMUL r16/32/64, r/m16/32/64"}},
+
+    // IMUL (3 operandi: IMUL reg, r/m, imm)
+    {0x6B, {3, 1, 2, 3, 1, 8, 32, 2, 0, true, false, true, "IMUL r16/32/64, r/m16/32/64, imm8"}},
+    {0x69, {6, 1, 5, 3, 4, 32, 32, 2, 1, true, false, true, "IMUL r16/32/64, r/m16/32/64, imm16/32"}},
     
 
 

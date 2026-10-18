@@ -101,6 +101,20 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     // Istruzioni LEA
     {0x8D, {.type=TypeofInstruction::LEA, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
 
+    // MUL 1-op
+    {0xF604, {.type=TypeofInstruction::MUL,  .mode=AddressingMode::M_ACC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xF704, {.type=TypeofInstruction::MUL,  .mode=AddressingMode::M_ACC, .executionMode=InstructionExecutionMode::ALU}},
+
+    // IMUL 1-op
+    {0xF605, {.type=TypeofInstruction::IMUL, .mode=AddressingMode::M_ACC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xF705, {.type=TypeofInstruction::IMUL, .mode=AddressingMode::M_ACC, .executionMode=InstructionExecutionMode::ALU}},
+
+    // IMUL 2-op
+    {0x0FAF, {.type=TypeofInstruction::IMUL, .mode=AddressingMode::RM,    .executionMode=InstructionExecutionMode::ALU}},
+
+    // IMUL 3-op
+    {0x6B,   {.type=TypeofInstruction::IMUL, .mode=AddressingMode::RMI,   .executionMode=InstructionExecutionMode::ALU}},
+    {0x69,   {.type=TypeofInstruction::IMUL, .mode=AddressingMode::RMI,   .executionMode=InstructionExecutionMode::ALU}},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -116,6 +130,8 @@ const std::array<DecodeFunc,(size_t)AddressingMode::COUNT> addressingModes =
     &Decoder::decodeInstructionFD,
     &Decoder::decodeInstructionTD,
     &Decoder::decodeInstructionM,
+    &Decoder::decodeInstructionM, //the decode is the same for M and M_ACC, but the fetchOperands is different, so it is separated in the implementation of the decode function
+    &Decoder::decodeInstructionRM,//the decode is the same for RMI and RM, but the fetchOperands is different, so it is separated in the implementation of the decode function
 };
 
 

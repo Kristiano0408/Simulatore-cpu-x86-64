@@ -1,0 +1,3 @@
+finire imul e mul,fare fetch opernads, esecuzioen e writeback(capire writebakc e controllare decode)
+
+cambaire gedstione flag(bool per invariato)

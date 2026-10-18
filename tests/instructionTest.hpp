@@ -63,5 +63,6 @@ std::vector<TestCase> buildCarryTests();   // ADC / SBB + 128-bit chains
 std::vector<TestCase> buildLeaTests();
 std::vector<TestCase> buildUnaryTests();   // INC / DEC / NEG
 std::vector<TestCase> buildCmpTests();
+std::vector<TestCase> buildMulTests();     // MUL / IMUL (1, 2 and 3 operands)
 
 #endif // INSTRUCTION_TEST_HPP

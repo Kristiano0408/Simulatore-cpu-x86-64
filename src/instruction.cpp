@@ -9,7 +9,7 @@ Instruction::Instruction()
     flags = InstructionFlags();
     sourceOperand = std::make_unique<EmptyOperand>();
     destinationOperand = std::make_unique<EmptyOperand>();
-
+    auxOperand = std::make_unique<EmptyOperand>();
 }
 bool Instruction::isEmpty() const 
 {
@@ -33,6 +33,14 @@ void Instruction::setDestinationOperand(std::unique_ptr<Operand> dOperand)
 
 Operand* Instruction::getDestinationOperand() {
     return destinationOperand.get(); // return the raw pointer of the unique_ptr
+}
+
+void Instruction::setAuxOperand(std::unique_ptr<Operand> aOperand) {
+    this->auxOperand = std::move(aOperand); // move the unique_ptr to the member variable
+}
+
+Operand* Instruction::getAuxOperand() {
+    return auxOperand.get(); // return the raw pointer of the unique_ptr
 }
 
 
@@ -62,7 +70,8 @@ uint8_t Instruction::calculatingNumberOfBits()
                                                             0x14, 0x8002, 0x10, 0x12, //adc
                                                             0x1C, 0x8003, 0x18, 0x1A, //sbb
                                                             0xF603, //neg r/m8
-                                                            0x3C, 0x8007, 0x38, 0x3A //cmp
+                                                            0x3C, 0x8007, 0x38, 0x3A, //cmp
+                                                            0xF604, 0xF605, //MUL/IMUL r/m8
                                                         }; 
 
     if(opcode_8bit.contains(opcode))

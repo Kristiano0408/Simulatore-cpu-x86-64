@@ -187,6 +187,14 @@ void ExecuteEngine::fetchOperands(Instruction* instruction)
             DEBUG_LOG(debugLog("FETCH_M"));
             operandFetch::fetchM(instruction, registerFile);
             break;
+        case AddressingMode::M_ACC: // single operand r/m with accumulator for IMUL,MUL, DIV, IDIV
+            DEBUG_LOG(debugLog("FETCH_M_ACC"));
+            operandFetch::fetchM_ACC(instruction, registerFile);
+            break;
+        case AddressingMode::RMI:
+            DEBUG_LOG(debugLog("FETCH_RMI"));
+            operandFetch::fetchRMI(instruction, registerFile);
+            break;
         case AddressingMode::RM: // LEA uses RM addressing
             if (core.type == TypeofInstruction::LEA)
             {
@@ -227,6 +235,7 @@ void ExecuteEngine::startExecution(Instruction* instruction)
 
     instruction->getSourceOperand()->setSize(bit);
     instruction->getDestinationOperand()->setSize(bit);
+    instruction->getAuxOperand()->setSize(bit);
 
     if (core.type == TypeofInstruction::MOV)
     {
@@ -236,6 +245,14 @@ void ExecuteEngine::startExecution(Instruction* instruction)
     if (core.type == TypeofInstruction::ADC || core.type == TypeofInstruction::SBB)
     {
         instruction->getTemporaryValuesRef().carryIn = registerFile.getFlags().getFlag(Flagbit::CF);
+    }
+
+    if (core.type == TypeofInstruction::IMUL && core.addressingMode == AddressingMode::RMI)
+    {
+        uint8_t immBits = (core.opcode == 0x6B) ? 8 : (core.nbit == 16 ? 16 : 32);
+        uint64_t val = instruction->getCore().value;
+        int64_t immSigned = (immBits == 8) ? static_cast<int8_t>(val) : ((immBits == 16) ? static_cast<int16_t>(val) : static_cast<int32_t>(val));
+        instruction->getTemporaryValuesRef().auxValue = static_cast<uint64_t>(immSigned); // the sign-extended immediate value is stored in auxValue for IMUL with 3 operands
     }
 
     operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), this, &triggerPipelineMemoryWaitingExecuteCallback);
@@ -253,7 +270,7 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
     switch (core.executionMode)
     {
         case InstructionExecutionMode::ALU:
-            alu.executeOperation(instruction->getTemporaryValuesRef(), core.type, core.nbit);
+            alu.executeOperation(instruction->getTemporaryValuesRef(), core.type, core.nbit, core.numOperands);
             break;
         case InstructionExecutionMode::DATA_TRANSFER:
             if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::LEA)
@@ -298,7 +315,7 @@ void ExecuteEngine::requestMemoryAccess(Instruction* instruction)
 
     // writing result back to memory
 
-    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue, this, &triggerPipelineMemoryWaitingCallback);
+    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().auxValue, this, &triggerPipelineMemoryWaitingCallback);
 }
 
 void ExecuteEngine::accessMemory(Instruction* instruction)
@@ -328,8 +345,7 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
     {
         FlagReg& flags = registerFile.getFlags();
 
-        flags.setFlag(Flagbit::ZF, instruction->getTemporaryValues().ZF);
-        flags.setFlag(Flagbit::SF, instruction->getTemporaryValues().SF);
+        
         flags.setFlag(Flagbit::OF, instruction->getTemporaryValues().OF);
         // INC and DEC do NOT modify CF
         if (instruction->getCore().type != TypeofInstruction::INC &&
@@ -337,8 +353,14 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         {
             flags.setFlag(Flagbit::CF, instruction->getTemporaryValues().CF);
         }
-        flags.setFlag(Flagbit::PF, instruction->getTemporaryValues().PF);
-        flags.setFlag(Flagbit::AF, instruction->getTemporaryValues().AF);
+        if(instruction->getCore().type != TypeofInstruction::MUL && instruction->getCore().type != TypeofInstruction::IMUL)
+        {
+            flags.setFlag(Flagbit::PF, instruction->getTemporaryValues().PF);
+            flags.setFlag(Flagbit::AF, instruction->getTemporaryValues().AF);
+            flags.setFlag(Flagbit::ZF, instruction->getTemporaryValues().ZF);
+            flags.setFlag(Flagbit::SF, instruction->getTemporaryValues().SF);
+        }
+        
     }
 
     // CMP aggiorna esclusivamente i flag di stato: la scrittura della differenza
@@ -360,8 +382,6 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
         return;
     }
+    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
 
-    DEBUG_LOG(debugLog("Writing back result for SubInstruction."));
-
-    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getTemporaryValues().resultValue, nullptr, nullptr);
 }

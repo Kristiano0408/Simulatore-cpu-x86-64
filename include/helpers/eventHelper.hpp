@@ -45,7 +45,8 @@ enum class EventHandlerExecuteEngineEventType : uint8_t
     MEMORY_WAITING_EXECUTE = 7,
     MEMORY_DONE_EXECUTE = 8,
 
-    COUNT = 9 // Represents the total number of event types
+    NONE = 9,
+    COUNT = 10 // Represents the total number of event types
 };
 
 #endif // EVENT_HELPER_HPP

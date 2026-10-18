@@ -10,9 +10,9 @@ void OperandEngine::sendReadRequest(Instruction* instruction, Operand* srcOperan
     readQueue.push({.instruction = instruction, .srcOperand = srcOperand, .destOperand = destOperand, .callbackContext = callbackContext, .callback = callback});
 }
 
-void OperandEngine::sendWriteRequest(Instruction* instruction, Operand* operand, uint64_t value, void* callbackContext, void (*callback)(void* context))
+void OperandEngine::sendWriteRequest(Instruction* instruction, Operand* operand, Operand* auxOperand, uint64_t value, uint64_t auxValue, void* callbackContext, void (*callback)(void* context))
 {
-    writeQueue.push({.instruction = instruction, .operand = operand, .value = value, .callbackContext = callbackContext, .callback = callback});
+    writeQueue.push({.instruction = instruction, .operand = operand, .auxOperand = auxOperand, .value = value, .auxValue = auxValue, .callbackContext = callbackContext, .callback = callback});
 }
 
 void OperandEngine::execute_operation()
@@ -22,7 +22,7 @@ void OperandEngine::execute_operation()
     if (!writeQueue.empty())
     {
         OperandContextWrite context = writeQueue.front();
-        writeOperand(context.instruction, context.operand, context.value, context.callbackContext, context.callback);
+        writeOperand(context.instruction, context.operand, context.auxOperand, context.value, context.auxValue, context.callbackContext, context.callback);
     }
 
     // Process read operations
@@ -81,17 +81,20 @@ void OperandEngine::readOperand(Instruction* instruction, Operand* operand, Whic
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define writeValue(type, setValueFunction, resultVariable, callbackType)                                                                                                           \
-    DEBUG_LOG(debugLog("Writing to " + std::string(type) + " operand."));                                                                                                          \
-    (resultVariable) = setValueFunction;                                                                                                                                           \
-    if ((resultVariable).status == OperandStatus::OK)                                                                                                                              \
-    {                                                                                                                                                                              \
-        DEBUG_LOG(debugLog("OperandEngine: " + std::string(type) + " write completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));           \
-        executeEngineEventHandler.triggerExecuteEngineEvent(callbackType);                                                                                                         \
-        writeQueue.pop(); /* Remove the completed write operation from the queue */                                                                                                \
+#define writeValue(type, setValueFunction, resultVariable, callbackType)                 \
+    DEBUG_LOG(debugLog("Writing to " + std::string(type) + " operand."));                \
+    (resultVariable) = (setValueFunction);                                               \
+    if ((resultVariable).status == OperandStatus::OK) {                                  \
+        DEBUG_LOG(debugLog("OperandEngine: " + std::string(type) +                       \
+            " write completed for instruction with ID " +                               \
+            std::to_string(instruction->getCore().InstructionId)));                      \
+        if ((callbackType) != EventHandlerExecuteEngineEventType::NONE) {                 \
+            executeEngineEventHandler.triggerExecuteEngineEvent(callbackType);           \
+            writeQueue.pop();                                                            \
+        }                                                                                \
     }
 
-void OperandEngine::writeOperand(Instruction* instruction, Operand* operand, uint64_t value, void* callbackContext, void (*callback)(void* context))
+void OperandEngine::writeOperand(Instruction* instruction, Operand* operand, Operand* auxOperand, uint64_t value, uint64_t auxValue, void* callbackContext, void (*callback)(void* context))
 {
     DEBUG_LOG(debugLog("OperandEngine: Writing value " + std::to_string(value) + " to operand of type " + std::to_string(static_cast<uint8_t>(operand->getType())) +
                        " for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
@@ -99,6 +102,9 @@ void OperandEngine::writeOperand(Instruction* instruction, Operand* operand, uin
     switch (operand->getType())
     {
         case OperandType::REGISTER:
+            if(auxOperand->getType() != OperandType::NONE) {
+                writeValue("register", setRegisterValue(auxOperand, auxValue), result, EventHandlerExecuteEngineEventType::NONE); // Write to auxOperand first
+            }
             writeValue("register", setRegisterValue(operand, value), result, EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE_WRITEBACK);
             return;
         case OperandType::MEMORY:

@@ -26,8 +26,10 @@ class Instruction
         void setSourceOperand(std::unique_ptr<Operand> sOperand);
         Operand* getSourceOperand();
         void setDestinationOperand(std::unique_ptr<Operand> dOperand);
-
         Operand* getDestinationOperand();
+        void setAuxOperand(std::unique_ptr<Operand> aOperand);
+        Operand* getAuxOperand();
+
         InstructionCore& getCore() { return core; }
         InstructionFlags& getFlags() { return flags; } 
 
@@ -41,6 +43,7 @@ class Instruction
     protected:
         std::unique_ptr<Operand> sourceOperand; //source operand
         std::unique_ptr<Operand> destinationOperand; //destination operand
+        std::unique_ptr<Operand> auxOperand; //auxiliary operand (used for IMUL/MUL with 1 operand and write to RDX/RAX)
     private:
     //parts of the instruction
         

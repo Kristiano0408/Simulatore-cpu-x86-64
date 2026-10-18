@@ -21,16 +21,19 @@ struct SIB {
 //enum for the type of instruction
 enum class TypeofInstruction : uint8_t
 {
-    MOV, //move instruction
-    ADD, //add instruction
-    SUB, //sub instruction
-    LEA, //load effective address
-    ADC, // Add with carry
-    SBB, // Subtract with borrow
-    INC, //increment instruction
-    DEC, //decrement instruction
-    NEG, //two's complement negate
-    CMP, //compare two operands (flags only, result discarded)
+    MOV  = 0, //move instruction
+    ADD = 1, //add instruction
+    SUB = 2, //sub instruction
+    LEA = 3, //load effective address
+    ADC = 4, // Add with carry
+    SBB = 5, // Subtract with borrow
+    INC = 6, //increment instruction
+    DEC = 7, //decrement instruction
+    NEG = 8, //two's complement negate
+    CMP = 9, //compare two operands (flags only, result discarded)
+    MUL = 10, //multiply instruction
+    IMUL = 11, //signed multiply instruction
+    COUNT = 12
 
    
 };
@@ -46,7 +49,10 @@ enum class AddressingMode : uint8_t
     FD = 5, //move from offset to Rax
     TD = 6, //move from Rax to offset
     M = 7,  //single operand r/m (used for unary instructions like INC/DEC)
-    COUNT = 8
+    M_ACC = 8, //single operand r/m with accumulator for IMUL,MUL, DIV, IDIV (this doest existin real intel docs, it is separated from M only for the sake of clarity and for make easier the implementation of the operands)
+               //it doesnt have his decode func, it differs from fetchoperands to the end 
+    RMI = 9, //move r/m  to reg with immediate (used for IMUL with 3 operands)
+    COUNT = 10
 
 };
 
@@ -80,9 +86,12 @@ struct InstructionType_and_addMode
 };
 
 struct temporaryValues {
-        uint64_t srcValue; //value of the source operand
-        uint64_t destValue; //value of the destination operand
-        uint64_t resultValue; //result of the operation
+        uint64_t srcValue{}; //value of the source operand
+        uint64_t destValue{}; //value of the destination operand
+        uint64_t auxValue{}; //auxiliary value for the operation (used for IMUL 3 operands)
+        uint64_t resultValue{}; //result of the operation
+        uint64_t resultHighValue{}; //result of the operation for high part (used for MUL/IMUL)(RDX/EDX/DX)
+        uint8_t nOperands{}; //number of bits of the value/operand
         bool isSrcValueReady = false; //flag to indicate if the source value is ready
         bool isDestValueReady = false; //flag to indicate if the destination value is ready
         bool carryIn = false; // Carry/Borrow in ingresso per ADC/SBB
@@ -105,6 +114,7 @@ struct InstructionCore
     uint8_t rexprefix;
     uint8_t numPrefixes;
     uint8_t nbit; //number of bits of the value/operand
+    uint8_t numOperands;
     r_m rm;
     SIB sib;
     TypeofInstruction type; //type of the instruction (arithmetic, logical, control flow, etc.)

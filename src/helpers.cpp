@@ -271,6 +271,8 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         case TypeofInstruction::DEC: return "DEC";
         case TypeofInstruction::NEG: return "NEG";
         case TypeofInstruction::CMP: return "CMP";
+        case TypeofInstruction::MUL: return "MUL";
+        case TypeofInstruction::IMUL: return "IMUL";
         default: return "UNKNOWN";
         }
 }

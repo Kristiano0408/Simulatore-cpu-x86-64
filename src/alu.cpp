@@ -165,12 +165,30 @@ void ALU::calculatePF(temporaryValues& tempValues, uint64_t resultMasked) {
 
 
 
-void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t nbit)
+void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t nbit, uint8_t nOperands)
 {
     DEBUG_LOG(debugLog("ALU: Executing operation " + toStringTypeofInstruction(type) + " with source value " + to_string_hex(tempValues.srcValue) + " and destination value " + to_string_hex(tempValues.destValue) + "."));
     uint64_t dest = tempValues.destValue;
     uint64_t src  = tempValues.srcValue;
     uint64_t tmp  = 0;
+
+    auto signExtend = [](uint64_t value, uint8_t bits) -> int64_t {
+        const uint64_t mask =
+            (bits == 64) ? ~0ULL : ((1ULL << bits) - 1);
+
+        value &= mask;
+
+        const uint64_t signBit = 1ULL << (bits - 1);
+
+        if ((value & signBit) == 0)
+            return static_cast<int64_t>(value);
+
+        // Sottraendo 2^bits si ottiene il valore signed.
+        // __int128 evita problemi con lo shift a 64 bit.
+        const __int128 signedValue = static_cast<__int128>(value) -  (static_cast<__int128>(1) << bits);
+
+        return static_cast<int64_t>(signedValue);
+    };
 
     const uint64_t widthMask = (nbit == 64) ? ~0ULL : ((1ULL << nbit) - 1);
     const uint64_t signBit   = (1ULL << (nbit - 1));
@@ -245,16 +263,87 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
             break;
         }
 
+        case TypeofInstruction::MUL: {
+            if (nbit != 64) {
+                tmp = mul(destMasked, srcMasked);
+                tempValues.resultValue = tmp & widthMask;
+                tempValues.resultHighValue  = (tmp >> (nbit)) & widthMask;
+                tempValues.CF = tempValues.OF = (tempValues.resultHighValue != 0);
+            } else {
+                unsigned __int128 d128 = dest;
+                unsigned __int128 s128 = src;
+                unsigned __int128 prod = d128 * s128;
+                tempValues.resultValue = static_cast<uint64_t>(prod);
+                tempValues.resultHighValue  = static_cast<uint64_t>(prod >> 64);
+                tempValues.CF = tempValues.OF = (tempValues.resultHighValue != 0);
+            }
+            break;
+        }
+
+        case TypeofInstruction::IMUL: {
+            int64_t srcSigned = signExtend(srcMasked, nbit);
+            int64_t destSigned = signExtend(destMasked, nbit);
+            int64_t auxSigned = signExtend(tempValues.auxValue, nbit);
+            if(nOperands == 3) {
+                if(nbit != 64) {
+                    int64_t tmpSigned = srcSigned * auxSigned;
+                    tempValues.resultValue = tmpSigned & widthMask;
+                    tempValues.resultHighValue  = (tmpSigned >> (nbit)) & widthMask;
+                    int64_t sext = signExtend(tempValues.resultValue, nbit);
+                    tempValues.CF = tempValues.OF = (tmpSigned != sext);
+                } else {
+                
+                    __int128 s128 = srcSigned;
+                    __int128 a128 = auxSigned;
+                    __int128 prod =s128 * static_cast<__int128>(auxSigned);
+                    tempValues.resultValue = static_cast<uint64_t>(prod);
+                    tempValues.resultHighValue  = static_cast<uint64_t>(prod >> 64);
+                    __int128 sext = signExtend(tempValues.resultValue, nbit);
+                    tempValues.CF = tempValues.OF = (prod != sext);
+                }
+
+            }
+            else {
+                 if(nbit != 64) {
+                    int64_t tmpSigned = srcSigned * destSigned;
+                    tempValues.resultValue = tmpSigned & widthMask;
+                    tempValues.resultHighValue  = (tmpSigned >> (nbit)) & widthMask;
+                    int64_t sext =signExtend(tempValues.resultValue, nbit);
+                    tempValues.CF = tempValues.OF = (tmpSigned != sext);
+                } else {
+                    __int128 s128 = static_cast<__int128>(srcSigned);
+                    __int128 d128 = static_cast<__int128>(destSigned);
+                    __int128 prod =s128 * d128;
+                    unsigned __int128 unsignedProd = static_cast<unsigned __int128>(prod);
+                    tempValues.resultValue = static_cast<uint64_t>(unsignedProd);
+                    tempValues.resultHighValue  = static_cast<uint64_t>(unsignedProd >> 64);
+                    __int128 sext = static_cast<__int128>(signExtend(tempValues.resultValue, nbit));
+                    tempValues.CF = tempValues.OF = (prod != sext);
+                }
+
+            }
+
+            break;
+        }
+
         default:
             throw std::runtime_error("ALU: operazione non supportata");
     }
 
-    const uint64_t truncatedResult = tmp & widthMask;
 
-    calculateZF(tempValues, truncatedResult);
-    calculateSF(tempValues, truncatedResult, signBit);
-    calculatePF(tempValues, truncatedResult);
-    tempValues.resultValue = truncatedResult;
+
+    if (type == TypeofInstruction::MUL || type == TypeofInstruction::IMUL) {
+        
+    }
+    else {
+        const uint64_t truncatedResult = tmp & widthMask;
+        calculateZF(tempValues, truncatedResult);
+        calculateSF(tempValues, truncatedResult, signBit);
+        calculatePF(tempValues, truncatedResult);
+        tempValues.resultValue = truncatedResult;
+       
+    }
+   
 }
 
 
@@ -277,4 +366,15 @@ uint64_t ALU::sbb(uint64_t dest, uint64_t src, uint64_t c)
 uint64_t ALU::add(uint64_t dest, uint64_t src)
 {
     return dest + src;
+}
+
+
+int64_t ALU::imul(uint64_t dest, uint64_t src)
+{
+    return static_cast<int64_t>(dest) * static_cast<int64_t>(src);
+}
+
+uint64_t ALU::mul(uint64_t dest, uint64_t src)
+{
+    return static_cast<uint64_t>(dest) * static_cast<uint64_t>(src);
 }

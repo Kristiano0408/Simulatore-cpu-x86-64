@@ -44,6 +44,20 @@ void fetchRM(Instruction* i, RegisterFile& registers)
 
     destination_register = decodeRegisterReg(rm.reg, rex);
 
+    // For IMUL reg, r/m (RM mode) the destination is ALWAYS the ModRM.reg register,
+    // even when r/m is a memory operand: memory is only read as the source, the
+    // result is written back to reg (never back to memory).
+    if (core.type == TypeofInstruction::IMUL)
+    {
+        auto sourceOperand = std::make_unique<MemOperand>(address);
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
+
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+
+        return;
+    }
+
     // Source operand is an address and destination is a register
     auto sourceOperand = std::make_unique<MemOperand>(address);
     auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
@@ -235,6 +249,74 @@ void fetchM(Instruction* i, RegisterFile& registers)
         i->setDestinationOperand(std::move(destinationOperand));
     }
 }
+
+void fetchM_ACC(Instruction* i, RegisterFile& registers)
+{
+    InstructionCore& core = i->getCore();
+    r_m rm = core.rm;
+    uint8_t rex = core.rexprefix;
+
+    auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RAX).raw());
+    auto auxOperand = std::make_unique<RegOperand>(registers.getReg(Register::RDX).raw());
+    if (rm.mod == 0b11)
+    {
+        // register operand as destination, immediate(1) as source for infrastructure compatibility
+        Register dest_reg = decodeRegisterRM(rm.r_m, rex, false);
+       
+        auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(dest_reg).raw());
+
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+        i->setAuxOperand(std::move(auxOperand));
+    }
+    else
+    {
+        // memory operand as destination, immediate(1) as source for infrastructure compatibility
+        uint64_t address = calculatingAddressRM(i, registers);
+        auto sourceOperand = std::make_unique<MemOperand>(address);
+
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+        i->setAuxOperand(std::move(auxOperand));
+    }
+}
+
+void fetchRMI(Instruction* i, RegisterFile& registers)
+{
+    InstructionCore& core = i->getCore();
+    r_m rm = core.rm;
+    uint8_t rex = core.rexprefix;
+
+    // IMUL reg, r/m, imm (RMI mode): the destination is ALWAYS the ModRM.reg register,
+    // the source is the r/m operand (register or memory), the immediate is stored in
+    // core.value and used by the ALU through auxValue.
+    Register dest_reg = decodeRegisterReg(rm.reg, rex);
+
+    if (rm.mod == 0b11)
+    {
+        Register src_reg = decodeRegisterRM(rm.r_m, rex, false);
+
+        auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(src_reg).raw());
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(dest_reg).raw());
+
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+    }
+    else
+    {
+        uint64_t address = calculatingAddressRM(i, registers);
+
+        auto sourceOperand = std::make_unique<MemOperand>(address);
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(dest_reg).raw());
+
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+    }
+}
+
+
+
+
 
 uint64_t calculatingAddressRM(Instruction* i, RegisterFile& registers)
 {
