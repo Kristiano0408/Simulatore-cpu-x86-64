@@ -247,15 +247,23 @@ void ExecuteEngine::startExecution(Instruction* instruction)
         instruction->getTemporaryValuesRef().carryIn = registerFile.getFlags().getFlag(Flagbit::CF);
     }
 
+   
     if (core.type == TypeofInstruction::IMUL && core.addressingMode == AddressingMode::RMI)
     {
         uint8_t immBits = (core.opcode == 0x6B) ? 8 : (core.nbit == 16 ? 16 : 32);
         uint64_t val = instruction->getCore().value;
         int64_t immSigned = (immBits == 8) ? static_cast<int8_t>(val) : ((immBits == 16) ? static_cast<int16_t>(val) : static_cast<int32_t>(val));
         instruction->getTemporaryValuesRef().auxValue = static_cast<uint64_t>(immSigned); // the sign-extended immediate value is stored in auxValue for IMUL with 3 operands
-    }
 
-    operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), this, &triggerPipelineMemoryWaitingExecuteCallback);
+    }
+     // MUL/IMUL (1-op) and DIV/IDIV read the implicit high half of the accumulator
+     // pair (RDX) through the aux operand: for MUL/IMUL it is the unused high half
+     // of the product's source pair, for DIV/IDIV it is the high half of the
+     // double-width dividend (stored in destHighValue by the AUXILIARY read).
+     bool uses_acc_pair = (core.addressingMode == AddressingMode::M_ACC);
+     bool requiresAuxRead = uses_acc_pair && instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() != OperandType::NONE;
+
+    operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), uses_acc_pair ? instruction->getAuxOperand() : nullptr, this, &triggerPipelineMemoryWaitingExecuteCallback, requiresAuxRead );
 }
 
 void ExecuteEngine::executeInstruction(Instruction* instruction)
@@ -264,7 +272,7 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
     DEBUG_LOG(debugLog("ExecuteEngine: Executing instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
     DEBUG_LOG(debugLog("ExecuteEngine: Source Operand Value: " + std::to_string(instruction->getTemporaryValuesRef().srcValue)));
     DEBUG_LOG(debugLog("ExecuteEngine: Destination Operand Value: " + std::to_string(instruction->getTemporaryValuesRef().destValue)));
-
+    DEBUG_LOG(debugLog("ExecuteEngine: Auxiliary Operand Value: " + std::to_string(instruction->getTemporaryValuesRef().auxValue)));
     InstructionCore& core = instruction->getCore();
 
     switch (core.executionMode)
@@ -349,11 +357,11 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         flags.setFlag(Flagbit::OF, instruction->getTemporaryValues().OF);
         // INC and DEC do NOT modify CF
         if (instruction->getCore().type != TypeofInstruction::INC &&
-            instruction->getCore().type != TypeofInstruction::DEC)
+            instruction->getCore().type != TypeofInstruction::DEC && instruction->getCore().type != TypeofInstruction::DIV && instruction->getCore().type != TypeofInstruction::IDIV)
         {
             flags.setFlag(Flagbit::CF, instruction->getTemporaryValues().CF);
         }
-        if(instruction->getCore().type != TypeofInstruction::MUL && instruction->getCore().type != TypeofInstruction::IMUL)
+        if(instruction->getCore().type != TypeofInstruction::MUL && instruction->getCore().type != TypeofInstruction::IMUL && instruction->getCore().type != TypeofInstruction::DIV && instruction->getCore().type != TypeofInstruction::IDIV)
         {
             flags.setFlag(Flagbit::PF, instruction->getTemporaryValues().PF);
             flags.setFlag(Flagbit::AF, instruction->getTemporaryValues().AF);
@@ -382,6 +390,8 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
         return;
     }
+    std::printf("Write-back: Writing result back to destination operand for instruction with ID %d\n", instruction->getCore().InstructionId);
+    std::printf("Write-back: Result value: %llu, Result high value: %llu\n", (unsigned long long)instruction->getTemporaryValues().resultValue, (unsigned long long)instruction->getTemporaryValues().resultHighValue);
     operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
 
 }

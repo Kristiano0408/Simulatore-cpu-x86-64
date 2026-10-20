@@ -115,6 +115,14 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     // IMUL 3-op
     {0x6B,   {.type=TypeofInstruction::IMUL, .mode=AddressingMode::RMI,   .executionMode=InstructionExecutionMode::ALU}},
     {0x69,   {.type=TypeofInstruction::IMUL, .mode=AddressingMode::RMI,   .executionMode=InstructionExecutionMode::ALU}},
+
+    // DIV
+    {0xF606, {.type=TypeofInstruction::DIV,  .mode=AddressingMode::M_ACC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xF706, {.type=TypeofInstruction::DIV,  .mode=AddressingMode::M_ACC, .executionMode=InstructionExecutionMode::ALU}},
+
+    // IDIV
+    {0xF607, {.type=TypeofInstruction::IDIV, .mode=AddressingMode::M_ACC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xF707, {.type=TypeofInstruction::IDIV, .mode=AddressingMode::M_ACC, .executionMode=InstructionExecutionMode::ALU}},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

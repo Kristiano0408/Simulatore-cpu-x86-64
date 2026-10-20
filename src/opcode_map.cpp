@@ -133,6 +133,14 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     // IMUL (3 operandi: IMUL reg, r/m, imm)
     {0x6B, {3, 1, 2, 3, 1, 8, 32, 2, 0, true, false, true, "IMUL r16/32/64, r/m16/32/64, imm8"}},
     {0x69, {6, 1, 5, 3, 4, 32, 32, 2, 1, true, false, true, "IMUL r16/32/64, r/m16/32/64, imm16/32"}},
+
+    // DIV (Gruppo 3, reg = 6)
+    {0xF606, {2, 1, 1, 1, 1, 8, 8, 0, 0, true, false, false, "DIV r/m8"}},
+    {0xF706, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "DIV r/m16/32/64"}},
+
+    // IDIV (Gruppo 3, reg = 7)
+    {0xF607, {2, 1, 1, 1, 1, 8, 8, 0, 0, true, false, false, "IDIV r/m8"}},
+    {0xF707, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "IDIV r/m16/32/64"}},
     
 
 

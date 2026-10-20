@@ -13,7 +13,8 @@ class ExecuteEngineEventHandler;
 enum class WhichOperand : uint8_t
 {
     SOURCE,
-    DESTINATION
+    DESTINATION,
+    AUXILIARY
 };
 
 struct OperandContextWrite
@@ -32,6 +33,8 @@ struct OperandContextRead
     Instruction* instruction;
     Operand* srcOperand;
     Operand* destOperand;
+    Operand* auxOperand;
+    bool requiresAuxRead; // Flag to indicate if an auxiliary read is required
     void* callbackContext;
     void (*callback)(void* context);
 };
@@ -44,7 +47,7 @@ class OperandEngine : public TickedDevice, public FaultDevice
     public:
         OperandEngine(CacheManager& cm, CPU& c, ExecuteEngineEventHandler& eeh) : cacheManager(cm), cpu(c), executeEngineEventHandler(eeh) {};
 
-        void sendReadRequest(Instruction* instruction, Operand* srcOperand, Operand* destOperand, void* callbackContext, void (*callback)(void* context));
+        void sendReadRequest(Instruction* instruction, Operand* srcOperand, Operand* destOperand, Operand* auxOperand, void* callbackContext, void (*callback)(void* context), bool requiresAuxRead = false);
         void sendWriteRequest(Instruction* instruction, Operand* operand, Operand* auxOperand, uint64_t value, uint64_t auxValue, void* callbackContext, void (*callback)(void* context));
 
         void readOperand(Instruction* instruction, Operand* operand, WhichOperand whichoperand, void* callbackContext, void (*callback)(void* context));

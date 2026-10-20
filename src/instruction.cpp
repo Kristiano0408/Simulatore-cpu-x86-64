@@ -72,6 +72,7 @@ uint8_t Instruction::calculatingNumberOfBits()
                                                             0xF603, //neg r/m8
                                                             0x3C, 0x8007, 0x38, 0x3A, //cmp
                                                             0xF604, 0xF605, //MUL/IMUL r/m8
+                                                            0xF606, 0xF607, //DIV/IDIV r/m8
                                                         }; 
 
     if(opcode_8bit.contains(opcode))

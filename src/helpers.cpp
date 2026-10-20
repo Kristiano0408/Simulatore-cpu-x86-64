@@ -273,6 +273,8 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         case TypeofInstruction::CMP: return "CMP";
         case TypeofInstruction::MUL: return "MUL";
         case TypeofInstruction::IMUL: return "IMUL";
+        case TypeofInstruction::DIV: return "DIV";
+        case TypeofInstruction::IDIV: return "IDIV";
         default: return "UNKNOWN";
         }
 }

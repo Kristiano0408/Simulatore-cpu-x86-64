@@ -167,8 +167,10 @@ void ALU::calculatePF(temporaryValues& tempValues, uint64_t resultMasked) {
 
 void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t nbit, uint8_t nOperands)
 {
+   
     DEBUG_LOG(debugLog("ALU: Executing operation " + toStringTypeofInstruction(type) + " with source value " + to_string_hex(tempValues.srcValue) + " and destination value " + to_string_hex(tempValues.destValue) + "."));
     uint64_t dest = tempValues.destValue;
+    uint64_t destHigh = tempValues.destHighValue;
     uint64_t src  = tempValues.srcValue;
     uint64_t tmp  = 0;
 
@@ -196,6 +198,7 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
 
 
     uint64_t destMasked = dest & widthMask;
+    uint64_t destHighMasked = destHigh & widthMask;
     uint64_t srcMasked  = src & widthMask;
 
     // Esegui le operazioni normalmente
@@ -322,17 +325,93 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
                 }
 
             }
-
             break;
         }
 
+        case TypeofInstruction::DIV: {
+            if (src == 0) {
+                //gestione errore "ALU: Division by zero (#DE)"
+                return;
+            }
+            if(nbit != 64) {
+                uint64_t dividend = (destHighMasked << nbit) | destMasked;
+                uint64_t divisor  = src;
+                uint64_t quot     = dividend / divisor;
+                uint64_t rem      = dividend % divisor;
+                if (quot > widthMask) {
+                    //gestione errore "ALU: Divide overflow (#DE)"
+                }
+                tempValues.resultValue = quot; // RAX/EAX/AX/AL
+                tempValues.resultHighValue  = rem;  // RDX/EDX/DX/DL
+
+           
+            } else if (nbit == 64) {
+                unsigned __int128 dividend = (static_cast<unsigned __int128>(tempValues.destHighValue) << 64) | static_cast<unsigned __int128>(dest);
+                unsigned __int128 divisor  = static_cast<unsigned __int128>(src);
+                unsigned __int128 quot     = dividend / divisor;
+                unsigned __int128 rem      = dividend % divisor;
+                if (quot > ~0ULL) {
+                    //gestione errore "ALU: Divide overflow (#DE)"
+                }
+                tempValues.resultValue = static_cast<uint64_t>(quot); // RAX
+                tempValues.resultHighValue  = static_cast<uint64_t>(rem);  // RDX
+
+            }
+            break;
+        }
+
+        case TypeofInstruction::IDIV: {
+
+            int64_t srcSigned = signExtend(srcMasked, nbit);
+            int64_t destSigned = signExtend(destMasked, nbit);
+            int64_t destHighSigned = signExtend(destHighMasked, nbit);
+
+            if (srcSigned  == 0) {
+                //gestione errore "ALU: Division by zero (#DE)"
+            }
+
+            if(nbit != 64) {
+                int64_t dividend = (destHighSigned << nbit) | destSigned;
+                int64_t divisor  = srcSigned;
+                int64_t quot     = dividend / divisor;
+                int64_t rem      = dividend % divisor;
+                int64_t minIntN  = (1LL << (nbit - 1));
+                int64_t maxIntN  = ~(1LL << (nbit - 1));
+                if (quot < minIntN || quot > maxIntN) {
+                    //gestione errore "ALU: Signed divide overflow (#DE)"
+                }
+                tempValues.resultValue = static_cast<uint64_t>(quot); // RAX/EAX/AX/AL
+                tempValues.resultHighValue  = static_cast<uint64_t>(rem);  // RDX/EDX/DX/DL
+
+            
+
+        
+            } else if (nbit == 64) {
+                __int128 dividend = (static_cast<__int128>(destHighSigned) << 64) |  static_cast<__int128>(destSigned);
+                __int128 divisor  = static_cast<__int128>(static_cast<int64_t>(srcSigned));
+                __int128 quot     = dividend / divisor;
+                __int128 rem      = dividend % divisor;
+                __int128 minInt64 = static_cast<__int128>(INT64_MIN);
+                __int128 maxInt64 = static_cast<__int128>(INT64_MAX);
+                if (quot < minInt64 || quot > maxInt64) {
+                    //gestione errore "ALU: Signed divide overflow (#DE)"
+                }
+                tempValues.resultValue = static_cast<uint64_t>(quot); // RAX
+                tempValues.resultHighValue  = static_cast<uint64_t>(rem);  // RDX
+
+            }
+            break;
+           
+        }
+        
         default:
-            throw std::runtime_error("ALU: operazione non supportata");
+                throw std::runtime_error("ALU: operazione non supportata");
     }
 
 
 
-    if (type == TypeofInstruction::MUL || type == TypeofInstruction::IMUL) {
+
+    if (type == TypeofInstruction::MUL || type == TypeofInstruction::IMUL || type == TypeofInstruction::DIV || type == TypeofInstruction::IDIV) {
         
     }
     else {

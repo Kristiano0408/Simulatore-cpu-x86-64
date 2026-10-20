@@ -33,7 +33,9 @@ enum class TypeofInstruction : uint8_t
     CMP = 9, //compare two operands (flags only, result discarded)
     MUL = 10, //multiply instruction
     IMUL = 11, //signed multiply instruction
-    COUNT = 12
+    DIV = 12, //divide instruction
+    IDIV = 13, //signed divide instruction
+    COUNT = 14
 
    
 };
@@ -88,12 +90,14 @@ struct InstructionType_and_addMode
 struct temporaryValues {
         uint64_t srcValue{}; //value of the source operand
         uint64_t destValue{}; //value of the destination operand
+        uint64_t destHighValue{}; //value of the destination operand for high part (used for MUL/IMUL)(RDX/EDX/DX)
         uint64_t auxValue{}; //auxiliary value for the operation (used for IMUL 3 operands)
         uint64_t resultValue{}; //result of the operation
         uint64_t resultHighValue{}; //result of the operation for high part (used for MUL/IMUL)(RDX/EDX/DX)
         uint8_t nOperands{}; //number of bits of the value/operand
         bool isSrcValueReady = false; //flag to indicate if the source value is ready
         bool isDestValueReady = false; //flag to indicate if the destination value is ready
+        bool isAuxValueReady = false; //flag to indicate if the auxiliary value is ready
         bool carryIn = false; // Carry/Borrow in ingresso per ADC/SBB
         bool CF; //Carry Flag
         bool ZF; //Zero Flag

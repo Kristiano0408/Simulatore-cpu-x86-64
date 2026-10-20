@@ -5,9 +5,9 @@
 #include "eventLog.hpp"
 #include "instruction.hpp"
 
-void OperandEngine::sendReadRequest(Instruction* instruction, Operand* srcOperand, Operand* destOperand, void* callbackContext, void (*callback)(void* context))
+void OperandEngine::sendReadRequest(Instruction* instruction, Operand* srcOperand, Operand* destOperand, Operand* auxOperand, void* callbackContext, void (*callback)(void* context), bool requiresAuxRead)
 {
-    readQueue.push({.instruction = instruction, .srcOperand = srcOperand, .destOperand = destOperand, .callbackContext = callbackContext, .callback = callback});
+    readQueue.push({.instruction = instruction, .srcOperand = srcOperand, .destOperand = destOperand, .auxOperand = auxOperand, .requiresAuxRead = requiresAuxRead, .callbackContext = callbackContext, .callback = callback});
 }
 
 void OperandEngine::sendWriteRequest(Instruction* instruction, Operand* operand, Operand* auxOperand, uint64_t value, uint64_t auxValue, void* callbackContext, void (*callback)(void* context))
@@ -38,6 +38,10 @@ void OperandEngine::execute_operation()
         {
             readOperand(context.instruction, context.destOperand, WhichOperand::DESTINATION, context.callbackContext, context.callback);
         }
+        if (!tempValues.isAuxValueReady &&  context.requiresAuxRead && context.auxOperand != nullptr && context.auxOperand->getType() != OperandType::NONE)
+        {
+            readOperand(context.instruction, context.auxOperand, WhichOperand::AUXILIARY, context.callbackContext, context.callback);
+        }
     }
 }
 
@@ -46,7 +50,7 @@ void OperandEngine::execute_operation()
 #define readValue(type, getValueFunction, resultVariable)                                                                                                                          \
     DEBUG_LOG(debugLog("Reading from " + std::string(type) + " operand."));                                                                                                        \
     (resultVariable) = getValueFunction;                                                                                                                                           \
-    if ((resultVariable).status == OperandStatus::OK && instruction->getTemporaryValuesRef().isSrcValueReady && instruction->getTemporaryValuesRef().isDestValueReady)             \
+    if ((resultVariable).status == OperandStatus::OK && instruction->getTemporaryValuesRef().isSrcValueReady && instruction->getTemporaryValuesRef().isDestValueReady && (instruction->getTemporaryValuesRef().isAuxValueReady || instruction->getAuxOperand()->getType() == OperandType::NONE))             \
     {                                                                                                                                                                              \
         DEBUG_LOG(debugLog("OperandEngine: " + std::string(type) + " read completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));            \
         executeEngineEventHandler.triggerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ_EXECUTION);                                                  \
@@ -134,8 +138,8 @@ OperandResult OperandEngine::setRegisterValue(Operand* operand, uint64_t value)
     const uint64_t valueMasked = value & mask;
 
     uint64_t& regValue = regOperand->getReg();
-    if (bitCount == 32)
-        regValue = valueMasked; // For 32-bit registers, overwrite the entire register
+    if (bitCount == 32 || bitCount == 8)
+        regValue = valueMasked; // 32-bit (and 8-bit accumulator writes) zero-extend into the full 64-bit register
     else
         regValue = (regValue & ~mask) | valueMasked; // Altrimenti, sovrascrivi l'intero registro
 
@@ -179,6 +183,10 @@ OperandResult OperandEngine::getRegisterValue(Instruction* instruction, Operand*
             instruction->getTemporaryValuesRef().destValue = value;
             instruction->getTemporaryValuesRef().isDestValueReady = true;
             break;
+        case WhichOperand::AUXILIARY:
+            instruction->getTemporaryValuesRef().destHighValue = value;
+            instruction->getTemporaryValuesRef().isAuxValueReady = true;
+            break;
     }
     #ifdef GUI_ENABLED
         EventLog::getInstance().pushOperandDataLogEntry(std::move(result), value);
@@ -221,6 +229,8 @@ OperandResult OperandEngine::getImmediateValue(Instruction* instruction, Operand
         case WhichOperand::DESTINATION:
             instruction->getTemporaryValuesRef().destValue = immOperand->getValue();
             instruction->getTemporaryValuesRef().isDestValueReady = true;
+            break;
+        case WhichOperand::AUXILIARY:
             break;
     }
 
@@ -324,6 +334,8 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
             case WhichOperand::DESTINATION:
                 instruction->getTemporaryValuesRef().destValue = value;
                 instruction->getTemporaryValuesRef().isDestValueReady = true;
+                break;
+            case WhichOperand::AUXILIARY:
                 break;
         }
 

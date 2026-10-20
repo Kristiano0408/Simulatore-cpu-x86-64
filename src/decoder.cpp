@@ -272,9 +272,10 @@ void Decoder::decodeInstructionM(Instruction* instruction, const InstructionInfo
     else
     {
         // memory operand
-        if (core.type == TypeofInstruction::MUL || core.type == TypeofInstruction::IMUL)
+        if (core.type == TypeofInstruction::MUL || core.type == TypeofInstruction::IMUL ||
+            core.type == TypeofInstruction::DIV || core.type == TypeofInstruction::IDIV)
         {
-            // M_ACC (MUL/IMUL 1-op): memory is only the SOURCE operand, the result
+            // M_ACC (MUL/IMUL/DIV/IDIV 1-op): memory is only the SOURCE operand, the result
             // always goes to the implicit accumulator (RAX), never back to memory.
             flags.regToMem = 0;
             flags.regToReg = 0;
