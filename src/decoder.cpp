@@ -337,6 +337,8 @@ void Decoder::settingInstructionParameters(Instruction* instruction, Instruction
     core.numPrefixes = instructionInfo.prefixCount;
     core.rexprefix = instructionInfo.rexprefix;
     core.InstructionId = instructionInfo.instructionId;
+    core.srcNbit = instructionInfo.src_operand_length;
+    core.destNbit = instructionInfo.dest_operand_length;
 
     InstructionFlags& flags = instruction->getFlags();
     flags.rex = instructionInfo.rex;

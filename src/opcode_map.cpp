@@ -142,6 +142,16 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0xF607, {2, 1, 1, 1, 1, 8, 8, 0, 0, true, false, false, "IDIV r/m8"}},
     {0xF707, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "IDIV r/m16/32/64"}},
     
+    // MOVZX r16/32/64, r/m8   (0F B6)
+    {0x0FB6, {3, 2, 1, 2, 1, 8, 32, 1, 0, true, false, false, "MOVZX r16/32/64, r/m8"}},
+    // MOVZX r32/64, r/m16     (0F B7)
+    {0x0FB7, {3, 2, 1, 2, 2, 16, 32, 1, 0, true, false, false, "MOVZX r32/64, r/m16"}},
+    // MOVSX r16/32/64, r/m8   (0F BE)
+    {0x0FBE, {3, 2, 1, 2, 1, 8, 32, 2, 0, true, false, false, "MOVSX r16/32/64, r/m8"}},
+    // MOVSX r32/64, r/m16     (0F BF)
+    {0x0FBF, {3, 2, 1, 2, 2, 16, 32, 2, 0, true, false, false, "MOVSX r32/64, r/m16"}},
+    // MOVSXD r64, r/m32       (REX.W + 63)
+    {0x63,   {2, 1, 1, 2, 4, 32, 64, 2, 1, true, false, false, "MOVSXD r64, r/m32"}},
 
 
 

@@ -386,7 +386,7 @@ uint64_t calculatingAddressRM(Instruction* i, RegisterFile& registers)
 
 void Operand::setSize(uint8_t s)
 {
-    if (s == 8 || s == 16 || s == 32 || s == 64)
+    if (s == 8 || s == 16 || s == 32 || s == 64 )
     {
         this->size = s;
     }

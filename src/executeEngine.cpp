@@ -228,16 +228,19 @@ void ExecuteEngine::startExecution(Instruction* instruction)
     DEBUG_LOG(debugLog("ExecuteEngine: Starting execution for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
     isExecuting = true;
     InstructionCore& core = instruction->getCore();
+
+
     // setting the size of the operands
-    uint8_t bit = instruction->calculatingNumberOfBits();
+    instruction->calculatingNumberOfBits();
 
-    core.nbit = bit;
+    instruction->getSourceOperand()->setSize(core.srcNbit);
+    instruction->getDestinationOperand()->setSize(core.destNbit);
+    if(core.auxNbit > 0 && instruction->getAuxOperand()->getType() != OperandType::NONE)
+    {
+        instruction->getAuxOperand()->setSize(core.auxNbit);
+    }
 
-    instruction->getSourceOperand()->setSize(bit);
-    instruction->getDestinationOperand()->setSize(bit);
-    instruction->getAuxOperand()->setSize(bit);
-
-    if (core.type == TypeofInstruction::MOV)
+    if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::MOVSX || core.type == TypeofInstruction::MOVZX || core.type == TypeofInstruction::MOVSXD)
     {
         instruction->getTemporaryValuesRef().isDestValueReady = true;
     }
@@ -250,7 +253,7 @@ void ExecuteEngine::startExecution(Instruction* instruction)
    
     if (core.type == TypeofInstruction::IMUL && core.addressingMode == AddressingMode::RMI)
     {
-        uint8_t immBits = (core.opcode == 0x6B) ? 8 : (core.nbit == 16 ? 16 : 32);
+        uint8_t immBits = core.immediateNbit;
         uint64_t val = instruction->getCore().value;
         int64_t immSigned = (immBits == 8) ? static_cast<int8_t>(val) : ((immBits == 16) ? static_cast<int16_t>(val) : static_cast<int32_t>(val));
         instruction->getTemporaryValuesRef().auxValue = static_cast<uint64_t>(immSigned); // the sign-extended immediate value is stored in auxValue for IMUL with 3 operands
@@ -278,12 +281,27 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
     switch (core.executionMode)
     {
         case InstructionExecutionMode::ALU:
-            alu.executeOperation(instruction->getTemporaryValuesRef(), core.type, core.nbit, core.numOperands);
+            alu.executeOperation(instruction->getTemporaryValuesRef(), core.type, core.srcNbit, core.destNbit, core.auxNbit, core.immediateNbit, core.numOperands);
             break;
         case InstructionExecutionMode::DATA_TRANSFER:
             if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::LEA)
             {
                 instruction->getTemporaryValuesRef().resultValue = instruction->getTemporaryValuesRef().srcValue;
+            }
+            else if (core.type == TypeofInstruction::MOVZX)
+            {
+                const uint64_t mask = (core.srcNbit == 64) ? ~0ULL : ((1ULL << core.srcNbit) - 1);
+                instruction->getTemporaryValuesRef().resultValue =
+                    instruction->getTemporaryValuesRef().srcValue & mask;
+            }
+            else if (core.type == TypeofInstruction::MOVSX || core.type == TypeofInstruction::MOVSXD)
+            {
+                
+                const uint64_t mask = (core.srcNbit == 64) ? ~0ULL : ((1ULL << core.srcNbit) - 1);
+                uint64_t srcMasked = instruction->getTemporaryValuesRef().srcValue & mask;
+                if (srcMasked & (1ULL << (core.srcNbit - 1)))   // bit di segno della sorgente
+                    srcMasked |= ~mask;                          // estensione di segno a 64 bit
+                instruction->getTemporaryValuesRef().resultValue = srcMasked;
             }
             break;
         /*case InstructionExecutionMode::CONTROL_FLOW:
@@ -309,11 +327,11 @@ void ExecuteEngine::requestMemoryAccess(Instruction* instruction)
     }
     isAccessingMemory = true;
 
-    InstructionFlags& flags = instruction->getFlags();
+    InstructionFlags& iFlags = instruction->getFlags();
 
     // CMP confronta gli operandi tramite una sottrazione logica: il risultato non viene
     // mai scritto ne' in memoria ne' nei registri, vanno aggiornati solo i flag.
-    if (!flags.regToMem || instruction->getCore().type == TypeofInstruction::CMP)
+    if (!iFlags.regToMem || instruction->getCore().type == TypeofInstruction::CMP)
     {
         DEBUG_LOG(debugLog("No memory access needed for SubInstruction (not register to memory)."));
         resetMemoryAccessState();
@@ -352,22 +370,39 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
     if (instruction->getCore().executionMode == InstructionExecutionMode::ALU)
     {
         FlagReg& flags = registerFile.getFlags();
+        /*
+        bool ofValue = instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::OF))? instruction->getTemporaryValues().OF : flags.getFlag(Flagbit::OF);
+        flags.setFlag(Flagbit::OF, ofValue);
+        
+        bool cfValue = instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::CF))? instruction->getTemporaryValues().CF : flags.getFlag(Flagbit::CF);
+        flags.setFlag(Flagbit::CF, cfValue);
+        
+        bool pfValue = instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::PF))? instruction->getTemporaryValues().PF : flags.getFlag(Flagbit::PF);
+        flags.setFlag(Flagbit::PF, pfValue);
+
+        bool afValue = instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::AF))? instruction->getTemporaryValues().AF : flags.getFlag(Flagbit::AF); 
+        flags.setFlag(Flagbit::AF, afValue);
+
+        bool zfValue = instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::ZF))? instruction->getTemporaryValues().ZF : flags.getFlag(Flagbit::ZF);
+        flags.setFlag(Flagbit::ZF, zfValue);
+
+        bool sfValue = instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::SF))? instruction->getTemporaryValues().SF : flags.getFlag(Flagbit::SF);
+        flags.setFlag(Flagbit::SF, sfValue);*/
+
+        bool ofValue = (instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::OF)) && instruction->getTemporaryValues().OF) || (flags.getFlag(Flagbit::OF) && !instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::OF)));
+        flags.setFlag(Flagbit::OF, ofValue);
+        bool cfValue = (instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::CF)) && instruction->getTemporaryValues().CF) || (flags.getFlag(Flagbit::CF) && !instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::CF)));
+        flags.setFlag(Flagbit::CF, cfValue);
+        bool pfValue = (instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::PF)) && instruction->getTemporaryValues().PF) || (flags.getFlag(Flagbit::PF) && !instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::PF)));
+        flags.setFlag(Flagbit::PF, pfValue);
+        bool afValue = (instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::AF)) && instruction->getTemporaryValues().AF) || (flags.getFlag(Flagbit::AF) && !instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::AF)));
+        flags.setFlag(Flagbit::AF, afValue);
+        bool zfValue = (instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::ZF)) && instruction->getTemporaryValues().ZF) || (flags.getFlag(Flagbit::ZF) && !instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::ZF)));
+        flags.setFlag(Flagbit::ZF, zfValue);
+        bool sfValue = (instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::SF)) && instruction->getTemporaryValues().SF) || (flags.getFlag(Flagbit::SF) && !instruction->getTemporaryValues().isFlagAffected(static_cast<uint8_t>(Flagbit::SF)));
+        flags.setFlag(Flagbit::SF, sfValue);
 
         
-        flags.setFlag(Flagbit::OF, instruction->getTemporaryValues().OF);
-        // INC and DEC do NOT modify CF
-        if (instruction->getCore().type != TypeofInstruction::INC &&
-            instruction->getCore().type != TypeofInstruction::DEC && instruction->getCore().type != TypeofInstruction::DIV && instruction->getCore().type != TypeofInstruction::IDIV)
-        {
-            flags.setFlag(Flagbit::CF, instruction->getTemporaryValues().CF);
-        }
-        if(instruction->getCore().type != TypeofInstruction::MUL && instruction->getCore().type != TypeofInstruction::IMUL && instruction->getCore().type != TypeofInstruction::DIV && instruction->getCore().type != TypeofInstruction::IDIV)
-        {
-            flags.setFlag(Flagbit::PF, instruction->getTemporaryValues().PF);
-            flags.setFlag(Flagbit::AF, instruction->getTemporaryValues().AF);
-            flags.setFlag(Flagbit::ZF, instruction->getTemporaryValues().ZF);
-            flags.setFlag(Flagbit::SF, instruction->getTemporaryValues().SF);
-        }
         
     }
 
@@ -390,8 +425,6 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
         return;
     }
-    std::printf("Write-back: Writing result back to destination operand for instruction with ID %d\n", instruction->getCore().InstructionId);
-    std::printf("Write-back: Result value: %llu, Result high value: %llu\n", (unsigned long long)instruction->getTemporaryValues().resultValue, (unsigned long long)instruction->getTemporaryValues().resultHighValue);
     operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
 
 }

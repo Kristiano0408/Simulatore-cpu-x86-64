@@ -20,7 +20,7 @@ class Instruction
         bool isEmpty() const; //check if the instruction is empty (no operation)
         
 
-        uint8_t calculatingNumberOfBits(); //calculate the number of bits of the value/operand
+        void calculatingNumberOfBits(); //calculate the number of bits of the value/operand
 
          //setters and getters for the operands
         void setSourceOperand(std::unique_ptr<Operand> sOperand);

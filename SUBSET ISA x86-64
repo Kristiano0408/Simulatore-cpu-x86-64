@@ -7,8 +7,8 @@ forme 8/16/32/64 bit dove esistono), non solo la forma base.
 1) DATA MOVEMENT
 -----------------
 - MOV        (r/m8,16,32,64 <-> r8,16,32,64 ; r/m,imm ; incl. mov con RIP-relative) DONE
-- MOVZX / MOVSX          (zero/sign extend, tutte le combinazioni 8/16/32->16/32/64)
-- MOVSXD                 (32->64 sign extend, specifica x86-64)
+- MOVZX / MOVSX          (zero/sign extend, tutte le combinazioni 8/16/32->16/32/64) DONE
+- MOVSXD                 (32->64 sign extend, specifica x86-64) DONE 
 - LEA                    (calcolo indirizzo, tutte le forme di addressing mode) DONE
 - PUSH / POP             (reg, imm, r/m)
 - XCHG                   (incl. forma implicita con RAX)
@@ -22,7 +22,7 @@ forme 8/16/32/64 bit dove esistono), non solo la forma base.
 - NEG                    DONE
 - CMP                    (stessa logica di SUB ma senza scrittura risultato) DONE
 - MUL / IMUL             (forma 1, 2 e 3 operandi per IMUL) DONE
-- DIV / IDIV
+- DIV / IDIV              DONE
 - CQO / CDQ / CWD        (sign-extend per divisione, tutte le size)
 
 3) LOGICA E BIT

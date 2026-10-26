@@ -123,6 +123,12 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     // IDIV
     {0xF607, {.type=TypeofInstruction::IDIV, .mode=AddressingMode::M_ACC, .executionMode=InstructionExecutionMode::ALU}},
     {0xF707, {.type=TypeofInstruction::IDIV, .mode=AddressingMode::M_ACC, .executionMode=InstructionExecutionMode::ALU}},
+
+    {0x0FB6, {.type=TypeofInstruction::MOVZX,  .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x0FB7, {.type=TypeofInstruction::MOVZX,  .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x0FBE, {.type=TypeofInstruction::MOVSX,  .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x0FBF, {.type=TypeofInstruction::MOVSX,  .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x63,   {.type=TypeofInstruction::MOVSXD, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

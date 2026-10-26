@@ -275,6 +275,9 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         case TypeofInstruction::IMUL: return "IMUL";
         case TypeofInstruction::DIV: return "DIV";
         case TypeofInstruction::IDIV: return "IDIV";
+        case TypeofInstruction::MOVZX: return "MOVZX";
+        case TypeofInstruction::MOVSX: return "MOVSX";
+        case TypeofInstruction::MOVSXD: return "MOVSXD";
         default: return "UNKNOWN";
         }
 }

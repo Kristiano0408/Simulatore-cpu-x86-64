@@ -17,7 +17,7 @@ class ALU : public FaultDevice
         ~ALU() = default;
 
         //arithmetic operations
-        void executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t nbit, uint8_t nOperands); //executes the operation based on the opcode
+        void executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t srcNbit, uint8_t destNbit, uint8_t auxNbit, uint8_t immediateNbit, uint8_t nOperands); //executes the operation based on the opcode
         //etc
     private:
         //private members if needed

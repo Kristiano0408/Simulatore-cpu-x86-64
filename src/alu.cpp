@@ -1,5 +1,5 @@
 #include "alu.hpp"
-
+#include "registerFile.hpp"
 /*
  * ============================================================================
  * ARITHMETIC FLAGS CALCULATION — x86-64 ISA
@@ -130,42 +130,53 @@
 
 void ALU::calculateCF_add(temporaryValues& tempValues, uint64_t dest, uint64_t src, uint64_t mask,  bool carryIn) {
     tempValues.CF = (dest > (mask - src)) || (carryIn && dest == (mask - src));
+    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::CF)); // Mark CF as affected
 }
 
 void ALU::calculateCF_sub(temporaryValues& tempValues, uint64_t dest, uint64_t src, bool carryIn) {
     tempValues.CF = (dest < src) || (carryIn && dest == src);
+    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::CF)); // Mark CF as affected
 }
 
 void ALU::calculateOF_add(temporaryValues& tempValues, uint64_t dest, uint64_t src, uint64_t result, uint64_t signBit) {
     tempValues.OF = ((~(dest^ src)) & (dest ^ result) & signBit) != 0;
+    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::OF)); // Mark OF as affected
 }
 
 void ALU::calculateOF_sub(temporaryValues& tempValues, uint64_t dest, uint64_t src, uint64_t result, uint64_t signBit) {
     tempValues.OF = ((dest ^ src) & (dest ^ result) & signBit) != 0;
+    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::OF)); // Mark OF as affected
 }
 
 
 void ALU::calculateAF(temporaryValues& tempValues, uint64_t destMasked, uint64_t srcMasked, uint64_t resultMasked) {
     tempValues.AF = ((destMasked ^ srcMasked ^ resultMasked) & 0x10) != 0;
+    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::AF)); // Mark AF as affected
 }
 
 void ALU::calculateZF(temporaryValues& tempValues, uint64_t resultMasked) {
     tempValues.ZF = (resultMasked == 0);
+    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::ZF)); // Mark ZF as affected
 }
 
 void ALU::calculateSF(temporaryValues& tempValues, uint64_t resultMasked, uint64_t signBit) {
     tempValues.SF = (resultMasked & signBit) != 0;
+    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::SF)); // Mark SF as affected
 }
 
 void ALU::calculatePF(temporaryValues& tempValues, uint64_t resultMasked) {
     // Parity flag is set if the number of set bits in the result is even
     tempValues.PF = static_cast<bool>(__builtin_parity(resultMasked & 0xFF) == 0);
+    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::PF)); // Mark PF as affected
 }
 
 
 
 
-void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t nbit, uint8_t nOperands)
+
+
+
+void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, uint8_t srcNbit, uint8_t destNbit, uint8_t auxNbit, uint8_t  immediateNbit, uint8_t nOperands)
 {
    
     DEBUG_LOG(debugLog("ALU: Executing operation " + toStringTypeofInstruction(type) + " with source value " + to_string_hex(tempValues.srcValue) + " and destination value " + to_string_hex(tempValues.destValue) + "."));
@@ -192,22 +203,24 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
         return static_cast<int64_t>(signedValue);
     };
 
-    const uint64_t widthMask = (nbit == 64) ? ~0ULL : ((1ULL << nbit) - 1);
-    const uint64_t signBit   = (1ULL << (nbit - 1));
+    const uint64_t srcWidthMask = (srcNbit == 64) ? ~0ULL : ((1ULL << srcNbit) - 1);
+    const uint64_t destWidthMask = (destNbit == 64) ? ~0ULL : ((1ULL << destNbit) - 1);
+    const uint64_t auxWidthMask = (auxNbit == 64) ? ~0ULL : ((1ULL << auxNbit) - 1);
+    const uint64_t immediateWidthMask = (immediateNbit == 64) ? ~0ULL : ((1ULL << immediateNbit) - 1);
+    const uint64_t signBitSrc   = (1ULL << (srcNbit - 1));
+    const uint64_t signBitDest  = (1ULL << (destNbit - 1));
     const uint64_t c         = tempValues.carryIn ? 1ULL : 0ULL;
-
-
-    uint64_t destMasked = dest & widthMask;
-    uint64_t destHighMasked = destHigh & widthMask;
-    uint64_t srcMasked  = src & widthMask;
+    uint64_t destMasked = dest & destWidthMask;
+    uint64_t destHighMasked = destHigh & destWidthMask;
+    uint64_t srcMasked  = src & srcWidthMask;
 
     // Esegui le operazioni normalmente
     switch (type) {
         case TypeofInstruction::ADD:
             tmp = add(dest, src);
-            calculateCF_add(tempValues, dest, src, widthMask, false);
-            calculateAF(tempValues, destMasked, srcMasked, tmp & widthMask);
-            calculateOF_add(tempValues, dest, src, tmp, signBit);
+            calculateCF_add(tempValues, dest, src, srcWidthMask, false);
+            calculateAF(tempValues, destMasked, srcMasked, tmp & destWidthMask);
+            calculateOF_add(tempValues, dest, src, tmp, signBitDest);
             break;
 
         case TypeofInstruction::SUB:
@@ -217,40 +230,40 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
             // la scrittura sull'operando di destinazione e' soppressa nella pipeline
             tmp = sub(dest, src);
             calculateCF_sub(tempValues, dest, src, false);
-            calculateAF(tempValues, destMasked, srcMasked, tmp & widthMask);
-            calculateOF_sub(tempValues, dest, src, tmp, signBit);
+            calculateAF(tempValues, destMasked, srcMasked, tmp & destWidthMask);
+            calculateOF_sub(tempValues, dest, src, tmp, signBitDest);
             break;
 
         case TypeofInstruction::ADC: {
-            tmp = adc(dest, src, c);
-            calculateCF_add(tempValues, dest, src, widthMask, c);
-            calculateAF(tempValues, destMasked, srcMasked, tmp & widthMask);
-            calculateOF_add(tempValues, dest, src, tmp, signBit);
+            tmp = adc(destMasked, srcMasked, c);
+            calculateCF_add(tempValues, dest, src, srcWidthMask, c);
+            calculateAF(tempValues, destMasked, srcMasked, tmp & destWidthMask);
+            calculateOF_add(tempValues, dest, src, tmp, signBitDest);
             break;
         }
 
         case TypeofInstruction::SBB: {
             tmp = sbb(dest, src, c);
             calculateCF_sub(tempValues, dest, src, c);
-            calculateAF(tempValues, destMasked, srcMasked, tmp & widthMask);
-            calculateOF_sub(tempValues, dest, src, tmp, signBit);
+            calculateAF(tempValues, destMasked, srcMasked, tmp & destWidthMask);
+            calculateOF_sub(tempValues, dest, src, tmp, signBitDest);
             break;
         }
 
         case TypeofInstruction::INC:
             tmp = add(dest, 1);
-            calculateAF(tempValues, destMasked, 1, tmp & widthMask);
+            calculateAF(tempValues, destMasked, 1, tmp & destWidthMask);
             // CF unchanged for INC
             // OF: overflow if positive → negative (max positive to most negative of the width)
-            calculateOF_add(tempValues, dest, 1, tmp, signBit);
+            calculateOF_add(tempValues, dest, 1, tmp, signBitDest);
             break;
 
         case TypeofInstruction::DEC:
             tmp = sub(dest, 1);
-            calculateAF(tempValues, destMasked, 1, tmp & widthMask);
+            calculateAF(tempValues, destMasked, 1, tmp & destWidthMask);
             // CF unchanged for DEC
             // OF: overflow if negative → positive (most negative to max positive of the width)
-            calculateOF_sub(tempValues, dest, 1, tmp, signBit);
+            calculateOF_sub(tempValues, dest, 1, tmp, signBitDest);
             break;
 
         case TypeofInstruction::NEG: {
@@ -261,17 +274,19 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
             calculateCF_sub(tempValues, 0, dest, false);
 
             // AF: borrow from bit 4 in 0 - (dest & 0xF)
-            calculateAF(tempValues, 0, destMasked, tmp & widthMask);
-            calculateOF_sub(tempValues, 0, dest, tmp, signBit);
+            calculateAF(tempValues, 0, destMasked, tmp & destWidthMask);
+            calculateOF_sub(tempValues, 0, dest, tmp, signBitDest);
             break;
         }
 
         case TypeofInstruction::MUL: {
-            if (nbit != 64) {
+            if (destNbit != 64) {
                 tmp = mul(destMasked, srcMasked);
-                tempValues.resultValue = tmp & widthMask;
-                tempValues.resultHighValue  = (tmp >> (nbit)) & widthMask;
+                tempValues.resultValue = tmp & destWidthMask;
+                tempValues.resultHighValue  = (tmp >> (destNbit)) & destWidthMask;
                 tempValues.CF = tempValues.OF = (tempValues.resultHighValue != 0);
+                tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::CF)); // Mark CF as affected
+                tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::OF)); // Mark OF as affected
             } else {
                 unsigned __int128 d128 = dest;
                 unsigned __int128 s128 = src;
@@ -279,21 +294,28 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
                 tempValues.resultValue = static_cast<uint64_t>(prod);
                 tempValues.resultHighValue  = static_cast<uint64_t>(prod >> 64);
                 tempValues.CF = tempValues.OF = (tempValues.resultHighValue != 0);
+                tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::CF)); // Mark CF as affected
+                tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::OF)); // Mark OF as affected
             }
             break;
         }
 
         case TypeofInstruction::IMUL: {
-            int64_t srcSigned = signExtend(srcMasked, nbit);
-            int64_t destSigned = signExtend(destMasked, nbit);
-            int64_t auxSigned = signExtend(tempValues.auxValue, nbit);
+            int64_t srcSigned = signExtend(srcMasked, srcNbit);
+            int64_t destSigned = signExtend(destMasked, destNbit);
+            // For the 3-op form (RMI) the multiplier is the sign-extended immediate stored
+            // in auxValue by ExecuteEngine: its width is immediateNbit (imm8/imm16/imm32),
+            // NOT auxNbit (which is 0 for RMI and would truncate the immediate to 0).
+            const uint8_t auxWidth = (nOperands == 3) ? immediateNbit : auxNbit;
+            int64_t auxSigned = signExtend(tempValues.auxValue, auxWidth);
             if(nOperands == 3) {
-                if(nbit != 64) {
+                if(destNbit != 64) {
                     int64_t tmpSigned = srcSigned * auxSigned;
-                    tempValues.resultValue = tmpSigned & widthMask;
-                    tempValues.resultHighValue  = (tmpSigned >> (nbit)) & widthMask;
-                    int64_t sext = signExtend(tempValues.resultValue, nbit);
+                    tempValues.resultValue = tmpSigned & destWidthMask;
+                    tempValues.resultHighValue  = (tmpSigned >> (destNbit)) & destWidthMask;
+                    int64_t sext = signExtend(tempValues.resultValue, destNbit);
                     tempValues.CF = tempValues.OF = (tmpSigned != sext);
+                    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::CF)); // Mark CF as affected
                 } else {
                 
                     __int128 s128 = srcSigned;
@@ -301,18 +323,21 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
                     __int128 prod =s128 * static_cast<__int128>(auxSigned);
                     tempValues.resultValue = static_cast<uint64_t>(prod);
                     tempValues.resultHighValue  = static_cast<uint64_t>(prod >> 64);
-                    __int128 sext = signExtend(tempValues.resultValue, nbit);
+                    __int128 sext = signExtend(tempValues.resultValue, destNbit);
                     tempValues.CF = tempValues.OF = (prod != sext);
+                    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::CF)); // Mark CF as affected 
                 }
 
             }
             else {
-                 if(nbit != 64) {
+                 if(destNbit != 64) {
                     int64_t tmpSigned = srcSigned * destSigned;
-                    tempValues.resultValue = tmpSigned & widthMask;
-                    tempValues.resultHighValue  = (tmpSigned >> (nbit)) & widthMask;
-                    int64_t sext =signExtend(tempValues.resultValue, nbit);
+                    tempValues.resultValue = tmpSigned & destWidthMask;
+                    tempValues.resultHighValue  = (tmpSigned >> (destNbit)) & destWidthMask;
+                    int64_t sext =signExtend(tempValues.resultValue, destNbit);
                     tempValues.CF = tempValues.OF = (tmpSigned != sext);
+                    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::CF)); // Mark CF as affected
+                    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::OF)); // Mark OF as affected
                 } else {
                     __int128 s128 = static_cast<__int128>(srcSigned);
                     __int128 d128 = static_cast<__int128>(destSigned);
@@ -320,8 +345,10 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
                     unsigned __int128 unsignedProd = static_cast<unsigned __int128>(prod);
                     tempValues.resultValue = static_cast<uint64_t>(unsignedProd);
                     tempValues.resultHighValue  = static_cast<uint64_t>(unsignedProd >> 64);
-                    __int128 sext = static_cast<__int128>(signExtend(tempValues.resultValue, nbit));
+                    __int128 sext = static_cast<__int128>(signExtend(tempValues.resultValue, destNbit));
                     tempValues.CF = tempValues.OF = (prod != sext);
+                    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::CF)); // Mark CF as affected
+                    tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::OF)); // Mark OF as affected
                 }
 
             }
@@ -333,19 +360,19 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
                 //gestione errore "ALU: Division by zero (#DE)"
                 return;
             }
-            if(nbit != 64) {
-                uint64_t dividend = (destHighMasked << nbit) | destMasked;
+            if(destNbit != 64) {
+                uint64_t dividend = (destHighMasked << destNbit) | destMasked;
                 uint64_t divisor  = src;
                 uint64_t quot     = dividend / divisor;
                 uint64_t rem      = dividend % divisor;
-                if (quot > widthMask) {
+                if (quot > destWidthMask) {
                     //gestione errore "ALU: Divide overflow (#DE)"
                 }
                 tempValues.resultValue = quot; // RAX/EAX/AX/AL
                 tempValues.resultHighValue  = rem;  // RDX/EDX/DX/DL
 
            
-            } else if (nbit == 64) {
+            } else {
                 unsigned __int128 dividend = (static_cast<unsigned __int128>(tempValues.destHighValue) << 64) | static_cast<unsigned __int128>(dest);
                 unsigned __int128 divisor  = static_cast<unsigned __int128>(src);
                 unsigned __int128 quot     = dividend / divisor;
@@ -362,21 +389,21 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
 
         case TypeofInstruction::IDIV: {
 
-            int64_t srcSigned = signExtend(srcMasked, nbit);
-            int64_t destSigned = signExtend(destMasked, nbit);
-            int64_t destHighSigned = signExtend(destHighMasked, nbit);
+            int64_t srcSigned = signExtend(srcMasked, srcNbit);
+            int64_t destSigned = signExtend(destMasked, destNbit);
+            int64_t destHighSigned = signExtend(destHighMasked, auxNbit);
 
             if (srcSigned  == 0) {
                 //gestione errore "ALU: Division by zero (#DE)"
             }
 
-            if(nbit != 64) {
-                int64_t dividend = (destHighSigned << nbit) | destSigned;
+            if(destNbit != 64) {
+                int64_t dividend = (destHighSigned << destNbit) | destSigned;
                 int64_t divisor  = srcSigned;
                 int64_t quot     = dividend / divisor;
                 int64_t rem      = dividend % divisor;
-                int64_t minIntN  = (1LL << (nbit - 1));
-                int64_t maxIntN  = ~(1LL << (nbit - 1));
+                int64_t minIntN  = (1LL << (destNbit - 1));
+                int64_t maxIntN  = ~(1LL << (destNbit - 1));
                 if (quot < minIntN || quot > maxIntN) {
                     //gestione errore "ALU: Signed divide overflow (#DE)"
                 }
@@ -386,7 +413,7 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
             
 
         
-            } else if (nbit == 64) {
+            } else {
                 __int128 dividend = (static_cast<__int128>(destHighSigned) << 64) |  static_cast<__int128>(destSigned);
                 __int128 divisor  = static_cast<__int128>(static_cast<int64_t>(srcSigned));
                 __int128 quot     = dividend / divisor;
@@ -415,9 +442,9 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
         
     }
     else {
-        const uint64_t truncatedResult = tmp & widthMask;
+        const uint64_t truncatedResult = tmp & destWidthMask;
         calculateZF(tempValues, truncatedResult);
-        calculateSF(tempValues, truncatedResult, signBit);
+        calculateSF(tempValues, truncatedResult, signBitDest);
         calculatePF(tempValues, truncatedResult);
         tempValues.resultValue = truncatedResult;
        

@@ -15,6 +15,26 @@ namespace RexMask
     inline constexpr uint8_t REX_X = 0x02; // REX.X bit
     inline constexpr uint8_t REX_B = 0x01; // REX.B bit
 
+    [[nodiscard]]  constexpr bool isREX_W(std::byte byte) 
+    {
+        return (static_cast<uint8_t>(byte) & REX_W) != 0;
+    }
+
+    [[nodiscard]]  constexpr bool isREX_R(std::byte byte) 
+    {
+        return (static_cast<uint8_t>(byte) & REX_R) != 0;
+    }
+
+    [[nodiscard]]  constexpr bool isREX_X(std::byte byte) 
+    {
+        return (static_cast<uint8_t>(byte) & REX_X) != 0;
+    }
+
+    [[nodiscard]]  constexpr bool isREX_B(std::byte byte) 
+    {
+        return (static_cast<uint8_t>(byte) & REX_B) != 0;
+    }
+
 }// namepsace RexMask
 
 namespace ModRMMask

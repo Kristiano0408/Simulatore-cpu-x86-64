@@ -35,7 +35,10 @@ enum class TypeofInstruction : uint8_t
     IMUL = 11, //signed multiply instruction
     DIV = 12, //divide instruction
     IDIV = 13, //signed divide instruction
-    COUNT = 14
+    MOVZX = 14, //move with zero extension
+    MOVSX = 15, //move with sign extension
+    MOVSXD = 16, //move with sign extension to doubleword
+    COUNT = 17
 
    
 };
@@ -105,6 +108,19 @@ struct temporaryValues {
         bool OF; //Overflow Flag
         bool PF; //Parity Flag
         bool AF; //Auxiliary Carry Flag
+        uint64_t flagsMask{}; // Mask for the flags that are affected by the operation
+
+        void setFlagMask(uint8_t flagPos, bool value) {
+            if (value) {
+                flagsMask|= (1ULL << static_cast<uint8_t>(flagPos));
+            } else {
+                flagsMask &= ~(1ULL << static_cast<uint8_t>(flagPos));
+            }
+        }
+
+        bool isFlagAffected(uint8_t flagPos) const {
+            return (flagsMask & (1ULL << static_cast<uint8_t>(flagPos))) != 0;
+        }
 };
 
 struct InstructionCore
@@ -117,7 +133,10 @@ struct InstructionCore
     std::array<uint8_t, 4> prefix;
     uint8_t rexprefix;
     uint8_t numPrefixes;
-    uint8_t nbit; //number of bits of the value/operand
+    uint8_t srcNbit;
+    uint8_t destNbit;
+    uint8_t auxNbit;
+    uint8_t immediateNbit;
     uint8_t numOperands;
     r_m rm;
     SIB sib;
