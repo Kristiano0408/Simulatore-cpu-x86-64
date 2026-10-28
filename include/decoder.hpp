@@ -37,6 +37,7 @@ class Decoder : public FaultDevice
         static void decodeInstructionM(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
         static void decodeInstructionM_ACC(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
         static void decodeInstructionRMI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
+        static void decodeInstructionO(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
 
         
     private:

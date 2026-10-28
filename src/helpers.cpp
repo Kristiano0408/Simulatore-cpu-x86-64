@@ -278,6 +278,8 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         case TypeofInstruction::MOVZX: return "MOVZX";
         case TypeofInstruction::MOVSX: return "MOVSX";
         case TypeofInstruction::MOVSXD: return "MOVSXD";
+        case TypeofInstruction::PUSH: return "PUSH";
+        case TypeofInstruction::POP: return "POP";
         default: return "UNKNOWN";
         }
 }

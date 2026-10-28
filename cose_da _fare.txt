@@ -1,1 +1,3 @@
 capire come gestire meglio dimensione operandi
+
+vedere se necessario controllo stack

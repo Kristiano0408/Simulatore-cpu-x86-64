@@ -6,7 +6,7 @@
 
 
 
-Bus::Bus() :cpu(*this), memory(static_cast<size_t>(1024*1024), *this)
+Bus::Bus() :cpu(*this), memory(static_cast<size_t>(1024*1024))
 {
    DEBUG_LOG(debugLog("Bus created"));
 }

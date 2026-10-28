@@ -10,7 +10,7 @@ forme 8/16/32/64 bit dove esistono), non solo la forma base.
 - MOVZX / MOVSX          (zero/sign extend, tutte le combinazioni 8/16/32->16/32/64) DONE
 - MOVSXD                 (32->64 sign extend, specifica x86-64) DONE 
 - LEA                    (calcolo indirizzo, tutte le forme di addressing mode) DONE
-- PUSH / POP             (reg, imm, r/m)
+- PUSH / POP             (reg, imm, r/m) DONE 
 - XCHG                   (incl. forma implicita con RAX)
 - CMOVcc                 (tutte le condizioni: CMOVE, CMOVNE, CMOVG, CMOVL, ecc.)
 

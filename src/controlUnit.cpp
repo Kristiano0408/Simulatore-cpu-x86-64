@@ -156,6 +156,11 @@ void CU::decodeInstruction(InstructionInfo instruction, std::unique_ptr<Instruct
 {
 
     decodedInstruction = decoder.decodeInstruction(instruction);
+    if(decodedInstruction == nullptr)
+    {
+        DEBUG_LOG(debugLog("Failed to decode instruction with ID: " + std::to_string(instruction.instructionId)));
+        return;
+    }
     DEBUG_LOG(debugLog("Decoded instruction type: " + toStringTypeofInstruction(decodedInstruction.get()->getCore().type)));
     eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::DECODE_COMPLETE);
     DEBUG_LOG(debugLog("Instruction decoded and DECODE_COMPLETE event triggered."));
@@ -260,7 +265,7 @@ void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, ui
     // checking if the opcode  is part of a group of instructions (the opcode is followed by a ModRM byte)
     // 0x80/0x81/0x83 -> group 1, 0xF6/0xF7 -> group 3 (TEST/NOT/MUL/IMUL/DIV/IDIV/NEG), 0xFE/0xFF -> group 4/5 (INC/DEC)
     if (opcode == 0x80 || opcode == 0x81 || opcode == 0x83 || opcode == 0xFE || opcode == 0xFF ||
-        opcode == 0xF6 || opcode == 0xF7)
+        opcode == 0xF6 || opcode == 0xF7 || opcode == 0x8F)
     {
         // the opcode is part of a group of instructions
         // the real opcode is in the ModRM byte

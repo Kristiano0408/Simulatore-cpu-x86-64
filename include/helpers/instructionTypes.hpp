@@ -38,7 +38,9 @@ enum class TypeofInstruction : uint8_t
     MOVZX = 14, //move with zero extension
     MOVSX = 15, //move with sign extension
     MOVSXD = 16, //move with sign extension to doubleword
-    COUNT = 17
+    PUSH = 17, //push instruction
+    POP = 18, //pop instruction
+    COUNT = 19
 
    
 };
@@ -46,7 +48,7 @@ enum class TypeofInstruction : uint8_t
 //enum for the addressing mode of the instruction
 enum class AddressingMode : uint8_t
 {
-    I = 0,  //move immediate to accumulator
+    I = 0,  //move immediate to accumulator or push/pop immediate on the stack
     OI = 1, //move immediate to register
     MI = 2, //move immediate to memory/register
     MR = 3, //move register to R/M
@@ -57,7 +59,8 @@ enum class AddressingMode : uint8_t
     M_ACC = 8, //single operand r/m with accumulator for IMUL,MUL, DIV, IDIV (this doest existin real intel docs, it is separated from M only for the sake of clarity and for make easier the implementation of the operands)
                //it doesnt have his decode func, it differs from fetchoperands to the end 
     RMI = 9, //move r/m  to reg with immediate (used for IMUL with 3 operands)
-    COUNT = 10
+    O = 10, //single operand register (used for push/pop register)
+    COUNT = 11
 
 };
 

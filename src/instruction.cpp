@@ -143,6 +143,25 @@ void Instruction::calculatingNumberOfBits()
         core.immediateNbit = 0;
     }
 
+    if (core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP)
+    {
+        // In 64-bit mode stack operations default to 64 bits. Operand-size
+        // override selects 16 bits; REX.W does not select the stack width.
+        bool operandSize16 = false;
+        for (size_t i = 0; i < core.numPrefixes; ++i)
+        {
+            if (core.prefix[i] == 0x66)
+            {
+                operandSize16 = true;
+                break;
+            }
+        }
+        core.destNbit = operandSize16 ? 16 : 64;
+        core.srcNbit = core.destNbit;
+        core.auxNbit = 64;
+    }
+
+
     return;
 }
 

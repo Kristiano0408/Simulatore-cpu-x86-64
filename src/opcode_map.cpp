@@ -153,6 +153,34 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     // MOVSXD r64, r/m32       (REX.W + 63)
     {0x63,   {2, 1, 1, 2, 4, 32, 64, 2, 1, true, false, false, "MOVSXD r64, r/m32"}},
 
+    //PUSH r/m16/32/64 (Gruppo 6, reg = 6)
+    {0xFF06, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "PUSH r/m16/64"}},
+    //PUSH r16/64
+    {0X50, {1, 1, 0, 1, 4, 32, 32, 0, 0, false, false, false, "PUSH AX/RAX" }},
+    {0X51, {1, 1, 0, 1, 4, 32, 32, 0, 0, false, false, false, "PUSH CX/RCX"}},
+    {0X52, {1, 1, 0, 1, 4, 32, 32, 0, 0, false, false, false, "PUSH DX/RDX"}},
+    {0X53, {1, 1, 0, 1, 4, 32, 32, 0, 0, false, false, false, "PUSH BX/RBX"}},
+    {0X54, {1, 1, 0, 1, 4, 32, 32, 0, 0, false,false,false,"PUSH SP/RSP"}},
+    {0X55,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false ,false ,false ,"PUSH BP/RBP"}},
+    {0X56,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false ,false ,false ,"PUSH SI/RSI"}},
+    {0X57,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false ,false ,false ,"PUSH DI/RDI"}},
+    //PUSH imm8/16/32
+    {0x6A, {2, 1, 1, 1, 4, 32, 32, 0, 0, false, false, true, "PUSH imm8"}},
+    {0x68, {5, 1, 4, 1, 4, 32, 32, 2, 1, false, false, true, "PUSH imm16/32/64"}},
+
+    //POP r/m16/64 (Gruppo 6, reg = 0)
+    {0x8F00, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "POP r/m16/64"}},
+    //POP r16/64
+    {0x58, {1, 1, 0, 1, 4, 32, 32, 0, 0, false, false, false, "POP AX/RAX"}},
+    {0x59, {1, 1, 0, 1, 4, 32, 32, 0, 0, false, false, false, "POP CX/RCX"}},
+    {0x5A, {1, 1, 0, 1, 4, 32, 32, 0, 0, false, false, false, "POP DX/RDX"}},
+    {0x5B,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false ,false ,false ,"POP BX/RBX"}},
+    {0x5C,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false ,false ,false ,"POP SP/RSP"}},
+    {0x5D,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false ,false ,false ,"POP BP/RBP"}},
+    {0x5E,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false ,false ,false ,"POP SI/RSI"}},
+    {0x5F,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false,false,false,"POP DI/RDI"}},
+    
+
 
 
 

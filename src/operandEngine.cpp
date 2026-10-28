@@ -106,7 +106,9 @@ void OperandEngine::writeOperand(Instruction* instruction, Operand* operand, Ope
     switch (operand->getType())
     {
         case OperandType::REGISTER:
-            if(auxOperand->getType() != OperandType::NONE) {
+            // Most writes have no auxiliary destination. PUSH/POP update RSP
+            // with a separate write request, so auxOperand is legitimately null.
+            if(auxOperand != nullptr && auxOperand->getType() != OperandType::NONE) {
                 writeValue("register", setRegisterValue(auxOperand, auxValue), result, EventHandlerExecuteEngineEventType::NONE); // Write to auxOperand first
             }
             writeValue("register", setRegisterValue(operand, value), result, EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE_WRITEBACK);
@@ -184,7 +186,15 @@ OperandResult OperandEngine::getRegisterValue(Instruction* instruction, Operand*
             instruction->getTemporaryValuesRef().isDestValueReady = true;
             break;
         case WhichOperand::AUXILIARY:
-            instruction->getTemporaryValuesRef().destHighValue = value;
+            if (instruction->getCore().type == TypeofInstruction::PUSH ||
+                instruction->getCore().type == TypeofInstruction::POP)
+            {
+                instruction->getTemporaryValuesRef().auxValue = value;
+            }
+            else
+            {
+                instruction->getTemporaryValuesRef().destHighValue = value;
+            }
             instruction->getTemporaryValuesRef().isAuxValueReady = true;
             break;
     }

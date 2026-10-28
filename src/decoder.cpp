@@ -185,6 +185,25 @@ void Decoder::decodeInstructionOI(Instruction* instruction, const InstructionInf
     
 }
 
+void Decoder::decodeInstructionO(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
+{
+    //decode the register operand
+    InstructionFlags& flags = instruction->getFlags();
+    if(instruction->getCore().type == TypeofInstruction::PUSH)
+    {
+        flags.regToMem = 1; //register to memory (the flag is reused implicitly for this purpose for simplicity)
+    }
+    else if(instruction->getCore().type == TypeofInstruction::POP)
+    {
+        flags.memToReg = 1; //memory to register (the flag is reused implicitly for this purpose for simplicity)
+    }
+    else
+    {
+        flags.regToReg = 1; //register to register (the flag is reused implicitly for this purpose for simplicity)
+    }
+    
+}
+
 void Decoder::decodeInstructionMI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
 {
     InstructionFlags& flags = instruction->getFlags();
@@ -192,7 +211,8 @@ void Decoder::decodeInstructionMI(Instruction* instruction, const InstructionInf
 
     if (instruction->getCore().rm.mod != 0b11)
     {
-        flags.regToMem = 1;
+        // CMP r/m, imm aggiorna solo i flag: nessuna scrittura in memoria.
+        flags.regToMem = (instruction->getCore().type != TypeofInstruction::CMP);
     }
 }
 
@@ -201,6 +221,13 @@ void Decoder::decodeInstructionMR(Instruction* instruction, const InstructionInf
     InstructionFlags& flags = instruction->getFlags();
     flags.regToMem = 1;
     decodeRmInstruction(instruction, instructionInfo, position);
+
+    // CMP r/m, r: il risultato della sottrazione logica non viene scritto in
+    // memoria (ne' nei registri); la memoria e' solo letta come destinazione.
+    if (instruction->getCore().type == TypeofInstruction::CMP && instruction->getCore().rm.mod != 0b11)
+    {
+        flags.regToMem = 0;
+    }
 }
 
 void Decoder::decodeInstructionRM(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
@@ -212,7 +239,9 @@ void Decoder::decodeInstructionRM(Instruction* instruction, const InstructionInf
     // IMUL reg, r/m (RM mode): the destination is always the ModRM.reg register.
     // When r/m is a memory operand it is only read as source, so no memory write
     // must happen in the Memory stage.
-    if (instruction->getCore().type == TypeofInstruction::IMUL && instruction->getCore().rm.mod != 0b11)
+    // CMP has the same operand shape but suppresses every destination write.
+    if ((instruction->getCore().type == TypeofInstruction::IMUL || instruction->getCore().type == TypeofInstruction::CMP) &&
+        instruction->getCore().rm.mod != 0b11)
     {
         flags.regToMem = 0;
         flags.regToReg = 0;
@@ -244,7 +273,14 @@ void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo
 {
     InstructionFlags& flags = instruction->getFlags();
     flags.hasImmediate = 1;
-    flags.regToReg = 1;  //immediate to register (the flag is reused implicitly for this purpose for simplicity)
+    if (instruction->getCore().type == TypeofInstruction::PUSH)
+    {
+        flags.regToMem = 1;
+    }
+    else
+    {
+        flags.regToReg = 1;  //immediate to register (the flag is reused implicitly for this purpose for simplicity)
+    }
     decodeImmediateValue(instructionInfo, instruction, position);
 }
 
@@ -256,7 +292,7 @@ void Decoder::decodeInstructionM(Instruction* instruction, const InstructionInfo
 
     if(core.type == TypeofInstruction::INC || core.type == TypeofInstruction::DEC)
     {
-        core.value = 1; //for INC and DEC the value is always 1
+        core.value = 1; //for INC and DEC the source operand is always 1 (INC dest = dest + 1, DEC dest = dest - 1)
     }
     else if(core.type == TypeofInstruction::NEG)
     {

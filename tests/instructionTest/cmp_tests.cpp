@@ -316,7 +316,7 @@ std::vector<TestCase> buildCmpTests()
         .description = "CMP RDX, QWORD [RSI] (mem source, dest > src -> CF=0, memory unchanged)",
         .program = {
             0x48, // REX.W
-            0x3B, 0x26 // 3B /r -> CMP RDX, QWORD PTR [RSI]
+            0x3B, 0x16 // 3B /r -> CMP RDX, QWORD PTR [RSI] (REG=010, R/M=110)
         },
         .initial_regs = {
             {Register::RDX, 0x20},
@@ -377,7 +377,7 @@ std::vector<TestCase> buildCmpTests()
         .description = "CMP QWORD [RSI + RDI*8], RDX (SIB, dest < src -> CF=1, memory unchanged)",
         .program = {
             0x48, // REX.W
-            0x39, 0x24, 0xFE // 39 /r + SIB -> CMP QWORD PTR [RSI + RDI*8], RDX
+            0x39, 0x14, 0xFE // 39 /r + SIB -> CMP QWORD PTR [RSI + RDI*8], RDX (REG=010, R/M=100)
         },
         .initial_regs = {
             {Register::RSI, 0x3000},

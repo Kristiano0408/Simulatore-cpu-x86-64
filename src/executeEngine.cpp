@@ -203,9 +203,13 @@ void ExecuteEngine::fetchOperands(Instruction* instruction)
             }
             else
             {
-                DEBUG_LOG(debugLog("SUB_RM"));
+                DEBUG_LOG(debugLog("FETCH_RM"));
                 operandFetch::fetchRM(instruction, registerFile);
             }
+            break;
+        case AddressingMode::O:
+            DEBUG_LOG(debugLog("FETCH_O"));
+            operandFetch::fetchO(instruction, registerFile);
             break;
         default:
             break;
@@ -240,7 +244,8 @@ void ExecuteEngine::startExecution(Instruction* instruction)
         instruction->getAuxOperand()->setSize(core.auxNbit);
     }
 
-    if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::MOVSX || core.type == TypeofInstruction::MOVZX || core.type == TypeofInstruction::MOVSXD)
+    if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::MOVSX || core.type == TypeofInstruction::MOVZX || core.type == TypeofInstruction::MOVSXD ||
+        core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP)
     {
         instruction->getTemporaryValuesRef().isDestValueReady = true;
     }
@@ -263,10 +268,10 @@ void ExecuteEngine::startExecution(Instruction* instruction)
      // pair (RDX) through the aux operand: for MUL/IMUL it is the unused high half
      // of the product's source pair, for DIV/IDIV it is the high half of the
      // double-width dividend (stored in destHighValue by the AUXILIARY read).
-     bool uses_acc_pair = (core.addressingMode == AddressingMode::M_ACC);
-     bool requiresAuxRead = uses_acc_pair && instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() != OperandType::NONE;
+     bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || instruction->getCore().type == TypeofInstruction::PUSH || instruction->getCore().type == TypeofInstruction::POP);
+     bool requiresAuxRead = (uses_aux && instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() != OperandType::NONE);
 
-    operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), uses_acc_pair ? instruction->getAuxOperand() : nullptr, this, &triggerPipelineMemoryWaitingExecuteCallback, requiresAuxRead );
+    operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), uses_aux ? instruction->getAuxOperand() : nullptr, this, &triggerPipelineMemoryWaitingExecuteCallback, requiresAuxRead );
 }
 
 void ExecuteEngine::executeInstruction(Instruction* instruction)
@@ -302,6 +307,40 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
                 if (srcMasked & (1ULL << (core.srcNbit - 1)))   // bit di segno della sorgente
                     srcMasked |= ~mask;                          // estensione di segno a 64 bit
                 instruction->getTemporaryValuesRef().resultValue = srcMasked;
+            }
+            else if (core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP)
+            {
+                // For PUSH and POP, the result value is the source value for PUSH and the destination value for POP
+                if (core.type == TypeofInstruction::PUSH)
+                {
+                    instruction->getTemporaryValuesRef().resultValue = instruction->getTemporaryValuesRef().srcValue;
+                    // PUSH imm sign-extends its encoded immediate to the stack
+                    // operand width (imm8 for 6A, imm32 for 68 in 64-bit mode).
+                    if (core.addressingMode == AddressingMode::I)
+                    {
+                        if (core.opcode == 0x6A)
+                        {
+                            instruction->getTemporaryValuesRef().resultValue =
+                                static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(core.value)));
+                        }
+                        else if (core.opcode == 0x68 && core.destNbit == 64)
+                        {
+                            instruction->getTemporaryValuesRef().resultValue =
+                                static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(core.value)));
+                        }
+                        else if (core.opcode == 0x68 && core.destNbit == 16)
+                        {
+                            instruction->getTemporaryValuesRef().resultValue =
+                                static_cast<uint16_t>(static_cast<int16_t>(core.value));
+                        }
+                    }
+                    instruction->getTemporaryValuesRef().resultHighValue = instruction->getTemporaryValuesRef().auxValue - 8; // For PUSH, the high value is the destination value (stack pointer)
+                }
+                else // POP
+                {
+                    instruction->getTemporaryValuesRef().resultValue = instruction->getTemporaryValuesRef().srcValue;
+                    instruction->getTemporaryValuesRef().resultHighValue = instruction->getTemporaryValuesRef().auxValue + 8; // For POP, the high value is the destination value (stack pointer)
+                }
             }
             break;
         /*case InstructionExecutionMode::CONTROL_FLOW:
@@ -422,9 +461,19 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         DEBUG_LOG(debugLog("getMemToReg(): " + std::to_string(instructionFlags.memToReg)));
         DEBUG_LOG(debugLog("getRegToMem(): " + std::to_string(instructionFlags.regToMem)));
         DEBUG_LOG(debugLog("No write-back needed for SubInstruction (not register to register or memory to register)."));
-        pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
+        
+
+        if(instruction->getCore().type == TypeofInstruction::PUSH || instruction->getCore().type == TypeofInstruction::POP)
+        {
+            operandEngine.sendWriteRequest(instruction, instruction->getAuxOperand(), nullptr, instruction->getTemporaryValues().resultHighValue, 0, nullptr, nullptr);
+        }
+        else
+        {
+            pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
+        }
         return;
     }
+     
     operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
 
 }

@@ -24,6 +24,7 @@ namespace operandFetch {
     void fetchM(Instruction* i, RegisterFile& registers);
     void fetchM_ACC(Instruction* i, RegisterFile& registers);
     void fetchRMI(Instruction* i, RegisterFile& registers);
+    void fetchO(Instruction* i, RegisterFile& registers);
     uint64_t calculatingAddressRM(Instruction* i, RegisterFile& registers);
 }
 

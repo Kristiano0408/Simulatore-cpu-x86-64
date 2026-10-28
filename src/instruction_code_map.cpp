@@ -129,6 +129,33 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     {0x0FBE, {.type=TypeofInstruction::MOVSX,  .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
     {0x0FBF, {.type=TypeofInstruction::MOVSX,  .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
     {0x63,   {.type=TypeofInstruction::MOVSXD, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+
+    //PUSH r/m16/32/64 (Gruppo 6, reg = 6)
+    {0xFF06, {.type=TypeofInstruction::PUSH, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    //PUSH r16/64
+    {0X50, {.type=TypeofInstruction::PUSH, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0X51, {.type=TypeofInstruction::PUSH, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0X52, {.type=TypeofInstruction::PUSH, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0X53, {.type=TypeofInstruction::PUSH, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0X54, {.type=TypeofInstruction::PUSH, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0X55,{.type=TypeofInstruction::PUSH, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0X56,{.type=TypeofInstruction::PUSH, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0X57,{.type=TypeofInstruction::PUSH, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    //PUSH imm8/16/32
+    {0x6A, {.type=TypeofInstruction::PUSH, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x68, {.type=TypeofInstruction::PUSH, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+
+    //POP r/m16/64 (Gruppo 6, reg = 0)
+    {0x8F00, {.type=TypeofInstruction::POP, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    //POP r16/64
+    {0x58, {.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x59, {.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x5A, {.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x5B,{.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x5C,{.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x5D,{.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x5E,{.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+    {0x5F,{.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -146,6 +173,7 @@ const std::array<DecodeFunc,(size_t)AddressingMode::COUNT> addressingModes =
     &Decoder::decodeInstructionM,
     &Decoder::decodeInstructionM, //the decode is the same for M and M_ACC, but the fetchOperands is different, so it is separated in the implementation of the decode function
     &Decoder::decodeInstructionRM,//the decode is the same for RMI and RM, but the fetchOperands is different, so it is separated in the implementation of the decode function
+    &Decoder::decodeInstructionO 
 };
 
 

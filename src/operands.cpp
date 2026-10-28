@@ -149,7 +149,7 @@ void fetchOI(Instruction* i, RegisterFile& registers, uint32_t opcode)
     uint8_t reg_index = opcode & 0x07;
 
     // if Rex.b = 1, add 8 to the register index
-    if ((core.rexprefix & 0x01) != 0)
+    if ((RexMask::isREX_B((std::byte)core.rexprefix)) != 0)
     {
         reg_index += 8;
     }
@@ -162,6 +162,58 @@ void fetchOI(Instruction* i, RegisterFile& registers, uint32_t opcode)
     i->setSourceOperand(std::move(sourceOperand));           // no source operand for immediate move
     i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the register
 }
+
+void fetchO(Instruction* i, RegisterFile& registers)
+{
+    InstructionCore& core = i->getCore();
+    Register register_name[16] = {Register::RAX, Register::RCX, Register::RDX, Register::RBX, Register::RSP, Register::RBP, Register::RSI, Register::RDI,
+                                  Register::R8,  Register::R9,  Register::R10, Register::R11, Register::R12, Register::R13, Register::R14, Register::R15};
+
+    // getting the register index from the opcode
+    uint8_t reg_index = core.opcode & 0x07;
+
+    // if Rex.b = 1, add 8 to the register index
+    if ((RexMask::isREX_B((std::byte)core.rexprefix)) != 0)
+    {
+        reg_index += 8;
+    }
+
+    if(i->getCore().type == TypeofInstruction::PUSH)
+    {
+        Reg& rspReg = registers.getReg(Register::RSP);
+        uint64_t newRspValue = rspReg.raw() - 8;
+
+        // Keep a reference to the actual RSP register, not the local snapshot.
+        auto auxOperand = std::make_unique<RegOperand>(rspReg.raw());
+        // operand constructors for source operand
+        // the source is a register and the destination is the stack (no destination operand)
+        auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(register_name[reg_index]).raw());
+
+        auto destinationOperand = std::make_unique<MemOperand>(newRspValue); // the destination is the stack (no destination operand)
+
+        i->setSourceOperand(std::move(sourceOperand)); // set source operand to the register
+        i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the stack
+        i->setAuxOperand(std::move(auxOperand)); // set aux operand to the stack pointer
+    }
+    else if(i->getCore().type == TypeofInstruction::POP)
+    {
+        Reg& rspReg = registers.getReg(Register::RSP);
+        uint64_t currentRspValue = rspReg.raw();
+
+
+        // operand constructors for destination operand
+        // the source is the stack (no source operand) and the destination is a register
+        // Keep a reference to the actual RSP register, not the local snapshot.
+        auto auxOperand = std::make_unique<RegOperand>(rspReg.raw());
+        auto sourceOperand = std::make_unique<MemOperand>(currentRspValue); // the source is the stack (no source operand)
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(register_name[reg_index]).raw()); 
+
+        i->setDestinationOperand(std::move(destinationOperand)); // set destination operand to the register
+        i->setSourceOperand(std::move(sourceOperand)); // set source operand to the stack
+        i->setAuxOperand(std::move(auxOperand)); // set aux operand to the stack
+    }   
+}
+   
 
 void fetchMI(Instruction* i, RegisterFile& registers)
 {
@@ -194,9 +246,19 @@ void fetchMI(Instruction* i, RegisterFile& registers)
 
 void fetchI(Instruction* i, RegisterFile& registers)
 {
-    // the source is an immediate value and the destination is a register
     InstructionCore& core = i->getCore();
     auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
+    if (core.type == TypeofInstruction::PUSH)
+    {
+        auto destinationOperand = std::make_unique<MemOperand>(registers.getReg(Register::RSP).raw() - 8);
+        auto auxOperand = std::make_unique<RegOperand>(registers.getReg(Register::RSP).raw());
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+        i->setAuxOperand(std::move(auxOperand));
+        return;
+    }
+
+    // the source is an immediate value and the destination is a register
     auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RAX).raw());
 
     i->setSourceOperand(std::move(sourceOperand));
@@ -227,6 +289,26 @@ void fetchM(Instruction* i, RegisterFile& registers)
     InstructionCore& core = i->getCore();
     r_m rm = core.rm;
     uint8_t rex = core.rexprefix;
+
+    if (core.type == TypeofInstruction::PUSH)
+    {
+        std::unique_ptr<Operand> sourceOperand;
+        if (rm.mod == 0b11)
+        {
+            Register sourceReg = decodeRegisterRM(rm.r_m, rex, false);
+            sourceOperand = std::make_unique<RegOperand>(registers.getReg(sourceReg).raw());
+        }
+        else
+        {
+            sourceOperand = std::make_unique<MemOperand>(calculatingAddressRM(i, registers));
+        }
+        auto destinationOperand = std::make_unique<MemOperand>(registers.getReg(Register::RSP).raw() - 8);
+        auto auxOperand = std::make_unique<RegOperand>(registers.getReg(Register::RSP).raw());
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+        i->setAuxOperand(std::move(auxOperand));
+        return;
+    }
 
     auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
     if (rm.mod == 0b11)
