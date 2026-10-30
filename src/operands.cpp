@@ -310,6 +310,31 @@ void fetchM(Instruction* i, RegisterFile& registers)
         return;
     }
 
+    if(core.type == TypeofInstruction::NOT)
+    {
+        if(rm.mod == 0b11)
+        {
+            // register operand as destination, immediate(1) as source for infrastructure compatibility
+        Register dest_reg = decodeRegisterRM(rm.r_m, rex, false);
+        
+            auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(dest_reg).raw());
+
+            i->setDestinationOperand(std::move(destinationOperand));
+
+        }
+        else
+        {
+            // memory operand as destination, immediate(1) as source for infrastructure compatibility
+            uint64_t address = calculatingAddressRM(i, registers);
+            auto destinationOperand = std::make_unique<MemOperand>(address);
+
+            i->setDestinationOperand(std::move(destinationOperand));
+
+        }
+        return;
+
+    }
+
     auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
     if (rm.mod == 0b11)
     {

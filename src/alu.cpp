@@ -203,6 +203,30 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
         return static_cast<int64_t>(signedValue);
     };
 
+    auto signExtendSrcImmediateRex = [](uint64_t value, bool needsSignExtension) -> uint64_t {
+        if (needsSignExtension) {
+            return static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(value)));
+        } 
+        else {
+            return value;
+        }
+    };
+
+    auto signExtendSrcImmediate = [](uint64_t value, uint8_t finalBits, uint8_t originalBits) -> uint64_t {
+        
+        uint8_t signBit = value >> (originalBits - 1) & 1;
+
+        uint64_t mask;
+
+        mask = signBit ? (~(0ULL) << originalBits) : 0ULL;
+
+        uint64_t finalMask = (finalBits == 64) ? ~(0ULL) : ((1ULL << finalBits) - 1);
+
+        return (value | mask) & finalMask;
+
+
+    };
+
     const uint64_t srcWidthMask = (srcNbit == 64) ? ~0ULL : ((1ULL << srcNbit) - 1);
     const uint64_t destWidthMask = (destNbit == 64) ? ~0ULL : ((1ULL << destNbit) - 1);
     const uint64_t auxWidthMask = (auxNbit == 64) ? ~0ULL : ((1ULL << auxNbit) - 1);
@@ -217,7 +241,8 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
     // Esegui le operazioni normalmente
     switch (type) {
         case TypeofInstruction::ADD:
-            tmp = add(dest, src);
+            srcMasked = signExtendSrcImmediateRex(srcMasked, tempValues.srcImmediateNeedsSignExtensionRex);
+            tmp = add(destMasked, srcMasked);
             calculateCF_add(tempValues, dest, src, srcWidthMask, false);
             calculateAF(tempValues, destMasked, srcMasked, tmp & destWidthMask);
             calculateOF_add(tempValues, dest, src, tmp, signBitDest);
@@ -228,13 +253,15 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
             // CMP calcola dest - src esattamente come SUB:
             // il risultato viene troncato e usato solo per i flag,
             // la scrittura sull'operando di destinazione e' soppressa nella pipeline
-            tmp = sub(dest, src);
+            srcMasked = signExtendSrcImmediateRex(srcMasked, tempValues.srcImmediateNeedsSignExtensionRex);
+            tmp = sub(destMasked, srcMasked);
             calculateCF_sub(tempValues, dest, src, false);
             calculateAF(tempValues, destMasked, srcMasked, tmp & destWidthMask);
             calculateOF_sub(tempValues, dest, src, tmp, signBitDest);
             break;
 
         case TypeofInstruction::ADC: {
+            srcMasked = signExtendSrcImmediateRex(srcMasked, tempValues.srcImmediateNeedsSignExtensionRex);
             tmp = adc(destMasked, srcMasked, c);
             calculateCF_add(tempValues, dest, src, srcWidthMask, c);
             calculateAF(tempValues, destMasked, srcMasked, tmp & destWidthMask);
@@ -243,7 +270,8 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
         }
 
         case TypeofInstruction::SBB: {
-            tmp = sbb(dest, src, c);
+            srcMasked = signExtendSrcImmediateRex(srcMasked, tempValues.srcImmediateNeedsSignExtensionRex);
+            tmp = sbb(destMasked, srcMasked, c);
             calculateCF_sub(tempValues, dest, src, c);
             calculateAF(tempValues, destMasked, srcMasked, tmp & destWidthMask);
             calculateOF_sub(tempValues, dest, src, tmp, signBitDest);
@@ -251,7 +279,7 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
         }
 
         case TypeofInstruction::INC:
-            tmp = add(dest, 1);
+            tmp = add(destMasked, 1);
             calculateAF(tempValues, destMasked, 1, tmp & destWidthMask);
             // CF unchanged for INC
             // OF: overflow if positive → negative (max positive to most negative of the width)
@@ -259,7 +287,7 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
             break;
 
         case TypeofInstruction::DEC:
-            tmp = sub(dest, 1);
+            tmp = sub(destMasked, 1);
             calculateAF(tempValues, destMasked, 1, tmp & destWidthMask);
             // CF unchanged for DEC
             // OF: overflow if negative → positive (most negative to max positive of the width)
@@ -268,7 +296,7 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
 
         case TypeofInstruction::NEG: {
             // NEG dest = 0 - dest = (~dest) + 1
-            tmp = (~dest) + 1ULL;
+            tmp = (~destMasked) + 1ULL;
 
             // CF: 1 for every operand different from 0 (0 - dest needs a borrow)
             calculateCF_sub(tempValues, 0, dest, false);
@@ -297,7 +325,7 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
                 tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::CF)); // Mark CF as affected
                 tempValues.flagsMask |= (1ULL << static_cast<uint8_t>(Flagbit::OF)); // Mark OF as affected
             }
-            break;
+            return;
         }
 
         case TypeofInstruction::IMUL: {
@@ -352,7 +380,7 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
                 }
 
             }
-            break;
+            return;
         }
 
         case TypeofInstruction::DIV: {
@@ -384,7 +412,7 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
                 tempValues.resultHighValue  = static_cast<uint64_t>(rem);  // RDX
 
             }
-            break;
+            return;
         }
 
         case TypeofInstruction::IDIV: {
@@ -427,28 +455,69 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
                 tempValues.resultHighValue  = static_cast<uint64_t>(rem);  // RDX
 
             }
-            break;
+            return;
            
         }
         
+        case TypeofInstruction::AND: {
+
+            srcMasked = signExtendSrcImmediateRex(srcMasked, tempValues.srcImmediateNeedsSignExtensionRex);
+            if(tempValues.srcNeedSignExtension)
+                srcMasked = signExtendSrcImmediate(srcMasked, destNbit, srcNbit);
+            tmp = destMasked & srcMasked;
+            tempValues.CF = false;
+            tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::CF), true); // Mark CF as affected
+            tempValues.OF = false;
+            tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::OF), true); // Mark OF as affected
+            break;
+
+        }
+
+        case TypeofInstruction::OR: {
+
+            srcMasked = signExtendSrcImmediateRex(srcMasked, tempValues.srcImmediateNeedsSignExtensionRex);
+            if(tempValues.srcNeedSignExtension)
+                srcMasked = signExtendSrcImmediate(srcMasked, destNbit, srcNbit);
+            tmp = destMasked | srcMasked;
+            tempValues.CF = false;
+            tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::CF), true); // Mark CF as affected
+            tempValues.OF = false;
+            tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::OF), true); // Mark OF as affected
+            break;
+
+        }
+
+        case TypeofInstruction::XOR: {
+            srcMasked = signExtendSrcImmediateRex(srcMasked, tempValues.srcImmediateNeedsSignExtensionRex);
+            if(tempValues.srcNeedSignExtension)
+                srcMasked = signExtendSrcImmediate(srcMasked, destNbit, srcNbit);
+            tmp = destMasked ^ srcMasked;
+            tempValues.CF = false;
+            tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::CF), true); // Mark CF as affected
+            tempValues.OF = false;
+            tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::OF), true); // Mark OF as affected
+            break;
+
+        }
+
+        case TypeofInstruction::NOT: {
+
+            tmp = ~destMasked;
+            tempValues.resultValue = (tmp & destWidthMask);
+            return; 
+        }
+
         default:
                 throw std::runtime_error("ALU: operazione non supportata");
     }
 
 
-
-
-    if (type == TypeofInstruction::MUL || type == TypeofInstruction::IMUL || type == TypeofInstruction::DIV || type == TypeofInstruction::IDIV) {
-        
-    }
-    else {
         const uint64_t truncatedResult = tmp & destWidthMask;
         calculateZF(tempValues, truncatedResult);
         calculateSF(tempValues, truncatedResult, signBitDest);
         calculatePF(tempValues, truncatedResult);
         tempValues.resultValue = truncatedResult;
        
-    }
    
 }
 

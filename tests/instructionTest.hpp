@@ -67,5 +67,6 @@ std::vector<TestCase> buildMulTests();     // MUL / IMUL (1, 2 and 3 operands)
 std::vector<TestCase> buildDivTests();     // DIV / IDIV (single r/m operand, M_ACC)
 std::vector<TestCase> buildExtensionTests(); // MOVZX / MOVSX / MOVSXD
 std::vector<TestCase> buildStackTests();     // PUSH / POP
+std::vector<TestCase> buildBooleanTests();
 
 #endif // INSTRUCTION_TEST_HPP

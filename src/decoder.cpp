@@ -375,6 +375,9 @@ void Decoder::settingInstructionParameters(Instruction* instruction, Instruction
     core.InstructionId = instructionInfo.instructionId;
     core.srcNbit = instructionInfo.src_operand_length;
     core.destNbit = instructionInfo.dest_operand_length;
+    instruction->getTemporaryValuesRef().srcImmediateNeedsSignExtensionRex = instructionInfo.rex_w_sensitive;
+    instruction->getTemporaryValuesRef().srcNeedSignExtension = (instructionInfo.bit_extension == 2) ? true : false;
+    core.immediateNbit = (instructionInfo.operandLength * 8);
 
     InstructionFlags& flags = instruction->getFlags();
     flags.rex = instructionInfo.rex;

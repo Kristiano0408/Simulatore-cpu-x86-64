@@ -236,7 +236,6 @@ void ExecuteEngine::startExecution(Instruction* instruction)
 
     // setting the size of the operands
     instruction->calculatingNumberOfBits();
-
     instruction->getSourceOperand()->setSize(core.srcNbit);
     instruction->getDestinationOperand()->setSize(core.destNbit);
     if(core.auxNbit > 0 && instruction->getAuxOperand()->getType() != OperandType::NONE)
@@ -249,11 +248,18 @@ void ExecuteEngine::startExecution(Instruction* instruction)
     {
         instruction->getTemporaryValuesRef().isDestValueReady = true;
     }
+    if(core.type == TypeofInstruction::NOT)
+    {
+        instruction->getTemporaryValuesRef().isSrcValueReady = true;
+    }
 
     if (core.type == TypeofInstruction::ADC || core.type == TypeofInstruction::SBB)
     {
         instruction->getTemporaryValuesRef().carryIn = registerFile.getFlags().getFlag(Flagbit::CF);
     }
+
+
+    
 
    
     if (core.type == TypeofInstruction::IMUL && core.addressingMode == AddressingMode::RMI)
@@ -473,7 +479,6 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         }
         return;
     }
-     
     operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
 
 }

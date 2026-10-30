@@ -156,6 +156,50 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     {0x5D,{.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
     {0x5E,{.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
     {0x5F,{.type=TypeofInstruction::POP, .mode=AddressingMode::O, .executionMode=InstructionExecutionMode::DATA_TRANSFER}},
+
+    //AND
+    {0x24, {.type=TypeofInstruction::AND, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::ALU}},
+    {0x25, {.type=TypeofInstruction::AND, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8004, {.type=TypeofInstruction::AND, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8104, {.type=TypeofInstruction::AND, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8304, {.type=TypeofInstruction::AND, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+
+    {0x20, {.type=TypeofInstruction::AND, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x21, {.type=TypeofInstruction::AND, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x22, {.type=TypeofInstruction::AND, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+    {0x23, {.type=TypeofInstruction::AND, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+
+    //OR
+    {0x0C, {.type=TypeofInstruction::OR, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::ALU}},
+    {0x0D, {.type=TypeofInstruction::OR, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::ALU}},
+
+    {0x8001, {.type=TypeofInstruction::OR, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8101, {.type=TypeofInstruction::OR, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8301, {.type=TypeofInstruction::OR, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+
+    {0x08, {.type=TypeofInstruction::OR, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x09, {.type=TypeofInstruction::OR, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x0A, {.type=TypeofInstruction::OR, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+    {0x0B, {.type=TypeofInstruction::OR, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+
+    //XOR
+    {0x34, {.type=TypeofInstruction::XOR, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::ALU}},
+    {0x35, {.type=TypeofInstruction::XOR, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::ALU}},
+
+    {0x8006, {.type=TypeofInstruction::XOR, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8106, {.type=TypeofInstruction::XOR, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0x8306, {.type=TypeofInstruction::XOR, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+
+    {0x30, {.type=TypeofInstruction::XOR, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x31, {.type=TypeofInstruction::XOR, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x32, {.type=TypeofInstruction::XOR, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+    {0x33, {.type=TypeofInstruction::XOR, .mode=AddressingMode::RM, .executionMode=InstructionExecutionMode::ALU}},
+
+    //NOT (Gruppo 3, reg = 010b)
+    {0xF602, {.type=TypeofInstruction::NOT, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::ALU}},
+    {0xF702, {.type=TypeofInstruction::NOT, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::ALU}},
+
+    
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

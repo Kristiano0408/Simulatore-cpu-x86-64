@@ -40,7 +40,11 @@ enum class TypeofInstruction : uint8_t
     MOVSXD = 16, //move with sign extension to doubleword
     PUSH = 17, //push instruction
     POP = 18, //pop instruction
-    COUNT = 19
+    AND = 19, //AND instruction
+    OR = 20, //OR instruction
+    XOR = 21, //XOR instruction
+    NOT = 22, //NOT instruction
+    COUNT = 23
 
    
 };
@@ -104,6 +108,8 @@ struct temporaryValues {
         bool isSrcValueReady = false; //flag to indicate if the source value is ready
         bool isDestValueReady = false; //flag to indicate if the destination value is ready
         bool isAuxValueReady = false; //flag to indicate if the auxiliary value is ready
+        bool srcImmediateNeedsSignExtensionRex = false; //flag to indicate if the source immediate value needs sign extension
+        bool srcNeedSignExtension = false;
         bool carryIn = false; // Carry/Borrow in ingresso per ADC/SBB
         bool CF; //Carry Flag
         bool ZF; //Zero Flag

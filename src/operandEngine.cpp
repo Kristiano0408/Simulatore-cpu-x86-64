@@ -141,9 +141,13 @@ OperandResult OperandEngine::setRegisterValue(Operand* operand, uint64_t value)
 
     uint64_t& regValue = regOperand->getReg();
     if (bitCount == 32 || bitCount == 8)
+    
         regValue = valueMasked; // 32-bit (and 8-bit accumulator writes) zero-extend into the full 64-bit register
     else
+    {
         regValue = (regValue & ~mask) | valueMasked; // Altrimenti, sovrascrivi l'intero registro
+    }
+        
 
     result.success = true;
     result.errorInfo.source = ComponentType::OPERAND;

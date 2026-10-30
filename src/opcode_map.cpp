@@ -179,6 +179,53 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0x5D,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false ,false ,false ,"POP BP/RBP"}},
     {0x5E,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false ,false ,false ,"POP SI/RSI"}},
     {0x5F,{1 ,1 ,0 ,1 ,4 ,32 ,32 ,0 ,0 ,false,false,false,"POP DI/RDI"}},
+
+    // Istruzioni AND
+    {0x24, {2, 1, 1, 1, 1, 8, 8, 0, 0, false, false, true, "AND AL, imm8"}},
+    {0x25, {5, 1, 4, 1, 4, 32, 32, 0, 1, false, false, true, "AND EAX/RAX, imm16/imm32/imm64"}},
+
+    {0x8004, {3, 1, 2, 2, 1 ,8 ,8 ,0 ,0 ,true ,false ,true , "AND r/m8 , imm8"}},
+    {0x8104,{6 ,1 ,5 ,2 ,4 ,32 ,32 ,0 ,1 ,true ,false ,true ,"AND r/m16/32/64 , imm16/32/64"}},
+    {0x8304,{3 ,1 ,2 ,2 ,1 ,8 ,32 ,2 ,0 ,true ,false ,true ,"AND r/m16/32/64 , imm8"}},
+
+    {0x20,{2 ,1 ,1 ,2 ,1 ,8 ,8 ,0 ,0 ,true,false,false,"AND r/m8,r8"}},
+    {0x21,{2 ,1 ,1 ,2 ,1 ,32 ,32 ,0 ,0,true,false,false,"AND r/m16/32/64,r16/32/64"}},
+    {0x22,{2 ,1 ,1 ,2 ,1 ,8 ,8 ,0 ,0,true,false,false,"AND r8,r/m8"}},
+    {0x23,{2,1,1,2,1,32,32,0,0,true,false,false,"AND r16/32/64,r/m16/32/64"}},
+
+    // Istruzioni OR
+    {0x0C, {2, 1, 1, 1, 1, 8, 8, 0, 0, false, false, true, "OR AL, imm8"}},
+    {0x0D, {5, 1, 4, 1, 4, 32, 32, 0, 1, false, false, true, "OR EAX/RAX, imm16/imm32/imm64"}},
+
+    {0x8001, {3, 1, 2, 2, 1 ,8 ,8 ,0 ,0 ,true ,false ,true , "OR r/m8 , imm8"}},
+    {0x8101,{6 ,1 ,5 ,2 ,4 ,32 ,32 ,0 ,1 ,true ,false ,true ,"OR r/m16/32/64 , imm16/32"}},
+    {0x8301,{3 ,1 ,2 ,2 ,1 ,8 ,32 ,2 ,0 ,true ,false ,true ,"OR r/m16/32/64 , imm8"}},
+
+    {0x08,{2 ,1 ,1 ,2 ,1 ,8 ,8 ,0 ,0,true,false,false,"OR r/m8,r8"}},
+    {0x09,{2 ,1 ,1 ,2 ,1 ,32 ,32 ,0 ,0,true,false,false,"OR r/m16/32/64,r16/32/64"}},
+    {0x0A,{2 ,1 ,1 ,2 ,1 ,8 ,8 ,0 ,0,true,false,false,"OR r8,r/m8"}},
+    {0x0B,{2,1,1,2,1,32,32,0,0,true,false,false,"OR r16/32/64,r/m16/32/64"}},
+
+    //Istruzioni XOR
+    {0x34, {2, 1, 1, 1, 1, 8, 8, 0, 0, false, false, true, "XOR AL, imm8"}},
+    {0x35, {5, 1, 4, 1, 4, 32, 32, 0, 1, false, false, true, "XOR EAX/RAX, imm16/imm32/imm64"}},
+
+    {0x8006,{3 ,1 ,2 ,2 ,1 ,8 ,8 ,0 ,0 ,true ,false ,true ,"XOR r/m8 , imm8"}},
+    {0x8106,{6 ,1 ,5 ,2 ,4 ,32 ,32 ,0 ,1 ,true ,false ,true ,"XOR r/m16/32/64 , imm16/32/64"}},
+    {0x8306,{3 ,1 ,2 ,2 ,1 ,8 ,32 ,2 ,0 ,true ,false ,true ,"XOR r/m16/32/64 , imm8"}},
+
+
+    {0x30,{2 ,1 ,1 ,2 ,1 ,8 ,8 ,0 ,0,true,false,false,"XOR r/m8,r8"}},
+    {0x31,{2 ,1 ,1 ,2 ,1 ,32 ,32 ,0 ,0,true,false,false,"XOR r/m16/32/64,r16/32/64"}},
+    {0x32,{2 ,1 ,1 ,2 ,1 ,8 ,8 ,0 ,0,true,false,false,"XOR r8,r/m8"}},
+    {0x33,{2,1,1,2,1,32,32,0,0,true,false,false,"XOR r16/32/64,r/m16/32/64"}},
+
+    //Istruzioni NOT 
+    {0xF602, {2, 1, 1, 1, 1, 8, 8, 0, 0, true, false, false, "NOT r/m8"}},
+    {0xF702, {2, 1, 1, 1, 4, 32, 32, 0, 0, true, false, false, "NOT r/m16/32/64"}},
+
+
+
     
 
 
