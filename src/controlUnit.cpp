@@ -130,7 +130,9 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Pip
     DEBUG_LOG(debugLog("Additional Bytes: " + std::to_string(info.additionalBytes)));
     DEBUG_LOG(debugLog("Description: " + std::string(info.description)));
     DEBUG_LOG(debugLog("Number of Operands: " + std::to_string(info.numOperands)));
-    DEBUG_LOG(debugLog("Operand Length: " + std::to_string(info.operandLength)));
+    DEBUG_LOG(debugLog("Src Operand Length: " + std::to_string(info.src_operand_length)));
+    DEBUG_LOG(debugLog("Dest Operand Length: " + std::to_string(info.dest_operand_length)));
+    DEBUG_LOG(debugLog("Immediate Length: " + std::to_string(info.immediateLength)));
 
     std::memcpy(info.instruction.data(), buffer.data(), info.totalLength); // Copy the instruction bytes into the info structure
 

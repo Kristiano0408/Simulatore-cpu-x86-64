@@ -399,6 +399,9 @@ void fetchRMI(Instruction* i, RegisterFile& registers)
     // core.value and used by the ALU through auxValue.
     Register dest_reg = decodeRegisterReg(rm.reg, rex);
 
+    auto auxOperand =  std::make_unique<ImmediateOperand>(core.value);
+    i->setAuxOperand(std::move(auxOperand));
+
     if (rm.mod == 0b11)
     {
         Register src_reg = decodeRegisterRM(rm.r_m, rex, false);
@@ -419,6 +422,9 @@ void fetchRMI(Instruction* i, RegisterFile& registers)
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
     }
+
+
+    
 }
 
 

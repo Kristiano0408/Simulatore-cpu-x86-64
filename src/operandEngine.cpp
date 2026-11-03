@@ -108,7 +108,7 @@ void OperandEngine::writeOperand(Instruction* instruction, Operand* operand, Ope
         case OperandType::REGISTER:
             // Most writes have no auxiliary destination. PUSH/POP update RSP
             // with a separate write request, so auxOperand is legitimately null.
-            if(auxOperand != nullptr && auxOperand->getType() != OperandType::NONE) {
+            if(auxOperand != nullptr && auxOperand->getType() != OperandType::NONE && (instruction->getCore().addressingMode != AddressingMode::RMI)) {
                 writeValue("register", setRegisterValue(auxOperand, auxValue), result, EventHandlerExecuteEngineEventType::NONE); // Write to auxOperand first
             }
             writeValue("register", setRegisterValue(operand, value), result, EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE_WRITEBACK);
@@ -234,17 +234,33 @@ OperandResult OperandEngine::getImmediateValue(Instruction* instruction, Operand
     Result result;
     result.success = true;
     result.errorInfo = {.source = ComponentType::OPERAND, .event = EventType::OPERAND_GET_VALUE, .error = ErrorType::NONE};
+    temporaryValues& tempValues = instruction->getTemporaryValuesRef();
     switch (whichoperand)
     {
         case WhichOperand::SOURCE:
-            instruction->getTemporaryValuesRef().srcValue = immOperand->getValue();
-            instruction->getTemporaryValuesRef().isSrcValueReady = true;
+            tempValues.srcValue = immOperand->getValue();
+            tempValues.isSrcValueReady = true;
             break;
         case WhichOperand::DESTINATION:
-            instruction->getTemporaryValuesRef().destValue = immOperand->getValue();
-            instruction->getTemporaryValuesRef().isDestValueReady = true;
+            tempValues.destValue = immOperand->getValue();
+            tempValues.isDestValueReady = true;
             break;
         case WhichOperand::AUXILIARY:
+            InstructionCore& core = instruction->getCore();
+            if (core.type == TypeofInstruction::IMUL && core.addressingMode == AddressingMode::RMI)
+            {
+                uint8_t immBits = core.immediateNbit;
+                uint64_t val = immOperand->getValue();
+                int64_t immSigned = (immBits == 8) ? static_cast<int8_t>(val) : ((immBits == 16) ? static_cast<int16_t>(val) : static_cast<int32_t>(val));
+                tempValues.auxValue = static_cast<uint64_t>(immSigned); // the sign-extended immediate value is stored in auxValue for IMUL with 3 operands
+                
+
+            }
+            else 
+                tempValues.auxValue = immOperand->getValue();
+            
+            tempValues.isAuxValueReady = true;
+
             break;
     }
 

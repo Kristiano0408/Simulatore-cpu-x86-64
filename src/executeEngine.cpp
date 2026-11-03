@@ -152,6 +152,19 @@ void ExecuteEngine::sendWriteBackRequest(Instruction* instruction)
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
 
+
+void ExecuteEngine::updateTemporaryValuesForInstruction(Instruction* instruction, RegisterFile& regFile)
+{
+    tempValuesInit::temporaryValuesInit[static_cast<size_t>(instruction->getCore().type)](instruction->getTemporaryValuesRef(), regFile);
+}
+
+void ExecuteEngine::executeDataTransferInstruction(Instruction* instrptr)
+{
+    TypeofDataTransferInstruction datatransferType = dataTransferTypeMap[static_cast<size_t>(instrptr->getCore().type)];
+
+    dataTransferexecution::dataTransferExecutionFunc[static_cast<size_t>(datatransferType)](instrptr);
+}
+
 void ExecuteEngine::fetchOperands(Instruction* instruction)
 {
     // fetch the operands
@@ -243,7 +256,7 @@ void ExecuteEngine::startExecution(Instruction* instruction)
         instruction->getAuxOperand()->setSize(core.auxNbit);
     }
 
-    if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::MOVSX || core.type == TypeofInstruction::MOVZX || core.type == TypeofInstruction::MOVSXD ||
+    /*if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::MOVSX || core.type == TypeofInstruction::MOVZX || core.type == TypeofInstruction::MOVSXD ||
         core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP)
     {
         instruction->getTemporaryValuesRef().isDestValueReady = true;
@@ -256,25 +269,16 @@ void ExecuteEngine::startExecution(Instruction* instruction)
     if (core.type == TypeofInstruction::ADC || core.type == TypeofInstruction::SBB)
     {
         instruction->getTemporaryValuesRef().carryIn = registerFile.getFlags().getFlag(Flagbit::CF);
-    }
+    }*/
+
+    updateTemporaryValuesForInstruction(instruction, registerFile);
 
 
-    
-
-   
-    if (core.type == TypeofInstruction::IMUL && core.addressingMode == AddressingMode::RMI)
-    {
-        uint8_t immBits = core.immediateNbit;
-        uint64_t val = instruction->getCore().value;
-        int64_t immSigned = (immBits == 8) ? static_cast<int8_t>(val) : ((immBits == 16) ? static_cast<int16_t>(val) : static_cast<int32_t>(val));
-        instruction->getTemporaryValuesRef().auxValue = static_cast<uint64_t>(immSigned); // the sign-extended immediate value is stored in auxValue for IMUL with 3 operands
-
-    }
      // MUL/IMUL (1-op) and DIV/IDIV read the implicit high half of the accumulator
      // pair (RDX) through the aux operand: for MUL/IMUL it is the unused high half
      // of the product's source pair, for DIV/IDIV it is the high half of the
      // double-width dividend (stored in destHighValue by the AUXILIARY read).
-     bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || instruction->getCore().type == TypeofInstruction::PUSH || instruction->getCore().type == TypeofInstruction::POP);
+     bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || (core.addressingMode == AddressingMode::RMI && core.type == TypeofInstruction::IMUL)) ||instruction->getCore().type == TypeofInstruction::PUSH || instruction->getCore().type == TypeofInstruction::POP;
      bool requiresAuxRead = (uses_aux && instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() != OperandType::NONE);
 
     operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), uses_aux ? instruction->getAuxOperand() : nullptr, this, &triggerPipelineMemoryWaitingExecuteCallback, requiresAuxRead );
@@ -295,7 +299,7 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
             alu.executeOperation(instruction->getTemporaryValuesRef(), core.type, core.srcNbit, core.destNbit, core.auxNbit, core.immediateNbit, core.numOperands);
             break;
         case InstructionExecutionMode::DATA_TRANSFER:
-            if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::LEA)
+            /*if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::LEA)
             {
                 instruction->getTemporaryValuesRef().resultValue = instruction->getTemporaryValuesRef().srcValue;
             }
@@ -347,7 +351,9 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
                     instruction->getTemporaryValuesRef().resultValue = instruction->getTemporaryValuesRef().srcValue;
                     instruction->getTemporaryValuesRef().resultHighValue = instruction->getTemporaryValuesRef().auxValue + 8; // For POP, the high value is the destination value (stack pointer)
                 }
-            }
+            }*/
+            executeDataTransferInstruction(instruction);
+
             break;
         /*case InstructionExecutionMode::CONTROL_FLOW:
             // executeControlFlowOperation(instruction);
@@ -482,3 +488,88 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
     operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
 
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Table function definitions (declared in executeEngine.hpp): defined once,
+// in a single TU, to avoid multiple-definition link errors across TUs.
+
+namespace tempValuesInit {
+
+    void initNone([[maybe_unused]] temporaryValues& tempValues, [[maybe_unused]] RegisterFile& regfile) {}
+
+    void initDestReady(temporaryValues& tempValues, [[maybe_unused]] RegisterFile& regfile) {
+        tempValues.isDestValueReady = true;
+    }
+
+    void initSrcReady(temporaryValues& tempValues, [[maybe_unused]] RegisterFile& regfile) {
+        tempValues.isSrcValueReady = true;
+    }
+
+    void initCarryIn(temporaryValues& tempValues, RegisterFile& regfile) {
+        tempValues.carryIn = regfile.getFlags().getFlag(Flagbit::CF);
+    }
+
+}
+
+namespace dataTransferexecution {
+
+    void executeMOVandLEA(Instruction* instruction) {
+        instruction->getTemporaryValuesRef().resultValue = instruction->getTemporaryValuesRef().srcValue;
+    }
+
+    void executeMOVSXandMOVSXD(Instruction* instruction) {
+        InstructionCore& core = instruction->getCore();
+        temporaryValues& tempValues = instruction->getTemporaryValuesRef();
+        const uint64_t mask = (core.srcNbit == 64) ? ~0ULL : ((1ULL << core.srcNbit) - 1);
+        uint64_t srcMasked = tempValues.srcValue & mask;
+        if (srcMasked & (1ULL << (core.srcNbit - 1)))   // bit di segno della sorgente
+            srcMasked |= ~mask;                          // estensione di segno a 64 bit
+        tempValues.resultValue = srcMasked;
+    }
+
+    void executeMOVZX(Instruction* instruction) {
+        InstructionCore& core = instruction->getCore();
+        temporaryValues& tempValues = instruction->getTemporaryValuesRef();
+        const uint64_t mask = (core.srcNbit == 64) ? ~0ULL : ((1ULL << core.srcNbit) - 1);
+        tempValues.resultValue =
+        tempValues.srcValue & mask;
+    }
+
+    void executePUSH(Instruction* instruction) {
+        InstructionCore& core = instruction->getCore();
+        temporaryValues& tempValues = instruction->getTemporaryValuesRef();
+        tempValues.resultValue = tempValues.srcValue;
+                    // PUSH imm sign-extends its encoded immediate to the stack
+                    // operand width (imm8 for 6A, imm32 for 68 in 64-bit mode).
+        if (core.addressingMode == AddressingMode::I) {
+
+            if (core.opcode == 0x6A) {
+                            
+                tempValues.resultValue =
+                static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(core.value)));
+            }
+            else if (core.opcode == 0x68 && core.destNbit == 64) {
+                
+                tempValues.resultValue =
+                static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(core.value)));
+            }
+            else if (core.opcode == 0x68 && core.destNbit == 16){
+                
+                tempValues.resultValue =
+                static_cast<uint16_t>(static_cast<int16_t>(core.value));
+            }
+        }
+        tempValues.resultHighValue = tempValues.auxValue - 8;
+    }
+
+    void executePOP(Instruction* instruction) {
+        temporaryValues& tempValues = instruction->getTemporaryValuesRef();
+        tempValues.resultValue = tempValues.srcValue;
+        tempValues.resultHighValue = tempValues.auxValue + 8;
+    }
+
+}
+
+
+
+

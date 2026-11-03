@@ -24,7 +24,7 @@ InstructionInfo Decoder::lenghtOfInstruction(uint32_t opcode,const uint8_t prefi
         info.additionalBytes = uint8_t(it->second.additionalBytes); //additional bytes standars for 32 bits
         info.description = it->second.description;
         info.numOperands = uint8_t(it->second.numOperands);
-        info.operandLength = uint8_t(it->second.operandLength);
+        info.immediateLength = uint8_t(it->second.immediateLength);
         info.hasModRM = it->second.hasModRM;
         info.hasDisplacement = it->second.hasDisplacement;
         info.hasImmediate = it->second.hasImmediate;
@@ -54,7 +54,7 @@ InstructionInfo Decoder::lenghtOfInstruction(uint32_t opcode,const uint8_t prefi
             //the lenght is reduced by 2 bytes
             info.totalLength -= 2;
             info.additionalBytes -= 2;
-            info.operandLength -= 2;
+            info.immediateLength -= 16;
             info.prefix[i] = prefix[i];
             
             break;
@@ -69,7 +69,7 @@ InstructionInfo Decoder::lenghtOfInstruction(uint32_t opcode,const uint8_t prefi
         //the lenght is increased by 4 bytes 
         info.totalLength += 4;
         info.additionalBytes += 4;
-        info.operandLength += 4;
+        info.immediateLength += 32;
            
     }
    
@@ -353,12 +353,13 @@ void Decoder::decodeImmediateValue(InstructionInfo instructionInfo, Instruction*
 {
     uint64_t value = 0;
     //decode the immediate value
-    for (size_t i = 0; i < instructionInfo.operandLength; i++)
+    uint8_t nBytes = instructionInfo.immediateLength >> 3; // Convert bits to bytes
+    for (size_t i = 0; i < nBytes; i++)
     {
         value |= static_cast<uint64_t>(instructionInfo.instruction[position + i]) << (i * 8);
     }
 
-    //position += instructionInfo.operandLength;
+    //position += instructionInfo.immediateLength;
     InstructionCore& core = instruction->getCore();
     core.value = value;
 
@@ -377,7 +378,7 @@ void Decoder::settingInstructionParameters(Instruction* instruction, Instruction
     core.destNbit = instructionInfo.dest_operand_length;
     instruction->getTemporaryValuesRef().srcImmediateNeedsSignExtensionRex = instructionInfo.rex_w_sensitive;
     instruction->getTemporaryValuesRef().srcNeedSignExtension = (instructionInfo.bit_extension == 2) ? true : false;
-    core.immediateNbit = (instructionInfo.operandLength * 8);
+    core.immediateNbit = instructionInfo.immediateLength;
 
     InstructionFlags& flags = instruction->getFlags();
     flags.rex = instructionInfo.rex;

@@ -7,11 +7,11 @@
 
 // Struct for memorizing instruction details
 struct InstructionDetails {
-    size_t totalLength;
-    size_t opcodeLength;
+    size_t totalLength;  // Total length of the instruction in bytes
+    size_t opcodeLength;  // Length of the opcode in bytes
     size_t additionalBytes;
     size_t numOperands;
-    size_t operandLength;
+    size_t immediateLength;
     size_t src_operand_length; // Length of source operand
     size_t dest_operand_length; // Length of destination operand
     size_t bit_extension; // Bit extension (0 if not extended, 1 for 0 extension, 2 for sign extension)

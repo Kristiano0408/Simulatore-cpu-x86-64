@@ -38,7 +38,9 @@ private:
     void writeBackInstruction(Instruction* instruction);
 
     void execute_operation() override; // Override of the pure virtual function from Device class
-
+    
+    void updateTemporaryValuesForInstruction(Instruction* instruction, RegisterFile& regFile);
+    void executeDataTransferInstruction(Instruction* instruction);
 public:
     ExecuteEngine(CPU& cpuRef, RegisterFile& regFile, ALU& aLu, CacheManager& cManager, PipelineEventHandler* pEventHandler);
 
@@ -69,5 +71,72 @@ public:
     void sendMemoryAccessRequest(Instruction* instruction);
     void sendWriteBackRequest(Instruction* instruction);
 };
+
+
+namespace tempValuesInit {
+
+    using TemporaryValuesFunc = void (*)(temporaryValues&, RegisterFile&);
+
+    void initNone(temporaryValues& tempValues, RegisterFile& regfile);
+    void initDestReady(temporaryValues& tempValues, RegisterFile& regfile);
+    void initSrcReady(temporaryValues& tempValues, RegisterFile& regfile);
+    void initCarryIn(temporaryValues& tempValues, RegisterFile& regfile);
+
+
+    constexpr  std::array<TemporaryValuesFunc, static_cast<size_t>(TypeofInstruction::COUNT)> temporaryValuesInit {
+        /*MOV*/    initDestReady,
+        /*ADD*/    initNone,
+        /*SUB*/    initNone,
+        /*LEA*/    initNone,
+        /*ADC*/    initCarryIn,
+        /*SBB*/    initCarryIn,
+        /*INC*/    initNone,
+        /*DEC*/    initNone,
+        /*NEG*/    initNone,
+        /*CMP*/    initNone,
+        /*MUL*/    initNone,
+        /*IMUL*/   initNone,
+        /*DIV*/    initNone,
+        /*IDIV*/   initNone,
+        /*MOVZX*/  initDestReady,
+        /*MOVSX*/  initDestReady,
+        /*MOVSXD*/ initDestReady,
+        /*PUSH*/   initDestReady,
+        /*POP*/    initDestReady,
+        /*AND*/    initNone,
+        /*OR*/     initNone,
+        /*XOR*/    initNone,
+        /*NOT*/    initSrcReady
+
+    };
+    
+
+
+}
+
+namespace dataTransferexecution {
+
+    using DataTransferFunc = void(*)(Instruction*);
+
+    void executeMOVandLEA(Instruction* instruction);
+    void executeMOVSXandMOVSXD(Instruction* instruction);
+    void executeMOVZX(Instruction* instruction);
+    void executePUSH(Instruction* instruction);
+    void executePOP(Instruction* instruction);
+
+
+    constexpr std::array<DataTransferFunc, static_cast<size_t>(TypeofDataTransferInstruction::COUNT)> dataTransferExecutionFunc {
+        /*MOV*/    executeMOVandLEA,
+        /*MOVSX*/  executeMOVSXandMOVSXD,
+        /*MOVZX*/  executeMOVZX,
+        /*MOVSXD*/ executeMOVSXandMOVSXD,
+        /*LEA*/    executeMOVandLEA,
+        /*PUSH*/   executePUSH,
+        /*POP*/    executePOP
+    };
+
+
+}
+
 
 #endif // EXECUTE_ENGINE_HPP

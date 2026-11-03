@@ -27,7 +27,7 @@ forme 8/16/32/64 bit dove esistono), non solo la forma base.
 
 3) LOGICA E BIT
 -----------------
-- AND / OR / XOR / NOT
+- AND / OR / XOR / NOT   DONE
 - TEST                   (come AND ma senza scrittura, solo flags)
 - SHL/SAL, SHR, SAR      (shift, tutte le forme: imm8, CL, 1 implicito)
 - ROL, ROR, RCL, RCR     (rotazioni, stesse forme di shift)

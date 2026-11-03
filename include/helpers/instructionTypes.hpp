@@ -49,6 +49,45 @@ enum class TypeofInstruction : uint8_t
    
 };
 
+enum class TypeofDataTransferInstruction : uint8_t
+{
+    MOV = 0,
+    MOVSX = 1,
+    MOVZX = 2,
+    MOVSXD = 3,
+    LEA = 4,
+    PUSH = 5,
+    POP = 6,
+    COUNT = 7
+};
+
+constexpr std::array<TypeofDataTransferInstruction, static_cast<size_t>(TypeofInstruction::COUNT)> dataTransferTypeMap
+{
+    /* MOV   */ TypeofDataTransferInstruction::MOV,
+    /* ADD   */ TypeofDataTransferInstruction::COUNT,
+    /* SUB   */ TypeofDataTransferInstruction::COUNT,
+    /* LEA   */ TypeofDataTransferInstruction::LEA,
+    /* ADC   */ TypeofDataTransferInstruction::COUNT,
+    /* SBB   */ TypeofDataTransferInstruction::COUNT,
+    /* INC   */ TypeofDataTransferInstruction::COUNT,
+    /* DEC   */ TypeofDataTransferInstruction::COUNT,
+    /* NEG   */ TypeofDataTransferInstruction::COUNT,
+    /* CMP   */ TypeofDataTransferInstruction::COUNT,
+    /* MUL   */ TypeofDataTransferInstruction::COUNT,
+    /* IMUL  */ TypeofDataTransferInstruction::COUNT,
+    /* DIV   */ TypeofDataTransferInstruction::COUNT,
+    /* IDIV  */ TypeofDataTransferInstruction::COUNT,
+    /* MOVZX */ TypeofDataTransferInstruction::MOVZX,
+    /* MOVSX */ TypeofDataTransferInstruction::MOVSX,
+    /* MOVSXD*/ TypeofDataTransferInstruction::MOVSXD,
+    /* PUSH  */ TypeofDataTransferInstruction::PUSH,
+    /* POP   */ TypeofDataTransferInstruction::POP,
+    /* AND   */ TypeofDataTransferInstruction::COUNT,
+    /* OR    */ TypeofDataTransferInstruction::COUNT,
+    /* XOR   */ TypeofDataTransferInstruction::COUNT,
+    /* NOT   */ TypeofDataTransferInstruction::COUNT
+};
+
 //enum for the addressing mode of the instruction
 enum class AddressingMode : uint8_t
 {
@@ -181,7 +220,7 @@ struct InstructionInfo {
     uint8_t rexprefix{};   // Prefisso REX
     uint8_t additionalBytes{}; // Byte aggiuntivi (ModR/M, SIB, displacement, immediate)
     uint8_t numOperands{}; // Numero di operandi
-    uint8_t operandLength{}; // Lunghezza degli operandi
+    uint8_t immediateLength{}; // Lunghezza degli operandi
     uint8_t src_operand_length{}; // Lunghezza dell'operando sorgente
     uint8_t dest_operand_length{}; // Lunghezza dell'operando destinazione
     uint8_t bit_extension{}; // Estensione in bit (0 se non esteso, 1 per 0 extension, 2 per sign extension)
