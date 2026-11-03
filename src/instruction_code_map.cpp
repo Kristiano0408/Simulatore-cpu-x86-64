@@ -199,6 +199,18 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     {0xF602, {.type=TypeofInstruction::NOT, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::ALU}},
     {0xF702, {.type=TypeofInstruction::NOT, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::ALU}},
 
+    //TEST
+    {0xA8, {.type=TypeofInstruction::TEST, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::ALU}},
+    {0xA9, {.type=TypeofInstruction::TEST, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xF600, {.type=TypeofInstruction::TEST, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0xF700, {.type=TypeofInstruction::TEST, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+
+    //TEST r/m, r (MR): with a register ModRM the destination is the r/m operand and the
+    //source is the reg operand, exactly like CMP with 0x39; decodeMR + ALU work unchanged.
+    {0x84, {.type=TypeofInstruction::TEST, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    {0x85, {.type=TypeofInstruction::TEST, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+    
     
 };
 

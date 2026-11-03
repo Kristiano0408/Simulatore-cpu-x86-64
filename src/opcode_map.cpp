@@ -224,6 +224,16 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0xF602, {2, 1, 1, 1, 0, 8, 8, 0, false, true, false, false, "NOT r/m8"}},
     {0xF702, {2, 1, 1, 1, 0, 32, 32, 0, false, true, false, false, "NOT r/m16/32/64"}},
 
+    //Istruzioni TEST
+    {0xA8, {2, 1, 1, 1, 8, 8, 8, 0, false, false, false, true, "TEST AL, imm8"}},
+    {0xA9, {5, 1, 4, 1, 32, 32, 32, 0, true, false, false, true, "TEST EAX/RAX, imm16/imm32/imm64"}},
+
+    {0xF600,{3 ,1 ,2 ,2 ,8 ,8 ,8 ,0 ,false ,true ,false ,true ,"TEST r/m8 , imm8"}},
+    {0xF700,{6 ,1 ,5 ,2 ,32 ,32 ,32 ,0 ,true ,true ,false ,true ,"TEST r/m16/32/64 , imm16/32/64"}},
+
+    {0x84,{2 ,1 ,1 ,2 ,0 ,8 ,8 ,0 ,false,true,false,false,"TEST r/m8,r8"}},
+    {0x85,{2 ,1 ,1 ,2 ,0 ,32 ,32 ,0 ,false,true,false,false,"TEST r/m16/32/64,r16/32/64"}},
+
 
 
     

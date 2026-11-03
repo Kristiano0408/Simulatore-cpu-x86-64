@@ -106,7 +106,8 @@ namespace tempValuesInit {
         /*AND*/    initNone,
         /*OR*/     initNone,
         /*XOR*/    initNone,
-        /*NOT*/    initSrcReady
+        /*NOT*/    initSrcReady,
+        /*TEST*/   initNone
 
     };
     

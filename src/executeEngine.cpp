@@ -382,7 +382,7 @@ void ExecuteEngine::requestMemoryAccess(Instruction* instruction)
 
     // CMP confronta gli operandi tramite una sottrazione logica: il risultato non viene
     // mai scritto ne' in memoria ne' nei registri, vanno aggiornati solo i flag.
-    if (!iFlags.regToMem || instruction->getCore().type == TypeofInstruction::CMP)
+    if (!iFlags.regToMem || instruction->getCore().type == TypeofInstruction::CMP || instruction->getCore().type == TypeofInstruction::TEST)
     {
         DEBUG_LOG(debugLog("No memory access needed for SubInstruction (not register to memory)."));
         resetMemoryAccessState();
@@ -459,9 +459,9 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
 
     // CMP aggiorna esclusivamente i flag di stato: la scrittura della differenza
     // calcolata dall'ALU sull'operando di destinazione va sempre soppressa
-    if (instruction->getCore().type == TypeofInstruction::CMP)
+    if (instruction->getCore().type == TypeofInstruction::CMP || instruction->getCore().type == TypeofInstruction::TEST)
     {
-        DEBUG_LOG(debugLog("CMP instruction: flags updated, destination write suppressed."));
+        DEBUG_LOG(debugLog("CMP,TEST instruction: flags updated, destination write suppressed."));
         pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
         return;
     }

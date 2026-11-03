@@ -459,7 +459,8 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
            
         }
         
-        case TypeofInstruction::AND: {
+        case TypeofInstruction::AND:
+        case TypeofInstruction::TEST: {
 
             srcMasked = signExtendSrcImmediateRex(srcMasked, tempValues.srcImmediateNeedsSignExtensionRex);
             if(tempValues.srcNeedSignExtension)

@@ -87,6 +87,7 @@ std::vector<TestCase> buildTestCases()
     append(buildExtensionTests());
     append(buildStackTests());
     append(buildBooleanTests());
+    append(buildTestTests());
 
     return tests;
 }
@@ -252,7 +253,7 @@ bool runTest(const TestCase& tc)
 int main()
 {
     std::cout
-        << "=== MOV / ADD / SUB / ADC / SBB / INC / DEC / NEG / CMP Opcode Test Suite ===\n\n";
+        << "=== MOV / ADD / SUB / ADC / SBB / INC / DEC / NEG / CMP / TEST Opcode Test Suite ===\n\n";
 
     const auto tests = buildTestCases();
 

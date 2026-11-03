@@ -44,7 +44,8 @@ enum class TypeofInstruction : uint8_t
     OR = 20, //OR instruction
     XOR = 21, //XOR instruction
     NOT = 22, //NOT instruction
-    COUNT = 23
+    TEST = 23, //TEST instruction
+    COUNT = 24
 
    
 };
@@ -85,7 +86,8 @@ constexpr std::array<TypeofDataTransferInstruction, static_cast<size_t>(TypeofIn
     /* AND   */ TypeofDataTransferInstruction::COUNT,
     /* OR    */ TypeofDataTransferInstruction::COUNT,
     /* XOR   */ TypeofDataTransferInstruction::COUNT,
-    /* NOT   */ TypeofDataTransferInstruction::COUNT
+    /* NOT   */ TypeofDataTransferInstruction::COUNT,
+    /* TEST  */ TypeofDataTransferInstruction::COUNT
 };
 
 //enum for the addressing mode of the instruction
