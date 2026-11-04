@@ -79,6 +79,9 @@ void fetchMR(Instruction* i, RegisterFile& registers)
     // getting the rex prefix
     uint8_t rex = core.rexprefix;
 
+    // creating the source operand
+    auto sourceOperand = std::make_unique<Operand>();
+
     // Case 1: operation between register and register
     if (rm.mod == 0b11)
     {
@@ -86,7 +89,12 @@ void fetchMR(Instruction* i, RegisterFile& registers)
         destination_register = decodeRegisterRM(rm.r_m, rex, false);
 
         // operand constructors for source and destination operands
-        auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
+        if(core.addressingMode == AddressingMode::MC)
+            // the source is an immediate value and the destination is a register
+            sourceOperand = std::make_unique<RegOperand>(registers.getReg(Register::RCX).raw()); //for MC the source operand is always RCX (used for shift instructions)
+        else
+            sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
+
         auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
 
         // setting the source and destination operands
@@ -105,8 +113,12 @@ void fetchMR(Instruction* i, RegisterFile& registers)
     // the source is a register
     source_register = decodeRegisterReg(rm.reg, rex);
 
-    // operand constructors for source and destination operands
-    auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
+     // operand constructors for source and destination operands
+    if(core.addressingMode == AddressingMode::MC)
+            // the source is an immediate value and the destination is a register
+        sourceOperand = std::make_unique<RegOperand>(registers.getReg(Register::RCX).raw()); //for MC the source operand is always RCX (used for shift instructions)
+    else
+        sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
     auto destinationOperand = std::make_unique<MemOperand>(address);
 
     i->setSourceOperand(std::move(sourceOperand));
@@ -220,12 +232,21 @@ void fetchMI(Instruction* i, RegisterFile& registers)
     InstructionCore& core = i->getCore();
     // getting the r/m byte
     r_m rm = core.rm;
-
+    auto sourceOperand = std::make_unique<Operand>();
     if (rm.mod == 0b11)
     {
         Register destination_register = decodeRegisterRM(rm.r_m, core.rexprefix, false);
 
-        auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
+        
+        if(core.addressingMode == AddressingMode::M1)
+        {
+            // the source is an immediate value and the destination is a register
+            sourceOperand = std::make_unique<ImmediateOperand>(0x01); //for M1 the source operand is always 1 (used for shift instructions)
+        }
+        else
+            sourceOperand = std::make_unique<ImmediateOperand>(core.value);
+
+
         auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
 
         i->setSourceOperand(std::move(sourceOperand));
@@ -236,8 +257,12 @@ void fetchMI(Instruction* i, RegisterFile& registers)
 
     uint64_t address{calculatingAddressRM(i, registers)};
 
-    // the source is an immediate value and the destination is a memory address
-    auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
+    if(core.addressingMode == AddressingMode::M1)
+        // the source is an immediate value and the destination is a memory address
+        sourceOperand = std::make_unique<ImmediateOperand>(0x01); //for M1 the source operand is always 1 (used for shift instructions)
+    else
+        sourceOperand = std::make_unique<ImmediateOperand>(core.value);
+
     auto destinationOperand = std::make_unique<MemOperand>(address);
 
     i->setSourceOperand(std::move(sourceOperand));           // no source operand for immediate move

@@ -49,7 +49,11 @@ InstructionInfo Decoder::lenghtOfInstruction(uint32_t opcode,const uint8_t prefi
     for (uint8_t i = 0; i < numPrefixes; i++)
     {
         //if there is the prefix for 16bits opernads
-        if(prefix[i] == LegacyPrefixMask::OPERAND_SIZE_OVERRIDE and (info.hasImmediate))
+        // The 0x66 prefix shrinks an imm32 to imm16 (instruction 2 bytes shorter).
+        // 8-bit immediates (opcodeMap entries with immediateLength == 8, e.g. the C0/C1
+        // shift groups and the 83 group) are NOT affected: subtracting 16 from 8 would
+        // underflow the size_t and corrupt the decoded length and immediate.
+        if(prefix[i] == LegacyPrefixMask::OPERAND_SIZE_OVERRIDE and info.hasImmediate and info.immediateLength >= 32)
         {
             //the lenght is reduced by 2 bytes
             info.totalLength -= 2;
@@ -134,9 +138,11 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
 
     TypeofInstruction type_instruction = it.type;
 
+
     DEBUG_LOG(debugLog("Instruction type: " + toStringTypeofInstruction(type_instruction)));
 
     AddressingMode mode = it.mode;
+
 
     InstructionExecutionMode executionMode = it.executionMode;
     
@@ -160,7 +166,8 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
         decoderFunction(instructionPtr.get(), instruction, position);
 
         core.addressingMode = mode;
-
+       
+       
         return instructionPtr;
 
     }
@@ -212,7 +219,7 @@ void Decoder::decodeInstructionMI(Instruction* instruction, const InstructionInf
     if (instruction->getCore().rm.mod != 0b11)
     {
         // CMP r/m, imm aggiorna solo i flag: nessuna scrittura in memoria.
-        flags.regToMem = (instruction->getCore().type != TypeofInstruction::CMP);
+        flags.regToMem = (instruction->getCore().type != TypeofInstruction::CMP && instruction->getCore().type != TypeofInstruction::TEST);
     }
 }
 
@@ -224,7 +231,7 @@ void Decoder::decodeInstructionMR(Instruction* instruction, const InstructionInf
 
     // CMP r/m, r: il risultato della sottrazione logica non viene scritto in
     // memoria (ne' nei registri); la memoria e' solo letta come destinazione.
-    if (instruction->getCore().type == TypeofInstruction::CMP && instruction->getCore().rm.mod != 0b11)
+    if ((instruction->getCore().type == TypeofInstruction::CMP || instruction->getCore().type == TypeofInstruction::TEST) && instruction->getCore().rm.mod != 0b11)
     {
         flags.regToMem = 0;
     }
@@ -240,7 +247,7 @@ void Decoder::decodeInstructionRM(Instruction* instruction, const InstructionInf
     // When r/m is a memory operand it is only read as source, so no memory write
     // must happen in the Memory stage.
     // CMP has the same operand shape but suppresses every destination write.
-    if ((instruction->getCore().type == TypeofInstruction::IMUL || instruction->getCore().type == TypeofInstruction::CMP) &&
+    if ((instruction->getCore().type == TypeofInstruction::IMUL || instruction->getCore().type == TypeofInstruction::CMP || instruction->getCore().type == TypeofInstruction::TEST) &&
         instruction->getCore().rm.mod != 0b11)
     {
         flags.regToMem = 0;

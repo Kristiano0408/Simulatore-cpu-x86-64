@@ -508,12 +508,137 @@ void ALU::executeOperation(temporaryValues& tempValues, TypeofInstruction type, 
             return; 
         }
 
+        case TypeofInstruction::SALSHL: {
+            uint8_t shiftMask = (destNbit == 64) ? 0b111111 : 0b11111; // Mask for shift count (6 bits for 64-bit, 5 bits for others)
+            uint8_t shiftCount = static_cast<uint8_t>(srcMasked & shiftMask);
+            
+           
+            if (shiftCount == 0) {
+                tempValues.resultValue = destMasked; // No shift, result is the same as destination
+                return;
+            }
+            tmp = destMasked << shiftCount;
+        
+            if(shiftCount == 1)
+            {
+                uint8_t CFMask = 1 << (destNbit - shiftCount);
+                uint8_t mostSignificatBitMask = 1 << (destNbit - 1);
+             
+                bool cf = destMasked & CFMask;
+                bool mostSignificantBit = (tmp & mostSignificatBitMask)!= 0;
+                tempValues.OF = (cf == mostSignificantBit) ? false : true;
+                tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::OF), true);
+            }
+
+            if(shiftCount < destNbit)
+            {
+                uint8_t CFMask = 1 << (destNbit - shiftCount);
+               
+                bool cf = destMasked & CFMask;
+    
+                tempValues.CF = cf;
+                tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::CF), true);
+            }
+
+            break;
+        
+        }
+
+      
+
+        case TypeofInstruction::SHR: {
+            uint8_t shiftMask = (destNbit == 64) ? 0b111111 : 0b11111; // Mask for shift count (6 bits for 64-bit, 5 bits for others)
+            uint8_t shiftCount = static_cast<uint8_t>(srcMasked & shiftMask);
+            if (shiftCount == 0) {
+                tempValues.resultValue = destMasked; // No shift, result is the same as destination
+                return;
+            }
+            tmp = destMasked >> shiftCount;
+            
+            uint8_t mostSignificatBitMask = 1 << (destNbit - 1);
+            uint8_t mostSignificatBit = destMasked & mostSignificatBitMask;
+
+            if(shiftCount < destNbit)
+            {
+                uint8_t CFMask = 1 << (shiftCount - 1);
+                bool cf = destMasked & CFMask;
+                tempValues.CF = cf;
+                tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::CF), true);
+            }
+
+            if(shiftCount == 1)
+            {
+                tempValues.OF = mostSignificatBit;
+                tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::OF), true);
+               
+            }
+            
+            
+
+            break;
+
+        }
+
+        case TypeofInstruction::SAR: {
+
+            uint8_t shiftMask = (destNbit == 64) ? 0b111111 : 0b11111; // Mask for shift count (6 bits for 64-bit, 5 bits for others)
+            uint8_t shiftCount = static_cast<uint8_t>(srcMasked & shiftMask);
+           
+            if (shiftCount == 0) {
+                tempValues.resultValue = destMasked; // No shift, result is the same as destination
+                return;
+            }
+            int64_t destsigned{};
+            switch (destNbit)
+            {
+                case 8:
+                    destsigned = static_cast<int64_t>(static_cast<int8_t>(destMasked));
+                    break;
+                
+                case 16:
+                    destsigned = static_cast<int64_t>(static_cast<int16_t>(destMasked));
+                    break;
+                
+                case 32:
+                    destsigned = static_cast<int64_t>(static_cast<int32_t>(destMasked));
+                    break;
+                case 64:
+                    destsigned = static_cast<int64_t>(destMasked);
+                    break;
+                
+                default:
+                    break;
+            }
+
+            tmp = static_cast<uint64_t>(destsigned >> shiftCount);
+
+           
+
+            uint8_t CFMask = 1 << (shiftCount - 1);
+           
+            bool cf = destMasked & CFMask;
+          
+            tempValues.CF = cf;
+            tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::CF), true);
+        
+            if(shiftCount == 1)
+            {
+                tempValues.OF = false;
+                tempValues.setFlagMask(static_cast<uint8_t>(Flagbit::OF), true);
+
+            }
+            
+            break;
+
+        }
+
         default:
                 throw std::runtime_error("ALU: operazione non supportata");
     }
 
 
         const uint64_t truncatedResult = tmp & destWidthMask;
+    
         calculateZF(tempValues, truncatedResult);
         calculateSF(tempValues, truncatedResult, signBitDest);
         calculatePF(tempValues, truncatedResult);

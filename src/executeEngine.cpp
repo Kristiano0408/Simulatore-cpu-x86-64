@@ -224,6 +224,13 @@ void ExecuteEngine::fetchOperands(Instruction* instruction)
             DEBUG_LOG(debugLog("FETCH_O"));
             operandFetch::fetchO(instruction, registerFile);
             break;
+        case AddressingMode::M1:
+            DEBUG_LOG(debugLog("FETCH_M1"));
+            operandFetch::fetchMI(instruction, registerFile);
+            break;
+        case AddressingMode::MC:
+            DEBUG_LOG(debugLog("FETCH_MC"));
+            operandFetch::fetchMR(instruction, registerFile);
         default:
             break;
     }
@@ -256,6 +263,7 @@ void ExecuteEngine::startExecution(Instruction* instruction)
         instruction->getAuxOperand()->setSize(core.auxNbit);
     }
 
+
     /*if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::MOVSX || core.type == TypeofInstruction::MOVZX || core.type == TypeofInstruction::MOVSXD ||
         core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP)
     {
@@ -273,7 +281,6 @@ void ExecuteEngine::startExecution(Instruction* instruction)
 
     updateTemporaryValuesForInstruction(instruction, registerFile);
 
-
      // MUL/IMUL (1-op) and DIV/IDIV read the implicit high half of the accumulator
      // pair (RDX) through the aux operand: for MUL/IMUL it is the unused high half
      // of the product's source pair, for DIV/IDIV it is the high half of the
@@ -281,7 +288,9 @@ void ExecuteEngine::startExecution(Instruction* instruction)
      bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || (core.addressingMode == AddressingMode::RMI && core.type == TypeofInstruction::IMUL)) ||instruction->getCore().type == TypeofInstruction::PUSH || instruction->getCore().type == TypeofInstruction::POP;
      bool requiresAuxRead = (uses_aux && instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() != OperandType::NONE);
 
+
     operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), uses_aux ? instruction->getAuxOperand() : nullptr, this, &triggerPipelineMemoryWaitingExecuteCallback, requiresAuxRead );
+
 }
 
 void ExecuteEngine::executeInstruction(Instruction* instruction)
@@ -292,7 +301,6 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
     DEBUG_LOG(debugLog("ExecuteEngine: Destination Operand Value: " + std::to_string(instruction->getTemporaryValuesRef().destValue)));
     DEBUG_LOG(debugLog("ExecuteEngine: Auxiliary Operand Value: " + std::to_string(instruction->getTemporaryValuesRef().auxValue)));
     InstructionCore& core = instruction->getCore();
-
     switch (core.executionMode)
     {
         case InstructionExecutionMode::ALU:

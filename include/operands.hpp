@@ -64,6 +64,8 @@ class RegOperand : public Operand
 
         uint64_t& getReg() { return reg; } // Getter for the register reference
 
+        void setReg(uint64_t value) { reg = value; } // Setter for the register value
+
 
     private:
         uint64_t& reg; // Reference to the register value

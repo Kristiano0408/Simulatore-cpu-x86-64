@@ -234,6 +234,36 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0x84,{2 ,1 ,1 ,2 ,0 ,8 ,8 ,0 ,false,true,false,false,"TEST r/m8,r8"}},
     {0x85,{2 ,1 ,1 ,2 ,0 ,32 ,32 ,0 ,false,true,false,false,"TEST r/m16/32/64,r16/32/64"}},
 
+    //SAL/SHL
+    {0xD004, {2, 1, 1, 1, 0, 8, 8, 0, false, true, false, false, "SAL/SHL r/m8, 1"}},
+    {0xD104, {2, 1, 1, 1, 0, 8, 32, 0, false, true, false, false, "SAL/SHL r/m16/32/64, 1"}},
+
+    {0xC004, {3, 1, 2, 2, 8 ,8 ,8 ,0 ,false ,true ,false ,true , "SAL/SHL r/m8 , imm8"}},
+    {0xC104,{3 ,1 ,2 ,2 ,8 ,8 ,32 ,0 ,false ,true ,false ,true ,"SAL/SHL r/m16/32/64 , imm8"}},
+
+    {0xD204, {2, 1, 1, 1, 0, 8, 8, 0, false, true, false, false, "SAL/SHL r/m8, CL"}},
+    {0xD304, {2, 1, 1, 1, 0, 8, 32, 0, false, true, false, false, "SAL/SHL r/m16/32/64, CL"}},
+
+    //SAR
+    {0xD007, {2, 1, 1, 1, 0, 8, 8, 0, false, true, false, false, "SAR r/m8, 1"}},
+    {0xD107, {2, 1, 1, 1, 0, 8, 32, 0, false, true, false, false, "SAR r/m16/32/64, 1"}},
+
+    {0xC007,{3 ,1 ,2 ,2 ,8 ,8 ,8 ,0 ,false ,true ,false ,true ,"SAR r/m8 , imm8"}},
+    {0xC107,{3 ,1 ,2 ,2 ,8 ,8 ,32 ,0 ,false ,true ,false ,true ,"SAR r/m16/32/64 , imm8"}},
+
+    {0xD207,{2 ,1 ,1 ,1 ,0 ,8 ,8 ,0 ,false ,true,false,false,"SAR r/m8,CL"}},
+    {0xD307,{2 ,1 ,1 ,1 ,0 ,8 ,32 ,0,false,true,false,false,"SAR r/m16/32/64,CL"}},
+
+    //SHR
+    {0xD005, {2, 1, 1, 1, 0, 8, 8, 0, false, true, false, false, "SHR r/m8, 1"}},
+    {0xD105, {2, 1, 1, 1, 0, 8, 32, 0, false, true, false, false, "SHR r/m16/32/64, 1"}},
+
+    {0xC005,{3 ,1 ,2 ,2 ,8 ,8 ,8 ,0 ,false ,true ,false ,true ,"SHR r/m8 , imm8"}},
+    {0xC105,{3 ,1 ,2 ,2 ,8 ,8 ,32 ,0 ,false ,true ,false ,true ,"SHR r/m16/32/64 , imm8"}},
+
+    {0xD205,{2 ,1 ,1 ,1 ,0 ,8 ,8 ,0,false,true,false,false,"SHR r/m8,CL"}},
+    {0xD305,{2 ,1 ,1 ,1 ,0 ,8 ,32 ,0,false,true,false,false,"SHR r/m16/32/64,CL"}},
+
 
 
     

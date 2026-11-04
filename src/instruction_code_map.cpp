@@ -210,6 +210,38 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     //source is the reg operand, exactly like CMP with 0x39; decodeMR + ALU work unchanged.
     {0x84, {.type=TypeofInstruction::TEST, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
     {0x85, {.type=TypeofInstruction::TEST, .mode=AddressingMode::MR, .executionMode=InstructionExecutionMode::ALU}},
+
+
+    //SAL/SHL
+    {0xD004, {.type=TypeofInstruction::SALSHL, .mode=AddressingMode::M1, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD104, {.type=TypeofInstruction::SALSHL, .mode=AddressingMode::M1,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xC004, {.type=TypeofInstruction::SALSHL, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0xC104, {.type=TypeofInstruction::SALSHL, .mode=AddressingMode::MI,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xD204, {.type=TypeofInstruction::SALSHL, .mode=AddressingMode::MC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD304, {.type=TypeofInstruction::SALSHL, .mode=AddressingMode::MC,  .executionMode=InstructionExecutionMode::ALU}},
+
+    //SAR
+    {0xD007, {.type=TypeofInstruction::SAR, .mode=AddressingMode::M1, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD107, {.type=TypeofInstruction::SAR, .mode=AddressingMode::M1,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xC007, {.type=TypeofInstruction::SAR, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0xC107, {.type=TypeofInstruction::SAR, .mode=AddressingMode::MI,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xD207, {.type=TypeofInstruction::SAR, .mode=AddressingMode::MC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD307, {.type=TypeofInstruction::SAR, .mode=AddressingMode::MC,  .executionMode=InstructionExecutionMode::ALU}},
+
+    //SHR
+    {0xD005, {.type=TypeofInstruction::SHR, .mode=AddressingMode::M1, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD105, {.type=TypeofInstruction::SHR, .mode=AddressingMode::M1,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xC005, {.type=TypeofInstruction::SHR, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0xC105, {.type=TypeofInstruction::SHR, .mode=AddressingMode::MI,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xD205, {.type=TypeofInstruction::SHR, .mode=AddressingMode::MC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD305, {.type=TypeofInstruction::SHR, .mode=AddressingMode::MC,  .executionMode=InstructionExecutionMode::ALU}},
+
     
     
 };
@@ -229,7 +261,9 @@ const std::array<DecodeFunc,(size_t)AddressingMode::COUNT> addressingModes =
     &Decoder::decodeInstructionM,
     &Decoder::decodeInstructionM, //the decode is the same for M and M_ACC, but the fetchOperands is different, so it is separated in the implementation of the decode function
     &Decoder::decodeInstructionRM,//the decode is the same for RMI and RM, but the fetchOperands is different, so it is separated in the implementation of the decode function
-    &Decoder::decodeInstructionO 
+    &Decoder::decodeInstructionO,
+    &Decoder::decodeInstructionMI, //M1 is a special case of MI, so it is separated in the implementation of the decode function
+    &Decoder::decodeInstructionMR //MC is a special case of MR, so it is separated in the implementation of the decode function
 };
 
 

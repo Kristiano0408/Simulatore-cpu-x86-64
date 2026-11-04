@@ -45,7 +45,10 @@ enum class TypeofInstruction : uint8_t
     XOR = 21, //XOR instruction
     NOT = 22, //NOT instruction
     TEST = 23, //TEST instruction
-    COUNT = 24
+    SALSHL = 24, //Shift arithmetic left
+    SAR = 25, //Shift arithmetic right
+    SHR = 26, //Shift logical right
+    COUNT = 27
 
    
 };
@@ -87,7 +90,10 @@ constexpr std::array<TypeofDataTransferInstruction, static_cast<size_t>(TypeofIn
     /* OR    */ TypeofDataTransferInstruction::COUNT,
     /* XOR   */ TypeofDataTransferInstruction::COUNT,
     /* NOT   */ TypeofDataTransferInstruction::COUNT,
-    /* TEST  */ TypeofDataTransferInstruction::COUNT
+    /* TEST  */ TypeofDataTransferInstruction::COUNT,
+    /* SAL/SHL*/ TypeofDataTransferInstruction::COUNT,
+    /* SAR   */ TypeofDataTransferInstruction::COUNT,
+    /* SHR   */ TypeofDataTransferInstruction::COUNT
 };
 
 //enum for the addressing mode of the instruction
@@ -105,7 +111,10 @@ enum class AddressingMode : uint8_t
                //it doesnt have his decode func, it differs from fetchoperands to the end 
     RMI = 9, //move r/m  to reg with immediate (used for IMUL with 3 operands)
     O = 10, //single operand register (used for push/pop register)
-    COUNT = 11
+    M1 = 11, //single operand r/m with 1 bit immediate (used for shift instructions)
+    MC = 12, //single operand r/m with count in cl (used for shift instructions)
+    
+    COUNT = 13
 
 };
 

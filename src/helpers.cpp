@@ -285,6 +285,10 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         case TypeofInstruction::XOR: return "XOR";
         case TypeofInstruction::NOT: return "NOT";
         case TypeofInstruction::TEST: return "TEST";
+        case TypeofInstruction::SALSHL: return "SAL/SHL";
+        case TypeofInstruction::SAR: return "SAR";
+        case TypeofInstruction::SHR: return "SHR";
+        case TypeofInstruction::COUNT: return "COUNT";
         default: return "UNKNOWN";
         }
 }

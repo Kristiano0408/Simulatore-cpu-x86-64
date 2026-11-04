@@ -298,6 +298,7 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
         DEBUG_LOG(
             debugLog("MemOperand: Sending read request to address " + to_string_hex(memOperand->getAddress()) + " with size " + std::to_string(memOperand->getSize()) + " bytes."));
         memOperand->setReadRequestSent(true);
+       
         TypeofData dataTypeSize;
         switch (memOperand->getSize())
         {
