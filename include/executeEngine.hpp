@@ -110,7 +110,11 @@ namespace tempValuesInit {
         /*TEST*/   initNone,
         /*SALSHL*/ initNone,  
         /*SAR*/    initNone,
-        /*SHR*/    initNone
+        /*SHR*/    initNone,
+        /*RCL*/    initCarryIn,
+        /*RCR*/    initCarryIn,
+        /*ROL*/    initNone,
+        /*ROR*/    initNone
 
     };
     

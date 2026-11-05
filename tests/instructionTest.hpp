@@ -70,5 +70,6 @@ std::vector<TestCase> buildStackTests();     // PUSH / POP
 std::vector<TestCase> buildBooleanTests();   // AND / OR / XOR / NOT
 std::vector<TestCase> buildTestTests();      // TEST (flags only)
 std::vector<TestCase> buildShiftTests();     // SHL/SAL, SHR, SAR
+std::vector<TestCase> buildRotateTests();
 
 #endif // INSTRUCTION_TEST_HPP

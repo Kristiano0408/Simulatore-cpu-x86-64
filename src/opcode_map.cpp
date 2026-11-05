@@ -265,6 +265,47 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0xD305,{2 ,1 ,1 ,1 ,0 ,8 ,32 ,0,false,true,false,false,"SHR r/m16/32/64,CL"}},
 
 
+    //RCL
+    {0xD002, {2, 1, 1, 1, 0, 8, 8, 0, false, true, false, false, "RCL r/m8, 1"}},
+    {0xD102, {2, 1, 1, 1, 0, 8, 32, 0, false, true, false, false, "RCL r/m16/32/64, 1"}},
+
+    {0xC002,{3 ,1 ,2 ,2 ,8 ,8 ,8 ,0 ,false ,true ,false ,true ,"RCL r/m8 , imm8"}},
+    {0xC102,{3 ,1 ,2 ,2 ,8 ,8 ,32 ,0 ,false ,true ,false ,true ,"RCL r/m16/32/64 , imm8"}},
+
+    {0xD202,{2 ,1 ,1 ,1 ,0 ,8 ,8 ,0,false,true,false,false,"RCL r/m8,CL"}},
+    {0xD302,{2 ,1 ,1 ,1 ,0 ,8 ,32 ,0,false,true,false,false,"RCL r/m16/32/64,CL"}},
+
+    //RCR
+    {0xD003, {2, 1, 1, 1, 0, 8, 8, 0, false, true, false, false, "RCR r/m8, 1"}},
+    {0xD103, {2, 1, 1, 1, 0, 8, 32, 0, false, true, false, false, "RCR r/m16/32/64, 1"}},
+
+    {0xC003,{3 ,1 ,2 ,2 ,8 ,8 ,8 ,0 ,false ,true ,false ,true ,"RCR r/m8 , imm8"}},
+    {0xC103,{3 ,1 ,2 ,2 ,8 ,8 ,32 ,0 ,false ,true ,false ,true ,"RCR r/m16/32/64 , imm8"}},
+
+    {0xD203,{2 ,1 ,1 ,1 ,0 ,8 ,8 ,0,false,true,false,false,"RCR r/m8,CL"}},
+    {0xD303,{2 ,1 ,1 ,1 ,0 ,8 ,32 ,0,false,true,false,false,"RCR r/m16/32/64,CL"}},
+
+    //ROL
+    {0xD000, {2, 1, 1, 1, 0, 8, 8, 0, false, true, false, false, "ROL r/m8, 1"}},
+    {0xD100, {2, 1, 1, 1, 0, 8, 32, 0, false, true, false, false, "ROL r/m16/32/64, 1"}},
+
+    {0xC000,{3 ,1 ,2 ,2 ,8 ,8 ,8 ,0 ,false ,true ,false ,true ,"ROL r/m8 , imm8"}},
+    {0xC100,{3 ,1 ,2 ,2 ,8 ,8 ,32 ,0 ,false ,true ,false ,true ,"ROL r/m16/32/64 , imm8"}},
+
+    {0xD200,{2 ,1 ,1 ,1 ,0 ,8 ,8 ,0,false,true,false,false,"ROL r/m8,CL"}},
+    {0xD300,{2 ,1 ,1 ,1 ,0 ,8 ,32 ,0,false,true,false,false,"ROL r/m16/32/64,CL"}},
+
+    //ROR
+    {0xD001, {2, 1, 1, 1, 0, 8, 8, 0, false, true, false, false, "ROR r/m8, 1"}},
+    {0xD101, {2, 1, 1, 1, 0, 8, 32, 0, false, true, false, false, "ROR r/m16/32/64, 1"}},
+
+    {0xC001,{3 ,1 ,2 ,2 ,8 ,8 ,8 ,0 ,false ,true ,false ,true ,"ROR r/m8 , imm8"}},
+    {0xC101,{3 ,1 ,2 ,2 ,8 ,8 ,32 ,0 ,false ,true ,false ,true ,"ROR r/m16/32/64 , imm8"}},
+
+    {0xD201,{2 ,1 ,1 ,1 ,0 ,8 ,8 ,0,false,true,false,false,"ROR r/m8,CL"}},
+    {0xD301,{2 ,1 ,1 ,1 ,0 ,8 ,32 ,0,false,true,false,false,"ROR r/m16/32/64,CL"}},
+
+
 
     
 

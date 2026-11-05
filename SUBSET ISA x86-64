@@ -29,8 +29,8 @@ forme 8/16/32/64 bit dove esistono), non solo la forma base.
 -----------------
 - AND / OR / XOR / NOT   DONE
 - TEST                   (come AND ma senza scrittura, solo flags)  DONE
-- SHL/SAL, SHR, SAR      (shift, tutte le forme: imm8, CL, 1 implicito)
-- ROL, ROR, RCL, RCR     (rotazioni, stesse forme di shift)
+- SHL/SAL, SHR, SAR      (shift, tutte le forme: imm8, CL, 1 implicito) DONE
+- ROL, ROR, RCL, RCR     (rotazioni, stesse forme di shift) DONE 
 - BT, BTS, BTR, BTC      (opzionali, se serve completezza sui bit test)
 
 4) CONTROLLO DI FLUSSO

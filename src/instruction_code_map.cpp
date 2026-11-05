@@ -242,6 +242,45 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     {0xD205, {.type=TypeofInstruction::SHR, .mode=AddressingMode::MC, .executionMode=InstructionExecutionMode::ALU}},
     {0xD305, {.type=TypeofInstruction::SHR, .mode=AddressingMode::MC,  .executionMode=InstructionExecutionMode::ALU}},
 
+    //RCL
+    {0xD002, {.type=TypeofInstruction::RCL, .mode=AddressingMode::M1, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD102, {.type=TypeofInstruction::RCL, .mode=AddressingMode::M1,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xC002, {.type=TypeofInstruction::RCL, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0xC102, {.type=TypeofInstruction::RCL, .mode=AddressingMode::MI,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xD202, {.type=TypeofInstruction::RCL, .mode=AddressingMode::MC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD302, {.type=TypeofInstruction::RCL, .mode=AddressingMode::MC,  .executionMode=InstructionExecutionMode::ALU}},
+
+    //RCR
+    {0xD003, {.type=TypeofInstruction::RCR, .mode=AddressingMode::M1, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD103, {.type=TypeofInstruction::RCR, .mode=AddressingMode::M1,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xC003, {.type=TypeofInstruction::RCR, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0xC103, {.type=TypeofInstruction::RCR, .mode=AddressingMode::MI,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xD203, {.type=TypeofInstruction::RCR, .mode=AddressingMode::MC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD303, {.type=TypeofInstruction::RCR, .mode=AddressingMode::MC,  .executionMode=InstructionExecutionMode::ALU}},
+
+    //ROL
+    {0xD000, {.type=TypeofInstruction::ROL, .mode=AddressingMode::M1, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD100, {.type=TypeofInstruction::ROL, .mode=AddressingMode::M1,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xC000, {.type=TypeofInstruction::ROL, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0xC100, {.type=TypeofInstruction::ROL, .mode=AddressingMode::MI,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xD200, {.type=TypeofInstruction::ROL, .mode=AddressingMode::MC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD300, {.type=TypeofInstruction::ROL, .mode=AddressingMode::MC,  .executionMode=InstructionExecutionMode::ALU}},
+
+    //ROR
+    {0xD001, {.type=TypeofInstruction::ROR, .mode=AddressingMode::M1, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD101, {.type=TypeofInstruction::ROR, .mode=AddressingMode::M1,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xC001, {.type=TypeofInstruction::ROR, .mode=AddressingMode::MI, .executionMode=InstructionExecutionMode::ALU}},
+    {0xC101, {.type=TypeofInstruction::ROR, .mode=AddressingMode::MI,  .executionMode=InstructionExecutionMode::ALU}},
+
+    {0xD201, {.type=TypeofInstruction::ROR, .mode=AddressingMode::MC, .executionMode=InstructionExecutionMode::ALU}},
+    {0xD301, {.type=TypeofInstruction::ROR, .mode=AddressingMode::MC,  .executionMode=InstructionExecutionMode::ALU}}
     
     
 };

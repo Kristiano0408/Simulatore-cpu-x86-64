@@ -48,7 +48,11 @@ enum class TypeofInstruction : uint8_t
     SALSHL = 24, //Shift arithmetic left
     SAR = 25, //Shift arithmetic right
     SHR = 26, //Shift logical right
-    COUNT = 27
+    RCL = 27, //Rotate through carry left
+    RCR = 28, //Rotate through carry right
+    ROL = 29, //Rotate left
+    ROR = 30, //Rotate right
+    COUNT = 31
 
    
 };
@@ -93,7 +97,11 @@ constexpr std::array<TypeofDataTransferInstruction, static_cast<size_t>(TypeofIn
     /* TEST  */ TypeofDataTransferInstruction::COUNT,
     /* SAL/SHL*/ TypeofDataTransferInstruction::COUNT,
     /* SAR   */ TypeofDataTransferInstruction::COUNT,
-    /* SHR   */ TypeofDataTransferInstruction::COUNT
+    /* SHR   */ TypeofDataTransferInstruction::COUNT,
+    /* RCL   */ TypeofDataTransferInstruction::COUNT,
+    /* RCR   */ TypeofDataTransferInstruction::COUNT,
+    /* ROL   */ TypeofDataTransferInstruction::COUNT,
+    /* ROR   */ TypeofDataTransferInstruction::COUNT
 };
 
 //enum for the addressing mode of the instruction
@@ -113,7 +121,6 @@ enum class AddressingMode : uint8_t
     O = 10, //single operand register (used for push/pop register)
     M1 = 11, //single operand r/m with 1 bit immediate (used for shift instructions)
     MC = 12, //single operand r/m with count in cl (used for shift instructions)
-    
     COUNT = 13
 
 };

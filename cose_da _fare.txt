@@ -1,7 +1,9 @@
 capire coem getsire imm32extende (I con signe xtended)-> vagetsitameglio sempre propagatadall opcode map 
 
+
 capire come gestire meglio dimensione operandi(forse)
 getoire meglio if
 
 gui
 hazarddetction postistruzioni e gui
+verificare corettezza rip-relative(indirizzo rip della prossima istruzione)

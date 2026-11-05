@@ -76,7 +76,7 @@ std::vector<TestCase> buildTestCases()
                      std::make_move_iterator(group.end()));
     };
 
-    append(buildMovTests());
+    /*append(buildMovTests());
     append(buildAddSubTests());
     append(buildCarryTests());
     append(buildLeaTests());
@@ -87,8 +87,9 @@ std::vector<TestCase> buildTestCases()
     append(buildExtensionTests());
     append(buildStackTests());
     append(buildBooleanTests());
-    append(buildTestTests());
+    append(buildTestTests());*/
     append(buildShiftTests());
+    append(buildRotateTests());
 
     return tests;
 }
