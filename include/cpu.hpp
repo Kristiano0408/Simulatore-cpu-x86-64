@@ -10,7 +10,7 @@
 #include "registerFile.hpp"
 #include "cache/cacheManager.hpp"
 #include "pipeline.hpp"
-#include "pipelineController.hpp"
+#include "hazardUnit.hpp"
 #include "third_party/unordered_dense.h"
 
 class Bus;
@@ -42,7 +42,7 @@ class CPU: public TickedDevice, public FaultDevice
 
         Pipeline pipeline; //pipeline of the CPU
 
-        PipelineController pipelineController; //controller for managing pipeline events
+        HazardUnit hazardUnit; //hazard unit of the CPU
 
         
 
@@ -79,7 +79,7 @@ class CPU: public TickedDevice, public FaultDevice
         
         Pipeline& getPipeline();
 
-        PipelineController& getPipelineController();
+        HazardUnit& getHazardUnit();
 
         void sendCacheRequest(CacheRequest&& request, CacheLevelType cacheType); //send a cache request
 

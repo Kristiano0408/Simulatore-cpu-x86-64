@@ -332,6 +332,14 @@ void Decoder::decodeInstructionM(Instruction* instruction, const InstructionInfo
     }
 }
 
+
+void Decoder::decodeInstructionD(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
+{
+    InstructionFlags& flags = instruction->getFlags();
+    flags.hasImmediate = 1;
+    flags.regToReg = 1; //immediate to register (the flag is reused implicitly for this purpose for simplicity)
+    decodeImmediateValue(instructionInfo, instruction, position);
+}
 //helper methods for decoding the instruction
 
 SIB Decoder::decodeSIB(std::byte sib)
@@ -386,6 +394,7 @@ void Decoder::settingInstructionParameters(Instruction* instruction, Instruction
     instruction->getTemporaryValuesRef().srcImmediateNeedsSignExtensionRex = instructionInfo.rex_w_sensitive;
     instruction->getTemporaryValuesRef().srcNeedSignExtension = (instructionInfo.bit_extension == 2) ? true : false;
     core.immediateNbit = instructionInfo.immediateLength;
+    core.nextRip = instructionInfo.nextRipAddress;
 
     InstructionFlags& flags = instruction->getFlags();
     flags.rex = instructionInfo.rex;

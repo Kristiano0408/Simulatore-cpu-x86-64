@@ -54,6 +54,11 @@ namespace  AddressCalculator
         return registers.getReg(base).raw() + displacement;
     }
 
+    uint64_t RIPRelativeAddressing(uint64_t nextRip, uint32_t displacement)
+    {
+        return static_cast<uint64_t>(nextRip + static_cast<uint64_t>(displacement));
+    }
+
     int ScaleConversion(uint8_t scale)
     {
         switch (scale) {

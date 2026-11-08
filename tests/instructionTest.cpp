@@ -43,6 +43,7 @@ std::string regName(Register r)
         case Register::R13: return "R13";
         case Register::R14: return "R14";
         case Register::R15: return "R15";
+        case Register::RIP: return "RIP";
         default: return "UNKNOWN";
     }
 }
@@ -87,9 +88,10 @@ std::vector<TestCase> buildTestCases()
     append(buildExtensionTests());
     append(buildStackTests());
     append(buildBooleanTests());
-    append(buildTestTests());*/
-    append(buildShiftTests());
+    append(buildTestTests());
+    append(buildShiftTests());*/
     append(buildRotateTests());
+    append(buildJmpTests());
 
     return tests;
 }

@@ -231,6 +231,11 @@ void ExecuteEngine::fetchOperands(Instruction* instruction)
         case AddressingMode::MC:
             DEBUG_LOG(debugLog("FETCH_MC"));
             operandFetch::fetchMR(instruction, registerFile);
+            break;
+        case AddressingMode::D:
+            DEBUG_LOG(debugLog("FETCH_D"));
+            operandFetch::fetchD(instruction, registerFile);
+            break;
         default:
             break;
     }
@@ -363,9 +368,34 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
             executeDataTransferInstruction(instruction);
 
             break;
-        /*case InstructionExecutionMode::CONTROL_FLOW:
+        case InstructionExecutionMode::CONTROL_FLOW: 
+        {
+            temporaryValues& tempValues = instruction->getTemporaryValuesRef();
+            if(core.type == TypeofInstruction::JMP)
+            {
+                std::printf("ExecuteEngine: Executing JMP instruction with ID %llu\n", instruction->getCore().InstructionId);
+                uint64_t displacement{};
+                if(core.opcode == 0xEB)
+                {
+                    displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(tempValues.srcValue)));
+                    tempValues.resultValue = core.nextRip + displacement;
+                }
+                else if(core.opcode == 0xE9)
+                {   
+    
+                    displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
+                    tempValues.resultValue = core.nextRip + displacement;
+                }
+                else if(core.opcode == 0xFF04)
+                    tempValues.resultValue = tempValues.srcValue;
+                    
+
+            }
             // executeControlFlowOperation(instruction);
             break;
+        }
+        
+        /*
         case InstructionExecutionMode::SYSTEM:
             // executeSystemOperation(instruction);
             break*/
@@ -493,6 +523,8 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         }
         return;
     }
+    std::printf("ExecuteEngine: Writing back result to destination operand for instruction with ID %llu\n", instruction->getCore().InstructionId);
+    std::printf("ExecuteEngine: Result Value: %x\n", instruction->getTemporaryValues().resultValue);
     operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
 
 }

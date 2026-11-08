@@ -13,6 +13,7 @@ namespace AddressCalculator
     uint64_t indirectAddressing(RegisterFile& registers, Register reg_address);
     uint64_t registerAddressing(RegisterFile& registers, Register reg_value);
 
+    uint64_t RIPRelativeAddressing(uint64_t nextRip, uint32_t displacement);
     uint64_t BaseAddressing(RegisterFile& registers, Register base);
     uint64_t BaseIndexAddressing(RegisterFile& registers, Register base, Register index);
     uint64_t BaseIndexScaleAddressing(RegisterFile& registers, Register base, Register index, uint8_t scale);

@@ -312,6 +312,7 @@ void fetchLEA(Instruction* i, RegisterFile& registers)
 void fetchM(Instruction* i, RegisterFile& registers)
 {
     InstructionCore& core = i->getCore();
+    InstructionFlags& flags = i->getFlags();
     r_m rm = core.rm;
     uint8_t rex = core.rexprefix;
 
@@ -358,6 +359,37 @@ void fetchM(Instruction* i, RegisterFile& registers)
         }
         return;
 
+    }
+
+    if(core.type == TypeofInstruction::JMP)
+    {
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RIP).raw());
+
+        if(rm.mod == 0b11)
+        {
+            Register sourceReg = decodeRegisterRM(rm.r_m, rex, false);
+
+            auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(sourceReg).raw());
+
+            i->setSourceOperand(std::move(sourceOperand));
+            i->setDestinationOperand(std::move(destinationOperand));
+            flags.regToReg = true; // set the regToReg flag to true since this is a register to register operation
+
+
+        }
+        else
+        {
+            uint64_t address = calculatingAddressRM(i, registers);
+
+            auto sourceOperand = std::make_unique<MemOperand>(address);
+
+            i->setSourceOperand(std::move(sourceOperand));
+            i->setDestinationOperand(std::move(destinationOperand));
+            flags.memToReg = true; // set the memToReg flag to true since this is a memory to register operation
+
+        }
+
+        return;
     }
 
     auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
@@ -452,7 +484,22 @@ void fetchRMI(Instruction* i, RegisterFile& registers)
     
 }
 
+void fetchD(Instruction* i, RegisterFile& registers)
+{
+    InstructionCore& core = i->getCore();
+    InstructionFlags& flags = i->getFlags();
 
+    flags.regToReg = true; // set the regToReg flag to true since this is a register to register operation
+    // operand constructors for source and destination operands
+
+    // the source is an immediate value and the destination is a register
+    auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
+    auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RIP).raw());
+
+
+    i->setSourceOperand(std::move(sourceOperand));
+    i->setDestinationOperand(std::move(destinationOperand));
+}
 
 
 
@@ -478,7 +525,7 @@ uint64_t calculatingAddressRM(Instruction* i, RegisterFile& registers)
         if (rm.r_m == 0b101 && rm.mod == 0b00)
         {
             // calculation of the address with  RIP displacement
-            return AddressCalculator::BaseDisplacementAddressing(registers, Register::RIP, displacement);
+            return AddressCalculator::RIPRelativeAddressing(core.nextRip, displacement);
         }
 
         // destination adress is in the register

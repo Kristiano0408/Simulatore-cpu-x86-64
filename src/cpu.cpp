@@ -2,10 +2,10 @@
 #include "bus.hpp"
 
 //constructor for the CPU
-CPU::CPU(Bus& busRef): bus(busRef), controlUnit(busRef),registers(), cacheManager(busRef, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc), pipeline(*this, nullptr), pipelineController(pipeline)
+CPU::CPU(Bus& busRef): bus(busRef), controlUnit(busRef),registers(), cacheManager(busRef, L1_cache_size, L2_cache_size, L3_cache_size, L1_cache_assoc, L2_cache_assoc, L3_cache_assoc), pipeline(*this, nullptr), hazardUnit(pipeline)
 {
     DEBUG_LOG(debugLog("CPU created"));
-    pipeline.setEventHandler(pipelineController.getEventHandler());
+    pipeline.setEventHandler(hazardUnit.getEventHandler());
   
  }
 
@@ -38,9 +38,9 @@ Pipeline& CPU::getPipeline()
     return pipeline;
 }
 
-PipelineController& CPU::getPipelineController()
+HazardUnit& CPU::getHazardUnit()
 {
-    return pipelineController;
+    return hazardUnit;
 }
 
 //cpu operations

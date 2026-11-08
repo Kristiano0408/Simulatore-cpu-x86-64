@@ -52,7 +52,8 @@ enum class TypeofInstruction : uint8_t
     RCR = 28, //Rotate through carry right
     ROL = 29, //Rotate left
     ROR = 30, //Rotate right
-    COUNT = 31
+    JMP = 31,
+    COUNT = 32
 
    
 };
@@ -101,7 +102,8 @@ constexpr std::array<TypeofDataTransferInstruction, static_cast<size_t>(TypeofIn
     /* RCL   */ TypeofDataTransferInstruction::COUNT,
     /* RCR   */ TypeofDataTransferInstruction::COUNT,
     /* ROL   */ TypeofDataTransferInstruction::COUNT,
-    /* ROR   */ TypeofDataTransferInstruction::COUNT
+    /* ROR   */ TypeofDataTransferInstruction::COUNT,
+    /* JMP   */ TypeofDataTransferInstruction::COUNT
 };
 
 //enum for the addressing mode of the instruction
@@ -121,7 +123,8 @@ enum class AddressingMode : uint8_t
     O = 10, //single operand register (used for push/pop register)
     M1 = 11, //single operand r/m with 1 bit immediate (used for shift instructions)
     MC = 12, //single operand r/m with count in cl (used for shift instructions)
-    COUNT = 13
+    D = 13, //single operand register with count in cl (used for shift instructions)
+    COUNT = 14
 
 };
 
@@ -194,6 +197,7 @@ struct InstructionCore
     uint64_t InstructionId; //unique id for the instruction
     uint64_t value;
     uint64_t displacement;
+    uint64_t nextRip;
     uint32_t opcode;
     uint32_t SIBdisplacement;
     std::array<uint8_t, 4> prefix;
@@ -231,6 +235,7 @@ struct InstructionFlags
 
 struct InstructionInfo {
     uint64_t instructionId{}; // Unique ID for the instruction
+    uint64_t nextRipAddress{};
     size_t totalLength{};  // Lunghezza totale dell'istruzione
     size_t opcodeLength{}; // Lunghezza dell'opcode (1, 2 o 3 byte)
     std::array<uint8_t, 4> prefix{}; // Array dei prefissi (max 4)

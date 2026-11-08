@@ -288,6 +288,11 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         case TypeofInstruction::SALSHL: return "SAL/SHL";
         case TypeofInstruction::SAR: return "SAR";
         case TypeofInstruction::SHR: return "SHR";
+        case TypeofInstruction::ROL: return "ROL";
+        case TypeofInstruction::ROR: return "ROR";
+        case TypeofInstruction::RCL: return "RCL";
+        case TypeofInstruction::RCR: return "RCR";
+        case TypeofInstruction::JMP: return "JMP";
         case TypeofInstruction::COUNT: return "COUNT";
         default: return "UNKNOWN";
         }

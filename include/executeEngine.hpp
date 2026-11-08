@@ -114,7 +114,8 @@ namespace tempValuesInit {
         /*RCL*/    initCarryIn,
         /*RCR*/    initCarryIn,
         /*ROL*/    initNone,
-        /*ROR*/    initNone
+        /*ROR*/    initNone,
+        /*JMP*/    initDestReady
 
     };
     

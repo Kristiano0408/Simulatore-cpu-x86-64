@@ -305,6 +305,13 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0xD201,{2 ,1 ,1 ,1 ,0 ,8 ,8 ,0,false,true,false,false,"ROR r/m8,CL"}},
     {0xD301,{2 ,1 ,1 ,1 ,0 ,8 ,32 ,0,false,true,false,false,"ROR r/m16/32/64,CL"}},
 
+    //JMP
+    {0xEB, {2, 1, 1, 1, 8, 64, 64, 2, false, false, false, true, "JMP rel8"}},
+    {0xE9, {5, 1, 4, 1, 32, 64, 64, 2, false, false, false, true, "JMP rel64"}}, // solo 64 bit, no 16/32
+
+    {0xFF04, {2, 1, 1, 1, 0, 64, 64, 0, false, false, false, true, "JMP r/m64"}},
+
+
 
 
     

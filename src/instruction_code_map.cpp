@@ -280,9 +280,14 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     {0xC101, {.type=TypeofInstruction::ROR, .mode=AddressingMode::MI,  .executionMode=InstructionExecutionMode::ALU}},
 
     {0xD201, {.type=TypeofInstruction::ROR, .mode=AddressingMode::MC, .executionMode=InstructionExecutionMode::ALU}},
-    {0xD301, {.type=TypeofInstruction::ROR, .mode=AddressingMode::MC,  .executionMode=InstructionExecutionMode::ALU}}
-    
-    
+    {0xD301, {.type=TypeofInstruction::ROR, .mode=AddressingMode::MC,  .executionMode=InstructionExecutionMode::ALU}},
+
+    //JMP
+    {0xEB, {.type=TypeofInstruction::JMP, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0xE9, {.type=TypeofInstruction::JMP, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0xFF04, {.type=TypeofInstruction::JMP, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::CONTROL_FLOW}}
+
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -302,7 +307,8 @@ const std::array<DecodeFunc,(size_t)AddressingMode::COUNT> addressingModes =
     &Decoder::decodeInstructionRM,//the decode is the same for RMI and RM, but the fetchOperands is different, so it is separated in the implementation of the decode function
     &Decoder::decodeInstructionO,
     &Decoder::decodeInstructionMI, //M1 is a special case of MI, so it is separated in the implementation of the decode function
-    &Decoder::decodeInstructionMR //MC is a special case of MR, so it is separated in the implementation of the decode function
+    &Decoder::decodeInstructionMR, //MC is a special case of MR, so it is separated in the implementation of the decode function
+    &Decoder::decodeInstructionD //M_ACC is a special case of M, so it is separated in the implementation of the decode function
 };
 
 
