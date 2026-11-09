@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 #include <cstdint>
+#include "registersTypes.hpp"
 
 struct r_m {
     uint8_t r_m;
@@ -213,6 +214,12 @@ struct InstructionCore
     TypeofInstruction type; //type of the instruction (arithmetic, logical, control flow, etc.)
     AddressingMode addressingMode; //addressing mode of the instruction
     InstructionExecutionMode executionMode; //execution mode of the instruction (ALU, data transfer, control flow, etc.)
+    Register rmReg{Register::DummyRegister}; //register used in the instruction (if any)
+    Register regReg{Register::DummyRegister}; //register used in the instruction (if any)
+    Register indexReg{Register::DummyRegister}; //register used in the instruction (if any)
+    Register baseReg{Register::DummyRegister}; //register used in the instruction (if any)
+    bool needRSPimplicitly = false; //flag to indicate if the instruction needs RSP implicitly (used for push/pop instructions)
+    uint8_t scale; //scale factor for the SIB byte (if any)
 
 
 };

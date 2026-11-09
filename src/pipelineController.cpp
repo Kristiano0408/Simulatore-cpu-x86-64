@@ -43,11 +43,12 @@ void PipelineController::onFetchComplete()
     fetchStage.setStalledGUI(true); // Set the stalled flag
     #else
     FetchDecodeBuffer& fetchDecodeBuffer = pipeline.getFetchDecodeBuffer();
-    fetchDecodeBuffer.valid = true;
-    fetchDecodeBuffer.stalled = false;
-    fetchDecodeBuffer.flushed = false;
-    fetchStage.setStatus(StageStatus::READY);
-    fetchStage.setCurrentInstructionInfo(InstructionInfo());
+    if(fetchDecodeBuffer.valid == true)
+    {
+        fetchStage.setStatus(StageStatus::COMPLETED_BUT_BUFFER_FULL);
+        return;
+    }
+ 
     #endif
 }
 
@@ -61,6 +62,12 @@ void PipelineController::onDecodeComplete()
     decodeStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status to waiting for GUI buffer update
     #else
     DecodeOperandFetchBuffer& decodeOperandFetchBuffer = pipeline.getDecodeOperandFetchBuffer();
+    if(decodeOperandFetchBuffer.valid == true)
+    {
+        //buffer pieno 
+        decodeStage.setStatus(StageStatus::COMPLETED_BUT_BUFFER_FULL);
+        return;
+    }
     decodeOperandFetchBuffer.decodedInstruction = decodeStage.getDecodedInstruction();
     decodeStage.setInstructionToDecode(InstructionInfo()); //reset the instructionInfo of decode stage
     decodeOperandFetchBuffer.valid = true;
@@ -81,6 +88,12 @@ void PipelineController::onOperandFetchComplete()
     operandFetchStage.setStatus(StageStatus::WAITING_GUI_EXECUTION); // Set the status
     #else
     OperandFetchExecuteBuffer& operandFetchExecuteBuffer = pipeline.getOperandFetchExecuteBuffer();
+     if(operandFetchExecuteBuffer.valid == true)
+    {
+        //buffer pieno 
+        operandFetchStage.setStatus(StageStatus::COMPLETED_BUT_BUFFER_FULL);
+        return;
+    }
     operandFetchExecuteBuffer.instructionWithOperands = operandFetchStage.getInstructionWithFetchedOperands();
     operandFetchExecuteBuffer.valid = true;
     operandFetchExecuteBuffer.stalled = false;
@@ -100,6 +113,12 @@ void PipelineController::onExecuteComplete()
     executeStage.setStalledGUI(true); // Set the stalled flag
     #else
     ExecuteMemoryBuffer& executeMemoryBuffer = pipeline.getExecuteMemoryBuffer();
+    if(executeMemoryBuffer.valid == true)
+    {
+        //buffer pieno 
+        executeStage.setStatus(StageStatus::COMPLETED_BUT_BUFFER_FULL);
+        return;
+    }
     executeMemoryBuffer.executedInstruction = executeStage.getInstructionToExecute();
     executeMemoryBuffer.valid = true;
     executeMemoryBuffer.stalled = false;
@@ -122,6 +141,12 @@ void PipelineController::onMemoryStageComplete()
 
     #else
     MemoryWriteBackBuffer& memoryWriteBackBuffer = pipeline.getMemoryWriteBackBuffer();
+    if(memoryWriteBackBuffer.valid == true)
+    {
+        //buffer pieno 
+        memoryStage.setStatus(StageStatus::COMPLETED_BUT_BUFFER_FULL);
+        return;
+    }
     memoryWriteBackBuffer.memoryAccessedInstruction = memoryStage.getInstructionToMemory();
     memoryWriteBackBuffer.valid = true;
     memoryWriteBackBuffer.stalled = false;

@@ -122,7 +122,7 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
         position++;
     }
 
-    position += instruction.opcodeLength;
+    position += static_cast<uint8_t>(instruction.opcodeLength);
 
     //getting the type and adressing mode of the instruction
     
@@ -164,8 +164,9 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
     if(decoderFunction != nullptr)
     {
         decoderFunction(instructionPtr.get(), instruction, position);
-
         core.addressingMode = mode;
+        settingRM_SIBRegisters(instructionPtr.get());
+        
        
        
         return instructionPtr;
@@ -181,6 +182,36 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
 
 }
 
+void Decoder::settingRM_SIBRegisters(Instruction* instruction)
+{
+    InstructionCore& core = instruction->getCore();
+    InstructionFlags& flags = instruction->getFlags();
+
+    if (flags.hasModRM && flags.hasSIB)
+    {
+        // Both Mod/RM and SIB bytes are present
+        core.rmReg = decodeRegisterRM(core.rm.r_m, core.rexprefix, true);
+        core.regReg = decodeRegisterReg(core.rm.reg, core.rexprefix);
+        core.indexReg = decodeRegisterSIB_index(core.sib.index, core.rexprefix, true);
+        core.baseReg = decodeRegisterSIB_base(core.sib.base, core.rexprefix, true);
+        core.scale = core.sib.scale;
+    }
+    else if (flags.hasModRM)
+    {
+        core.rmReg = decodeRegisterRM(core.rm.r_m, core.rexprefix, false);
+        core.regReg = decodeRegisterReg(core.rm.reg, core.rexprefix);
+    }
+    if(core.addressingMode == AddressingMode::MC)
+    {
+        core.regReg = Register::RCX;
+    }
+    if(core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP)
+    {
+        core.needRSPimplicitly = true; //for push and pop the RSP is needed implicitly
+    }
+    
+}
+
 //methods for decoding the instructions based on the addressing mode
 void Decoder::decodeInstructionOI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
 {
@@ -192,7 +223,7 @@ void Decoder::decodeInstructionOI(Instruction* instruction, const InstructionInf
     
 }
 
-void Decoder::decodeInstructionO(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)
+void Decoder::decodeInstructionO(Instruction* instruction, [[maybe_unused]] const InstructionInfo& instructionInfo, [[maybe_unused]] uint8_t position)
 {
     //decode the register operand
     InstructionFlags& flags = instruction->getFlags();

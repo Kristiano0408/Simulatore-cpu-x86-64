@@ -23,7 +23,6 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, PipelineEventHandle
     RegisterFile& cpuRegisters = bus.getCPU().getRegisters(); // get the registers of the CPU temporarily
     // take the value of istruction register
     index = cpuRegisters.getReg(Register::RIP).raw();
-    std::printf("ControlUnit: Fetching instruction at address: %llx\n", index);
     // fetching the instruction from cache or memory
 
     DEBUG_LOG(debugLog("Fetching instruction at address: " + to_string_hex(index)));

@@ -3,6 +3,7 @@
 #include "helpers/decoderHelper.hpp"
 #include "instruction.hpp"
 #include "registerFile.hpp"
+#include "helpers/debug.hpp"
 // namespace for operand fetching
 // every addressing mode has its own function that take the istruction and the referecne to then bus for loading
 // the right values inside the smart pointers that store the operands
@@ -20,14 +21,12 @@ void fetchRM(Instruction* i, RegisterFile& registers)
     // getting the r/m byte
     r_m rm = core.rm;
 
-    // getting the rex prefix
-    uint8_t rex = core.rexprefix;
 
     // Case 1: operation between register and register (maybe you can use the regToReg boolean variable)
     if (rm.mod == 0b11)
     {
-        source_register = decodeRegisterRM(rm.r_m, rex, false);
-        destination_register = decodeRegisterReg(rm.reg, rex);
+        source_register = core.rmReg;
+        destination_register = core.regReg;
 
         auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
         auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
@@ -42,7 +41,7 @@ void fetchRM(Instruction* i, RegisterFile& registers)
 
     uint64_t address{calculatingAddressRM(i, registers)};
 
-    destination_register = decodeRegisterReg(rm.reg, rex);
+    destination_register = core.regReg;
 
     // For IMUL reg, r/m (RM mode) the destination is ALWAYS the ModRM.reg register,
     // even when r/m is a memory operand: memory is only read as the source, the
@@ -76,8 +75,6 @@ void fetchMR(Instruction* i, RegisterFile& registers)
     // getting the r/m byte
     r_m rm = core.rm;
 
-    // getting the rex prefix
-    uint8_t rex = core.rexprefix;
 
     // creating the source operand
     auto sourceOperand = std::make_unique<Operand>();
@@ -85,16 +82,9 @@ void fetchMR(Instruction* i, RegisterFile& registers)
     // Case 1: operation between register and register
     if (rm.mod == 0b11)
     {
-        source_register = decodeRegisterReg(rm.reg, rex);
-        destination_register = decodeRegisterRM(rm.r_m, rex, false);
-
-        // operand constructors for source and destination operands
-        if(core.addressingMode == AddressingMode::MC)
-            // the source is an immediate value and the destination is a register
-            sourceOperand = std::make_unique<RegOperand>(registers.getReg(Register::RCX).raw()); //for MC the source operand is always RCX (used for shift instructions)
-        else
-            sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
-
+        source_register = core.regReg;
+        destination_register = core.rmReg;
+        sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
         auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(destination_register).raw());
 
         // setting the source and destination operands
@@ -111,14 +101,9 @@ void fetchMR(Instruction* i, RegisterFile& registers)
     uint64_t address{calculatingAddressRM(i, registers)};
 
     // the source is a register
-    source_register = decodeRegisterReg(rm.reg, rex);
+    source_register = core.regReg;
 
-     // operand constructors for source and destination operands
-    if(core.addressingMode == AddressingMode::MC)
-            // the source is an immediate value and the destination is a register
-        sourceOperand = std::make_unique<RegOperand>(registers.getReg(Register::RCX).raw()); //for MC the source operand is always RCX (used for shift instructions)
-    else
-        sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
+    sourceOperand = std::make_unique<RegOperand>(registers.getReg(source_register).raw());
     auto destinationOperand = std::make_unique<MemOperand>(address);
 
     i->setSourceOperand(std::move(sourceOperand));
@@ -235,7 +220,7 @@ void fetchMI(Instruction* i, RegisterFile& registers)
     auto sourceOperand = std::make_unique<Operand>();
     if (rm.mod == 0b11)
     {
-        Register destination_register = decodeRegisterRM(rm.r_m, core.rexprefix, false);
+        Register destination_register = core.rmReg;
 
         
         if(core.addressingMode == AddressingMode::M1)
@@ -293,13 +278,10 @@ void fetchI(Instruction* i, RegisterFile& registers)
 void fetchLEA(Instruction* i, RegisterFile& registers)
 {
     InstructionCore& core = i->getCore();
-    r_m rm = core.rm;
-    uint8_t rex = core.rexprefix;
-
     
     uint64_t address{calculatingAddressRM(i, registers)};
 
-    Register destination_register = decodeRegisterReg(rm.reg, rex);
+    Register destination_register = core.regReg;
 
     // The EA is the VALUE (not a memory address to read from)
     auto sourceOperand = std::make_unique<ImmediateOperand>(address);
@@ -314,14 +296,13 @@ void fetchM(Instruction* i, RegisterFile& registers)
     InstructionCore& core = i->getCore();
     InstructionFlags& flags = i->getFlags();
     r_m rm = core.rm;
-    uint8_t rex = core.rexprefix;
 
     if (core.type == TypeofInstruction::PUSH)
     {
         std::unique_ptr<Operand> sourceOperand;
         if (rm.mod == 0b11)
         {
-            Register sourceReg = decodeRegisterRM(rm.r_m, rex, false);
+            Register sourceReg = core.rmReg;
             sourceOperand = std::make_unique<RegOperand>(registers.getReg(sourceReg).raw());
         }
         else
@@ -341,7 +322,7 @@ void fetchM(Instruction* i, RegisterFile& registers)
         if(rm.mod == 0b11)
         {
             // register operand as destination, immediate(1) as source for infrastructure compatibility
-        Register dest_reg = decodeRegisterRM(rm.r_m, rex, false);
+        Register dest_reg = core.rmReg;
         
             auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(dest_reg).raw());
 
@@ -367,7 +348,7 @@ void fetchM(Instruction* i, RegisterFile& registers)
 
         if(rm.mod == 0b11)
         {
-            Register sourceReg = decodeRegisterRM(rm.r_m, rex, false);
+            Register sourceReg = core.rmReg;
 
             auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(sourceReg).raw());
 
@@ -396,7 +377,7 @@ void fetchM(Instruction* i, RegisterFile& registers)
     if (rm.mod == 0b11)
     {
         // register operand as destination, immediate(1) as source for infrastructure compatibility
-        Register dest_reg = decodeRegisterRM(rm.r_m, rex, false);
+        Register dest_reg = core.rmReg;
        
         auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(dest_reg).raw());
 
@@ -418,16 +399,15 @@ void fetchM_ACC(Instruction* i, RegisterFile& registers)
 {
     InstructionCore& core = i->getCore();
     r_m rm = core.rm;
-    uint8_t rex = core.rexprefix;
 
     auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RAX).raw());
     auto auxOperand = std::make_unique<RegOperand>(registers.getReg(Register::RDX).raw());
     if (rm.mod == 0b11)
     {
-        // register operand as destination, immediate(1) as source for infrastructure compatibility
-        Register dest_reg = decodeRegisterRM(rm.r_m, rex, false);
+        // register operand as source
+        Register src_reg = core.rmReg;
        
-        auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(dest_reg).raw());
+        auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(src_reg).raw());
 
         i->setSourceOperand(std::move(sourceOperand));
         i->setDestinationOperand(std::move(destinationOperand));
@@ -449,19 +429,18 @@ void fetchRMI(Instruction* i, RegisterFile& registers)
 {
     InstructionCore& core = i->getCore();
     r_m rm = core.rm;
-    uint8_t rex = core.rexprefix;
 
     // IMUL reg, r/m, imm (RMI mode): the destination is ALWAYS the ModRM.reg register,
     // the source is the r/m operand (register or memory), the immediate is stored in
     // core.value and used by the ALU through auxValue.
-    Register dest_reg = decodeRegisterReg(rm.reg, rex);
+    Register dest_reg = core.regReg;
 
     auto auxOperand =  std::make_unique<ImmediateOperand>(core.value);
     i->setAuxOperand(std::move(auxOperand));
 
     if (rm.mod == 0b11)
     {
-        Register src_reg = decodeRegisterRM(rm.r_m, rex, false);
+        Register src_reg = core.rmReg;
 
         auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(src_reg).raw());
         auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(dest_reg).raw());
@@ -510,9 +489,6 @@ uint64_t calculatingAddressRM(Instruction* i, RegisterFile& registers)
     // getting the r/m byte
     r_m rm = core.rm;
 
-    // getting the rex prefix
-    uint8_t rex = core.rexprefix;
-
     // getting the displacement
     uint64_t displacement = core.displacement;
 
@@ -525,16 +501,16 @@ uint64_t calculatingAddressRM(Instruction* i, RegisterFile& registers)
         if (rm.r_m == 0b101 && rm.mod == 0b00)
         {
             // calculation of the address with  RIP displacement
-            return AddressCalculator::RIPRelativeAddressing(core.nextRip, displacement);
+            return AddressCalculator::RIPRelativeAddressing(core.nextRip, static_cast<uint32_t>(displacement));
         }
 
         // destination adress is in the register
-        return AddressCalculator::indirectAddressing(registers, decodeRegisterRM(rm.r_m, rex, flags.hasSIB)) + displacement;
+        return AddressCalculator::indirectAddressing(registers, core.rmReg) + displacement;
     }
 
     // calculation of the address with SIB
-    Register base = decodeRegisterSIB_base(sib.base, rex, flags.hasSIB);
-    Register index = decodeRegisterSIB_index(sib.index, rex, flags.hasSIB);
+    Register base = core.baseReg;
+    Register index = core.indexReg;
     uint64_t address = 0;
 
     // if the base is 0b101 and the index is 0b100, there is no index and base is 32 bit displacement

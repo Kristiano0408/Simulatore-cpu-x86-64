@@ -373,7 +373,6 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
             temporaryValues& tempValues = instruction->getTemporaryValuesRef();
             if(core.type == TypeofInstruction::JMP)
             {
-                std::printf("ExecuteEngine: Executing JMP instruction with ID %llu\n", instruction->getCore().InstructionId);
                 uint64_t displacement{};
                 if(core.opcode == 0xEB)
                 {
@@ -523,8 +522,6 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         }
         return;
     }
-    std::printf("ExecuteEngine: Writing back result to destination operand for instruction with ID %llu\n", instruction->getCore().InstructionId);
-    std::printf("ExecuteEngine: Result Value: %x\n", instruction->getTemporaryValues().resultValue);
     operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
 
 }

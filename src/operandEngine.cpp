@@ -140,7 +140,6 @@ OperandResult OperandEngine::setRegisterValue(Operand* operand, uint64_t value)
     const uint64_t valueMasked = value & mask;
 
     uint64_t& regValue = regOperand->getReg();
-    std::printf("OperandEngine: previous register value: %llx\n", regValue);
     if (bitCount == 32 || bitCount == 8)
     
         regValue = valueMasked; // 32-bit (and 8-bit accumulator writes) zero-extend into the full 64-bit register
@@ -148,8 +147,6 @@ OperandResult OperandEngine::setRegisterValue(Operand* operand, uint64_t value)
     {
         regValue = (regValue & ~mask) | valueMasked; // Altrimenti, sovrascrivi l'intero registro
     }
-    std::printf("OperandEngine: new register value: %llx\n", regValue);
-    std::printf("OperandEngine: new register value: %llx\n", regOperand->getReg());
         
 
     result.success = true;

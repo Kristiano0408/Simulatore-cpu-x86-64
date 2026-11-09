@@ -298,6 +298,29 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         }
 }
 
+std::string toStringRegister(Register reg)
+{
+    switch (reg) {
+        case Register::RAX: return "RAX";
+        case Register::RBX: return "RBX";
+        case Register::RCX: return "RCX";
+        case Register::RDX: return "RDX";
+        case Register::RSI: return "RSI";
+        case Register::RDI: return "RDI";
+        case Register::RSP: return "RSP";
+        case Register::RBP: return "RBP";
+        case Register::R8:  return "R8";
+        case Register::R9:  return "R9";
+        case Register::R10: return "R10";
+        case Register::R11: return "R11";
+        case Register::R12: return "R12";
+        case Register::R13: return "R13";
+        case Register::R14: return "R14";
+        case Register::R15: return "R15";
+        default:            return "UNKNOWN_REGISTER";
+    }
+}
+
 ComponentType getComponentTypeFromCacheLevelType(CacheLevelType type)
 {
     switch (type) {

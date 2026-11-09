@@ -1,6 +1,6 @@
 #include "hazardUnit.hpp"
 
-HazardUnit::HazardUnit(Pipeline& pipeline) : pipelineController(pipeline) , pipeline(pipeline) {
+HazardUnit::HazardUnit(Pipeline& pipelineRef) : pipeline(pipelineRef), pipelineController(pipelineRef){
 
     setupEvents(); // Set up the events for the HazardUnit
 };
@@ -112,6 +112,19 @@ void HazardUnit::onMemoryDoneWrapperMemoryStage(void* context)
 
 
 void  HazardUnit::execute_operation() {
+
+    /*updateFetchStageStatus(); // Update the status of the fetch stage // we need this info dor detecting control hazards( id > idJMP)
+    updateDecodeStageStatus(); // Update the status of the decode stage // we nedd his info to block OF for adress calculation 
+    updateOperandFetchStageStatus(); // Update the status of the operand fetch stage // we needhis info to block reg and memory access in execution 
+    updateExecuteStageStatus(); // Update the status of the execute stage // we need this info for detecting data hazards and control hazards
+    updateMemoryStageStatus(); // Update the status of the memory stage // we need this info for detecting data hazards and control hazards
+    updateWriteBackStageStatus(); // Update the status of the write back stage // we need this info for detecting data hazards and control hazards
+
+
+    if(detectAdressCalculationHazard()); // Detect address calculation hazards(confronting the instruction in decode stage or buffer  with the instruction OF,EX,WB to see if they are using the same registers)
+    {
+        //stall decode buffer 
+    }*/
     // Implement hazard detection and resolution logic here
     // This function will be called when the HazardUnit is ticked and the ticks_needed is reached
     DEBUG_LOG(debugLog("HazardUnit executing operation for hazard detection and resolution..."));

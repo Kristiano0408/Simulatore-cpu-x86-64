@@ -22,6 +22,8 @@ class Decoder : public FaultDevice
         InstructionInfo lenghtOfInstruction(uint32_t opcode, const uint8_t prefix[4], uint8_t numPrefixes, bool rex, uint8_t rexprefix);
         static void fixTotalLengthPrefix(InstructionInfo& info);
         std::unique_ptr<Instruction> decodeInstruction(InstructionInfo instruction);
+
+        void settingRM_SIBRegisters(Instruction* instruction);
          //decode the  r/m operand
         static r_m decodeRM(std::byte r_m);
         //decode the SIB operand
@@ -51,6 +53,7 @@ class Decoder : public FaultDevice
         static uint64_t decodeDisplacement(InstructionInfo instruction, uint8_t& position, uint8_t size);
         //decode the RM type instruction
         static void decodeRmInstruction(Instruction* instruction, InstructionInfo instructionInfo, uint8_t& position);
+
 
 
        

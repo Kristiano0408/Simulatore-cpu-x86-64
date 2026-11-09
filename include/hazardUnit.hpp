@@ -78,7 +78,7 @@ struct PipelineStageStatus
 class HazardUnit : public TickedDevice, public FaultDevice
 {
     public:
-        HazardUnit(Pipeline& pipeline);
+        HazardUnit(Pipeline& pipelineRef);
         ~HazardUnit();
         void execute_operation() override; // Override the execute_operation function to handle hazard detection and resolution
         PipelineController& getPipelineController() {return pipelineController;} // Function to get the PipelineController instance
@@ -109,6 +109,8 @@ class HazardUnit : public TickedDevice, public FaultDevice
         PipelineController pipelineController; // Pipeline controller to manage the pipeline stages and buffers
         PipelineEventHandler eventHandler;
         std::array<PipelineStageStatus, 6> stageInstructionsInfo; // Array to store instruction information for each pipeline stage
+        std::array<bool, 6> stageStalledforWriteBack; // Array to store whether each stage is stalled for write back
+        std::array<bool, 6> stageStalledforMemory; // Array to store whether each stage is stalled for memory access
 
 
 

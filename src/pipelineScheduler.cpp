@@ -124,7 +124,8 @@ void PipelineScheduler::processFetchStage(CPU& cpu)
     FetchStage& fetchStage = pipeline.fetchStage;
     FetchDecodeBuffer& fetchDecodeBuffer = pipeline.fetchDecodeBuffer;
 
-    if(fetchStage.isStageReady()) 
+
+    if(fetchStage.isStageReady() && fetchStage.getCurrentInstructionInfo().totalLength == 0) 
     {
         DEBUG_LOG(debugLog("FETCH STAGE processing..."));
         cpu.incrementInstructionIdCounter();
@@ -146,9 +147,34 @@ void PipelineScheduler::processFetchStage(CPU& cpu)
     { 
         DEBUG_LOG(debugLog("FETCH STAGE instruction fetch completed."));
 
-        // Move instruction to Fetch-Decode buffer
-        fetchDecodeBuffer.instructionInfo = fetchInstruction(cpu);
+        fetchStage.setCurrentInstructionInfo(fetchInstruction(cpu));
+
+        if(fetchDecodeBuffer.valid == false)
+        {
+            fetchDecodeBuffer.instructionInfo = fetchStage.getCurrentInstructionInfo();
+            fetchDecodeBuffer.valid = true;
+            fetchDecodeBuffer.stalled = false;
+            fetchDecodeBuffer.flushed = false;
+            fetchStage.setStatus(StageStatus::READY);
+            fetchStage.setCurrentInstructionInfo(InstructionInfo());
+        }
+ 
+
+
+    
         
+    }
+    else if (fetchStage.getStatus() == StageStatus::COMPLETED_BUT_BUFFER_FULL)
+    {
+        if(fetchDecodeBuffer.valid ==false)
+        {
+            fetchDecodeBuffer.instructionInfo = fetchStage.getCurrentInstructionInfo();
+            fetchDecodeBuffer.valid = true;
+            fetchDecodeBuffer.stalled = false;
+            fetchDecodeBuffer.flushed = false;
+            fetchStage.setStatus(StageStatus::READY);
+            fetchStage.setCurrentInstructionInfo(InstructionInfo());
+        }
     }
     #ifdef GUI_ENABLED
     else if(fetchStage.getStatus() == StageStatus::WAITING_GUI_EXECUTION)
@@ -175,9 +201,8 @@ void PipelineScheduler::processDecodeStage(CPU& cpu)
     DecodeStage& decodeStage = pipeline.decodeStage;
     FetchStage& fetchStage = pipeline.fetchStage;
     FetchDecodeBuffer& fetchDecodeBuffer = pipeline.fetchDecodeBuffer;
-    #ifdef GUI_ENABLED
-        DecodeOperandFetchBuffer& decodeOperandFetchBuffer = pipeline.decodeOperandFetchBuffer;
-    #endif
+    DecodeOperandFetchBuffer& decodeOperandFetchBuffer = pipeline.decodeOperandFetchBuffer;
+
 
 
     if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(decodeStage, fetchDecodeBuffer)) 
@@ -205,6 +230,20 @@ void PipelineScheduler::processDecodeStage(CPU& cpu)
         #else
         decodeInstruction(cpu);
         #endif
+    }
+    else if (decodeStage.getStatus() == StageStatus::COMPLETED_BUT_BUFFER_FULL)
+    {
+        if(decodeOperandFetchBuffer.valid == false)
+        {
+            //buffer vuoto
+            decodeOperandFetchBuffer.decodedInstruction = decodeStage.getDecodedInstruction();
+            decodeStage.setInstructionToDecode(InstructionInfo()); //reset the instructionInfo of decode stage
+            decodeOperandFetchBuffer.valid = true;
+            decodeOperandFetchBuffer.stalled = false;
+            decodeOperandFetchBuffer.flushed = false;
+            decodeStage.setStatus(StageStatus::READY);
+
+        }
     }
     else if(decodeStage.isStageReady() && !fetchDecodeBuffer.valid && (fetchStage.getCurrentInstructionInfo().totalLength == 0 || !fetchStage.isStageReady()))
     {
@@ -246,9 +285,9 @@ void PipelineScheduler::processOperandFetchStage()
     OperandFetchStage& operandFetchStage = pipeline.operandFetchStage;
     DecodeStage& decodeStage = pipeline.decodeStage;
     DecodeOperandFetchBuffer& decodeOperandFetchBuffer = pipeline.decodeOperandFetchBuffer;
-    #ifdef GUI_ENABLED
-        OperandFetchExecuteBuffer& operandFetchExecuteBuffer = pipeline.operandFetchExecuteBuffer;  
-    #endif
+
+    OperandFetchExecuteBuffer& operandFetchExecuteBuffer = pipeline.operandFetchExecuteBuffer;  
+   
 
 
     if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(operandFetchStage, decodeOperandFetchBuffer)) 
@@ -280,6 +319,18 @@ void PipelineScheduler::processOperandFetchStage()
     else if(STAGE_HAS_NOT_INSTRUCTION_TO_PROCESS(operandFetchStage, decodeStage, decodeOperandFetchBuffer))
     {
         DEBUG_LOG(debugLog("OPERAND FETCH STAGE has no valid instruction to process."));
+    }
+    else if (operandFetchStage.getStatus() == StageStatus::COMPLETED_BUT_BUFFER_FULL)
+    {
+        if(operandFetchExecuteBuffer.valid == false)
+        {
+            operandFetchExecuteBuffer.instructionWithOperands = operandFetchStage.getInstructionWithFetchedOperands();
+            operandFetchExecuteBuffer.valid = true;
+            operandFetchExecuteBuffer.stalled = false;
+            operandFetchExecuteBuffer.flushed = false;
+            operandFetchStage.setStatus(StageStatus::READY);
+
+        }
     }
     #ifdef GUI_ENABLED
     else if(operandFetchStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)
@@ -318,9 +369,8 @@ void PipelineScheduler::processExecuteStage()
     ExecuteStage& executeStage = pipeline.executeStage;
     OperandFetchStage& operandFetchStage = pipeline.operandFetchStage;
     OperandFetchExecuteBuffer& operandFetchExecuteBuffer = pipeline.operandFetchExecuteBuffer;
-    #ifdef GUI_ENABLED
-        ExecuteMemoryBuffer& executeMemoryBuffer = pipeline.executeMemoryBuffer;
-    #endif
+    ExecuteMemoryBuffer& executeMemoryBuffer = pipeline.executeMemoryBuffer;
+  
 
     if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(executeStage, operandFetchExecuteBuffer))
     {
@@ -352,6 +402,18 @@ void PipelineScheduler::processExecuteStage()
     else if(STAGE_HAS_NOT_INSTRUCTION_TO_PROCESS(executeStage, operandFetchStage, operandFetchExecuteBuffer))
     {
         DEBUG_LOG(debugLog("EXECUTE STAGE has no valid instruction to process."));
+    }
+    else if (executeStage.getStatus() == StageStatus::COMPLETED_BUT_BUFFER_FULL)
+    {
+        if(executeMemoryBuffer.valid == false)
+        {
+            executeMemoryBuffer.executedInstruction = executeStage.getInstructionToExecute();
+            executeMemoryBuffer.valid = true;
+            executeMemoryBuffer.stalled = false;
+            executeMemoryBuffer.flushed = false;
+            executeStage.setStatus(StageStatus::READY);
+
+        }
     }
     #ifdef GUI_ENABLED
     else if(executeStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)
@@ -395,9 +457,8 @@ void PipelineScheduler::processMemoryStage()
     MemoryStage& memoryStage = pipeline.memoryStage;
     ExecuteStage& executeStage = pipeline.executeStage;
     ExecuteMemoryBuffer& executeMemoryBuffer = pipeline.executeMemoryBuffer;
-    #ifdef GUI_ENABLED
-        MemoryWriteBackBuffer& memoryWriteBackBuffer = pipeline.memoryWriteBackBuffer;
-    #endif
+    MemoryWriteBackBuffer& memoryWriteBackBuffer = pipeline.memoryWriteBackBuffer;
+
 
 
     if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(memoryStage, executeMemoryBuffer)) 
@@ -430,6 +491,21 @@ void PipelineScheduler::processMemoryStage()
     else if(STAGE_HAS_NOT_INSTRUCTION_TO_PROCESS(memoryStage, executeStage, executeMemoryBuffer))
     {
         DEBUG_LOG(debugLog("MEMORY STAGE has no valid instruction to process."));
+    }
+    else if (memoryStage.getStatus() == StageStatus::COMPLETED_BUT_BUFFER_FULL)
+    {
+        if(memoryWriteBackBuffer.valid == false)
+        {
+             memoryWriteBackBuffer.memoryAccessedInstruction = memoryStage.getInstructionToMemory();
+            memoryWriteBackBuffer.valid = true;
+            memoryWriteBackBuffer.stalled = false;
+            memoryWriteBackBuffer.flushed = false;
+            memoryStage.setInstructionToMemory(nullptr); //reset the instruction of write back stage
+            memoryStage.setStatus(StageStatus::READY); // Set the status to waiting for GUI buffer update
+            memoryStage.setStalledGUI(false); // Set the stalled flag
+            
+
+        }
     }
     #ifdef GUI_ENABLED
     else if(memoryStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)

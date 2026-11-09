@@ -5,6 +5,8 @@
 
 enum class StageStatus : uint8_t 
 {
+    COMPLETED_BUT_BUFFER_FULL,
+    BUFFER2_FULL,
     READY,
     MEMORY_DONE,
     STALLED,
