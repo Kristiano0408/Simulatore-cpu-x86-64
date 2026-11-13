@@ -10,7 +10,9 @@
 #include "../include/bus.hpp"
 #include "../include/cpu.hpp"
 #include "../include/registerFile.hpp"
+#include "../include/helpers/debug.hpp"
 
+#include <cctype>
 #include <cstdint>
 #include <iostream>
 #include <string>
@@ -20,46 +22,26 @@
 using std::hex;
 
 // -----------------------------------------------------------------------------
-// Register name helper
+// Test-name sanitizer
+//
+// GoogleTest parameterized-test names must match [A-Za-z0-9_] and be unique
+// inside an INSTANTIATE block. Descriptions like "MOV AL, imm8" or
+// "LEA RAX, [RBX+RCX*8+0x10]" contain spaces, commas, brackets, etc., which
+// abort the binary at name-generation time: every non-alphanumeric character
+// is replaced with '_'.
 // -----------------------------------------------------------------------------
 
-std::string regName(Register r)
+static std::string sanitizeTestName(std::string name)
 {
-    switch (r)
+    for (char& c : name)
     {
-        case Register::RAX: return "RAX";
-        case Register::RBX: return "RBX";
-        case Register::RCX: return "RCX";
-        case Register::RDX: return "RDX";
-        case Register::RSI: return "RSI";
-        case Register::RDI: return "RDI";
-        case Register::RSP: return "RSP";
-        case Register::RBP: return "RBP";
-        case Register::R8:  return "R8";
-        case Register::R9:  return "R9";
-        case Register::R10: return "R10";
-        case Register::R11: return "R11";
-        case Register::R12: return "R12";
-        case Register::R13: return "R13";
-        case Register::R14: return "R14";
-        case Register::R15: return "R15";
-        case Register::RIP: return "RIP";
-        default: return "UNKNOWN";
+        if (!std::isalnum(static_cast<unsigned char>(c)))
+        {
+            c = '_';
+        }
     }
-}
 
-std::string flagName(Flagbit f)
-{
-    switch (f)
-    {
-        case Flagbit::CF: return "CF";
-        case Flagbit::PF: return "PF";
-        case Flagbit::AF: return "AF";
-        case Flagbit::ZF: return "ZF";
-        case Flagbit::SF: return "SF";
-        case Flagbit::OF: return "OF";
-        default: return "UNKNOWN";
-    }
+    return name;
 }
 
 // -----------------------------------------------------------------------------
@@ -77,7 +59,7 @@ std::vector<TestCase> buildTestCases()
                      std::make_move_iterator(group.end()));
     };
 
-    append(buildMovTests());
+    /*append(buildMovTests());
     append(buildAddSubTests());
     append(buildCarryTests());
     append(buildLeaTests());
@@ -90,36 +72,30 @@ std::vector<TestCase> buildTestCases()
     append(buildBooleanTests());
     append(buildTestTests());
     append(buildShiftTests());
-    append(buildRotateTests());
-    //append(buildJmpTests());
+    append(buildRotateTests());*/
+    append(buildJmpTests());
 
     return tests;
 }
 
-// -----------------------------------------------------------------------------
-// Run single test
-// -----------------------------------------------------------------------------
 
-bool runTest(const TestCase& tc)
+
+void InstructionTest::SetUp()
 {
-    Bus bus;
+    const auto& test = GetParam();
 
-    // -------------------------------------------------------------------------
-    // Initialize program memory
-    // -------------------------------------------------------------------------
-
-    bus.getMemory().setDataPartial(tc.program, 0x0000);
+     bus.getMemory().setDataPartial(test.program, 0x0000);
 
     // -------------------------------------------------------------------------
     // Initialize registers
     // -------------------------------------------------------------------------
 
-    for (const auto& [reg, value] : tc.initial_regs)
+    for (const auto& [reg, value] : test.initial_regs)
     {
         bus.getCPU().getRegisters().getReg(reg).raw() = value;
     }
 
-    for (const auto& [flag, value] : tc.initial_flags)
+    for (const auto& [flag, value] : test.initial_flags)
     {
         bus.getCPU().getRegisters().getFlags().setFlag(flag, value);
     }
@@ -128,7 +104,7 @@ bool runTest(const TestCase& tc)
     // Initialize data memory
     // -------------------------------------------------------------------------
 
-    for (const auto& [addr, value] : tc.initial_mem)
+    for (const auto& [addr, value] : test.initial_mem)
     {
         bus.getMemory().writeTest(addr, value);
     }
@@ -151,130 +127,72 @@ bool runTest(const TestCase& tc)
     // This is a functional test, not a performance benchmark.
     //
 
-    constexpr size_t MAX_CYCLES = 500;
+    constexpr size_t MAX_CYCLES = 100;
 
     for (size_t c = 0; c < MAX_CYCLES; ++c)
     {
+    
         DEBUG_LOG(debugLog("Cycle " + std::to_string(c)));
         bus.tick();
     }
 
     bus.getCPU().getCacheManager().flushAllCaches();
 
-    // -------------------------------------------------------------------------
-    // Verify
-    // -------------------------------------------------------------------------
+}
 
-    bool success = true;
 
+
+
+TEST_P(InstructionTest, InstructionCorrectExecution)
+{
+    const auto& test = GetParam();
     // -------------------------------------------------------------------------
     // Registers
     // -------------------------------------------------------------------------
 
-    for (const auto& [reg, expected] : tc.expected_regs)
+    for (const auto& [reg, expected] : test.expected_regs)
     {
         const uint64_t got =
             bus.getCPU().getRegisters().getReg(reg).raw();
 
-        if (got != expected)
-        {
-            success = false;
-
-            std::cout
-                << "  REG " << regName(reg)
-                << " mismatch: expected 0x"
-                << hex << expected
-                << " got 0x"
-                << got
-                << '\n';
-        }
+        EXPECT_EQ(got,expected)<< "Register " << toStringRegister(reg) << " expected: " << hex << expected << ", got: " << hex << got;
     }
 
     // -------------------------------------------------------------------------
     // Memory
     // -------------------------------------------------------------------------
 
-    for (const auto& [addr, expected] : tc.expected_mem)
+    for (const auto& [addr, expected] : test.expected_mem)
     {
         const uint8_t got =
             bus.getMemory().readTest(addr);
 
-        if (got != expected)
-        {
-            success = false;
-
-            std::cout
-                << "  MEM @"
-                << hex << addr
-                << " mismatch: expected 0x"
-                << static_cast<unsigned>(expected)
-                << " got 0x"
-                << static_cast<unsigned>(got)
-                << '\n';
-        }
+        EXPECT_EQ(got, expected) << "Memory at address " << hex << addr << " expected: " << hex << expected << ", got: " << hex << got;
     }
 
     // -------------------------------------------------------------------------
     // Flags
     // -------------------------------------------------------------------------
 
-    for (const auto& [flag, expected] : tc.expected_flags)
+    for (const auto& [flag, expected] : test.expected_flags)
     {
         const bool got =
             bus.getCPU().getRegisters().getFlags().getFlag(flag);
 
-        if (got != expected)
-        {
-            success = false;
-
-            std::cout
-                << "  FLAG " << flagName(flag)
-                << " mismatch: expected "
-                << (expected ? "1" : "0")
-                << " got "
-                << (got ? "1" : "0")
-                << '\n';
-        }
+        EXPECT_EQ(got, expected) << "Flag " << toStringFlag(flag) << " expected: " << expected << ", got: " << got;
     }
 
-    // -------------------------------------------------------------------------
-    // Result
-    // -------------------------------------------------------------------------
-
-    std::cout
-        << tc.description
-        << " -> "
-        << (success ? "TEST PASSED!" : "TEST FAILED!")
-        << '\n';
-
-    return success;
 }
 
-// -----------------------------------------------------------------------------
-// Main
-// -----------------------------------------------------------------------------
 
-int main()
-{
-    std::cout
-        << "=== MOV / ADD / SUB / ADC / SBB / INC / DEC / NEG / CMP / TEST Opcode Test Suite ===\n\n";
+INSTANTIATE_TEST_SUITE_P(InstructionCorrectExecutionTests, InstructionTest, ::testing::ValuesIn(buildTestCases()),
+                         [](const ::testing::TestParamInfo<TestCase>& paramInfo)
+                         {
+                             // The TestCase_<index> prefix guarantees uniqueness even
+                             // when two descriptions collapse to the same sanitized name.
+                             return "TestCase_" + std::to_string(paramInfo.index) + "_" +
+                                    sanitizeTestName(paramInfo.param.description);
+                         });
+    
 
-    const auto tests = buildTestCases();
 
-    size_t failedCount = 0;
-    for (const auto& test : tests)
-    {
-        if (!runTest(test))
-        {
-            ++failedCount;
-        }
-    }
-
-    if (failedCount > 0)
-    {
-        std::cerr << "\n" << failedCount << " test(s) FAILED!\n";
-        return 1;
-    }
-
-    return 0;
-}

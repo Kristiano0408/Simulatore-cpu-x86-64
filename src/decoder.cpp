@@ -166,6 +166,7 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
         decoderFunction(instructionPtr.get(), instruction, position);
         core.addressingMode = mode;
         settingRM_SIBRegisters(instructionPtr.get());
+        setBooleanFlagsOperandsReadWrite(instructionPtr.get());
         
        
        
@@ -178,6 +179,41 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
    
 
 
+
+
+}
+
+void Decoder::setBooleanFlagsOperandsReadWrite(Instruction* i)
+{
+    InstructionFlags& flags = i->getFlags();
+    InstructionCore& core = i->getCore();
+
+    flags.destNeedRead = destNeedRead[static_cast<size_t>(core.type)];
+
+    switch(core.addressingMode)
+    {
+        case AddressingMode::O:
+        case AddressingMode::I:
+        case AddressingMode::M:
+            if(core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP)
+            {
+                flags.auxNeedRead = true;
+                flags.auxNeedWrite = true;
+            }
+            break;
+        case AddressingMode::M_ACC:
+            if(core.type == TypeofInstruction::IMUL || core.type == TypeofInstruction::MUL || core.type == TypeofInstruction::DIV || core.type == TypeofInstruction::IDIV)
+            {
+                flags.auxNeedRead = true;
+                flags.auxNeedRead = true;
+            }
+            break;
+        default:
+            break;
+        
+    }
+
+    return;
 
 
 }

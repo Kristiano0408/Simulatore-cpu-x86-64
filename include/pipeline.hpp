@@ -27,6 +27,8 @@ public:
 
     void setStalledGUI(bool stalled) { StalledGUI = stalled; }
 
+    virtual void flushStage() { status = StageStatus::READY; StalledGUI = false; } // Reset the stage status and GUI stall flag
+
 private:
     bool StalledGUI = false; // Flag to indicate if the stage is stalled due to GUI interaction
     StageStatus status = StageStatus::READY;
@@ -46,7 +48,15 @@ public:
 
     InstructionInfo getCurrentInstructionInfo() const { return currentInstructionInfo; }
 
+    InstructionInfo& getCurrentInstructionInfoRef() { return currentInstructionInfo; }
+
     void setCurrentInstructionInfo(InstructionInfo info) { currentInstructionInfo = info; }
+
+    void flushStage() override
+    {
+        Stage::flushStage(); // Call the base class flushStage to reset status and GUI stall flag
+        currentInstructionInfo = InstructionInfo(); // Reset the current instruction info
+    }
 
 private:
     // any additional members specific to the fetch stage
@@ -76,6 +86,13 @@ public:
     std::unique_ptr<Instruction>& getDecodedInstructionRef() { return decoded_instruction; }
 
     Instruction* peekInstruction() const { return decoded_instruction.get(); }
+
+    void flushStage() override
+    {
+        Stage::flushStage(); // Call the base class flushStage to reset status and GUI stall flag
+        instruction_info_to_decode = InstructionInfo(); // Reset the instruction info to decode
+        decoded_instruction = std::make_unique<Instruction>(); // Reset the decoded instruction
+    }
 
 private:
     // any additional members specific to the decode stage
@@ -109,6 +126,12 @@ public:
     Instruction& peekInstructionRef() const { return *instruction_with_fetched_operands; }
     Instruction* peekInstruction() const { return instruction_with_fetched_operands.get(); }
 
+    void flushStage() override
+    {
+        Stage::flushStage(); // Call the base class flushStage to reset status and GUI stall flag
+        instruction_with_fetched_operands = std::make_unique<Instruction>(); // Reset the instruction with fetched operands
+    }
+
 private:
     // any additional members specific to the operand fetch stage
     std::unique_ptr<Instruction> instruction_with_fetched_operands; // pointer to the instruction with fetched operands
@@ -136,9 +159,17 @@ public:
     Instruction& peekInstructionRef() const { return *instruction_to_execute; }
     Instruction* peekInstruction() const { return instruction_to_execute.get(); }
 
+    void flushStage() override
+    {
+        Stage::flushStage(); // Call the base class flushStage to reset status and GUI stall flag
+        instruction_to_execute = std::make_unique<Instruction>(); // Reset the instruction to execute
+    }
+
 private:
     // any additional members specific to the execute stage
     std::unique_ptr<Instruction> instruction_to_execute; // pointer to the instruction being executed
+
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,6 +193,12 @@ public:
 
     Instruction* peekInstruction() const { return instruction_to_memory.get(); }
     Instruction& peekInstructionRef() const { return *instruction_to_memory; }
+
+    void flushStage() override
+    {
+        Stage::flushStage(); // Call the base class flushStage to reset status and GUI stall flag
+        instruction_to_memory = std::make_unique<Instruction>(); // Reset the instruction to memory
+    }
 
 private:
     // any additional members specific to the memory stage
@@ -190,6 +227,12 @@ public:
     Instruction* peekInstruction() const { return instruction_to_writeback.get(); }
     Instruction& peekInstructionRef() const { return *instruction_to_writeback; }
 
+    void flushStage() override
+    {
+        Stage::flushStage(); // Call the base class flushStage to reset status and GUI stall flag
+        instruction_to_writeback = std::make_unique<Instruction>(); // Reset the instruction to write back
+    }
+
 private:
     // any additional members specific to the write-back stage
     std::unique_ptr<Instruction> instruction_to_writeback;
@@ -207,6 +250,14 @@ struct FetchDecodeBuffer
     bool flushed{};
     InstructionInfo instructionInfo;
 
+    void flush()
+    {
+        valid = false;
+        stalled = false;
+        flushed = false;
+        instructionInfo = InstructionInfo(); // Reset the instruction info
+    }
+
 };
 
 struct DecodeOperandFetchBuffer
@@ -221,6 +272,14 @@ struct DecodeOperandFetchBuffer
     DecodeOperandFetchBuffer()
         : valid(false), stalled(false), flushed(false), decodedInstruction(std::make_unique<Instruction>())
     {
+    }
+
+    void flush()
+    {
+        valid = false;
+        stalled = false;
+        flushed = false;
+        decodedInstruction = std::make_unique<Instruction>(); // Reset the decoded instruction
     }
 };
 
@@ -237,6 +296,14 @@ struct OperandFetchExecuteBuffer
         : valid(false), stalled(false), flushed(false), instructionWithOperands(std::make_unique<Instruction>())
     {
     }
+
+    void flush()
+    {
+        valid = false;
+        stalled = false;
+        flushed = false;
+        instructionWithOperands = std::make_unique<Instruction>(); // Reset the instruction with operands
+    }
 };
 
 struct ExecuteMemoryBuffer
@@ -252,6 +319,14 @@ struct ExecuteMemoryBuffer
         : valid(false), stalled(false), flushed(false), executedInstruction(std::make_unique<Instruction>())
     {
     }
+
+    void flush()
+    {
+        valid = false;
+        stalled = false;
+        flushed = false;
+        executedInstruction = std::make_unique<Instruction>(); // Reset the executed instruction
+    }
 };
 
 struct MemoryWriteBackBuffer
@@ -266,6 +341,14 @@ struct MemoryWriteBackBuffer
     MemoryWriteBackBuffer()
         : valid(false), stalled(false), flushed(false), memoryAccessedInstruction(std::make_unique<Instruction>())
     {
+    }
+
+    void flush()
+    {
+        valid = false;
+        stalled = false;
+        flushed = false;
+        memoryAccessedInstruction = std::make_unique<Instruction>(); // Reset the memory accessed instruction
     }
 };
 
@@ -301,6 +384,8 @@ public:
     MemoryWriteBackBuffer& getMemoryWriteBackBuffer() { return memoryWriteBackBuffer; }
 
     void setEventHandler(PipelineEventHandler* handler);
+
+    void eraseExecuteEngineQueue(uint64_t instructionID) { executeEngine.eraseQueues(instructionID);}
 
 private:
     CPU& cpu;

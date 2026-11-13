@@ -23,6 +23,7 @@ class RequestScheduler : public FaultDevice
         void scheduleRequest(CacheRequest&& request); // Function to schedule a cache request
         void schedulePendingRequest(PendingRequest&& pendingRequest); // Function to schedule a pending request
         const std::vector<PendingRequest>& getPendingRequests() const { return pendingRequests; } // Function to get the pending requests being processed by the cache scheduler
+        std::vector<PendingRequest>& getPendingRequestsMutable()  { return pendingRequests; } // Function to get the pending requests being processed by the cache scheduler
 };
 
 

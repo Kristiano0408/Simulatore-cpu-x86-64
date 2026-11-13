@@ -46,14 +46,6 @@ class CPU: public TickedDevice, public FaultDevice
 
         
 
-       
-
-
-
-
-    
-
-
     public:
 
         //constructor that receives a pointer to the bus
@@ -84,6 +76,10 @@ class CPU: public TickedDevice, public FaultDevice
         void sendCacheRequest(CacheRequest&& request, CacheLevelType cacheType); //send a cache request
 
         void eraseCacheResponseIfFound(uint64_t requestID); //erase a cache response from the queue
+
+        static void eraseFlushedCacheResponseByInstructionIDWrapper(uint64_t IDFromFlush, void* ctx); //erase a flushed cache response from the queue
+
+        void eraseFlushedCacheResponseByInstructionID(uint64_t IDFromFlush); //erase a flushed cache response from the queue
 
         void findCacheResponse(uint64_t requestID, MaxCPUInstructionLength& response, bool& found); //find a cache response in the queue
 

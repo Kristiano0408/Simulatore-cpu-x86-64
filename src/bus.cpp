@@ -17,17 +17,22 @@ void Bus::tick() {
     if(cpu.getHazardUnit().getPipelineController().isPipelineStalledForGUI()) 
     {
         cpu.getPipeline().tick(); // Still tick the pipeline to allow GUI updates, but don't advance the clock
+        cpu.getHazardUnit().tick(); // Still tick the hazard unit to allow GUI updates, but don't advance the clock
         cpu.getCacheManager().tick(); // Memory/cache requests must keep progressing while the GUI is stalled
         return;
     }
     #endif
     DEBUG_LOG(debugLog("Bus Tick Start"));
-    cpu.getHazardUnit().tick(); // Tick the hazard unit first to check for hazards before executing the pipeline
-    DEBUG_LOG(debugLog("HazardUnit ticked"));
+    
     cpu.getPipeline().tick();
     DEBUG_LOG(debugLog("Pipeline ticked"));
+    
+    cpu.getHazardUnit().tick(); // Tick the hazard unit first to check for hazards before executing the pipeline
+    DEBUG_LOG(debugLog("HazardUnit ticked"));
+
     cpu.getCacheManager().tick();
     DEBUG_LOG(debugLog("CacheManager ticked"));
+
     clock.tick();
 }
 

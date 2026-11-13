@@ -5,6 +5,7 @@
 #include "memoryInterface.hpp"
 #include "device.hpp"
 
+
 class Bus;   // forward declaration
 class CPU;   // forward declaration
 class RegisterFile;   // forward declaration
@@ -24,16 +25,15 @@ class CU : public FaultDevice
         InstructionInfo fetchInstruction(uint64_t instructionID, uint64_t index, PipelineEventHandler& eventHandler);
         void decodeInstruction(InstructionInfo instruction, std::unique_ptr<Instruction>& decodedInstruction, PipelineEventHandler& eventHandler);
 
-        
-        
+        const InstructionInFlightInfo& getInflightInstructionInfo() { return inflightInstructionInfo; } // Get the information about the instruction currently in flight
+        static const InstructionInFlightInfo& getInflightInstructionInfoWrapper(void* context) { return static_cast<CU*>(context)->getInflightInstructionInfo(); } // Static method to get the information about the instruction currently in flight from a context pointer
 
     private:
         Decoder decoder;
         Bus& bus; //reference to the bus
         uint64_t currentInstructionId;
         InstructionMemoryInterface instructionMemoryInterface; // Interface for instruction memory access
-
-        
+        InstructionInFlightInfo inflightInstructionInfo; // Information about the instruction currently in flight
 
         //helpers function for making the code more readable
         void searchingSibDisplacement(const MaxCPUInstructionLength& buffer, InstructionInfo& info, uint8_t& byteCounter, r_m& rm);

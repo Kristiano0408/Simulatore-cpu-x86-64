@@ -11,11 +11,13 @@
 // -----------------------------------------------------------------------------
 
 #include "../include/registerFile.hpp"
+#include "../include/bus.hpp"
 
 #include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
+#include "gtest/gtest.h"
 
 // -----------------------------------------------------------------------------
 // Test case
@@ -46,12 +48,7 @@ struct TestCase
     std::vector<std::pair<Flagbit, bool>> expected_flags = {};
 };
 
-// -----------------------------------------------------------------------------
-// Name helpers (defined in instructionTest.cpp, used by the runner)
-// -----------------------------------------------------------------------------
 
-std::string regName(Register r);
-std::string flagName(Flagbit f);
 
 // -----------------------------------------------------------------------------
 // Test builders, one per instruction group
@@ -72,5 +69,13 @@ std::vector<TestCase> buildTestTests();      // TEST (flags only)
 std::vector<TestCase> buildShiftTests();     // SHL/SAL, SHR, SAR
 std::vector<TestCase> buildRotateTests();
 std::vector<TestCase> buildJmpTests();     // JMP rel8 / rel32 / r-m64
+
+
+class InstructionTest : public ::testing::TestWithParam<TestCase>
+{
+    protected:
+        Bus bus;
+        void SetUp() override;
+};
 
 #endif // INSTRUCTION_TEST_HPP

@@ -108,13 +108,13 @@ void PipelineScheduler::sendWriteBackRequestToExecuteEngine()
 
 
 #define STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(stage, buffer) \
-    stage.isStageReady() && (buffer).valid
+    stage.isStageReady() && (buffer).valid && !(buffer).stalled 
 
-#define STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(stage2, stage1) \
-    stage2.isStageReady() && (stage1).isStageReady() && !(stage1).isInstructionEmpty((stage1).peekInstruction())
+#define STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(stage2, stage1, buffer1) \
+    stage2.isStageReady() && (stage1).isStageReady() && !(stage1).isInstructionEmpty((stage1).peekInstruction()) && !(buffer1).stalled
 
 #define STAGE_HAS_NOT_INSTRUCTION_TO_PROCESS(stage2, stage1, buffer) \
-    stage2.isStageReady() && (buffer).valid == false && ((stage1).isInstructionEmpty((stage1).peekInstruction()) || (stage1).isStageReady() == false)
+    (stage2.isStageReady() && ((buffer).valid == false || (buffer).stalled == true) && ((stage1).isInstructionEmpty((stage1).peekInstruction()) || (stage1).isStageReady() == false))
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -303,7 +303,7 @@ void PipelineScheduler::processOperandFetchStage()
         sendOperandFetchRequestToExecuteEngine();
         #endif   
     }
-    else if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(operandFetchStage, decodeStage))
+    else if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(operandFetchStage, decodeStage, decodeOperandFetchBuffer))
     {
         DEBUG_LOG(debugLog("OPERAND FETCH STAGE processing..."));
         DEBUG_LOG(debugLog("Decode stage has valid instruction."));
@@ -386,7 +386,7 @@ void PipelineScheduler::processExecuteStage()
         #endif
 
     }
-    else if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(executeStage, operandFetchStage))
+    else if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(executeStage, operandFetchStage, operandFetchExecuteBuffer))
     {
         DEBUG_LOG(debugLog("EXECUTE STAGE processing..."));
         DEBUG_LOG(debugLog("Operand Fetch stage has valid instruction."));
@@ -475,7 +475,7 @@ void PipelineScheduler::processMemoryStage()
         #endif
 
     }
-    else if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(memoryStage, executeStage))
+    else if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(memoryStage, executeStage, executeMemoryBuffer))
     {
         DEBUG_LOG(debugLog("MEMORY STAGE processing..."));
         DEBUG_LOG(debugLog("Execute stage has valid instruction."));
@@ -571,7 +571,7 @@ void PipelineScheduler::processWriteBackStage()
         #endif
 
     }
-    else if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(writeBackStage, memoryStage))
+    else if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_PREVIOUS_STAGE(writeBackStage, memoryStage, memoryWriteBackBuffer))
     {
         DEBUG_LOG(debugLog("WRITEBACK STAGE processing..."));
         DEBUG_LOG(debugLog("Memory stage has valid instruction."));

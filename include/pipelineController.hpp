@@ -13,22 +13,11 @@ class PipelineController
 
         PipelineController(Pipeline& pipelineRef);
 
-        
 
         void onWaitingMemory(StageType stage);
 
-        
-
-        
-
-        
-
-
-
+    
         void onMemoryDone(StageType stage);
-
-        
-
 
 
         void onFetchComplete();
@@ -38,7 +27,6 @@ class PipelineController
         void onMemoryStageComplete();
         void onWriteBackComplete();
 
-        
         bool isPipelineStalledForGUI() const;
 
         

@@ -24,6 +24,8 @@ class MemoryScheduler : public FaultDevice
         void processMemoryRequest(PendingRequest&& pendingRequest); // Function to process a single memory request based on its type and data
         void setMemoryLatency(uint16_t latency) { memoryLatency = latency; }
         uint16_t getMemoryLatency() const { return memoryLatency; }
+
+        void eraseResponses(uint64_t IDfrom);
 };
 
 

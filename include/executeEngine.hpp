@@ -41,6 +41,8 @@ private:
     
     void updateTemporaryValuesForInstruction(Instruction* instruction, RegisterFile& regFile);
     void executeDataTransferInstruction(Instruction* instruction);
+
+    
 public:
     ExecuteEngine(CPU& cpuRef, RegisterFile& regFile, ALU& aLu, CacheManager& cManager, PipelineEventHandler* pEventHandler);
 
@@ -70,6 +72,8 @@ public:
     void sendExecutionRequest(Instruction* instruction);
     void sendMemoryAccessRequest(Instruction* instruction);
     void sendWriteBackRequest(Instruction* instruction);
+
+    void eraseQueues(uint64_t instructionID);
 };
 
 

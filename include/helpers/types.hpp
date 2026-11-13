@@ -118,22 +118,13 @@ class FixedSizeQueueCacheFriendly
 
     public:
 
-        size_t size() const
-        {
-            return count; // Return the current number of elements in the queue
-        }
+        size_t size() const { return count;}
 
-        bool isFull() const
-        {
-            return count == N; // Check if the queue is full
-        }
+        bool isFull() const { return count == N;}
 
-        bool empty() const
-        {
-            return count == 0; // Check if the queue is empty
-        }
+        bool empty() const { return count == 0; }
      
-         void push(T&& value)
+        void push(T&& value)
         {
             if (isFull())
                 throw std::out_of_range("Queue is full");
@@ -169,6 +160,26 @@ class FixedSizeQueueCacheFriendly
             head = (head + 1) % N; // Move the head forward, wrapping around if necessary
             count--; // Decrease the count of elements in the queue
             return value; // Return the extracted value
+        }
+
+        void eraseIf(bool(*predicate)(T, void*), void*ctx)
+        {
+            if(empty()) return;
+
+            for(size_t i = 0; i < count;)
+            {
+                if(predicate(data[(head + i) % N],ctx))
+                {
+                    for(int j = i; j < count - 1; j++)
+                        data[(head + j) % N] = std::move(data[(head + j + 1) % N]);
+
+                    tail = (tail + N - 1) % N;
+                    --count;
+                }
+                else
+                    i++;
+            }
+
         }
 
         

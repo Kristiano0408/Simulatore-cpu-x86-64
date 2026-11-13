@@ -32,10 +32,6 @@ struct OperandInfo
     {
         uint64_t address{};
         uint64_t accessLenght{};
-        Register register1{Register::DummyRegister};  //an address could be calculated from a register,                                                           
-        Register register2{Register::DummyRegister};  //   so we need to store the register used for the address calculation
-                                                      // max 2 registers are used for address calculation, e.g. [RAX + RBX + 4] or [RAX + 4]
-
     };
 
     OperandRole role{OperandRole::COUNT};
@@ -43,7 +39,7 @@ struct OperandInfo
     bool needRead{false};
     bool needWrite{false};
     
-    std::variant<Register, MemoryReference> operandRef;
+    std::variant<Register, MemoryReference> operandRef { Register::DummyRegister }; // Use std::variant to hold either a Register or MemoryReference
    
 };
 
@@ -57,12 +53,33 @@ struct InstructionFlagsInfo
     FlagsMask flagsAffected{};
 };
 
+struct DecodedRegistersInfo
+{
+    Register rmReg{Register::DummyRegister}; //register used in the instruction (if any)
+    Register regReg{Register::DummyRegister}; //register used in the instruction (if any)
+    Register indexReg{Register::DummyRegister}; //register used in the instruction (if any)
+    Register baseReg{Register::DummyRegister}; //register used in the instruction (if any)
+    bool needRSPimplicitly = false; //flag to indicate if the instruction needs RSP implicitly (used for push/pop instructions)
+
+    DecodedRegistersInfo() : rmReg(Register::DummyRegister), regReg(Register::DummyRegister), indexReg(Register::DummyRegister), 
+                             baseReg(Register::DummyRegister), needRSPimplicitly(false) {};
+
+    DecodedRegistersInfo(Register rm, Register reg, Register index, Register base, bool RSP) : rmReg(rm), regReg(reg), indexReg(index), 
+                             baseReg(base), needRSPimplicitly(RSP) {};
+
+                            
+
+};
+
 struct StageInstructionInfo
 {
     uint64_t instructionID;
-    TypeofInstruction typeofInstruction;
+    TypeofInstruction typeofInstruction{TypeofInstruction::COUNT};
     std::array<OperandInfo, static_cast<size_t>(OperandRole::COUNT)> operands;
     InstructionFlagsInfo flagsInfo;
+    DecodedRegistersInfo decodedRegisters;
+    
+
 };
 
 struct PipelineStageStatus
@@ -70,13 +87,22 @@ struct PipelineStageStatus
     StageStatusInfo stageStatusinfo;
     StageInstructionInfo instructionInfo;
     
+    
 
+};
+
+struct StalledStagesInfo
+{
+    std::array<bool, static_cast<size_t>(StageType::COUNT)> stageStalled;
+    uint64_t instructionId;
 };
 
 
 
 class HazardUnit : public TickedDevice, public FaultDevice
 {
+    using CallbackEraseInstructionQueued = void(*)(uint64_t IDFromFlush, void* ctx);
+    using CallBakcInflightInstructionInfo = const InstructionInFlightInfo& (*)(void* ctx);
     public:
         HazardUnit(Pipeline& pipelineRef);
         ~HazardUnit();
@@ -86,6 +112,23 @@ class HazardUnit : public TickedDevice, public FaultDevice
 
         inline PipelineEventHandler* getEventHandler() { return &eventHandler; }
 
+        void setEraseInstructionQueuedCallbackCPUCtx(void* context) {cpuCtx = context;}
+        void* getEraseInstructionQueuedCallbackCPUCtx() { return cpuCtx; }
+        void setEraseInstructionQueuedCallbackCPU(CallbackEraseInstructionQueued callback) { cpuEraseInstructionQueuedCallback = callback; }
+        CallbackEraseInstructionQueued getEraseInstructionQueuedCallbackCPU() const { return cpuEraseInstructionQueuedCallback; }
+
+        void setEraseInstructionQueuedCallbackCacheCtx(void* context) {cacheCtx = context;}
+        void* getEraseInstructionQueuedCallbackCacheCtx() { return cacheCtx; }
+        void setEraseInstructionQueuedCallbackCache(CallbackEraseInstructionQueued callback) { cacheEraseInstructionQueuedCallback = callback; }
+        CallbackEraseInstructionQueued getEraseInstructionQueuedCallbackCache() const { return cacheEraseInstructionQueuedCallback; }
+
+        void setInflightInstructionInfoCallbackCtx(void* context) { inflightInstructionInfoCtx = context; }
+        void* getInflightInstructionInfoCallbackCtx() { return inflightInstructionInfoCtx;}
+        void setInflightInstructionInfoCallback(CallBakcInflightInstructionInfo callback) { inflightInstructionInfoCallback = callback; }
+        CallBakcInflightInstructionInfo getInflightInstructionInfoCallback() const { return inflightInstructionInfoCallback; }
+
+        std::array<PipelineStageStatus, static_cast<size_t>(StageType::COUNT)>& getSTageInstructionsInfo() { return stageInstructionsInfo; } // Function to get the array of PipelineStageStatus for each stage
+        PipelineStageStatus& getStageInstructionInfo(uint8_t stage) { return stageInstructionsInfo[static_cast<size_t>(stage)]; } // Function to get the PipelineStageStatus for a specific stage
         void setupEvents();
 
         static void onFetchCompleteWrapper(void* context);
@@ -105,16 +148,30 @@ class HazardUnit : public TickedDevice, public FaultDevice
 
 
     private:
+        CallBakcInflightInstructionInfo inflightInstructionInfoCallback; // Callback function to get the information about the instruction currently in flight
+        void* inflightInstructionInfoCtx; // Context pointer for the inflight instruction info callback
+        CallbackEraseInstructionQueued cpuEraseInstructionQueuedCallback; // Callback function to erase queued instructions by instruction ID
+        CallbackEraseInstructionQueued cacheEraseInstructionQueuedCallback; // Callback function to erase queued instructions by instruction ID for cache responses
+        void* cpuCtx;
+        void* cacheCtx;
         Pipeline& pipeline; // Reference to the pipeline to access its stages and buffers
         PipelineController pipelineController; // Pipeline controller to manage the pipeline stages and buffers
         PipelineEventHandler eventHandler;
-        std::array<PipelineStageStatus, 6> stageInstructionsInfo; // Array to store instruction information for each pipeline stage
-        std::array<bool, 6> stageStalledforWriteBack; // Array to store whether each stage is stalled for write back
-        std::array<bool, 6> stageStalledforMemory; // Array to store whether each stage is stalled for memory access
+        std::array<PipelineStageStatus, static_cast<size_t>(StageType::COUNT)> stageInstructionsInfo; // Array to store instruction information for each pipeline stage
+        FixedSizeQueueCacheFriendly<StalledStagesInfo,static_cast<size_t>(StageType::COUNT)> stageStalledForWriteBack;
+        FixedSizeQueueCacheFriendly<StalledStagesInfo,static_cast<size_t>(StageType::COUNT)> stageStalledForMemory;
 
 
+        void updateFetchStageStatus();
+        void updateDecodeStageStatus();
+        void updateOperandFetchStageStatus();
+        void updateExecuteStageStatus();
+        void updateMemoryStageStatus();
+        void updateWriteBackStageStatus();
 
+        void updateInstructionOperands(Instruction* instr,std::array<OperandInfo, static_cast<size_t>(OperandRole::COUNT)>& operands);
 
+        void flushPipeline(uint64_t instructionId); // Function to flush the pipeline starting from a specific instruction ID
 };
 
 

@@ -24,6 +24,8 @@ class Decoder : public FaultDevice
         std::unique_ptr<Instruction> decodeInstruction(InstructionInfo instruction);
 
         void settingRM_SIBRegisters(Instruction* instruction);
+
+        void setBooleanFlagsOperandsReadWrite(Instruction* instruction);
          //decode the  r/m operand
         static r_m decodeRM(std::byte r_m);
         //decode the SIB operand
@@ -63,4 +65,38 @@ class Decoder : public FaultDevice
         //etc
 };
 
+constexpr std::array<bool, static_cast<size_t>(TypeofInstruction::COUNT)> destNeedRead = {{
+    /* MOV   */ false, //mov instruction does not need to read the destination operand
+    /* ADD   */ true,
+    /* SUB   */ true,
+    /* LEA   */ false, //lea instruction does not need to read the destination operand
+    /* ADC   */ true,
+    /* SBB   */ true,
+    /* INC   */ true,
+    /* DEC   */ true,
+    /* NEG   */ true,
+    /* CMP   */ true,
+    /* MUL   */ true,
+    /* IMUL  */ true,
+    /* DIV   */ true,
+    /* IDIV  */ true,
+    /* MOVZX */ false, //movzx instruction does not need to read the destination operand
+    /* MOVSX */ false, //movsx instruction does not need to read the destination operand
+    /* MOVSXD*/ false, //movsxd instruction does not need to read the destination operand
+    /* PUSH  */ false, 
+    /* POP   */ false, 
+    /* AND   */ true,
+    /* OR    */ true,
+    /* XOR   */ true,
+    /* NOT   */ true,
+    /* TEST  */ true,
+    /* SAL/SHL*/true,
+    /* SAR   */true,
+    /* SHR   */true,
+    /* RCL   */true,
+    /* RCR   */true,
+    /* ROL   */true,
+    /* ROR   */true,
+    /* JMP   */ false //jmp instruction does not need to read the destination operand
+}};
 #endif // DECODER_HPP

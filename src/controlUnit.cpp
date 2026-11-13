@@ -37,6 +37,9 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, PipelineEventHandle
     cacheRequest.typeofL1 = instructionMemoryInterface.type; // Set the cache level type for instruction memory interface
 
     bus.getCPU().getCacheManager().enqueRequest(std::move(cacheRequest), instructionMemoryInterface.type);
+
+    inflightInstructionInfo.instructionId = instructionId;
+    inflightInstructionInfo.isFetching = true; // Set the fetching flag to true since a
     // Trigger an event to notify that a cache request has been sent
     eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_WAITING_FETCH);
 
@@ -151,6 +154,8 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Pip
 
     eventHandler.triggerPipelineEvent(EventHandlerPipelineEventType::FETCH_COMPLETE);
 
+    inflightInstructionInfo.instructionId = 0;
+    inflightInstructionInfo.isFetching = false; // Reset the fetching flag after the instruction has
     return info;
 }
 

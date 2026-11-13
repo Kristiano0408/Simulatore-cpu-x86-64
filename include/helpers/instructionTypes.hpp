@@ -237,7 +237,11 @@ struct InstructionFlags
     uint8_t memToReg : 1;
     uint8_t waitingSrcOperand : 1;
     uint8_t waitingDestOperand : 1;
+    uint8_t destNeedRead : 1;
+    uint8_t auxNeedRead : 1;
+    uint8_t auxNeedWrite : 1;
     InstructionDataTransferMode dataTransferMode;
+    
 };
 
 struct InstructionInfo {
@@ -268,6 +272,11 @@ struct InstructionInfo {
 };
 
 
+struct InstructionInFlightInfo
+{
+    uint64_t instructionId; // Unique ID for the instruction
+    bool isFetching;        // Flag to indicate if the instruction is currently being fetched
+};
 
 
 

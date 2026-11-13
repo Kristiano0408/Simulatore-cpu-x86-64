@@ -13,6 +13,7 @@
 #include <iomanip>
 #include "instructionTypes.hpp"
 #include "result.hpp"
+#include "pipelineTypes.hpp"
 
 #ifdef DEBUG
     inline std::ofstream debugFile("debug.log", std::ios::trunc);
@@ -60,6 +61,12 @@ std::ostream& operator<<(std::ostream& os, const ComponentType& type);
 std::string toStringTypeofInstruction(TypeofInstruction type);
 
 std::string toStringRegister(Register reg);
+
+std::string toStringFlag(Flagbit f);
+
+std::string toStringStageStatus(StageStatus status);
+
+std::string toStringStageType(StageType stage);
 
 
 

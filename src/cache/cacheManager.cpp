@@ -125,3 +125,24 @@ void CacheManager::flushAllCaches()
     // L3 → RAM
     L3Cache.getStorage().flush([&](uint64_t address, const CacheLine& line) { bus.getMemory().write(address, line.data); });
 }
+
+
+void CacheManager::eraseFlushedCacheResponseByInstructionIDWrapper(uint64_t instructionId, void* ctx)
+{
+    CacheManager* cacheManager = static_cast<CacheManager*>(ctx);
+    if (cacheManager)
+    {
+        cacheManager->eraseFlushedCacheResponseByInstructionID(instructionId);
+    }
+}
+
+void CacheManager::eraseFlushedCacheResponseByInstructionID(uint64_t instructionId)
+{
+    
+
+    L1DCache.eraseResponses(instructionId);
+    L1ICache.eraseResponses(instructionId);
+    L2Cache.eraseResponses(instructionId);
+    L3Cache.eraseResponses(instructionId);
+    memoryScheduler.eraseResponses(instructionId);
+}

@@ -188,3 +188,11 @@ void MemoryScheduler::processMemoryRequest(PendingRequest&& pendingRequest)
 
     
 }
+
+
+void MemoryScheduler::eraseResponses(uint64_t IDfrom)
+{
+    std::erase_if(memoryRequestQueue, [IDfrom](const auto& pendingRequest) {
+            return pendingRequest.request.requestID > IDfrom;
+    } );
+}

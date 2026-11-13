@@ -152,6 +152,25 @@ void ExecuteEngine::sendWriteBackRequest(Instruction* instruction)
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
 
+void ExecuteEngine::eraseQueues(uint64_t instructionID)
+{
+    operandEngine.eraseQueues(instructionID);
+
+    auto predicate = [](Instruction* instr, void* ctx ) -> bool {
+        uint64_t ID= *(static_cast<uint64_t*>(ctx));
+        return instr->getCore().InstructionId > ID;};
+
+    operandFetchQueue.eraseIf(predicate, &instructionID);
+    executionQueue.eraseIf(predicate, &instructionID);
+    memoryAccessQueue.eraseIf(predicate, &instructionID);
+
+
+
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void ExecuteEngine::updateTemporaryValuesForInstruction(Instruction* instruction, RegisterFile& regFile)
 {
@@ -257,6 +276,7 @@ void ExecuteEngine::startExecution(Instruction* instruction)
     DEBUG_LOG(debugLog("ExecuteEngine: Starting execution for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
     isExecuting = true;
     InstructionCore& core = instruction->getCore();
+    InstructionFlags& flags = instruction->getFlags();
 
 
     // setting the size of the operands

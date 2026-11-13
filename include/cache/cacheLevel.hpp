@@ -136,6 +136,8 @@ public:
     CacheStorage& getStorage() { return storage; }
 
     CacheController& getController() { return controller; }
+
+    void eraseResponses(uint64_t IDfrom);
 };
 
 #endif // CACHELEVEL_HPP

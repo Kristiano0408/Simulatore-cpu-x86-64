@@ -27,7 +27,9 @@ public:
     void flushAllCaches();
     void invalidateAllCaches();
     void printCacheState() const; // For debugging purposes
-
+    void eraseFlushedCacheResponseByInstructionID(uint64_t instructionId); // Erase flushed cache responses by instruction ID
+    static void eraseFlushedCacheResponseByInstructionIDWrapper(uint64_t instructionId, void* ctx); // Erase flushed cache responses by instruction ID for cache responses
+    void eraseResponses(std::vector<PendingRequest>& pendingRequests, uint64_t instructionId); // Erase responses from the pending requests vector based on instruction ID
     CacheLevel& getL1ICache() { return L1ICache; }
     CacheLevel& getL1DCache() { return L1DCache; }
     CacheLevel& getL2Cache() { return L2Cache; }

@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include "registerFile.hpp"
+#include "helpers/pipelineTypes.hpp"
 
 bool isPrefix(uint8_t byte)
 {
@@ -317,6 +318,7 @@ std::string toStringRegister(Register reg)
         case Register::R13: return "R13";
         case Register::R14: return "R14";
         case Register::R15: return "R15";
+        case Register::RIP: return "RIP";
         default:            return "UNKNOWN_REGISTER";
     }
 }
@@ -337,5 +339,47 @@ ComponentType getComponentTypeFromCacheLevelType(CacheLevelType type)
     }
 }
 
+
+
+
+std::string toStringFlag(Flagbit f)
+{
+    switch (f)
+    {
+        case Flagbit::CF: return "CF";
+        case Flagbit::PF: return "PF";
+        case Flagbit::AF: return "AF";
+        case Flagbit::ZF: return "ZF";
+        case Flagbit::SF: return "SF";
+        case Flagbit::OF: return "OF";
+        default: return "UNKNOWN";
+    }
+}
+
+
+std::string toStringStageStatus(StageStatus status)
+{
+    switch (status)
+    {
+        case StageStatus::READY: return "READY";
+        case StageStatus::STALLED: return "STALLED";
+        case StageStatus::WAITING_MEMORY: return "WAITING_MEMORY";
+        default: return "UNKNOWN";
+    }
+}
+
+std::string toStringStageType(StageType stage)
+{
+    switch (stage)
+    {
+        case StageType::FETCH: return "FETCH";
+        case StageType::DECODE: return "DECODE";
+        case StageType::OPERAND_FETCH: return "OPERAND_FETCH";
+        case StageType::EXECUTE: return "EXECUTE";
+        case StageType::MEMORY: return "MEMORY";
+        case StageType::WRITE_BACK: return "WRITE_BACK";
+        default: return "UNKNOWN";
+    }
+}
 
 //////////////////////////////////////////////////////////////////////////////////////

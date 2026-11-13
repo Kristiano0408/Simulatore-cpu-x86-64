@@ -6,8 +6,13 @@ CPU::CPU(Bus& busRef): bus(busRef), controlUnit(busRef),registers(), cacheManage
 {
     DEBUG_LOG(debugLog("CPU created"));
     pipeline.setEventHandler(hazardUnit.getEventHandler());
-  
- }
+    hazardUnit.setEraseInstructionQueuedCallbackCPU(&CPU::eraseFlushedCacheResponseByInstructionIDWrapper);
+    hazardUnit.setEraseInstructionQueuedCallbackCacheCtx(this);
+    hazardUnit.setEraseInstructionQueuedCallbackCache(&CacheManager::eraseFlushedCacheResponseByInstructionIDWrapper);
+    hazardUnit.setEraseInstructionQueuedCallbackCacheCtx(&cacheManager);
+    hazardUnit.setInflightInstructionInfoCallback(&CU::getInflightInstructionInfoWrapper);
+    hazardUnit.setInflightInstructionInfoCallbackCtx(&controlUnit);
+}
 
 //destructor
 CPU::~CPU(){}
@@ -84,6 +89,27 @@ void CPU::eraseCacheResponseIfFound(uint64_t requestID)
         cacheResponseQueue.erase(it);
     }
 }
+
+
+void CPU::eraseFlushedCacheResponseByInstructionIDWrapper(uint64_t IDFromFlush, void* ctx)
+{
+    CPU* cpuPtr = static_cast<CPU*>(ctx);
+    if (cpuPtr) {
+        cpuPtr->eraseFlushedCacheResponseByInstructionID(IDFromFlush);
+    }
+}
+
+void CPU::eraseFlushedCacheResponseByInstructionID(uint64_t IDFromFlush)
+{
+    for (auto it = cacheResponseQueue.begin(); it != cacheResponseQueue.end(); ) {
+        if (it->first > IDFromFlush) {
+            it = cacheResponseQueue.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 
 void CPU::findCacheResponse(uint64_t requestID, MaxCPUInstructionLength& response, bool& found)
 {

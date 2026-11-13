@@ -45,6 +45,23 @@ void OperandEngine::execute_operation()
     }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void OperandEngine::eraseQueues(uint64_t instructionID)
+{
+    auto predicateRead = [](OperandContextRead ctxRead, void* ctx ) -> bool {
+        uint64_t ID= *(static_cast<uint64_t*>(ctx));
+        return ctxRead.instruction->getCore().InstructionId > ID;};
+
+    auto predicateWrite = [](OperandContextWrite ctxRead, void* ctx ) -> bool {
+        uint64_t ID= *(static_cast<uint64_t*>(ctx));
+        return ctxRead.instruction->getCore().InstructionId > ID;};
+
+    readQueue.eraseIf(predicateRead, &instructionID);
+    writeQueue.eraseIf(predicateWrite, &instructionID);
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define readValue(type, getValueFunction, resultVariable)                                                                                                                          \
@@ -373,7 +390,7 @@ OperandResult OperandEngine::getMemoryValue(Instruction* instruction, Operand* o
         return {.status = OperandStatus::OK, .value = value};
     }
 
-    // request not completed dhdhhdhd
+    // request not completed 
     DEBUG_LOG(debugLog("MemOperand: Read request not completed for address " + to_string_hex(memOperand->getAddress()) + "."));
     return {.status = OperandStatus::WAITING_MEMORY, .value = 0};
 }

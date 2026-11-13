@@ -1,3 +1,5 @@
+sistemare execute engine per read aux
+
 finire jmp
 hazard detection
 

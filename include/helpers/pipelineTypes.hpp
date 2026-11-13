@@ -3,6 +3,17 @@
 
 #include <cstdint>
 
+enum class StageType : uint8_t
+{
+    FETCH = 0,
+    DECODE = 1,
+    OPERAND_FETCH = 2,
+    EXECUTE = 3,
+    MEMORY = 4,
+    WRITE_BACK = 5,
+    COUNT = 6
+};
+
 enum class StageStatus : uint8_t 
 {
     COMPLETED_BUT_BUFFER_FULL,
@@ -23,16 +34,6 @@ enum class StageStatus : uint8_t
     
 };
 
-enum class StageType : uint8_t 
-{
-    FETCH = 0,
-    DECODE = 1,
-    OPERAND_FETCH = 2,
-    EXECUTE = 3,
-    MEMORY = 4,
-    WRITE_BACK = 5,
-    COUNT = 6
-};
 
 
 #endif // PIPELINE_TYPES_HPP

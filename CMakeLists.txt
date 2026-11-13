@@ -16,30 +16,39 @@ option(ENABLE_DEBUG "Enable debug logging" OFF)
 option(GUI_ENABLED "Enable Python/pybind11 GUI integration" OFF)
 option(PERF "Enable profiling" OFF)
 
+
+# ============================================================================ #
+# GOOGLETEST
+# ============================================================================ #
+
+include(FetchContent)          
+
+FetchContent_Declare(          
+    googletest               
+    GIT_REPOSITORY https://github.com/google/googletest.git   
+    GIT_TAG        v1.18.0   
+    FIND_PACKAGE_ARGS NAMES GTest   
+)
+
+FetchContent_MakeAvailable(googletest)
+
+
 # ============================================================================ #
 # COMPILER OPTIONS
 # ============================================================================ #
 
-add_compile_options(
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wconversion
-    -Wshadow
-)
+add_library(project_warnings INTERFACE) 
+
+target_compile_options(project_warnings  INTERFACE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 
 # ============================================================================ #
 # CORE SOURCES
 # ============================================================================ #
 
-file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-)
+file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 # prova.cpp contains the main() and is not part of the core library
-list(REMOVE_ITEM CORE_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/prova.cpp"
-)
+list(REMOVE_ITEM CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/prova.cpp")
 
 # ============================================================================ #
 # CORE LIBRARY
@@ -47,10 +56,7 @@ list(REMOVE_ITEM CORE_SOURCES
 
 add_library(cpu_core STATIC ${CORE_SOURCES})
 
-target_include_directories(cpu_core
-    PUBLIC
-        "${CMAKE_CURRENT_SOURCE_DIR}/include"
-)
+target_include_directories(cpu_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 if(ENABLE_DEBUG)
     target_compile_definitions(cpu_core PUBLIC DEBUG)
@@ -71,7 +77,7 @@ add_executable(prova
 
 target_link_libraries(prova
     PRIVATE
-        cpu_core
+        cpu_core project_warnings
 )
 
 # ============================================================================ #
@@ -83,6 +89,8 @@ enable_testing()
 file(GLOB TEST_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp"
 )
+
+include(GoogleTest)
 
 foreach(test_src ${TEST_SOURCES})
 
@@ -112,12 +120,18 @@ foreach(test_src ${TEST_SOURCES})
 
     target_link_libraries(${test_name}
         PRIVATE
-            cpu_core
+            cpu_core 
+            project_warnings   
+            GTest::gtest
+            GTest::gtest_main
     )
 
-    add_test(
-        NAME ${test_name}
-        COMMAND ${test_name}
+    gtest_discover_tests(${test_name}
+        NO_PRETTY_VALUES
+        DISCOVERY_TIMEOUT 30
+        PROPERTIES
+            TIMEOUT 60
+            LABELS "unit"
     )
 
 endforeach()
@@ -149,6 +163,8 @@ if(GUI_ENABLED)
         PRIVATE
             cpu_core
             Python3::Python
+            project_warnings
+          
     )
 
     set_target_properties(simulator PROPERTIES

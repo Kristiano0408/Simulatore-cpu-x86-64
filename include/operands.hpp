@@ -4,6 +4,7 @@
 
 
 #include "helpers/operandTypes.hpp"
+#include "helpers/registersTypes.hpp"
 #include <cstdint>
 
 
@@ -39,9 +40,11 @@ class Operand
         OperandType getType() const { return type; }
         void setType(OperandType t) { this->type = t; }
 
+
     protected:
         uint8_t size; // Size of the operand in bit
         OperandType type; // Type of the operand
+       
      
     
 
@@ -61,15 +64,20 @@ class EmptyOperand : public Operand {
 class RegOperand : public Operand 
 {
     public:
-        RegOperand(uint64_t& registerValue) : reg(registerValue) { setType(OperandType::REGISTER); } // Constructor to initialize register reference
+        RegOperand(uint64_t& registerValue, Register name) : reg(registerValue), regName(name) { setType(OperandType::REGISTER); } // Constructor to initialize register reference
 
         uint64_t& getReg() { return reg; } // Getter for the register reference
 
         void setReg(uint64_t value) { reg = value; } // Setter for the register value
 
+        Register getRegName() const { return regName; } // Getter for the register name
+
+        void setRegName(Register name) { regName = name; } // Setter for the register name
+
 
     private:
         uint64_t& reg; // Reference to the register value
+        Register regName; // Name of the register (enum value)
 };
 
 

@@ -53,6 +53,7 @@ class OperandEngine : public TickedDevice, public FaultDevice
         void readOperand(Instruction* instruction, Operand* operand, WhichOperand whichoperand, void* callbackContext, void (*callback)(void* context));
         void writeOperand(Instruction* instruction, Operand* operand, Operand* auxOperand, uint64_t value, uint64_t auxValue, void* callbackContext, void (*callback)(void* context));
 
+        void eraseQueues(uint64_t instructionID);
 
     
     private:
