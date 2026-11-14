@@ -59,7 +59,7 @@ std::vector<TestCase> buildTestCases()
                      std::make_move_iterator(group.end()));
     };
 
-    /*append(buildMovTests());
+    append(buildMovTests());
     append(buildAddSubTests());
     append(buildCarryTests());
     append(buildLeaTests());
@@ -72,7 +72,7 @@ std::vector<TestCase> buildTestCases()
     append(buildBooleanTests());
     append(buildTestTests());
     append(buildShiftTests());
-    append(buildRotateTests());*/
+    append(buildRotateTests());
     append(buildJmpTests());
 
     return tests;
@@ -131,7 +131,6 @@ void InstructionTest::SetUp()
 
     for (size_t c = 0; c < MAX_CYCLES; ++c)
     {
-    
         DEBUG_LOG(debugLog("Cycle " + std::to_string(c)));
         bus.tick();
     }

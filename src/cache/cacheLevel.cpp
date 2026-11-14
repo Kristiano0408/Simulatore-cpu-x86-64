@@ -822,6 +822,7 @@ void CacheLevel::fillToL1Ddouble(CacheLine* line1, CacheLine* line2, const Addre
 
 void CacheLevel::eraseResponses(uint64_t IDfrom)
 {
+   
     std::vector<PendingRequest>& pendingRequests = scheduler.getPendingRequestsMutable();
     
     std::erase_if(pendingRequests,[IDfrom](const auto& pendingRequest){

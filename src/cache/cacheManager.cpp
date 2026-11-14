@@ -138,7 +138,19 @@ void CacheManager::eraseFlushedCacheResponseByInstructionIDWrapper(uint64_t inst
 
 void CacheManager::eraseFlushedCacheResponseByInstructionID(uint64_t instructionId)
 {
+  
     
+   
+    std::erase_if(requestQueueL1D,[instructionId](const auto& cacheRequest){
+        return cacheRequest.requestID > instructionId;
+    });
+
+    std::erase_if(requestQueueL1I,[instructionId](const auto& cacheRequest){
+        return cacheRequest.requestID > instructionId;
+    });
+
+
+
 
     L1DCache.eraseResponses(instructionId);
     L1ICache.eraseResponses(instructionId);

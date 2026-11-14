@@ -67,7 +67,7 @@ void HazardUnit::onWriteBackCompleteWrapper(void* context)
     Instruction* instr = writeBackStage.peekInstruction();
     if(instr != nullptr && !instr->isEmpty() && instr->getCore().type == TypeofInstruction::JMP)
     {
-        std::printf("HazardUnit: Flushing pipeline due to JMP instruction with ID %llu\n", instr->getCore().InstructionId);
+        DEBUG_LOG(debugLog("HazardUnit: Flushing pipeline due to JMP instruction with ID " + std::to_string(instr->getCore().InstructionId)));
         hazardUnit->flushPipeline(instr->getCore().InstructionId);
         hazardUnit->getEraseInstructionQueuedCallbackCPU()(instr->getCore().InstructionId, hazardUnit->getEraseInstructionQueuedCallbackCPUCtx());
         hazardUnit->getEraseInstructionQueuedCallbackCache()(instr->getCore().InstructionId, hazardUnit->getEraseInstructionQueuedCallbackCacheCtx());
@@ -102,7 +102,7 @@ void HazardUnit::onWaitingMemoryWrapperExecute(void* context)
 void HazardUnit::onMemoryDoneWrapperFetch(void* context)
 {
     HazardUnit* hazardUnit = static_cast<HazardUnit*>(context);
-    hazardUnit->getPipelineController().\2(StageType::FETCH);
+    hazardUnit->getPipelineController().onMemoryDone(StageType::FETCH);
 }
 
 void HazardUnit::onMemoryDoneWrapperExecute(void* context)
@@ -133,8 +133,10 @@ void HazardUnit::flushPipeline(uint64_t instructionId)
     {
         DEBUG_LOG(debugLog("HazardUnit: Flushing Fetch stage for instruction ID " + std::to_string(instructionId)));
         fetchStage.flushStage();
-        std::printf("HazardUnit: Fetch stage flushed for instruction ID %llu\n", instructionId);
-        std::printf("HazardUnit: Fetch stage status after flush: %s\n", toStringStageStatus(fetchStage.getStatus()).c_str());
+        if(isFetching && inflightInstructionId > instructionId)
+        {
+            inflightInstructionInfoCallbackSet(inflightInstructionInfoCtx);
+        }
     }
     //flushing fetch-decode buffer
     FetchDecodeBuffer& fetchDecodeBuffer = pipeline.getFetchDecodeBuffer();

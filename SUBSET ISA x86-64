@@ -35,7 +35,7 @@ forme 8/16/32/64 bit dove esistono), non solo la forma base.
 
 4) CONTROLLO DI FLUSSO
 ------------------------
-- JMP                    (relativo, indiretto reg, indiretto mem)
+- JMP                    (relativo, indiretto reg, indiretto mem) DONE
 - Jcc                    (tutte le condizioni: JE, JNE, JG, JL, JGE, JLE, JA, JB, ecc.)
 - CALL / RET             (relativo e indiretto; RET con imm16 per pulizia stack)
 - LOOP / LOOPE / LOOPNE  (opzionali, poco usate dai compilatori moderni)

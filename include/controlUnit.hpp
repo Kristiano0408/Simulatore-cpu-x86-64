@@ -27,11 +27,15 @@ class CU : public FaultDevice
 
         const InstructionInFlightInfo& getInflightInstructionInfo() { return inflightInstructionInfo; } // Get the information about the instruction currently in flight
         static const InstructionInFlightInfo& getInflightInstructionInfoWrapper(void* context) { return static_cast<CU*>(context)->getInflightInstructionInfo(); } // Static method to get the information about the instruction currently in flight from a context pointer
+        void setInflightInstructionInfo() { inflightInstructionInfo = InstructionInFlightInfo{false, 0}; } // Set the information about the instruction currently in flight
+        static void setInflightInstructionInfoWrapper(void* context) { static_cast<CU*>(context)->setInflightInstructionInfo(); } // Static method to set the information about the instruction currently in flight from a context pointer
+        void setNextRip(uint64_t nextRip) { PC = nextRip; } // Set the next instruction pointer (RIP) for the control unit
 
     private:
         Decoder decoder;
         Bus& bus; //reference to the bus
-        uint64_t currentInstructionId;
+        //uint64_t currentInstructionId;
+        uint64_t PC{}; //program counter
         InstructionMemoryInterface instructionMemoryInterface; // Interface for instruction memory access
         InstructionInFlightInfo inflightInstructionInfo; // Information about the instruction currently in flight
 

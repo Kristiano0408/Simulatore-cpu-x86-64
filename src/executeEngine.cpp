@@ -163,6 +163,7 @@ void ExecuteEngine::eraseQueues(uint64_t instructionID)
     operandFetchQueue.eraseIf(predicate, &instructionID);
     executionQueue.eraseIf(predicate, &instructionID);
     memoryAccessQueue.eraseIf(predicate, &instructionID);
+    writeBackQueue.eraseIf(predicate, &instructionID);
 
 
 
@@ -543,7 +544,12 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         return;
     }
     operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
-
+    
+    if (instruction->getCore().executionMode != InstructionExecutionMode::CONTROL_FLOW)
+        cpu.getRegisters().getReg(Register::RIP).raw() = instruction->getCore().nextRip;
+    else
+        cpu.getControlUnit().setNextRip(instruction->getTemporaryValues().resultValue);
+    
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

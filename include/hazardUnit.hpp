@@ -103,6 +103,8 @@ class HazardUnit : public TickedDevice, public FaultDevice
 {
     using CallbackEraseInstructionQueued = void(*)(uint64_t IDFromFlush, void* ctx);
     using CallBakcInflightInstructionInfo = const InstructionInFlightInfo& (*)(void* ctx);
+    using CallBakcInflightInstructionInfoSet = void(*)(void* ctx);
+
     public:
         HazardUnit(Pipeline& pipelineRef);
         ~HazardUnit();
@@ -127,6 +129,11 @@ class HazardUnit : public TickedDevice, public FaultDevice
         void setInflightInstructionInfoCallback(CallBakcInflightInstructionInfo callback) { inflightInstructionInfoCallback = callback; }
         CallBakcInflightInstructionInfo getInflightInstructionInfoCallback() const { return inflightInstructionInfoCallback; }
 
+        void setInflightInstructionInfoCallbackSet(CallBakcInflightInstructionInfoSet callback) { inflightInstructionInfoCallbackSet = callback; }
+        CallBakcInflightInstructionInfoSet getInflightInstructionInfoCallbackSet() const { return inflightInstructionInfoCallbackSet; }
+
+
+    
         std::array<PipelineStageStatus, static_cast<size_t>(StageType::COUNT)>& getSTageInstructionsInfo() { return stageInstructionsInfo; } // Function to get the array of PipelineStageStatus for each stage
         PipelineStageStatus& getStageInstructionInfo(uint8_t stage) { return stageInstructionsInfo[static_cast<size_t>(stage)]; } // Function to get the PipelineStageStatus for a specific stage
         void setupEvents();
@@ -148,6 +155,7 @@ class HazardUnit : public TickedDevice, public FaultDevice
 
 
     private:
+        CallBakcInflightInstructionInfoSet inflightInstructionInfoCallbackSet;
         CallBakcInflightInstructionInfo inflightInstructionInfoCallback; // Callback function to get the information about the instruction currently in flight
         void* inflightInstructionInfoCtx; // Context pointer for the inflight instruction info callback
         CallbackEraseInstructionQueued cpuEraseInstructionQueuedCallback; // Callback function to erase queued instructions by instruction ID

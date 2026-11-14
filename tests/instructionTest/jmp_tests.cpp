@@ -39,16 +39,16 @@ static std::vector<TestCase> buildJmpRel8Tests()
 
     // JMP rel8 backward: EB FE at 0x04 -> target = (0x04+2) - 2 = 0x04 (self loop)
     tests.push_back({
-        .description = "JMP rel8 backward (EB FE at 0x04): RIP 0x06 -> 0x04",
+        .description = "JMP rel8 backward : RIP 0x02 -> 0x00",
         .program     = {0xEB, 0xFE},
-        .expected_regs = {{Register::RIP, 0x04}},
+        .expected_regs = {{Register::RIP, 0x00}},
     });
 
     // JMP rel8 backward -1: EB FF at 0x04 -> target = (0x04+2) - 1 = 0x05 (lands on the disp byte)
     tests.push_back({
-        .description = "JMP rel8 backward -1 (EB FF at 0x04): RIP 0x06 -> 0x05",
+        .description = "JMP rel8 backward -1 : RIP 0x02 -> 0x01",
         .program     = {0xEB, 0xFF},
-        .expected_regs = {{Register::RIP, 0x05}},
+        .expected_regs = {{Register::RIP, 0x01}},
     });
 
 
@@ -69,9 +69,9 @@ static std::vector<TestCase> buildJmpRel32Tests()
     // JMP rel32 backward: E9 FC FF FF FF (-4) at 0x08 -> target = (0x08+5) - 4 = 0x09... 
     // (0x0D) - 4 = 0x09
     tests.push_back({
-        .description = "JMP rel32 backward (E9 FFFFFFFC at 0x08): RIP 0x0D -> 0x09",
+        .description = "JMP rel32 backward : RIP 0x5 -> 0x01",
         .program     = {0xE9, 0xFC, 0xFF, 0xFF, 0xFF},
-        .expected_regs = {{Register::RIP, 0x09}},
+        .expected_regs = {{Register::RIP, 0x01}},
     });
 
     // JMP rel32 zero displacement: E9 00 00 00 00 at 0x00 -> target = 0x05
@@ -83,9 +83,9 @@ static std::vector<TestCase> buildJmpRel32Tests()
 
     // JMP rel32 large positive: E9 FB 01 00 00 (507) at 0x00 -> target = 5 + 507 = 0x1FC
     tests.push_back({
-        .description = "JMP rel32 large forward (E9 000001FB): RIP 0x00 -> 0x1FC",
+        .description = "JMP rel32 large forward (E9 000001FB): RIP 0x05 -> 0x200",
         .program     = {0xE9, 0xFB, 0x01, 0x00, 0x00},
-        .expected_regs = {{Register::RIP, 0x1FC}},
+        .expected_regs = {{Register::RIP, 0x200}},
     });
 
     return tests;

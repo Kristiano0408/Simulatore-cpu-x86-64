@@ -22,7 +22,7 @@ void CU::startFetch(uint64_t instructionId, uint64_t& index, PipelineEventHandle
 
     RegisterFile& cpuRegisters = bus.getCPU().getRegisters(); // get the registers of the CPU temporarily
     // take the value of istruction register
-    index = cpuRegisters.getReg(Register::RIP).raw();
+    index = PC; // get the value of the program counter
     // fetching the instruction from cache or memory
 
     DEBUG_LOG(debugLog("Fetching instruction at address: " + to_string_hex(index)));
@@ -148,7 +148,7 @@ InstructionInfo CU::fetchInstruction(uint64_t instructionId, uint64_t index, Pip
     //memorize the RIP for RIP relative adresses;
     info.nextRipAddress = index + static_cast<uint64_t>(info.totalLength);
     // set the RIP to the next instruction
-    bus.getCPU().getRegisters().getReg(Register::RIP) = index + static_cast<uint64_t>(info.totalLength);
+    PC = info.nextRipAddress;
 
     DEBUG_LOG(debugLog("IR: " + to_string_hex(bus.getCPU().getRegisters().getReg(Register::RIP).raw())));
 
