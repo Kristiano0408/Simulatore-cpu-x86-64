@@ -74,6 +74,7 @@ std::vector<TestCase> buildTestCases()
     append(buildShiftTests());
     append(buildRotateTests());
     append(buildJmpTests());
+    append(buildJmpControlFlowTests());
 
     return tests;
 }

@@ -299,6 +299,27 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         }
 }
 
+std::string toStringAddressingMode(AddressingMode mode)
+{
+    switch (mode) {
+        case AddressingMode::OI: return "OI";
+        case AddressingMode::M: return "M";
+        case AddressingMode::MI: return "MI";
+        case AddressingMode::FD: return "FD";
+        case AddressingMode::TD: return "TD";
+        case AddressingMode::I: return "I";
+        case AddressingMode::RM: return "RM";
+        case AddressingMode::MR: return "MR";
+        case AddressingMode::RMI: return "RMI";
+        case AddressingMode::M_ACC: return "M_ACC";
+        case AddressingMode::MC: return "MC";
+        case AddressingMode::D: return "D";
+        case AddressingMode::M1: return "M1";
+        case AddressingMode::O: return "O";
+        default: return "UNKNOWN";
+    }
+}
+
 std::string toStringRegister(Register reg)
 {
     switch (reg) {

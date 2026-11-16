@@ -6,13 +6,19 @@ CPU::CPU(Bus& busRef): bus(busRef), controlUnit(busRef),registers(), cacheManage
 {
     DEBUG_LOG(debugLog("CPU created"));
     pipeline.setEventHandler(hazardUnit.getEventHandler());
-    hazardUnit.setEraseInstructionQueuedCallbackCPU(&CPU::eraseFlushedCacheResponseByInstructionIDWrapper);
-    hazardUnit.setEraseInstructionQueuedCallbackCPUCtx(this);
-    hazardUnit.setEraseInstructionQueuedCallbackCache(&CacheManager::eraseFlushedCacheResponseByInstructionIDWrapper);
-    hazardUnit.setEraseInstructionQueuedCallbackCacheCtx(&cacheManager);
+    
+    hazardUnitEventHandler.setCPUContext(this);
+    hazardUnitEventHandler.registerEvent(EventHandlerHazardUnitEventType::ERASE_FLUSHED_CACHE_RESPONSES, &CPU::eraseFlushedCacheResponseByInstructionIDWrapper);
+
+
+    hazardUnitEventHandler.setCacheManagerContext(&cacheManager);
+    hazardUnitEventHandler.registerEvent(EventHandlerHazardUnitEventType::ERASE_FLUSHED_CACHE_QUEUES, &CacheManager::eraseFlushedCacheResponseByInstructionIDWrapper);
+  
     hazardUnit.setInflightInstructionInfoCallback(&CU::getInflightInstructionInfoWrapper);
     hazardUnit.setInflightInstructionInfoCallbackSet(&CU::setInflightInstructionInfoWrapper);
     hazardUnit.setInflightInstructionInfoCallbackCtx(&controlUnit);
+
+    hazardUnit.setHazardUnitEventHandler(&hazardUnitEventHandler);
 }
 
 //destructor

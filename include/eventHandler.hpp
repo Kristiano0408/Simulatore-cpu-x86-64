@@ -94,4 +94,32 @@ class ExecuteEngineEventHandler
         void* callbackContext; // Context pointer to be passed to the callback function for additional information or state management
         ArrayCallbackExecuteEngineEventType executeEngineCallbacks;
 };
+
+enum class EventHandlerHazardUnitEventType : uint8_t;
+
+class HazardUnitEventHandler
+{
+    using CallBackHazardUnitEventType = void(*)(uint64_t instructionID, void * context);
+    using ArrayCallbackHazardUnitEventType = std::array<CallBackHazardUnitEventType, static_cast<size_t>(EventHandlerHazardUnitEventType::COUNT)>;
+    public:
+        HazardUnitEventHandler();
+        void setCPUContext(void*ctx) { cpuCtx = ctx;}
+        void* getCPUContext() const {return cpuCtx;}
+        void setCacheManagerContext(void* ctx) { cacheManagerCtx = ctx;}
+        void* getCacheManagerContext() const { return cacheManagerCtx;}
+        
+        void registerEvent(const EventHandlerHazardUnitEventType eventName, CallBackHazardUnitEventType callback);
+        void triggerCPUEvent(const EventHandlerHazardUnitEventType eventName, uint64_t instructionID);
+        void triggerCacheManagerEvent(const EventHandlerHazardUnitEventType eventName, uint64_t instructionID);
+    
+
+    private:
+        void* cpuCtx;
+        void* cacheManagerCtx;
+        ArrayCallbackHazardUnitEventType hazardUnitCallbacks;
+};
+
+
 #endif // EVENT_HANDLER_HPP
+
+

@@ -49,4 +49,14 @@ enum class EventHandlerExecuteEngineEventType : uint8_t
     COUNT = 10 // Represents the total number of event types
 };
 
+
+enum class EventHandlerHazardUnitEventType : uint8_t
+{
+    ERASE_FLUSHED_CACHE_RESPONSES = 0,
+    ERASE_FLUSHED_CACHE_QUEUES = 1,
+    COUNT = 4
+
+
+};
+
 #endif // EVENT_HELPER_HPP

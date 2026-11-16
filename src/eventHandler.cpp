@@ -99,3 +99,38 @@ void ExecuteEngineEventHandler::triggerExecuteEngineEvent(const EventHandlerExec
         executeEngineCallbacks[eventTypeIndex](callbackContext); // Call the registered callback function for the specified event type with the context
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+HazardUnitEventHandler::HazardUnitEventHandler() : cpuCtx(nullptr), cacheManagerCtx(nullptr)
+{
+    hazardUnitCallbacks.fill(nullptr);
+}
+
+void HazardUnitEventHandler::registerEvent(const EventHandlerHazardUnitEventType eventName, CallBackHazardUnitEventType callback)
+{
+    hazardUnitCallbacks[static_cast<size_t>(eventName)] = callback;
+}
+
+void HazardUnitEventHandler::triggerCPUEvent(const EventHandlerHazardUnitEventType eventName, uint64_t instructionID)
+{
+     uint8_t eventTypeIndex = static_cast<uint8_t>(eventName); // Convert the event type to an index for the vector
+
+    if(hazardUnitCallbacks[eventTypeIndex] != nullptr) // Check if a callback function is registered for the specified event type
+    {
+        hazardUnitCallbacks[eventTypeIndex](instructionID, cpuCtx); // Call the registered callback function for the specified event type with the context
+    }
+    
+}
+
+void HazardUnitEventHandler::triggerCacheManagerEvent(const EventHandlerHazardUnitEventType eventName, uint64_t instructionID)
+{
+     uint8_t eventTypeIndex = static_cast<uint8_t>(eventName); // Convert the event type to an index for the vector
+
+    if(hazardUnitCallbacks[eventTypeIndex] != nullptr) // Check if a callback function is registered for the specified event type
+    {
+        hazardUnitCallbacks[eventTypeIndex](instructionID, cacheManagerCtx); // Call the registered callback function for the specified event type with the context
+    }
+    
+}
+

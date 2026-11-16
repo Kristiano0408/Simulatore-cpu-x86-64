@@ -27,7 +27,6 @@ private:
     FixedSizeQueueCacheFriendly<Instruction*, 10> memoryAccessQueue; // Queue for memory access operations
     FixedSizeQueueCacheFriendly<Instruction*, 10> writeBackQueue;    // Queue for write-back operations
     bool isExecuting = false;                                        // Flag to indicate if an instruction is currently being executed
-    bool operandEngineBusy = false;                                  // Flag to indicate if the operand engine is busy processing an operation
     bool isAccessingMemory = false;                                  // Flag to indicate if memory access is currently in progress
 
     void fetchOperands(Instruction* instruction);

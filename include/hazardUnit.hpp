@@ -114,26 +114,18 @@ class HazardUnit : public TickedDevice, public FaultDevice
 
         inline PipelineEventHandler* getEventHandler() { return &eventHandler; }
 
-        void setEraseInstructionQueuedCallbackCPUCtx(void* context) {cpuCtx = context;}
-        void* getEraseInstructionQueuedCallbackCPUCtx() { return cpuCtx; }
-        void setEraseInstructionQueuedCallbackCPU(CallbackEraseInstructionQueued callback) { cpuEraseInstructionQueuedCallback = callback; }
-        CallbackEraseInstructionQueued getEraseInstructionQueuedCallbackCPU() const { return cpuEraseInstructionQueuedCallback; }
-
-        void setEraseInstructionQueuedCallbackCacheCtx(void* context) {cacheCtx = context;}
-        void* getEraseInstructionQueuedCallbackCacheCtx() { return cacheCtx; }
-        void setEraseInstructionQueuedCallbackCache(CallbackEraseInstructionQueued callback) { cacheEraseInstructionQueuedCallback = callback; }
-        CallbackEraseInstructionQueued getEraseInstructionQueuedCallbackCache() const { return cacheEraseInstructionQueuedCallback; }
-
         void setInflightInstructionInfoCallbackCtx(void* context) { inflightInstructionInfoCtx = context; }
         void* getInflightInstructionInfoCallbackCtx() { return inflightInstructionInfoCtx;}
+
         void setInflightInstructionInfoCallback(CallBakcInflightInstructionInfo callback) { inflightInstructionInfoCallback = callback; }
         CallBakcInflightInstructionInfo getInflightInstructionInfoCallback() const { return inflightInstructionInfoCallback; }
 
         void setInflightInstructionInfoCallbackSet(CallBakcInflightInstructionInfoSet callback) { inflightInstructionInfoCallbackSet = callback; }
         CallBakcInflightInstructionInfoSet getInflightInstructionInfoCallbackSet() const { return inflightInstructionInfoCallbackSet; }
 
-
-    
+        void setHazardUnitEventHandler(HazardUnitEventHandler* hazardEventHandler) {eventHandlerForHazardsCallbacks = hazardEventHandler;}
+        HazardUnitEventHandler* getHazardUnitEventHandler() const { return eventHandlerForHazardsCallbacks;}
+        
         std::array<PipelineStageStatus, static_cast<size_t>(StageType::COUNT)>& getSTageInstructionsInfo() { return stageInstructionsInfo; } // Function to get the array of PipelineStageStatus for each stage
         PipelineStageStatus& getStageInstructionInfo(uint8_t stage) { return stageInstructionsInfo[static_cast<size_t>(stage)]; } // Function to get the PipelineStageStatus for a specific stage
         void setupEvents();
@@ -158,10 +150,7 @@ class HazardUnit : public TickedDevice, public FaultDevice
         CallBakcInflightInstructionInfoSet inflightInstructionInfoCallbackSet;
         CallBakcInflightInstructionInfo inflightInstructionInfoCallback; // Callback function to get the information about the instruction currently in flight
         void* inflightInstructionInfoCtx; // Context pointer for the inflight instruction info callback
-        CallbackEraseInstructionQueued cpuEraseInstructionQueuedCallback; // Callback function to erase queued instructions by instruction ID
-        CallbackEraseInstructionQueued cacheEraseInstructionQueuedCallback; // Callback function to erase queued instructions by instruction ID for cache responses
-        void* cpuCtx;
-        void* cacheCtx;
+        HazardUnitEventHandler* eventHandlerForHazardsCallbacks;
         Pipeline& pipeline; // Reference to the pipeline to access its stages and buffers
         PipelineController pipelineController; // Pipeline controller to manage the pipeline stages and buffers
         PipelineEventHandler eventHandler;

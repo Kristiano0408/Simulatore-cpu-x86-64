@@ -1,7 +1,6 @@
-sistemare execute engine per read aux
+vedere jmp con offset 32 da registro
 
-finire jmp
-hazard detection
+data hazard detection
 
 
 capire coem getsire imm32extende (I con signe xtended)-> vagetsitameglio sempre propagatadall opcode map 

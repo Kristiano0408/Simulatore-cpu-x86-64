@@ -44,6 +44,8 @@ class CPU: public TickedDevice, public FaultDevice
 
         HazardUnit hazardUnit; //hazard unit of the CPU
 
+        HazardUnitEventHandler hazardUnitEventHandler;
+
         
 
     public:
@@ -77,6 +79,7 @@ class CPU: public TickedDevice, public FaultDevice
 
         void eraseCacheResponseIfFound(uint64_t requestID); //erase a cache response from the queue
 
+        
         static void eraseFlushedCacheResponseByInstructionIDWrapper(uint64_t IDFromFlush, void* ctx); //erase a flushed cache response from the queue
 
         void eraseFlushedCacheResponseByInstructionID(uint64_t IDFromFlush); //erase a flushed cache response from the queue

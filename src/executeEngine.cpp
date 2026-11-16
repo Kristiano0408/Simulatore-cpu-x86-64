@@ -159,11 +159,22 @@ void ExecuteEngine::eraseQueues(uint64_t instructionID)
     auto predicate = [](Instruction* instr, void* ctx ) -> bool {
         uint64_t ID= *(static_cast<uint64_t*>(ctx));
         return instr->getCore().InstructionId > ID;};
+    
 
+    if(isExecuting && !executionQueue.empty() && executionQueue.front()->getCore().InstructionId > instructionID)
+    {
+        isExecuting = false;
+    }
+    if(isAccessingMemory && !memoryAccessQueue.empty() && memoryAccessQueue.front()->getCore().InstructionId > instructionID)
+    {
+        isAccessingMemory = false;
+    }
     operandFetchQueue.eraseIf(predicate, &instructionID);
     executionQueue.eraseIf(predicate, &instructionID);
     memoryAccessQueue.eraseIf(predicate, &instructionID);
     writeBackQueue.eraseIf(predicate, &instructionID);
+
+   
 
 
 
@@ -311,9 +322,9 @@ void ExecuteEngine::startExecution(Instruction* instruction)
      // pair (RDX) through the aux operand: for MUL/IMUL it is the unused high half
      // of the product's source pair, for DIV/IDIV it is the high half of the
      // double-width dividend (stored in destHighValue by the AUXILIARY read).
+     // If the instruction uses the auxiliary operand, we need to read it.
      bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || (core.addressingMode == AddressingMode::RMI && core.type == TypeofInstruction::IMUL)) ||instruction->getCore().type == TypeofInstruction::PUSH || instruction->getCore().type == TypeofInstruction::POP;
      bool requiresAuxRead = (uses_aux && instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() != OperandType::NONE);
-
 
     operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), uses_aux ? instruction->getAuxOperand() : nullptr, this, &triggerPipelineMemoryWaitingExecuteCallback, requiresAuxRead );
 

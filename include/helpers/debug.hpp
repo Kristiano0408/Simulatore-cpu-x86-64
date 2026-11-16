@@ -60,6 +60,8 @@ std::ostream& operator<<(std::ostream& os, const ComponentType& type);
 
 std::string toStringTypeofInstruction(TypeofInstruction type);
 
+std::string toStringAddressingMode(AddressingMode mode);
+
 std::string toStringRegister(Register reg);
 
 std::string toStringFlag(Flagbit f);

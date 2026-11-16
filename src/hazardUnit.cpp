@@ -69,9 +69,15 @@ void HazardUnit::onWriteBackCompleteWrapper(void* context)
     {
         DEBUG_LOG(debugLog("HazardUnit: Flushing pipeline due to JMP instruction with ID " + std::to_string(instr->getCore().InstructionId)));
         hazardUnit->flushPipeline(instr->getCore().InstructionId);
-        hazardUnit->getEraseInstructionQueuedCallbackCPU()(instr->getCore().InstructionId, hazardUnit->getEraseInstructionQueuedCallbackCPUCtx());
-        hazardUnit->getEraseInstructionQueuedCallbackCache()(instr->getCore().InstructionId, hazardUnit->getEraseInstructionQueuedCallbackCacheCtx());
-        hazardUnit->pipeline.eraseExecuteEngineQueue(instr->getCore().InstructionId);
+        HazardUnitEventHandler* hazardUnitEventHandler = hazardUnit->getHazardUnitEventHandler();
+        uint64_t instructionId = instr->getCore().InstructionId;
+        if(hazardUnitEventHandler)
+        {   
+            hazardUnitEventHandler->triggerCPUEvent(EventHandlerHazardUnitEventType::ERASE_FLUSHED_CACHE_RESPONSES,instructionId);
+            hazardUnitEventHandler->triggerCacheManagerEvent(EventHandlerHazardUnitEventType::ERASE_FLUSHED_CACHE_QUEUES, instructionId);
+            
+        }
+        hazardUnit->pipeline.eraseExecuteEngineQueue(instructionId);
     }
     hazardUnit->getPipelineController().onWriteBackComplete();
 }
