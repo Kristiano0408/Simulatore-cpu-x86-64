@@ -65,7 +65,7 @@ void HazardUnit::onWriteBackCompleteWrapper(void* context)
     HazardUnit* hazardUnit = static_cast<HazardUnit*>(context);
     WriteBackStage& writeBackStage = hazardUnit->getPipeline().getWriteBackStage();
     Instruction* instr = writeBackStage.peekInstruction();
-    if(instr != nullptr && !instr->isEmpty() && instr->getCore().type == TypeofInstruction::JMP)
+    if(instr != nullptr && !instr->isEmpty() && (instr->getCore().type == TypeofInstruction::JMP || (instr->getCore().type == TypeofInstruction::Jcc && instr->getCore().notFlushNeeded == false)))
     {
         DEBUG_LOG(debugLog("HazardUnit: Flushing pipeline due to JMP instruction with ID " + std::to_string(instr->getCore().InstructionId)));
         hazardUnit->flushPipeline(instr->getCore().InstructionId);

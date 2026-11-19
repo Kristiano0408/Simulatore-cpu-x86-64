@@ -7,7 +7,7 @@ ExecuteEngine::ExecuteEngine(CPU& cpuRef, RegisterFile& regFile, ALU& aLu, Cache
 {
     executeEngineEventHandler.setContext(this); // Set the context for the event handler to this ExecuteEngine instance
     executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::MEMORY_WAITING, &triggerPipelineMemoryWaitingCallback);
-    executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::MEMORY_DONE, &triggerPipelineMemoryDoneExecuteCallback);
+    executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::MEMORY_DONE, &triggerPipelineMemoryCompleteCallback);
     executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::MEMORY_WAITING_EXECUTE, &triggerPipelineMemoryWaitingExecuteCallback);
     executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::MEMORY_DONE_EXECUTE, &triggerPipelineMemoryDoneExecuteCallback);
     executeEngineEventHandler.registerExecuteEngineEvent(EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_READ_EXECUTION, &completeExecutionCallback);
@@ -196,6 +196,187 @@ void ExecuteEngine::executeDataTransferInstruction(Instruction* instrptr)
     dataTransferexecution::dataTransferExecutionFunc[static_cast<size_t>(datatransferType)](instrptr);
 }
 
+void executeControlFlowOperation(Instruction* instruction)
+{
+    InstructionCore& core = instruction->getCore();
+    temporaryValues& tempValues = instruction->getTemporaryValuesRef();
+    if(core.type == TypeofInstruction::JMP)
+    {
+        uint64_t displacement{};
+        if(core.opcode == 0xEB)
+        {
+            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(tempValues.srcValue)));
+            tempValues.resultValue = core.nextRip + displacement;
+        }
+        else if(core.opcode == 0xE9)
+        {   
+    
+            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
+            tempValues.resultValue = core.nextRip + displacement;
+        }
+        else if(core.opcode == 0xFF04)
+            tempValues.resultValue = tempValues.srcValue;
+    }
+
+    if(core.type == TypeofInstruction::Jcc)
+    {
+        uint64_t displacement{};
+        if(core.opcode >> 8 == 0x0F)
+            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
+        else
+            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(tempValues.srcValue)));
+        
+
+        if(core.opcode == 0xE3) //JCXZ/JECXZ/JRCXZ
+        {
+            if(tempValues.auxValue == 0)
+                tempValues.resultValue = core.nextRip + displacement;
+            else
+                tempValues.resultValue = core.nextRip;
+                core.notFlushNeeded = true; 
+                return;
+        }
+        switch(core.opcode & 0x0F)
+        {
+            case 0x0: //JO
+                if(tempValues.ofIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else    {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true; 
+                }
+                break;
+            case 0x1: //JNO
+                if(!tempValues.ofIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x2: //JB/JC/JNAE
+                if(tempValues.carryIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x3: //JNB/JNC/JAE
+                if(!tempValues.carryIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x4: //JE/JZ
+                if(tempValues.zfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x5: //JNE/JNZ
+                if(!tempValues.zfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x6: //JBE/JNA
+                if(tempValues.carryIn || tempValues.zfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x7: //JNBE/JA
+                if(!tempValues.carryIn && !tempValues.zfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x8: //JS
+                if(tempValues.sfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x9: //JNS
+                if(!tempValues.sfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xA: //JP/JPE
+                if(tempValues.pfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xB: //JNP/JPO
+                if(!tempValues.pfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {  
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xC: //JL/JNGE
+                if(tempValues.sfIn != tempValues.ofIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xD: //JNL/JGE
+                if(tempValues.sfIn == tempValues.ofIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xE: //JLE/JNG
+                if(tempValues.zfIn || (tempValues.sfIn != tempValues.ofIn))
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xF: //JNLE/JG
+                if(!tempValues.zfIn && (tempValues.sfIn == tempValues.ofIn))
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void ExecuteEngine::fetchOperands(Instruction* instruction)
 {
     // fetch the operands
@@ -323,8 +504,9 @@ void ExecuteEngine::startExecution(Instruction* instruction)
      // of the product's source pair, for DIV/IDIV it is the high half of the
      // double-width dividend (stored in destHighValue by the AUXILIARY read).
      // If the instruction uses the auxiliary operand, we need to read it.
-     bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || (core.addressingMode == AddressingMode::RMI && core.type == TypeofInstruction::IMUL)) ||instruction->getCore().type == TypeofInstruction::PUSH || instruction->getCore().type == TypeofInstruction::POP;
+     bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || (core.addressingMode == AddressingMode::RMI && core.type == TypeofInstruction::IMUL)) ||instruction->getCore().type == TypeofInstruction::PUSH || instruction->getCore().type == TypeofInstruction::POP || instruction->getCore().type == TypeofInstruction::Jcc;
      bool requiresAuxRead = (uses_aux && instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() != OperandType::NONE);
+
 
     operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), uses_aux ? instruction->getAuxOperand() : nullptr, this, &triggerPipelineMemoryWaitingExecuteCallback, requiresAuxRead );
 
@@ -332,7 +514,6 @@ void ExecuteEngine::startExecution(Instruction* instruction)
 
 void ExecuteEngine::executeInstruction(Instruction* instruction)
 {
-
     DEBUG_LOG(debugLog("ExecuteEngine: Executing instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
     DEBUG_LOG(debugLog("ExecuteEngine: Source Operand Value: " + std::to_string(instruction->getTemporaryValuesRef().srcValue)));
     DEBUG_LOG(debugLog("ExecuteEngine: Destination Operand Value: " + std::to_string(instruction->getTemporaryValuesRef().destValue)));
@@ -402,27 +583,8 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
             break;
         case InstructionExecutionMode::CONTROL_FLOW: 
         {
-            temporaryValues& tempValues = instruction->getTemporaryValuesRef();
-            if(core.type == TypeofInstruction::JMP)
-            {
-                uint64_t displacement{};
-                if(core.opcode == 0xEB)
-                {
-                    displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(tempValues.srcValue)));
-                    tempValues.resultValue = core.nextRip + displacement;
-                }
-                else if(core.opcode == 0xE9)
-                {   
-    
-                    displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
-                    tempValues.resultValue = core.nextRip + displacement;
-                }
-                else if(core.opcode == 0xFF04)
-                    tempValues.resultValue = tempValues.srcValue;
-                    
-
-            }
-            // executeControlFlowOperation(instruction);
+            
+            executeControlFlowOperation(instruction);
             break;
         }
         
@@ -526,6 +688,20 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         
     }
 
+     if (instruction->getCore().executionMode != InstructionExecutionMode::CONTROL_FLOW || (instruction->getCore().type == TypeofInstruction::Jcc && instruction->getCore().notFlushNeeded == true))
+    {
+        cpu.getRegisters().getReg(Register::RIP).raw() = instruction->getCore().nextRip;
+
+    }
+    else if (instruction->getCore().executionMode == InstructionExecutionMode::CONTROL_FLOW) 
+    {
+        if (!(instruction->getCore().type == TypeofInstruction::Jcc && instruction->getCore().notFlushNeeded == true))
+        {
+            cpu.getControlUnit().setNextRip(instruction->getTemporaryValues().resultValue);
+        }
+            
+    }
+
     // CMP aggiorna esclusivamente i flag di stato: la scrittura della differenza
     // calcolata dall'ALU sull'operando di destinazione va sempre soppressa
     if (instruction->getCore().type == TypeofInstruction::CMP || instruction->getCore().type == TypeofInstruction::TEST)
@@ -556,12 +732,14 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
     }
     operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
     
-    if (instruction->getCore().executionMode != InstructionExecutionMode::CONTROL_FLOW)
-        cpu.getRegisters().getReg(Register::RIP).raw() = instruction->getCore().nextRip;
-    else
-        cpu.getControlUnit().setNextRip(instruction->getTemporaryValues().resultValue);
+   
     
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Table function definitions (declared in executeEngine.hpp): defined once,
@@ -581,6 +759,15 @@ namespace tempValuesInit {
 
     void initCarryIn(temporaryValues& tempValues, RegisterFile& regfile) {
         tempValues.carryIn = regfile.getFlags().getFlag(Flagbit::CF);
+    }
+
+    void initJcc(temporaryValues& tempValues, RegisterFile& regfile) {
+        tempValues.carryIn = regfile.getFlags().getFlag(Flagbit::CF);
+        tempValues.isDestValueReady = true;
+        tempValues.zfIn = regfile.getFlags().getFlag(Flagbit::ZF);
+        tempValues.sfIn = regfile.getFlags().getFlag(Flagbit::SF);
+        tempValues.ofIn = regfile.getFlags().getFlag(Flagbit::OF);
+        tempValues.pfIn = regfile.getFlags().getFlag(Flagbit::PF);
     }
 
 }

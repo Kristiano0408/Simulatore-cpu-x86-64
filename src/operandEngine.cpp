@@ -89,7 +89,7 @@ void OperandEngine::readOperand(Instruction* instruction, Operand* operand, Whic
             readValue("memory",
 
                       getMemoryValue(instruction, operand, executeEngineEventHandler.getContext(),
-                                     executeEngineEventHandler.getCallback(EventHandlerExecuteEngineEventType::MEMORY_DONE), whichoperand),
+                                     executeEngineEventHandler.getCallback(EventHandlerExecuteEngineEventType::MEMORY_DONE_EXECUTE), whichoperand),
                       result);
             return;
         case OperandType::IMMEDIATE:

@@ -210,6 +210,13 @@ inline FlagsMask flagNeeded(TypeofInstruction instruction)
         case TypeofInstruction::RCL:
         case TypeofInstruction::RCR:
             return FlagsMask().set(static_cast<size_t>(Flagbit::CF));
+        case TypeofInstruction::Jcc: {
+            return FlagsMask().set(static_cast<size_t>(Flagbit::CF))
+                              .set(static_cast<size_t>(Flagbit::ZF))
+                              .set(static_cast<size_t>(Flagbit::SF))
+                              .set(static_cast<size_t>(Flagbit::OF))
+                              .set(static_cast<size_t>(Flagbit::PF)); //all set to needed (the real check will be done in the hazard unit, we need to know if any of these flags are needed for the instruction)
+        }
         default:
             return FlagsMask(); // No flags needed for other instructions
     }
@@ -230,6 +237,7 @@ inline FlagsMask flagAffected(TypeofInstruction instruction)
     case TypeofInstruction::POP:
     case TypeofInstruction::NOT:
     case TypeofInstruction::JMP:
+    case TypeofInstruction::Jcc:
         return FlagsMask(); // No flags affected for MOV and LEA
     case TypeofInstruction::ADD:
     case TypeofInstruction::SUB:
@@ -271,6 +279,8 @@ inline FlagsMask flagAffected(TypeofInstruction instruction)
                           .set(static_cast<size_t>(Flagbit::SF))
                           .set(static_cast<size_t>(Flagbit::CF))
                           .set(static_cast<size_t>(Flagbit::OF));
+    
+    
                         
     
     default:
@@ -311,7 +321,8 @@ const std::array<InstructionFlagsInfo, static_cast<size_t>(TypeofInstruction::CO
     {flagNeeded(TypeofInstruction::RCR), flagAffected(TypeofInstruction::RCR)},
     {flagNeeded(TypeofInstruction::ROL), flagAffected(TypeofInstruction::ROL)},
     {flagNeeded(TypeofInstruction::ROR), flagAffected(TypeofInstruction::ROR)},
-    {flagNeeded(TypeofInstruction::JMP), flagAffected(TypeofInstruction::JMP)}
+    {flagNeeded(TypeofInstruction::JMP), flagAffected(TypeofInstruction::JMP)},
+    {flagNeeded(TypeofInstruction::Jcc), flagAffected(TypeofInstruction::Jcc)}
 
 }};
 

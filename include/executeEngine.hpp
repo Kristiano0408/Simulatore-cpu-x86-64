@@ -84,6 +84,7 @@ namespace tempValuesInit {
     void initDestReady(temporaryValues& tempValues, RegisterFile& regfile);
     void initSrcReady(temporaryValues& tempValues, RegisterFile& regfile);
     void initCarryIn(temporaryValues& tempValues, RegisterFile& regfile);
+    void initJcc(temporaryValues& tempValues, RegisterFile& regfile);
 
 
     constexpr  std::array<TemporaryValuesFunc, static_cast<size_t>(TypeofInstruction::COUNT)> temporaryValuesInit {
@@ -118,7 +119,8 @@ namespace tempValuesInit {
         /*RCR*/    initCarryIn,
         /*ROL*/    initNone,
         /*ROR*/    initNone,
-        /*JMP*/    initDestReady
+        /*JMP*/    initDestReady,
+        /*Jcc*/    initJcc
 
     };
     

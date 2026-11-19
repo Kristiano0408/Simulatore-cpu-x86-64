@@ -125,5 +125,88 @@ std::vector<TestCase> buildJmpControlFlowTests()
         .expected_mem = {{0x1000, 0x2A}},
     });
 
+
+    //---------------------------------------------------------------------------------
+    // TEST Jcc
+    //---------------------------------------------------------------------------------
+     
+    //---------------------------------------------------------------------------------
+    //TEST 8 : Jcc(CF=0 and ZF=0) + mov rax 5 (non utilizzata) + mov rbx 3
+    //-------------------------------------------------------------------------------------
+
+    tests.push_back({
+        .description = "Jcc(CF=0 and ZF=0) rel8 forward 2: RIP 0x02 -> 0x04 + MOV al, imm8 NON ESEGUITA + MOV bl, imm8",
+        .program     = {0x77, 0x02, 0xB0, 0x05, 0xB3, 0x03},
+        .initial_regs =  {{Register::RIP, 0x00},
+                          {Register::RAX, 0x0A},
+                          {Register::RBX, 0x00}},
+        .initial_flags = {{Flagbit::CF, false},
+                         {Flagbit::ZF, false}},
+        .expected_regs = {{Register::RIP, 0x06},
+                          {Register::RAX, 0x0A},
+                          {Register::RBX, 0x03}},
+    });
+
+      
+    //---------------------------------------------------------------------------------
+    //TEST 9 : Jcc(CF=0 and ZF=0) NON ESEGUITO + mov rax 5  + mov rbx 3
+    //-------------------------------------------------------------------------------------
+
+    tests.push_back({
+        .description = "Jcc(CF=0 and ZF=0) rel8 forward 2: nessun salto + MOV al, imm8 + MOV bl, imm8",
+        .program     = {0x77, 0x02, 0xB0, 0x05, 0xB3, 0x03},
+        .initial_regs =  {{Register::RIP, 0x00},
+                          {Register::RAX, 0x0A},
+                          {Register::RBX, 0x00}},
+        .initial_flags = {{Flagbit::CF, true},
+                         {Flagbit::ZF, false}},
+        .expected_regs = {{Register::RIP, 0x06},
+                          {Register::RAX, 0x05},
+                          {Register::RBX, 0x03}},
+    });
+
+     //---------------------------------------------------------------------------------
+    //TEST 10 : flusso con memoria: MOV [RSI], RAX prima del JMP viene eseguita,
+    //         la MOV AL dopo il JMP viene saltata.
+    //         EB 02 a 0x08 -> target = (0x08 + 2) + 2 = 0x0c
+    //--------------------------------------------------------------------------------
+    tests.push_back({
+        .description = "Jcc (CF=1) forward dopo write memoria: [RSI] scritto, MOV al saltata",
+        .program     = {0xB8, 0x2A, 0x00, 0x00, 0x00,
+                        0x48, 0x89, 0x06,
+                        0x72, 0x02,
+                        0xB0, 0x05},
+        .initial_regs =  {{Register::RIP, 0x00},
+                          {Register::RAX, 0x0A},
+                          {Register::RSI, 0x1000}},
+        .initial_flags = {{Flagbit::CF, true}},
+        .expected_regs = {{Register::RIP, 0x0C},
+                          {Register::RAX, 0x2A},
+                          {Register::RSI, 0x1000}},
+        .expected_mem = {{0x1000, 0x2A}},
+    });
+
+     //---------------------------------------------------------------------------------
+    //TEST 11 : flusso con memoria: MOV [RSI], RAX prima del JMP viene eseguita,
+    //         la MOV AL dopo il JMP viene eseguita e jmp saltato
+    //         EB 02 a 0x08 -> target = (0x08 + 2) + 2 = 0x0c
+    //--------------------------------------------------------------------------------
+    tests.push_back({
+        .description = "Jcc (CF=1) forward dopo write memoria: [RSI] scritto, MOV non saltata",
+        .program     = {0xB8, 0x2A, 0x00, 0x00, 0x00,
+                        0x48, 0x89, 0x06,
+                        0x72, 0x02,
+                        0xB0, 0x05},
+        .initial_regs =  {{Register::RIP, 0x00},
+                          {Register::RAX, 0x0A},
+                          {Register::RSI, 0x1000}},
+        .initial_flags = {{Flagbit::CF, false}},
+        .expected_regs = {{Register::RIP, 0x0C},
+                          {Register::RAX, 0x05},
+                          {Register::RSI, 0x1000}},
+        .expected_mem = {{0x1000, 0x2A}},
+    });
+
+
     return tests;
 }

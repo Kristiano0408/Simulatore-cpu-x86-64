@@ -365,12 +365,11 @@ void PipelineScheduler::processOperandFetchStage()
 
 void PipelineScheduler::processExecuteStage()
 {
-
+  
     ExecuteStage& executeStage = pipeline.executeStage;
     OperandFetchStage& operandFetchStage = pipeline.operandFetchStage;
     OperandFetchExecuteBuffer& operandFetchExecuteBuffer = pipeline.operandFetchExecuteBuffer;
     ExecuteMemoryBuffer& executeMemoryBuffer = pipeline.executeMemoryBuffer;
-  
 
     if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(executeStage, operandFetchExecuteBuffer))
     {
@@ -412,8 +411,8 @@ void PipelineScheduler::processExecuteStage()
             executeMemoryBuffer.stalled = false;
             executeMemoryBuffer.flushed = false;
             executeStage.setStatus(StageStatus::READY);
-
         }
+        
     }
     #ifdef GUI_ENABLED
     else if(executeStage.getStatus()== StageStatus::WAITING_GUI_BUFFER1)

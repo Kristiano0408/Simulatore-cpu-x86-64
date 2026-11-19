@@ -285,9 +285,44 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     //JMP
     {0xEB, {.type=TypeofInstruction::JMP, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
     {0xE9, {.type=TypeofInstruction::JMP, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
-    {0xFF04, {.type=TypeofInstruction::JMP, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::CONTROL_FLOW}}
+    {0xFF04, {.type=TypeofInstruction::JMP, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    
+    //Jcc
+    {0x70, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x71, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x72, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x73, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x74, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x75, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x76, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x77, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x78, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x79, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x7A, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x7B, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x7C, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x7D, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x7E, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x7F, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
 
+    {0xE3, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
 
+    {0x0F80, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F81, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F82, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F83, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F84, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F85, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F86, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F87, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F88, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F89, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F8A, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F8B, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F8C, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F8D, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F8E, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0x0F8F, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

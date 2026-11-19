@@ -1,4 +1,10 @@
+refatcory-> sistemare inizializzazione CU, introddure RIPoperand e RSPoperand
+
+
+
 vedere jmp con offset 32 da registro
+
+controlare jmp + rel(signed)
 
 data hazard detection
 

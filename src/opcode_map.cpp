@@ -311,6 +311,42 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
 
     {0xFF04, {2, 1, 1, 1, 0, 64, 64, 0, false, false, false, true, "JMP r/m64"}},
 
+    //JMPcc
+    {0x70, {2, 1, 1, 1, 8, 64, 64, 2, false, false, false, true, "JO rel8"}},
+    {0x71, {2, 1, 1, 1, 8, 64, 64, 2, false, false, false, true, "JNO rel8"}},
+    {0x72, {2, 1, 1, 1, 8, 64, 64, 2, false, false, false, true, "JB/JC/JNAE rel8"}},
+    {0x73,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2 ,false ,false ,false ,true ,"JNB/JNC/JAE rel8"}},
+    {0x74,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2 ,false ,false ,false ,true ,"JE/JZ rel8"}},
+    {0x75,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2 ,false ,false ,false ,true ,"JNE/JNZ rel8"}},
+    {0x76,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2 ,false ,false ,false ,true ,"JBE/JNA rel8"}},
+    {0x77,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2,false,false,false,true,"JA/JNBE rel8"}},
+    {0x78,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2,false,false,false,true,"JS rel8"}},
+    {0x79,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2,false,false,false,true,"JNS rel8"}},
+    {0x7A,{2 ,1 ,1 ,1 ,8, 64 ,64 ,2,false,false,false,true,"JP/JPE rel8"}},
+    {0x7B,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2,false,false,false,true,"JNP/JPO rel8"}},
+    {0x7C,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2,false,false,false,true,"JL/JNGE rel8"}},
+    {0x7D,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2,false,false,false,true,"JNL/JGE rel8"}},
+    {0x7E,{2 ,1 ,1 ,1 ,8 ,64 ,64 ,2,false,false,false,true,"JLE/JNG rel8"}},
+    {0x7F,{2 ,1 ,1 ,1 ,8, 64, 64, 2, false, false, false, true, "JNLE/JG rel8"}},
+
+    {0xE3, {2, 1, 1, 1, 8, 64, 64, 2, false, false, false, true, "JCXZ/JECXZ/JRCXZ rel8"}}, //solo 64bit e 32bit 
+
+    {0x0F80,{6 ,2 ,5 ,1 ,32 ,64 ,64 ,2 ,false ,false ,false ,true ,"JO rel32"}},
+    {0x0F81,{6 ,2 ,5 ,1 ,32 ,64 ,64 ,2 ,false ,false ,false ,true ,"JNO rel32"}},
+    {0x0F82,{6 ,2 ,5 ,1 ,32 ,64 ,64 ,2,false,false,false,true,"JB/JC/JNAE rel32"}},
+    {0x0F83,{6,2,5,1,32,64,64,2,false,false,false,true,"JNB/JNC/JAE rel32"}},
+    {0x0F84,{6,2,5,1,32,64,64,2,false,false,false,true,"JE/JZ rel32"}},
+    {0x0F85,{6,2,5,1,32,64,64,2,false,false,false,true,"JNE/JNZ rel32"}},
+    {0x0F86,{6,2,5,1,32,64,64,2,false,false,false,true,"JBE/JNA rel32"}},
+    {0x0F87,{6,2,5,1,32,64,64,2,false,false,false,true,"JA/JNBE rel32"}},
+    {0x0F88,{6,2,5,1,32,64,64,2,false,false,false,true,"JS rel32"}},
+    {0x0F89,{6,2,5,1,32,64,64,2,false,false,false,true,"JNS rel32"}},
+    {0x0F8A,{6 ,2 ,5 ,1 ,32 ,64 ,64 ,2 ,false ,false ,false ,true ,"JP/JPE rel32"}},
+    {0x0F8B,{6 ,2 ,5 ,1 ,32 ,64 ,64 ,2,false,false,false,true,"JNP/JPO rel32"}},
+    {0x0F8C,{6 ,2 ,5 ,1 ,32 ,64 ,64 ,2,false,false,false,true,"JL/JNGE rel32"}},
+    {0x0F8D,{6 ,2 ,5 ,1 ,32 ,64 ,64 ,2,false,false,false,true,"JNL/JGE rel32"}},
+    {0x0F8E,{6 ,2 ,5 ,1 ,32 ,64 ,64 ,2,false,false,false,true,"JLE/JNG rel32"}},
+    {0x0F8F,{6 ,2 ,5 ,1 ,32 ,64 ,64 ,2,false,false,false,true,"JNLE/JG rel32"}},    
 
 
 

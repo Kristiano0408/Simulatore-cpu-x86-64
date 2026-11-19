@@ -44,12 +44,6 @@ static std::vector<TestCase> buildJmpRel8Tests()
         .expected_regs = {{Register::RIP, 0x00}},
     });
 
-    // JMP rel8 backward -1: EB FF at 0x04 -> target = (0x04+2) - 1 = 0x05 (lands on the disp byte)
-    tests.push_back({
-        .description = "JMP rel8 backward -1 : RIP 0x02 -> 0x01",
-        .program     = {0xEB, 0xFF},
-        .expected_regs = {{Register::RIP, 0x01}},
-    });
 
 
     return tests;

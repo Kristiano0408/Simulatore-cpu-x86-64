@@ -27,7 +27,6 @@ void PipelineController::onWaitingMemory(StageType stage)
 void PipelineController::onMemoryDone(StageType stage)
 {
     Stage* currentStage = pipeline.getStage(stage);
-
     currentStage->setStatus(StageStatus::MEMORY_DONE);
 }
 
@@ -113,8 +112,10 @@ void PipelineController::onExecuteComplete()
     executeStage.setStalledGUI(true); // Set the stalled flag
     #else
     ExecuteMemoryBuffer& executeMemoryBuffer = pipeline.getExecuteMemoryBuffer();
+  
     if(executeMemoryBuffer.valid == true)
     {
+    
         //buffer pieno 
         executeStage.setStatus(StageStatus::COMPLETED_BUT_BUFFER_FULL);
         return;

@@ -294,6 +294,7 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         case TypeofInstruction::RCL: return "RCL";
         case TypeofInstruction::RCR: return "RCR";
         case TypeofInstruction::JMP: return "JMP";
+        case TypeofInstruction::Jcc: return "Jcc";
         case TypeofInstruction::COUNT: return "COUNT";
         default: return "UNKNOWN";
         }
@@ -385,6 +386,10 @@ std::string toStringStageStatus(StageStatus status)
         case StageStatus::READY: return "READY";
         case StageStatus::STALLED: return "STALLED";
         case StageStatus::WAITING_MEMORY: return "WAITING_MEMORY";
+        case StageStatus::MEMORY_DONE: return "MEMORY_DONE";
+        case StageStatus::COMPLETED_BUT_BUFFER_FULL: return "COMPLETED_BUT_BUFFER_FULL";
+        case StageStatus::WAITING_GUI_BUFFER1: return "WAITING_GUI_BUFFER1";
+        case StageStatus::WAITING_GUI_EXECUTION: return "WAITING_GUI_EXECUTION";
         default: return "UNKNOWN";
     }
 }

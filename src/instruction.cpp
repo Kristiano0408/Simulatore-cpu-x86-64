@@ -161,6 +161,14 @@ void Instruction::calculatingNumberOfBits()
         core.auxNbit = 64;
     }
 
+    if(core.type == TypeofInstruction::Jcc && core.opcode == 0xE3)
+    {
+        if (RexMask::isREX_W(static_cast<std::byte>(core.rexprefix)))
+            core.auxNbit = 64;
+        else
+            core.auxNbit = 32;
+    }
+
 
     return;
 }

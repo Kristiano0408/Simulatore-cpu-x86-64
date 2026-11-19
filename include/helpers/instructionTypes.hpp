@@ -54,7 +54,8 @@ enum class TypeofInstruction : uint8_t
     ROL = 29, //Rotate left
     ROR = 30, //Rotate right
     JMP = 31,
-    COUNT = 32
+    Jcc = 32, //Jump if condition is met
+    COUNT = 33
 
    
 };
@@ -104,7 +105,8 @@ constexpr std::array<TypeofDataTransferInstruction, static_cast<size_t>(TypeofIn
     /* RCR   */ TypeofDataTransferInstruction::COUNT,
     /* ROL   */ TypeofDataTransferInstruction::COUNT,
     /* ROR   */ TypeofDataTransferInstruction::COUNT,
-    /* JMP   */ TypeofDataTransferInstruction::COUNT
+    /* JMP   */ TypeofDataTransferInstruction::COUNT,
+    /* Jcc   */ TypeofDataTransferInstruction::COUNT
 };
 
 //enum for the addressing mode of the instruction
@@ -172,6 +174,10 @@ struct temporaryValues {
         bool srcImmediateNeedsSignExtensionRex = false; //flag to indicate if the source immediate value needs sign extension
         bool srcNeedSignExtension = false;
         bool carryIn = false; // Carry/Borrow in ingresso per ADC/SBB
+        bool zfIn = false; // Zero Flag in ingresso per jcc
+        bool sfIn = false; // Sign Flag in ingresso per jcc
+        bool ofIn = false; // Overflow Flag in ingresso per jcc
+        bool pfIn = false; // Parity Flag in ingresso per jcc
         bool CF; //Carry Flag
         bool ZF; //Zero Flag
         bool SF; //Sign Flag
@@ -220,6 +226,7 @@ struct InstructionCore
     Register baseReg{Register::DummyRegister}; //register used in the instruction (if any)
     bool needRSPimplicitly = false; //flag to indicate if the instruction needs RSP implicitly (used for push/pop instructions)
     uint8_t scale; //scale factor for the SIB byte (if any)
+    bool notFlushNeeded = false; //flag to indicate if the instruction does not need to flush the pipeline (used for Jcc instructions)
 
 
 };

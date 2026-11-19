@@ -97,6 +97,7 @@ constexpr std::array<bool, static_cast<size_t>(TypeofInstruction::COUNT)> destNe
     /* RCR   */true,
     /* ROL   */true,
     /* ROR   */true,
-    /* JMP   */ false //jmp instruction does not need to read the destination operand
+    /* JMP   */ false, //jmp instruction does not need to read the destination operand
+    /* Jcc   */ false //jcc instruction does not need to read the destination operand
 }};
 #endif // DECODER_HPP

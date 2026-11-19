@@ -498,6 +498,11 @@ void fetchD(Instruction* i, RegisterFile& registers)
     auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
     auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RIP).raw(), Register::RIP);
 
+    if(core.type == TypeofInstruction::Jcc && core.opcode == 0xE3)
+    {
+        auto auxOperand = std::make_unique<RegOperand>(registers.getReg(Register::RCX).raw(), Register::RCX);
+        i->setAuxOperand(std::move(auxOperand));
+    }
 
     i->setSourceOperand(std::move(sourceOperand));
     i->setDestinationOperand(std::move(destinationOperand));

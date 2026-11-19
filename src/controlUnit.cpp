@@ -244,7 +244,7 @@ void CU::fetchOpcode(const MaxCPUInstructionLength& buffer, uint32_t& opcode, ui
     // checking if the opcode has two or three bytes
     if (byte == 0x0F)
     {
-        // the opcode has two bytes
+        // the opcode has at least two bytes
         opcode = static_cast<uint32_t>(byte);             // set the opcode
         byte = static_cast<uint8_t>(buffer[byteCounter]); // fetch the next byte
         byteCounter++;                                    // increment the byte counter
