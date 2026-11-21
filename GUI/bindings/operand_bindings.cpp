@@ -23,7 +23,7 @@ void bind_operands(py::module &m) {
         .def(py::init<>());
 
     py::class_<RegOperand, Operand>(m, "RegOperand")
-        .def(py::init<uint64_t&>());
+        .def(py::init<uint64_t&, Register>());
 
     py::class_<MemOperand, Operand>(m, "MemOperand")
         .def(py::init< int64_t>());

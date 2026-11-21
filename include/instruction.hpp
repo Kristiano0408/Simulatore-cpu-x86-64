@@ -29,6 +29,10 @@ class Instruction
         Operand* getDestinationOperand();
         void setAuxOperand(std::unique_ptr<Operand> aOperand);
         Operand* getAuxOperand();
+        void setRIPOperand(std::unique_ptr<Operand> rOperand);
+        Operand* getRIPOperand();
+        void setRSPOperand(std::unique_ptr<Operand> rOperand);
+        Operand* getRSPOperand();
 
         InstructionCore& getCore() { return core; }
         InstructionFlags& getFlags() { return flags; } 
@@ -44,6 +48,8 @@ class Instruction
         std::unique_ptr<Operand> sourceOperand; //source operand
         std::unique_ptr<Operand> destinationOperand; //destination operand
         std::unique_ptr<Operand> auxOperand; //auxiliary operand (used for IMUL/MUL with 1 operand and write to RDX/RAX)
+        std::unique_ptr<Operand> RIPOperand; //RIP operand (used for all the instructions except for the ones who use rip as destination operand, like jcc, call, etc.)
+        std::unique_ptr<Operand> RSPOperand;
     private:
     //parts of the instruction
         

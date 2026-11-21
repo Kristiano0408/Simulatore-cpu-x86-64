@@ -14,7 +14,9 @@ enum class WhichOperand : uint8_t
 {
     SOURCE,
     DESTINATION,
-    AUXILIARY
+    AUXILIARY,
+    RIP,
+    RSP
 };
 
 struct OperandContextWrite
@@ -22,8 +24,12 @@ struct OperandContextWrite
     Instruction* instruction;
     Operand* operand;
     Operand* auxOperand;
+    Operand* ripOperand;
+    Operand* rspOperand;
     uint64_t value;
     uint64_t auxValue;
+    uint64_t ripValue;
+    uint64_t rspValue;
     void* callbackContext;
     void (*callback)(void* context);
 };
@@ -34,7 +40,9 @@ struct OperandContextRead
     Operand* srcOperand;
     Operand* destOperand;
     Operand* auxOperand;
+    Operand* rspOperand;
     bool requiresAuxRead; // Flag to indicate if an auxiliary read is required
+    bool requiresRSPRead; // Flag to indicate if an RSP read is required
     void* callbackContext;
     void (*callback)(void* context);
 };
@@ -47,11 +55,11 @@ class OperandEngine : public TickedDevice, public FaultDevice
     public:
         OperandEngine(CacheManager& cm, CPU& c, ExecuteEngineEventHandler& eeh) : cacheManager(cm), cpu(c), executeEngineEventHandler(eeh) {};
 
-        void sendReadRequest(Instruction* instruction, Operand* srcOperand, Operand* destOperand, Operand* auxOperand, void* callbackContext, void (*callback)(void* context), bool requiresAuxRead = false);
-        void sendWriteRequest(Instruction* instruction, Operand* operand, Operand* auxOperand, uint64_t value, uint64_t auxValue, void* callbackContext, void (*callback)(void* context));
+        void sendReadRequest(Instruction* instruction, Operand* srcOperand, Operand* destOperand, Operand* auxOperand, Operand* rspOperand, void* callbackContext, void (*callback)(void* context), bool requiresAuxRead = false, bool requiresRSPRead = false);
+        void sendWriteRequest(Instruction* instruction, Operand* operand, Operand* auxOperand,  Operand* ripOperand, Operand* rspOperand, uint64_t value, uint64_t auxValue, uint64_t ripValue, uint64_t rspValue, void* callbackContext, void (*callback)(void* context));
 
         void readOperand(Instruction* instruction, Operand* operand, WhichOperand whichoperand, void* callbackContext, void (*callback)(void* context));
-        void writeOperand(Instruction* instruction, Operand* operand, Operand* auxOperand, uint64_t value, uint64_t auxValue, void* callbackContext, void (*callback)(void* context));
+        void writeOperand(Instruction* instruction, Operand* operand, Operand* auxOperand, Operand* ripOperand, Operand* rspOperand, uint64_t value, uint64_t auxValue, uint64_t ripValue, uint64_t rspValue, void* callbackContext, void (*callback)(void* context));
 
         void eraseQueues(uint64_t instructionID);
 

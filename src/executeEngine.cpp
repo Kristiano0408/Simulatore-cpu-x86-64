@@ -504,11 +504,14 @@ void ExecuteEngine::startExecution(Instruction* instruction)
      // of the product's source pair, for DIV/IDIV it is the high half of the
      // double-width dividend (stored in destHighValue by the AUXILIARY read).
      // If the instruction uses the auxiliary operand, we need to read it.
-     bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || (core.addressingMode == AddressingMode::RMI && core.type == TypeofInstruction::IMUL)) ||instruction->getCore().type == TypeofInstruction::PUSH || instruction->getCore().type == TypeofInstruction::POP || instruction->getCore().type == TypeofInstruction::Jcc;
+     bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || (core.addressingMode == AddressingMode::RMI && core.type == TypeofInstruction::IMUL)) || (instruction->getCore().type == TypeofInstruction::Jcc && instruction->getCore().opcode == 0xE3);
      bool requiresAuxRead = (uses_aux && instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() != OperandType::NONE);
 
+     bool requiresRSPRead = (instruction->getRSPOperand() != nullptr && instruction->getRSPOperand()->getType() != OperandType::NONE);
 
-    operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), uses_aux ? instruction->getAuxOperand() : nullptr, this, &triggerPipelineMemoryWaitingExecuteCallback, requiresAuxRead );
+
+
+    operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), uses_aux ? instruction->getAuxOperand() : nullptr, requiresRSPRead ? instruction->getRSPOperand() : nullptr, this, &triggerPipelineMemoryWaitingExecuteCallback, requiresAuxRead, requiresRSPRead);
 
 }
 
@@ -622,8 +625,7 @@ void ExecuteEngine::requestMemoryAccess(Instruction* instruction)
     }
 
     // writing result back to memory
-
-    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().auxValue, this, &triggerPipelineMemoryWaitingCallback);
+    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), nullptr, nullptr, instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().auxValue,0, 0, this, &triggerPipelineMemoryWaitingCallback);
 }
 
 void ExecuteEngine::accessMemory(Instruction* instruction)
@@ -638,7 +640,6 @@ void ExecuteEngine::accessMemory(Instruction* instruction)
     // serching in cache response queue for the result
 
     cpu.eraseCacheResponseIfFound(core.InstructionId);
-
     //pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::MEMORY_COMPLETE);
 }
 
@@ -688,18 +689,14 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         
     }
 
-     if (instruction->getCore().executionMode != InstructionExecutionMode::CONTROL_FLOW || (instruction->getCore().type == TypeofInstruction::Jcc && instruction->getCore().notFlushNeeded == true))
+    bool needRipWrite = false;
+    if (instruction->getCore().executionMode == InstructionExecutionMode::CONTROL_FLOW) 
     {
-        cpu.getRegisters().getReg(Register::RIP).raw() = instruction->getCore().nextRip;
-
+        cpu.getControlUnit().setNextRip(instruction->getTemporaryValues().resultValue);
     }
-    else if (instruction->getCore().executionMode == InstructionExecutionMode::CONTROL_FLOW) 
+    else
     {
-        if (!(instruction->getCore().type == TypeofInstruction::Jcc && instruction->getCore().notFlushNeeded == true))
-        {
-            cpu.getControlUnit().setNextRip(instruction->getTemporaryValues().resultValue);
-        }
-            
+        needRipWrite = true;
     }
 
     // CMP aggiorna esclusivamente i flag di stato: la scrittura della differenza
@@ -707,7 +704,8 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
     if (instruction->getCore().type == TypeofInstruction::CMP || instruction->getCore().type == TypeofInstruction::TEST)
     {
         DEBUG_LOG(debugLog("CMP,TEST instruction: flags updated, destination write suppressed."));
-        pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
+        //pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
+        operandEngine.sendWriteRequest(instruction, instruction->getRIPOperand(), nullptr, nullptr, nullptr, instruction->getCore().nextRip, 0, 0, 0, nullptr, nullptr);
         return;
     }
 
@@ -717,20 +715,21 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         DEBUG_LOG(debugLog("getRegToReg(): " + std::to_string(instructionFlags.regToReg)));
         DEBUG_LOG(debugLog("getMemToReg(): " + std::to_string(instructionFlags.memToReg)));
         DEBUG_LOG(debugLog("getRegToMem(): " + std::to_string(instructionFlags.regToMem)));
-        DEBUG_LOG(debugLog("No write-back needed for SubInstruction (not register to register or memory to register)."));
+        DEBUG_LOG(debugLog("No write-back needed(not register to register or memory to register)."));
         
 
         if(instruction->getCore().type == TypeofInstruction::PUSH || instruction->getCore().type == TypeofInstruction::POP)
         {
-            operandEngine.sendWriteRequest(instruction, instruction->getAuxOperand(), nullptr, instruction->getTemporaryValues().resultHighValue, 0, nullptr, nullptr);
+            operandEngine.sendWriteRequest(instruction, needRipWrite ? instruction->getRIPOperand() : nullptr, nullptr, nullptr, instruction->getRSPOperand(), instruction->getCore().nextRip, 0, 0, instruction->getTemporaryValues().rspValue, nullptr, nullptr);
         }
         else
         {
-            pipelineEventHandler->triggerPipelineEvent(EventHandlerPipelineEventType::WRITE_BACK_COMPLETE);
+            operandEngine.sendWriteRequest(instruction, needRipWrite ? instruction->getRIPOperand() : nullptr, nullptr, nullptr, nullptr, instruction->getCore().nextRip, 0, 0, 0, nullptr, nullptr);
         }
         return;
     }
-    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, nullptr, nullptr);
+
+    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(),needRipWrite ? instruction->getRIPOperand() : nullptr, instruction->getRSPOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, instruction->getCore().nextRip, instruction->getTemporaryValues().rspValue, nullptr, nullptr);
     
    
     
@@ -820,13 +819,13 @@ namespace dataTransferexecution {
                 static_cast<uint16_t>(static_cast<int16_t>(core.value));
             }
         }
-        tempValues.resultHighValue = tempValues.auxValue - 8;
+        tempValues.rspValue = tempValues.rspValue - 8; // For PUSH, the high value is the destination value (stack pointer)
     }
 
     void executePOP(Instruction* instruction) {
         temporaryValues& tempValues = instruction->getTemporaryValuesRef();
         tempValues.resultValue = tempValues.srcValue;
-        tempValues.resultHighValue = tempValues.auxValue + 8;
+        tempValues.rspValue = tempValues.rspValue + 8;
     }
 
 }

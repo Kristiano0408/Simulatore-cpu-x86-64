@@ -33,6 +33,20 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 
+#============================================================================= #
+# PYBIND11
+#============================================================================= #
+
+FetchContent_Declare(
+        pybind11
+        GIT_REPOSITORY https://github.com/pybind/pybind11.git
+        GIT_TAG        v3.1
+        FIND_PACKAGE_ARGS CONFIG NAMES pybind11
+    )
+
+ FetchContent_MakeAvailable(pybind11)
+
+
 # ============================================================================ #
 # COMPILER OPTIONS
 # ============================================================================ #
@@ -144,12 +158,13 @@ if(GUI_ENABLED)
     target_compile_definitions(cpu_core PUBLIC GUI_ENABLED)
     
     find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+    
     # Use bundled pybind11 if available, otherwise search the system.
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/pybind11/CMakeLists.txt")
-        add_subdirectory(pybind11)
-    else()
-        find_package(pybind11 CONFIG REQUIRED)
-    endif()
+    #if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/pybind11/CMakeLists.txt")
+    #    add_subdirectory(pybind11)
+    #else()
+    #    find_package(pybind11 CONFIG REQUIRED)
+    #endif()
 
     file(GLOB_RECURSE BINDINGS_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/GUI/bindings/*.cpp"

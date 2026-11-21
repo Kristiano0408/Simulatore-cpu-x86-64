@@ -72,12 +72,6 @@ PYBIND11_MODULE(simulator, m) {
         .def("setData", &Memory::setData)
         .def("setDataPartial", &Memory::setDataPartial)
         .def("clear", &Memory::clear)
-        .def("getStackPointer", &Memory::getStackPointer)
-        .def("setStackPointer", &Memory::setStackPointer)
-        .def("getBasePointer", &Memory::getBasePointer)
-        .def("setBasePointer", &Memory::setBasePointer)
-        .def("push", &Memory::push)
-        .def("pop", &Memory::pop)
         .def("readByte", &Memory::readTest);
        
     

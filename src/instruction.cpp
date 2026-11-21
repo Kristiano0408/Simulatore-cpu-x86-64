@@ -11,6 +11,8 @@ Instruction::Instruction()
     sourceOperand = std::make_unique<EmptyOperand>();
     destinationOperand = std::make_unique<EmptyOperand>();
     auxOperand = std::make_unique<EmptyOperand>();
+    RIPOperand = std::make_unique<EmptyOperand>();
+    RSPOperand = std::make_unique<EmptyOperand>();
 }
 bool Instruction::isEmpty() const 
 {
@@ -44,12 +46,30 @@ Operand* Instruction::getAuxOperand() {
     return auxOperand.get(); // return the raw pointer of the unique_ptr
 }
 
+void Instruction::setRIPOperand(std::unique_ptr<Operand> rOperand) {
+    this->RIPOperand = std::move(rOperand); // move the unique_ptr to the member variable
+}
+
+Operand* Instruction::getRIPOperand() {
+    return RIPOperand.get(); // return the raw pointer of the unique_ptr
+}
+
+void Instruction::setRSPOperand(std::unique_ptr<Operand> rOperand) {
+    this->RSPOperand = std::move(rOperand); // move the unique_ptr to the member variable
+}
+
+Operand* Instruction::getRSPOperand() {
+    return RSPOperand.get(); // return the raw pointer of the unique_ptr
+}
 
 //calculate the number of bits of the value/operand
 void Instruction::calculatingNumberOfBits() 
 {   
     InstructionCore& core = this->getCore();
     uint32_t opcode = core.opcode;
+
+    RIPOperand->setSize(64);
+    RSPOperand->setSize(64);
 
     // NOTE: operand widths are resolved here, NOT from the opcode map: the map entries are
     // defined for the 32-bit form, so REX.W / 0x66 must override the copied values.
@@ -150,7 +170,7 @@ void Instruction::calculatingNumberOfBits()
         bool operandSize16 = false;
         for (size_t i = 0; i < core.numPrefixes; ++i)
         {
-            if (core.prefix[i] == 0x66)
+            if (LegacyPrefixMask::isOperandSizeOverride(static_cast<std::byte>(core.prefix[i])))
             {
                 operandSize16 = true;
                 break;

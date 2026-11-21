@@ -1,4 +1,4 @@
-refatcory-> sistemare inizializzazione CU, introddure RIPoperand e RSPoperand
+refatcory->  whichoperadn anche con write 
 
 
 
@@ -8,8 +8,6 @@ controlare jmp + rel(signed)
 
 data hazard detection
 
-
-capire coem getsire imm32extende (I con signe xtended)-> vagetsitameglio sempre propagatadall opcode map 
 
 
 capire come gestire meglio dimensione operandi(forse)

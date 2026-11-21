@@ -98,6 +98,31 @@ namespace LegacyPrefixMask
     inline constexpr uint8_t REP_PREFIX            = 0xF3; // REP/REPE/REPZ prefix
     inline constexpr uint8_t LOCK_PREFIX           = 0xF0; // LOCK prefix
 
+    [[nodiscard]]  constexpr bool isOperandSizeOverride(std::byte byte) 
+    {
+        return static_cast<uint8_t>(byte) == OPERAND_SIZE_OVERRIDE;
+    }
+
+    [[nodiscard]]  constexpr bool isAddressSizeOverride(std::byte byte) 
+    {
+        return static_cast<uint8_t>(byte) == ADDRESS_SIZE_OVERRIDE;
+    }
+
+    [[nodiscard]]  constexpr bool isRepnePrefix(std::byte byte) 
+    {
+        return static_cast<uint8_t>(byte) == REPNE_PREFIX;
+    }
+
+    [[nodiscard]]  constexpr bool isRepPrefix(std::byte byte) 
+    {
+        return static_cast<uint8_t>(byte) == REP_PREFIX;
+    }
+
+    [[nodiscard]]  constexpr bool isLockPrefix(std::byte byte) 
+    {
+        return static_cast<uint8_t>(byte) == LOCK_PREFIX;
+    }
+
 } // namespace LegacyPrefixMask
 
 

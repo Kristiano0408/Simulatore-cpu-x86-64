@@ -165,12 +165,14 @@ struct temporaryValues {
         uint64_t destValue{}; //value of the destination operand
         uint64_t destHighValue{}; //value of the destination operand for high part (used for MUL/IMUL)(RDX/EDX/DX)
         uint64_t auxValue{}; //auxiliary value for the operation (used for IMUL 3 operands)
+        uint64_t rspValue{}; //value of the RSP register (used for push/pop instructions)
         uint64_t resultValue{}; //result of the operation
         uint64_t resultHighValue{}; //result of the operation for high part (used for MUL/IMUL)(RDX/EDX/DX)
         uint8_t nOperands{}; //number of bits of the value/operand
         bool isSrcValueReady = false; //flag to indicate if the source value is ready
         bool isDestValueReady = false; //flag to indicate if the destination value is ready
         bool isAuxValueReady = false; //flag to indicate if the auxiliary value is ready
+        bool isRSPValueReady = false; //flag to indicate if the RSP value is ready
         bool srcImmediateNeedsSignExtensionRex = false; //flag to indicate if the source immediate value needs sign extension
         bool srcNeedSignExtension = false;
         bool carryIn = false; // Carry/Borrow in ingresso per ADC/SBB

@@ -36,6 +36,7 @@ class CU : public FaultDevice
         Bus& bus; //reference to the bus
         //uint64_t currentInstructionId;
         uint64_t PC{}; //program counter
+        bool isPCinitialized = false; // Flag to indicate if the program counter (PC) has been initialized
         InstructionMemoryInterface instructionMemoryInterface; // Interface for instruction memory access
         InstructionInFlightInfo inflightInstructionInfo; // Information about the instruction currently in flight
 
