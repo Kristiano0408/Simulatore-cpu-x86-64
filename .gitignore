@@ -11,6 +11,7 @@ perf.data
 flame.svg
 debug.log
 cose_da_fare.txt
+/SUBSET ISA x86-64
 comandi.txt
 nozioni.txt
 /GUI/__pycache__

@@ -3,7 +3,66 @@
 // -----------------------------------------------------------------------------
 
 #include "../instructionTest.hpp"
+#include "gtest/gtest.h"
 
+using std::hex;
+
+
+
+TEST_P(InstructionTest, Instruction_Add_Sub_CorrectExecution)
+{
+    const auto& test = GetParam();
+    // -------------------------------------------------------------------------
+    // Registers
+    // -------------------------------------------------------------------------
+
+    for (const auto& [reg, expected] : test.expected_regs)
+    {
+        const uint64_t got =
+            bus.getCPU().getRegisters().getReg(reg).raw();
+
+        EXPECT_EQ(got,expected)<< "Register " << toStringRegister(reg) << " expected: " << hex << expected << ", got: " << hex << got;
+    }
+
+    // -------------------------------------------------------------------------
+    // Memory
+    // -------------------------------------------------------------------------
+
+    for (const auto& [addr, expected] : test.expected_mem)
+    {
+        const uint8_t got =
+            bus.getMemory().readTest(addr);
+
+        EXPECT_EQ(got, expected) << "Memory at address " << hex << addr << " expected: " << hex << expected << ", got: " << hex << got;
+    }
+
+    // -------------------------------------------------------------------------
+    // Flags
+    // -------------------------------------------------------------------------
+
+    for (const auto& [flag, expected] : test.expected_flags)
+    {
+        const bool got =
+            bus.getCPU().getRegisters().getFlags().getFlag(flag);
+
+        EXPECT_EQ(got, expected) << "Flag " << toStringFlag(flag) << " expected: " << expected << ", got: " << got;
+    }
+
+}
+
+
+
+INSTANTIATE_TEST_SUITE_P(Instruction_Add_Sub_CorrectExecution, InstructionTest, ::testing::ValuesIn(buildAddSubTests()),
+                         [](const ::testing::TestParamInfo<TestCase>& paramInfo)
+                         {
+                             // The TestCase_<index> prefix guarantees uniqueness even
+                             // when two descriptions collapse to the same sanitized name.
+                             return "TestCase_" + std::to_string(paramInfo.index) + "_" +
+                                    sanitizeTestName(paramInfo.param.description);
+                         });
+    
+
+                         
 std::vector<TestCase> buildAddSubTests()
 {
     std::vector<TestCase> tests{};
@@ -317,3 +376,4 @@ std::vector<TestCase> buildAddSubTests()
 
     return tests;
 }
+

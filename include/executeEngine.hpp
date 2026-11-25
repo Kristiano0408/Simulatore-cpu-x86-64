@@ -120,7 +120,9 @@ namespace tempValuesInit {
         /*ROL*/    initNone,
         /*ROR*/    initNone,
         /*JMP*/    initDestReady,
-        /*Jcc*/    initJcc
+        /*Jcc*/    initJcc,
+        /*CALL*/   initDestReady,
+        /*RET*/    initDestReady
 
     };
     

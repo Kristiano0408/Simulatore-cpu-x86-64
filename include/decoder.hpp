@@ -43,6 +43,7 @@ class Decoder : public FaultDevice
         static void decodeInstructionRMI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
         static void decodeInstructionO(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
         static void decodeInstructionD(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
+        static void decodeInstructionZO(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position);
 
         
     private:
@@ -98,6 +99,8 @@ constexpr std::array<bool, static_cast<size_t>(TypeofInstruction::COUNT)> destNe
     /* ROL   */true,
     /* ROR   */true,
     /* JMP   */ false, //jmp instruction does not need to read the destination operand
-    /* Jcc   */ false //jcc instruction does not need to read the destination operand
+    /* Jcc   */ false, //jcc instruction does not need to read the destination operand
+    /* CALL  */ false, //call instruction does not need to read the destination operand
+    /* RET   */ false  //ret instruction does not need to read the destination operand
 }};
 #endif // DECODER_HPP

@@ -349,6 +349,15 @@ ankerl::unordered_dense::map<uint32_t, InstructionDetails> opcodeMap =
     {0x0F8F,{6 ,2 ,5 ,1 ,32 ,64 ,64 ,2,false,false,false,true,"JNLE/JG rel32"}},    
 
 
+    //CALL
+    {0xE8, {5, 1, 4, 1, 32, 64, 64, 2, false, false, false, true, "CALL rel32"}}, //solo 32bit 
+    {0xFF02,{2 ,1 ,1 ,1 ,0 ,64 ,64 ,0 ,false ,false ,false ,true ,"CALL r/m64"}}, //solo 64bit
+
+    //RET
+    {0xC3, {1, 1, 0, 1, 0, 64, 64, 0, false, false, false, false, "RET"}},
+    {0xC2,{3 ,1 ,2 ,1 ,16 ,64 ,64 ,0 ,false ,false ,false ,true ,"RET imm16"}},
+
+
 
     
 

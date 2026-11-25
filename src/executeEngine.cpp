@@ -160,7 +160,6 @@ void ExecuteEngine::eraseQueues(uint64_t instructionID)
         uint64_t ID= *(static_cast<uint64_t*>(ctx));
         return instr->getCore().InstructionId > ID;};
     
-
     if(isExecuting && !executionQueue.empty() && executionQueue.front()->getCore().InstructionId > instructionID)
     {
         isExecuting = false;
@@ -371,6 +370,39 @@ void executeControlFlowOperation(Instruction* instruction)
         }
     }
 
+    if(core.type == TypeofInstruction::CALL)
+    {
+        DEBUG_LOG(debugLog("ExecuteEngine: Executing CALL instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+        uint64_t displacement{};
+        if(core.opcode == 0xE8 )
+        {
+            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
+            tempValues.resultValue = core.nextRip + displacement;
+            tempValues.rspValue = tempValues.rspValue - 8; // Decrement RSP by 8 bytes (64 bits) to push the return address onto the stack
+        }
+        else if(core.opcode == 0xFF02 || core.opcode == 0xFF03)
+        {
+            tempValues.resultValue = tempValues.srcValue;
+            tempValues.rspValue = tempValues.rspValue - 8; // Decrement RSP by 8 bytes (64 bits) to push the return address onto the stack
+        }
+    }
+
+    if(core.type == TypeofInstruction::RET)
+    {
+        DEBUG_LOG(debugLog("ExecuteEngine: Executing RET instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+        if(core.opcode == 0xC3)
+        {
+            tempValues.resultValue = tempValues.srcValue;
+            tempValues.rspValue = tempValues.rspValue + 8; // Increment RSP by 8 bytes (64 bits) to pop the return address from the stack
+
+        }
+        else if(core.opcode == 0xC2)
+        {
+            tempValues.resultValue = tempValues.srcValue;
+            tempValues.rspValue = tempValues.rspValue + 8 + static_cast<uint64_t>(tempValues.auxValue); // Increment RSP by 8 bytes (64 bits) to pop the return address from the stack and add the immediate value to RSP
+        }
+            
+    }
 }
 
 
@@ -384,28 +416,28 @@ void ExecuteEngine::fetchOperands(Instruction* instruction)
     InstructionCore& core = instruction->getCore();
     switch (core.addressingMode)
     {
-        case AddressingMode::MR: // sub register to R/M
-            DEBUG_LOG(debugLog("SUB_MR"));
+        case AddressingMode::MR: //  register to R/M
+            DEBUG_LOG(debugLog("FETCH_MR"));
             operandFetch::fetchMR(instruction, registerFile);
             break;
-        case AddressingMode::MI: // sub immediate to memory/register
-            DEBUG_LOG(debugLog("SUB_MI"));
+        case AddressingMode::MI: //  immediate to memory/register
+            DEBUG_LOG(debugLog("FETCH_MI"));
             operandFetch::fetchMI(instruction, registerFile);
             break;
-        case AddressingMode::I: // sub immediate to accumulator
-            DEBUG_LOG(debugLog("SUB_I"));
+        case AddressingMode::I: //  immediate to accumulator
+            DEBUG_LOG(debugLog("FETCH_I"));
             operandFetch::fetchI(instruction, registerFile);
             break;
         case AddressingMode::OI:
-            DEBUG_LOG(debugLog("SUB_OI"));
+            DEBUG_LOG(debugLog("FETCH_OI"));
             operandFetch::fetchOI(instruction, registerFile, core.opcode);
             break;
         case AddressingMode::FD:
-            DEBUG_LOG(debugLog("SUB_FD"));
+            DEBUG_LOG(debugLog("FETCH_FD"));
             operandFetch::fetchFD(instruction, registerFile);
             break;
         case AddressingMode::TD:
-            DEBUG_LOG(debugLog("SUB_TD"));
+            DEBUG_LOG(debugLog("FETCH_TD"));
             operandFetch::fetchTD(instruction, registerFile);
             break;
         case AddressingMode::M: // single operand r/m (INC/DEC)
@@ -447,6 +479,10 @@ void ExecuteEngine::fetchOperands(Instruction* instruction)
         case AddressingMode::D:
             DEBUG_LOG(debugLog("FETCH_D"));
             operandFetch::fetchD(instruction, registerFile);
+            break;
+        case AddressingMode::ZO:
+            DEBUG_LOG(debugLog("FETCH_Z0"));
+            operandFetch::fetchZ0(instruction, registerFile);
             break;
         default:
             break;
@@ -504,11 +540,12 @@ void ExecuteEngine::startExecution(Instruction* instruction)
      // of the product's source pair, for DIV/IDIV it is the high half of the
      // double-width dividend (stored in destHighValue by the AUXILIARY read).
      // If the instruction uses the auxiliary operand, we need to read it.
-     bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || (core.addressingMode == AddressingMode::RMI && core.type == TypeofInstruction::IMUL)) || (instruction->getCore().type == TypeofInstruction::Jcc && instruction->getCore().opcode == 0xE3);
+     bool uses_aux= (core.addressingMode == AddressingMode::M_ACC || (core.addressingMode == AddressingMode::RMI && core.type == TypeofInstruction::IMUL)) || (core.type == TypeofInstruction::Jcc && core.opcode == 0xE3)
+                    || (core.type == TypeofInstruction::RET && core.addressingMode == AddressingMode::I);
      bool requiresAuxRead = (uses_aux && instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() != OperandType::NONE);
 
-     bool requiresRSPRead = (instruction->getRSPOperand() != nullptr && instruction->getRSPOperand()->getType() != OperandType::NONE);
 
+     bool requiresRSPRead = (instruction->getRSPOperand() != nullptr && instruction->getRSPOperand()->getType() != OperandType::NONE);
 
 
     operandEngine.sendReadRequest(instruction, instruction->getSourceOperand(), instruction->getDestinationOperand(), uses_aux ? instruction->getAuxOperand() : nullptr, requiresRSPRead ? instruction->getRSPOperand() : nullptr, this, &triggerPipelineMemoryWaitingExecuteCallback, requiresAuxRead, requiresRSPRead);
@@ -586,7 +623,6 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
             break;
         case InstructionExecutionMode::CONTROL_FLOW: 
         {
-            
             executeControlFlowOperation(instruction);
             break;
         }
@@ -614,7 +650,14 @@ void ExecuteEngine::requestMemoryAccess(Instruction* instruction)
 
     InstructionFlags& iFlags = instruction->getFlags();
 
-    // CMP confronta gli operandi tramite una sottrazione logica: il risultato non viene
+   
+    if(instruction->getCore().type == TypeofInstruction::CALL)
+    {
+        operandEngine.sendWriteRequest(instruction,instruction->getAuxOperand(), nullptr, nullptr, nullptr, instruction->getCore().nextRip, 0 ,0, 0, this, &triggerPipelineMemoryWaitingCallback);
+        return;
+    }
+
+     // CMP confronta gli operandi tramite una sottrazione logica: il risultato non viene
     // mai scritto ne' in memoria ne' nei registri, vanno aggiornati solo i flag.
     if (!iFlags.regToMem || instruction->getCore().type == TypeofInstruction::CMP || instruction->getCore().type == TypeofInstruction::TEST)
     {
@@ -634,7 +677,7 @@ void ExecuteEngine::accessMemory(Instruction* instruction)
     InstructionFlags& flags = instruction->getFlags();
     InstructionCore& core = instruction->getCore();
 
-    if (!flags.regToMem)
+    if (!flags.regToMem || (instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() != OperandType::MEMORY))
         return;
 
     // serching in cache response queue for the result
@@ -692,6 +735,7 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
     bool needRipWrite = false;
     if (instruction->getCore().executionMode == InstructionExecutionMode::CONTROL_FLOW) 
     {
+        
         cpu.getControlUnit().setNextRip(instruction->getTemporaryValues().resultValue);
     }
     else
@@ -728,8 +772,8 @@ void ExecuteEngine::writeBackInstruction(Instruction* instruction)
         }
         return;
     }
-
-    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), instruction->getAuxOperand(),needRipWrite ? instruction->getRIPOperand() : nullptr, instruction->getRSPOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, instruction->getCore().nextRip, instruction->getTemporaryValues().rspValue, nullptr, nullptr);
+    bool auxNeedsWrite = (instruction->getAuxOperand() != nullptr && instruction->getAuxOperand()->getType() == OperandType::REGISTER && instruction->getFlags().auxNeedWrite);
+    operandEngine.sendWriteRequest(instruction, instruction->getDestinationOperand(), auxNeedsWrite ? instruction->getAuxOperand() : nullptr,needRipWrite ? instruction->getRIPOperand() : nullptr, instruction->getRSPOperand(), instruction->getTemporaryValues().resultValue, instruction->getTemporaryValues().resultHighValue, instruction->getCore().nextRip, instruction->getTemporaryValues().rspValue, nullptr, nullptr);
     
    
     

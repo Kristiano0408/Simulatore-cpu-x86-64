@@ -257,6 +257,6 @@ TEST_P(HazardUnitTest, HazardUnitBufferTest)
 INSTANTIATE_TEST_SUITE_P(HazardUnitBufferTests, HazardUnitTest, ::testing::ValuesIn(buildHazardUnitBufferTests()),
     [](const ::testing::TestParamInfo<HazardUnitBufferTestCase>& paramInfo) {
         std::string name = "TestCase_" + std::to_string(paramInfo.index) + "_" + toStringStageType(static_cast<StageType>(static_cast<uint8_t>(paramInfo.param.stalledStage)- 1));
-        return name;
+        return sanitizeTestName(name);
     }
 );

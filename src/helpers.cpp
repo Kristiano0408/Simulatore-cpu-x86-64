@@ -5,6 +5,7 @@
 #include <iostream>
 #include "registerFile.hpp"
 #include "helpers/pipelineTypes.hpp"
+#include "helpers/operandTypes.hpp"
 
 bool isPrefix(uint8_t byte)
 {
@@ -295,6 +296,8 @@ std::string toStringTypeofInstruction(TypeofInstruction type)
         case TypeofInstruction::RCR: return "RCR";
         case TypeofInstruction::JMP: return "JMP";
         case TypeofInstruction::Jcc: return "Jcc";
+        case TypeofInstruction::CALL: return "CALL";
+        case TypeofInstruction::RET: return "RET";
         case TypeofInstruction::COUNT: return "COUNT";
         default: return "UNKNOWN";
         }
@@ -317,6 +320,7 @@ std::string toStringAddressingMode(AddressingMode mode)
         case AddressingMode::D: return "D";
         case AddressingMode::M1: return "M1";
         case AddressingMode::O: return "O";
+        case AddressingMode::ZO: return "ZO";
         default: return "UNKNOWN";
     }
 }
@@ -404,6 +408,18 @@ std::string toStringStageType(StageType stage)
         case StageType::EXECUTE: return "EXECUTE";
         case StageType::MEMORY: return "MEMORY";
         case StageType::WRITE_BACK: return "WRITE_BACK";
+        default: return "UNKNOWN";
+    }
+}
+
+std::string toStringOperandType(OperandType type)
+{
+    switch (type)
+    {
+        case OperandType::REGISTER: return "REGISTER";
+        case OperandType::MEMORY: return "MEMORY";
+        case OperandType::IMMEDIATE: return "IMMEDIATE";
+        case OperandType::NONE: return "NONE";
         default: return "UNKNOWN";
     }
 }

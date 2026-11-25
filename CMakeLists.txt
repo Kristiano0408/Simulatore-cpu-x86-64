@@ -106,49 +106,25 @@ file(GLOB TEST_SOURCES CONFIGURE_DEPENDS
 
 include(GoogleTest)
 
+file(GLOB TEST_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp")
+
 foreach(test_src ${TEST_SOURCES})
-
-    get_filename_component(test_name
-        "${test_src}"
-        NAME_WE
-    )
-
-    add_executable(${test_name}
-        "${test_src}"
-    )
-
-    # Optional helper translation units for a test: tests/<test_name>/*.cpp
-    # (e.g. instructionTest is split one file per instruction group)
-    set(test_helper_dir "${CMAKE_CURRENT_SOURCE_DIR}/tests/${test_name}")
-
-    if(IS_DIRECTORY "${test_helper_dir}")
-        file(GLOB TEST_HELPER_SOURCES CONFIGURE_DEPENDS
-            "${test_helper_dir}/*.cpp"
-        )
-
-        target_sources(${test_name}
-            PRIVATE
-                ${TEST_HELPER_SOURCES}
-        )
-    endif()
-
-    target_link_libraries(${test_name}
-        PRIVATE
-            cpu_core 
-            project_warnings   
-            GTest::gtest
-            GTest::gtest_main
-    )
-
-    gtest_discover_tests(${test_name}
-        NO_PRETTY_VALUES
-        DISCOVERY_TIMEOUT 30
-        PROPERTIES
-            TIMEOUT 60
-            LABELS "unit"
-    )
-
+    get_filename_component(test_name "${test_src}" NAME_WE)
+    add_executable(${test_name} "${test_src}")
+    target_link_libraries(${test_name} PRIVATE cpu_core project_warnings GTest::gtest GTest::gtest_main)
+    gtest_discover_tests(${test_name} NO_PRETTY_VALUES DISCOVERY_TIMEOUT 30 PROPERTIES TIMEOUT 60 LABELS "unit")
 endforeach()
+
+file(GLOB GROUP_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tests/instructionTest/*.cpp")
+
+foreach(group_src ${GROUP_SOURCES})
+    get_filename_component(group_name "${group_src}" NAME_WE) 
+    add_executable(${group_name} "${group_src}")
+    target_sources(${group_name} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tests/instructionTest/instructionSupport.cpp")
+    target_link_libraries(${group_name} PRIVATE cpu_core project_warnings GTest::gtest GTest::gtest_main)
+    gtest_discover_tests(${group_name} NO_PRETTY_VALUES DISCOVERY_TIMEOUT 30 PROPERTIES TIMEOUT 60 LABELS "unit")
+endforeach()
+
 
 # ============================================================================ #
 # PYBIND11 / GUI

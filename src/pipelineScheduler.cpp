@@ -459,7 +459,8 @@ void PipelineScheduler::processMemoryStage()
     MemoryWriteBackBuffer& memoryWriteBackBuffer = pipeline.memoryWriteBackBuffer;
 
 
-
+    DEBUG_LOG(debugLog("MEMORY STAGE processing..."));
+    DEBUG_LOG(debugLog("executeMemoryBuffer.valid: " + std::to_string(executeMemoryBuffer.valid)));
     if(STAGE_HAS_INSTRUCTION_TO_PROCESS_FROM_BUFFER(memoryStage, executeMemoryBuffer)) 
     {
         DEBUG_LOG(debugLog("MEMORY STAGE processing..."));

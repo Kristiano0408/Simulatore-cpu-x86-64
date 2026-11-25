@@ -4,6 +4,65 @@
 
 #include "../instructionTest.hpp"
 
+
+
+TEST_P(InstructionTest, Instruction_LEA_CorrectExecution)
+{
+    const auto& test = GetParam();
+    // -------------------------------------------------------------------------
+    // Registers
+    // -------------------------------------------------------------------------
+
+    for (const auto& [reg, expected] : test.expected_regs)
+    {
+        const uint64_t got =
+            bus.getCPU().getRegisters().getReg(reg).raw();
+
+        EXPECT_EQ(got,expected)<< "Register " << toStringRegister(reg) << " expected: " << std::hex << expected << ", got: " << std::hex << got;
+    }
+
+    // -------------------------------------------------------------------------
+    // Memory
+    // -------------------------------------------------------------------------
+
+    for (const auto& [addr, expected] : test.expected_mem)
+    {
+        const uint8_t got =
+            bus.getMemory().readTest(addr);
+
+        EXPECT_EQ(got, expected) << "Memory at address " << std::hex << addr << " expected: " << std::hex << expected << ", got: " << std::hex << got;
+    }
+
+    // -------------------------------------------------------------------------
+    // Flags
+    // -------------------------------------------------------------------------
+
+    for (const auto& [flag, expected] : test.expected_flags)
+    {
+        const bool got =
+            bus.getCPU().getRegisters().getFlags().getFlag(flag);
+
+        EXPECT_EQ(got, expected) << "Flag " << toStringFlag(flag) << " expected: " << expected << ", got: " << got;
+    }
+
+}
+
+
+
+
+
+
+INSTANTIATE_TEST_SUITE_P(Instruction_LEA_CorrectExecution, InstructionTest, ::testing::ValuesIn(buildLeaTests()),
+                         [](const ::testing::TestParamInfo<TestCase>& paramInfo)
+                         {
+                             // The TestCase_<index> prefix guarantees uniqueness even
+                             // when two descriptions collapse to the same sanitized name.
+                             return "TestCase_" + std::to_string(paramInfo.index) + "_" +
+                                    sanitizeTestName(paramInfo.param.description);
+                         });
+
+    
+
 std::vector<TestCase> buildLeaTests()
 {
     std::vector<TestCase> tests{};

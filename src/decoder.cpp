@@ -134,7 +134,7 @@ std::unique_ptr<Instruction> Decoder::decodeInstruction(InstructionInfo instruct
     }
     auto& it = mapIt->second;
 
-    DEBUG_LOG(debugLog("Decoding instruction: " + to_string_hex(instruction.opcode) + " - " + std::to_string(static_cast<int>(it.mode))));
+    DEBUG_LOG(debugLog("Decoding instruction: " + to_string_hex(instruction.opcode) + " - " + toStringAddressingMode(it.mode) + " - " + toStringTypeofInstruction(it.type)));
 
     TypeofInstruction type_instruction = it.type;
 
@@ -192,19 +192,27 @@ void Decoder::setBooleanFlagsOperandsReadWrite(Instruction* i)
 
     switch(core.addressingMode)
     {
-        case AddressingMode::O:
-        case AddressingMode::I:
-        case AddressingMode::M:
-            if(core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP)
+        case AddressingMode::D:
+            if(core.type == TypeofInstruction::CALL)
             {
-                flags.auxNeedRead = true;
                 flags.auxNeedWrite = true;
             }
+            if(core.type == TypeofInstruction::Jcc || core.opcode == 0xE3)
+            {
+                flags.auxNeedRead = true;
+            }
+           
             break;
         case AddressingMode::M_ACC:
             if(core.type == TypeofInstruction::IMUL || core.type == TypeofInstruction::MUL || core.type == TypeofInstruction::DIV || core.type == TypeofInstruction::IDIV)
             {
                 flags.auxNeedRead = true;
+                flags.auxNeedWrite = true;
+            }
+            break;
+        case AddressingMode::I:
+            if(core.type == TypeofInstruction::RET)
+            {
                 flags.auxNeedRead = true;
             }
             break;
@@ -241,7 +249,7 @@ void Decoder::settingRM_SIBRegisters(Instruction* instruction)
     {
         core.regReg = Register::RCX;
     }
-    if(core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP)
+    if(core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP || core.type == TypeofInstruction::CALL || core.type == TypeofInstruction::RET)
     {
         core.needRSPimplicitly = true; //for push and pop the RSP is needed implicitly
     }
@@ -341,6 +349,13 @@ void Decoder::decodeInstructionTD(Instruction* instruction, const InstructionInf
     flags.hasDisplacement = 1;
     flags.regToMem = 1;
     core.displacement = decodeDisplacement(instructionInfo, position, 4);
+}
+
+void Decoder::decodeInstructionZO(Instruction* instruction, [[maybe_unused]] const InstructionInfo& instructionInfo, [[maybe_unused]] uint8_t position)
+{
+    //decode 
+    InstructionFlags& flags = instruction->getFlags();
+    flags.memToReg = 1; 
 }
 
 void Decoder::decodeInstructionI(Instruction* instruction, const InstructionInfo& instructionInfo, uint8_t position)

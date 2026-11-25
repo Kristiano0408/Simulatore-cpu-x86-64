@@ -6,9 +6,9 @@
 
 enum class OperandStatus : uint8_t 
 {
-    OK,
-    WAITING_MEMORY,
-    ERROR
+    OK = 0,
+    WAITING_MEMORY = 1,
+    ERROR = 2
 };
 
 enum class OperandType : uint8_t 

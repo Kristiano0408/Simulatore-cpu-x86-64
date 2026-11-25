@@ -55,7 +55,9 @@ enum class TypeofInstruction : uint8_t
     ROR = 30, //Rotate right
     JMP = 31,
     Jcc = 32, //Jump if condition is met
-    COUNT = 33
+    CALL = 33, //Call instruction
+    RET = 34, //Return instruction
+    COUNT = 35
 
    
 };
@@ -106,7 +108,9 @@ constexpr std::array<TypeofDataTransferInstruction, static_cast<size_t>(TypeofIn
     /* ROL   */ TypeofDataTransferInstruction::COUNT,
     /* ROR   */ TypeofDataTransferInstruction::COUNT,
     /* JMP   */ TypeofDataTransferInstruction::COUNT,
-    /* Jcc   */ TypeofDataTransferInstruction::COUNT
+    /* Jcc   */ TypeofDataTransferInstruction::COUNT,
+    /* CALL  */ TypeofDataTransferInstruction::COUNT,
+    /* RET   */ TypeofDataTransferInstruction::COUNT
 };
 
 //enum for the addressing mode of the instruction
@@ -127,7 +131,8 @@ enum class AddressingMode : uint8_t
     M1 = 11, //single operand r/m with 1 bit immediate (used for shift instructions)
     MC = 12, //single operand r/m with count in cl (used for shift instructions)
     D = 13, //single operand register with count in cl (used for shift instructions)
-    COUNT = 14
+    ZO = 14,
+    COUNT = 15
 
 };
 

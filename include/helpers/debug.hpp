@@ -14,6 +14,7 @@
 #include "instructionTypes.hpp"
 #include "result.hpp"
 #include "pipelineTypes.hpp"
+#include "operandTypes.hpp"
 
 #ifdef DEBUG
     inline std::ofstream debugFile("debug.log", std::ios::trunc);
@@ -69,6 +70,8 @@ std::string toStringFlag(Flagbit f);
 std::string toStringStageStatus(StageStatus status);
 
 std::string toStringStageType(StageType stage);
+
+std::string toStringOperandType(OperandType type);
 
 
 

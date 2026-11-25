@@ -70,7 +70,10 @@ std::vector<TestCase> buildShiftTests();     // SHL/SAL, SHR, SAR
 std::vector<TestCase> buildRotateTests();
 std::vector<TestCase> buildJmpTests();     // JMP rel8 / rel32 / r-m64
 std::vector<TestCase> buildJmpControlFlowTests(); //test multiple instruction with JMP
+std::vector<TestCase> buildCallRetTests(); // test CALL and RET instructions
 
+
+std::string sanitizeTestName(std::string name);
 
 class InstructionTest : public ::testing::TestWithParam<TestCase>
 {

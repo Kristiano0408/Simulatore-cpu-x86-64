@@ -172,6 +172,7 @@ void fetchOI(Instruction* i, RegisterFile& registers, uint32_t opcode)
     
     auto RIPOperand = std::make_unique<RegOperand>(registers.getReg(Register::RIP).raw(), Register::RIP);
     i->setRIPOperand(std::move(RIPOperand));
+
 }
 
 void fetchO(Instruction* i, RegisterFile& registers)
@@ -288,6 +289,18 @@ void fetchI(Instruction* i, RegisterFile& registers)
         auto destinationOperand = std::make_unique<MemOperand>(registers.getReg(Register::RSP).raw() - 8);
         auto RSPOperand = std::make_unique<RegOperand>(registers.getReg(Register::RSP).raw(), Register::RSP);
         i->setSourceOperand(std::move(sourceOperand));
+        i->setDestinationOperand(std::move(destinationOperand));
+        i->setRSPOperand(std::move(RSPOperand));
+        return;
+    }
+    if(core.type == TypeofInstruction::RET)
+    {
+        auto sourceOperand = std::make_unique<MemOperand>(registers.getReg(Register::RSP).raw());
+        auto auxOperand = std::make_unique<ImmediateOperand>(core.value);
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RIP).raw(), Register::RIP);
+        auto RSPOperand = std::make_unique<RegOperand>(registers.getReg(Register::RSP).raw(), Register::RSP);
+        i->setSourceOperand(std::move(sourceOperand));
+        i->setAuxOperand(std::move(auxOperand));
         i->setDestinationOperand(std::move(destinationOperand));
         i->setRSPOperand(std::move(RSPOperand));
         return;
@@ -423,6 +436,40 @@ void fetchM(Instruction* i, RegisterFile& registers)
         return;
     }
 
+    if(core.type == TypeofInstruction::CALL)
+    {
+        auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RIP).raw(), Register::RIP);
+
+        if(rm.mod == 0b11)
+        {
+            Register sourceReg = core.rmReg;
+
+            auto sourceOperand = std::make_unique<RegOperand>(registers.getReg(sourceReg).raw(), sourceReg);
+
+            i->setSourceOperand(std::move(sourceOperand));
+            i->setDestinationOperand(std::move(destinationOperand));
+            flags.regToReg = true; // set the regToReg flag to true since this is a register to register operation
+        }
+        else
+        {
+            uint64_t address = calculatingAddressRM(i, registers);
+
+            auto sourceOperand = std::make_unique<MemOperand>(address);
+
+            i->setSourceOperand(std::move(sourceOperand));
+            i->setDestinationOperand(std::move(destinationOperand));
+            flags.memToReg = true; // set the memToReg flag to true since this is a memory to register operation
+        }
+
+        auto auxOperand = std::make_unique<MemOperand>(registers.getReg(Register::RSP).raw() - 8);
+        i->setAuxOperand(std::move(auxOperand));
+        auto RSPOperand = std::make_unique<RegOperand>(registers.getReg(Register::RSP).raw(), Register::RSP);
+        i->setRSPOperand(std::move(RSPOperand));
+        return;
+    }
+    
+
+
     auto sourceOperand = std::make_unique<ImmediateOperand>(core.value);
     if (rm.mod == 0b11)
     {
@@ -535,6 +582,13 @@ void fetchD(Instruction* i, RegisterFile& registers)
         auto auxOperand = std::make_unique<RegOperand>(registers.getReg(Register::RCX).raw(), Register::RCX);
         i->setAuxOperand(std::move(auxOperand));
     }
+    if(core.type == TypeofInstruction::CALL)
+    {
+        auto auxOperand = std::make_unique<MemOperand>(registers.getReg(Register::RSP).raw() - 8);
+        i->setAuxOperand(std::move(auxOperand));
+        auto RSPOperand = std::make_unique<RegOperand>(registers.getReg(Register::RSP).raw(), Register::RSP);
+        i->setRSPOperand(std::move(RSPOperand));
+    }
 
     auto RIPOperand = std::make_unique<RegOperand>(registers.getReg(Register::RIP).raw(), Register::RIP);
     i->setRIPOperand(std::move(RIPOperand));
@@ -543,6 +597,28 @@ void fetchD(Instruction* i, RegisterFile& registers)
     i->setDestinationOperand(std::move(destinationOperand));
 }
 
+void fetchZ0(Instruction* i, RegisterFile& registers)
+{
+    InstructionCore& core = i->getCore();
+    InstructionFlags& flags = i->getFlags();
+
+    flags.memToReg = true; 
+    // operand constructors for source and destination operands
+
+    // the source is an immediate value and the destination is a register
+    auto sourceOperand = std::make_unique<MemOperand>(registers.getReg(Register::RSP).raw());
+    auto destinationOperand = std::make_unique<RegOperand>(registers.getReg(Register::RIP).raw(), Register::RIP);
+
+
+    auto RSPOperand = std::make_unique<RegOperand>(registers.getReg(Register::RSP).raw(), Register::RSP);
+    i->setRSPOperand(std::move(RSPOperand));
+
+    auto RIPOperand = std::make_unique<RegOperand>(registers.getReg(Register::RIP).raw(), Register::RIP);
+    i->setRIPOperand(std::move(RIPOperand));
+
+    i->setSourceOperand(std::move(sourceOperand));
+    i->setDestinationOperand(std::move(destinationOperand));
+}
 
 
 uint64_t calculatingAddressRM(Instruction* i, RegisterFile& registers)

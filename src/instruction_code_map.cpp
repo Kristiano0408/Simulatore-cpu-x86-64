@@ -322,7 +322,16 @@ ankerl::unordered_dense::map<uint32_t, InstructionType_and_addMode> instructionM
     {0x0F8C, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
     {0x0F8D, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
     {0x0F8E, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
-    {0x0F8F, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}}
+    {0x0F8F, {.type=TypeofInstruction::Jcc, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+
+    //CALL
+    {0xE8, {.type=TypeofInstruction::CALL, .mode=AddressingMode::D, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0xFF02, {.type=TypeofInstruction::CALL, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0xFF03, {.type=TypeofInstruction::CALL, .mode=AddressingMode::M, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+
+    //RET
+    {0xC3, {.type=TypeofInstruction::RET, .mode=AddressingMode::ZO, .executionMode=InstructionExecutionMode::CONTROL_FLOW}},
+    {0xC2, {.type=TypeofInstruction::RET, .mode=AddressingMode::I, .executionMode=InstructionExecutionMode::CONTROL_FLOW}}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -343,7 +352,8 @@ const std::array<DecodeFunc,(size_t)AddressingMode::COUNT> addressingModes =
     &Decoder::decodeInstructionO,
     &Decoder::decodeInstructionMI, //M1 is a special case of MI, so it is separated in the implementation of the decode function
     &Decoder::decodeInstructionMR, //MC is a special case of MR, so it is separated in the implementation of the decode function
-    &Decoder::decodeInstructionD //M_ACC is a special case of M, so it is separated in the implementation of the decode function
+    &Decoder::decodeInstructionD, //M_ACC is a special case of M, so it is separated in the implementation of the decode function
+    &Decoder::decodeInstructionZO
 };
 
 

@@ -27,7 +27,7 @@ void OperandEngine::execute_operation()
 
     // Process read operations
     if (!readQueue.empty())
-    {
+    {       
         OperandContextRead context = readQueue.front();
         temporaryValues& tempValues = context.instruction->getTemporaryValuesRef();
         if (!tempValues.isSrcValueReady)
@@ -42,9 +42,19 @@ void OperandEngine::execute_operation()
         {
             readOperand(context.instruction, context.auxOperand, WhichOperand::AUXILIARY, context.callbackContext, context.callback);
         }
+        else if (context.auxOperand == nullptr)
+        {
+            // If auxOperand is of type NONE, mark it as ready
+            tempValues.isAuxValueReady = true;
+        }
         if (!tempValues.isRSPValueReady && context.requiresRSPRead && context.rspOperand != nullptr && context.rspOperand->getType() != OperandType::NONE)
         {
             readOperand(context.instruction, context.rspOperand, WhichOperand::RSP, context.callbackContext, context.callback);
+        }
+        else if (context.rspOperand == nullptr)
+        {
+            // If rspOperand is of type NONE, mark it as ready
+            tempValues.isRSPValueReady = true;
         }
     }
 }
@@ -70,7 +80,7 @@ void OperandEngine::eraseQueues(uint64_t instructionID)
 
 #define readValue(type, getValueFunction, resultVariable)                                                                                                                          \
     DEBUG_LOG(debugLog("Reading from " + std::string(type) + " operand."));                                                                                                        \
-    (resultVariable) = getValueFunction;                                                                                                                                           \
+    (resultVariable) = getValueFunction; \
     if ((resultVariable).status == OperandStatus::OK && instruction->getTemporaryValuesRef().isSrcValueReady && instruction->getTemporaryValuesRef().isDestValueReady && (instruction->getTemporaryValuesRef().isAuxValueReady || instruction->getAuxOperand()->getType() == OperandType::NONE) && (instruction->getTemporaryValuesRef().isRSPValueReady || instruction->getRSPOperand()->getType() == OperandType::NONE))             \
     {                                                                                                                                                                              \
         DEBUG_LOG(debugLog("OperandEngine: " + std::string(type) + " read completed for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));            \
@@ -80,7 +90,7 @@ void OperandEngine::eraseQueues(uint64_t instructionID)
 
 void OperandEngine::readOperand(Instruction* instruction, Operand* operand, WhichOperand  whichoperand, void* callbackContext, void (*callback)(void* context))
 {
-    DEBUG_LOG(debugLog("OperandEngine: Reading operand of type " + std::to_string(static_cast<uint8_t>(operand->getType())) + " for instruction with ID " +
+    DEBUG_LOG(debugLog("OperandEngine: Reading operand of type " + toStringOperandType(operand->getType()) + " for instruction with ID " +
                        std::to_string(instruction->getCore().InstructionId)));
     OperandResult result;
     switch (operand->getType())
@@ -133,14 +143,17 @@ void OperandEngine::writeOperand(Instruction* instruction, Operand* operand, Ope
                 writeValue("register", setRegisterValue(auxOperand, auxValue), result, EventHandlerExecuteEngineEventType::NONE); // Write to auxOperand first
             }
             if(ripOperand != nullptr && ripOperand->getType() != OperandType::NONE) {
+    
                 writeValue("register", setRegisterValue(ripOperand, ripValue), result, EventHandlerExecuteEngineEventType::NONE); // Write to ripOperand
             }
             if(rspOperand != nullptr && rspOperand->getType() != OperandType::NONE) {
                 writeValue("register", setRegisterValue(rspOperand, rspValue), result, EventHandlerExecuteEngineEventType::NONE); // Write to rspOperand
             }
+         
             writeValue("register", setRegisterValue(operand, value), result, EventHandlerExecuteEngineEventType::OPERAND_COMPLETE_WRITE_WRITEBACK);
             return;
         case OperandType::MEMORY:
+        DEBUG_LOG(debugLog("OperandEngine: Writing to memory operand for instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
             callback(callbackContext); // Call the callback function to initiate memory access(set teh corrisponding stage to WAITING_MEMORY)
             writeValue("memory",
                        setMemoryValue(instruction, operand, value, executeEngineEventHandler.getContext(),
@@ -162,6 +175,7 @@ OperandResult OperandEngine::setRegisterValue(Operand* operand, uint64_t value)
     Result result;
     uint8_t bitCount = operand->getSize();
     const uint64_t mask = (bitCount == 64) ? ~0ULL : ((1ULL << bitCount) - 1);
+
 
     // Applica la maschera coerente alla size del tipo
     const uint64_t valueMasked = value & mask;
@@ -476,7 +490,7 @@ OperandResult OperandEngine::setMemoryValue(Instruction* instruction, Operand* o
     cpu.findCacheResponse(core.InstructionId, response, found);
 
     if (found)
-    {
+    {   
         // request completed
         DEBUG_LOG(debugLog("MemOperand: Write request completed for address " + to_string_hex(memOperand->getAddress()) + "."));
 

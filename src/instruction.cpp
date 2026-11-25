@@ -77,7 +77,7 @@ void Instruction::calculatingNumberOfBits()
     {
         core.destNbit = 64;
     }
-    else
+    else if(core.destNbit != 64)
     {
         for (size_t i = 0; i < core.numPrefixes; i++)
         {
@@ -156,6 +156,10 @@ void Instruction::calculatingNumberOfBits()
     {
         core.auxNbit = core.destNbit;
         core.immediateNbit = 0;
+    }
+    else if (core.type == TypeofInstruction::CALL)
+    {
+        core.auxNbit = 64;
     }
     else
     {

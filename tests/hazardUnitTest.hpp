@@ -24,6 +24,19 @@ struct HazardUnitBufferTestCase
 
 };
 
+std::string sanitizeTestName(std::string name)
+{
+    for (char& c : name)
+    {
+        if (!std::isalnum(static_cast<unsigned char>(c)))
+        {
+            c = '_';
+        }
+    }
+
+    return name;
+}
+
 class HazardUnitTest : public ::testing::TestWithParam<HazardUnitBufferTestCase>
 {
     protected:

@@ -65,10 +65,11 @@ void HazardUnit::onWriteBackCompleteWrapper(void* context)
     HazardUnit* hazardUnit = static_cast<HazardUnit*>(context);
     WriteBackStage& writeBackStage = hazardUnit->getPipeline().getWriteBackStage();
     Instruction* instr = writeBackStage.peekInstruction();
-    if(instr != nullptr && !instr->isEmpty() && (instr->getCore().type == TypeofInstruction::JMP || (instr->getCore().type == TypeofInstruction::Jcc && instr->getCore().notFlushNeeded == false)))
+    if(instr != nullptr && !instr->isEmpty() && (instr->getCore().type == TypeofInstruction::JMP || 
+        (instr->getCore().type == TypeofInstruction::Jcc && instr->getCore().notFlushNeeded == false) || instr->getCore().type == TypeofInstruction::CALL || instr->getCore().type == TypeofInstruction::RET))
     {
         DEBUG_LOG(debugLog("HazardUnit: Flushing pipeline due to JMP instruction with ID " + std::to_string(instr->getCore().InstructionId)));
-        hazardUnit->flushPipeline(instr->getCore().InstructionId);
+      
         HazardUnitEventHandler* hazardUnitEventHandler = hazardUnit->getHazardUnitEventHandler();
         uint64_t instructionId = instr->getCore().InstructionId;
         if(hazardUnitEventHandler)
@@ -78,6 +79,7 @@ void HazardUnit::onWriteBackCompleteWrapper(void* context)
             
         }
         hazardUnit->pipeline.eraseExecuteEngineQueue(instructionId);
+        hazardUnit->flushPipeline(instr->getCore().InstructionId);
     }
     hazardUnit->getPipelineController().onWriteBackComplete();
 }

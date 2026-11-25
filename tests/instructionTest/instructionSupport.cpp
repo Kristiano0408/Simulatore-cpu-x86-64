@@ -5,12 +5,12 @@
 // this file only aggregates them and runs them against the simulated CPU.
 // -----------------------------------------------------------------------------
 
-#include "instructionTest.hpp"
+#include "../instructionTest.hpp"
 
-#include "../include/bus.hpp"
-#include "../include/cpu.hpp"
-#include "../include/registerFile.hpp"
-#include "../include/helpers/debug.hpp"
+#include "../../include/bus.hpp"
+#include "../../include/cpu.hpp"
+#include "../../include/registerFile.hpp"
+#include "../../include/helpers/debug.hpp"
 
 #include <cctype>
 #include <cstdint>
@@ -31,7 +31,7 @@ using std::hex;
 // is replaced with '_'.
 // -----------------------------------------------------------------------------
 
-static std::string sanitizeTestName(std::string name)
+std::string sanitizeTestName(std::string name)
 {
     for (char& c : name)
     {
@@ -42,41 +42,6 @@ static std::string sanitizeTestName(std::string name)
     }
 
     return name;
-}
-
-// -----------------------------------------------------------------------------
-// Build tests: concatenation of every instruction group, in the original order
-// -----------------------------------------------------------------------------
-
-std::vector<TestCase> buildTestCases()
-{
-    std::vector<TestCase> tests{};
-
-    const auto append = [&tests](std::vector<TestCase> group)
-    {
-        tests.insert(tests.end(),
-                     std::make_move_iterator(group.begin()),
-                     std::make_move_iterator(group.end()));
-    };
-
-    append(buildMovTests());
-    append(buildAddSubTests());
-    append(buildCarryTests());
-    append(buildLeaTests());
-    append(buildUnaryTests());
-    append(buildCmpTests());
-    append(buildMulTests());
-    append(buildDivTests());
-    append(buildExtensionTests());
-    append(buildStackTests());
-    append(buildBooleanTests());
-    append(buildTestTests());
-    append(buildShiftTests());
-    append(buildRotateTests());
-    append(buildJmpTests());
-    append(buildJmpControlFlowTests());
-
-    return tests;
 }
 
 
@@ -141,7 +106,7 @@ void InstructionTest::SetUp()
 }
 
 
-
+/*
 
 TEST_P(InstructionTest, InstructionCorrectExecution)
 {
@@ -193,6 +158,6 @@ INSTANTIATE_TEST_SUITE_P(InstructionCorrectExecutionTests, InstructionTest, ::te
                              return "TestCase_" + std::to_string(paramInfo.index) + "_" +
                                     sanitizeTestName(paramInfo.param.description);
                          });
-    
+*/
 
 
