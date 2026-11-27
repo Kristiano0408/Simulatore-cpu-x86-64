@@ -62,7 +62,7 @@ enum class TypeofInstruction : uint8_t
    
 };
 
-enum class TypeofDataTransferInstruction : uint8_t
+enum class TypeOfDataTransferInstruction : uint8_t
 {
     MOV = 0,
     MOVSX = 1,
@@ -74,43 +74,92 @@ enum class TypeofDataTransferInstruction : uint8_t
     COUNT = 7
 };
 
-constexpr std::array<TypeofDataTransferInstruction, static_cast<size_t>(TypeofInstruction::COUNT)> dataTransferTypeMap
+constexpr std::array<TypeOfDataTransferInstruction, static_cast<size_t>(TypeofInstruction::COUNT)> dataTransferTypeMap
 {
-    /* MOV   */ TypeofDataTransferInstruction::MOV,
-    /* ADD   */ TypeofDataTransferInstruction::COUNT,
-    /* SUB   */ TypeofDataTransferInstruction::COUNT,
-    /* LEA   */ TypeofDataTransferInstruction::LEA,
-    /* ADC   */ TypeofDataTransferInstruction::COUNT,
-    /* SBB   */ TypeofDataTransferInstruction::COUNT,
-    /* INC   */ TypeofDataTransferInstruction::COUNT,
-    /* DEC   */ TypeofDataTransferInstruction::COUNT,
-    /* NEG   */ TypeofDataTransferInstruction::COUNT,
-    /* CMP   */ TypeofDataTransferInstruction::COUNT,
-    /* MUL   */ TypeofDataTransferInstruction::COUNT,
-    /* IMUL  */ TypeofDataTransferInstruction::COUNT,
-    /* DIV   */ TypeofDataTransferInstruction::COUNT,
-    /* IDIV  */ TypeofDataTransferInstruction::COUNT,
-    /* MOVZX */ TypeofDataTransferInstruction::MOVZX,
-    /* MOVSX */ TypeofDataTransferInstruction::MOVSX,
-    /* MOVSXD*/ TypeofDataTransferInstruction::MOVSXD,
-    /* PUSH  */ TypeofDataTransferInstruction::PUSH,
-    /* POP   */ TypeofDataTransferInstruction::POP,
-    /* AND   */ TypeofDataTransferInstruction::COUNT,
-    /* OR    */ TypeofDataTransferInstruction::COUNT,
-    /* XOR   */ TypeofDataTransferInstruction::COUNT,
-    /* NOT   */ TypeofDataTransferInstruction::COUNT,
-    /* TEST  */ TypeofDataTransferInstruction::COUNT,
-    /* SAL/SHL*/ TypeofDataTransferInstruction::COUNT,
-    /* SAR   */ TypeofDataTransferInstruction::COUNT,
-    /* SHR   */ TypeofDataTransferInstruction::COUNT,
-    /* RCL   */ TypeofDataTransferInstruction::COUNT,
-    /* RCR   */ TypeofDataTransferInstruction::COUNT,
-    /* ROL   */ TypeofDataTransferInstruction::COUNT,
-    /* ROR   */ TypeofDataTransferInstruction::COUNT,
-    /* JMP   */ TypeofDataTransferInstruction::COUNT,
-    /* Jcc   */ TypeofDataTransferInstruction::COUNT,
-    /* CALL  */ TypeofDataTransferInstruction::COUNT,
-    /* RET   */ TypeofDataTransferInstruction::COUNT
+    /* MOV   */ TypeOfDataTransferInstruction::MOV,
+    /* ADD   */ TypeOfDataTransferInstruction::COUNT,
+    /* SUB   */ TypeOfDataTransferInstruction::COUNT,
+    /* LEA   */ TypeOfDataTransferInstruction::LEA,
+    /* ADC   */ TypeOfDataTransferInstruction::COUNT,
+    /* SBB   */ TypeOfDataTransferInstruction::COUNT,
+    /* INC   */ TypeOfDataTransferInstruction::COUNT,
+    /* DEC   */ TypeOfDataTransferInstruction::COUNT,
+    /* NEG   */ TypeOfDataTransferInstruction::COUNT,
+    /* CMP   */ TypeOfDataTransferInstruction::COUNT,
+    /* MUL   */ TypeOfDataTransferInstruction::COUNT,
+    /* IMUL  */ TypeOfDataTransferInstruction::COUNT,
+    /* DIV   */ TypeOfDataTransferInstruction::COUNT,
+    /* IDIV  */ TypeOfDataTransferInstruction::COUNT,
+    /* MOVZX */ TypeOfDataTransferInstruction::MOVZX,
+    /* MOVSX */ TypeOfDataTransferInstruction::MOVSX,
+    /* MOVSXD*/ TypeOfDataTransferInstruction::MOVSXD,
+    /* PUSH  */ TypeOfDataTransferInstruction::PUSH,
+    /* POP   */ TypeOfDataTransferInstruction::POP,
+    /* AND   */ TypeOfDataTransferInstruction::COUNT,
+    /* OR    */ TypeOfDataTransferInstruction::COUNT,
+    /* XOR   */ TypeOfDataTransferInstruction::COUNT,
+    /* NOT   */ TypeOfDataTransferInstruction::COUNT,
+    /* TEST  */ TypeOfDataTransferInstruction::COUNT,
+    /* SAL/SHL*/ TypeOfDataTransferInstruction::COUNT,
+    /* SAR   */ TypeOfDataTransferInstruction::COUNT,
+    /* SHR   */ TypeOfDataTransferInstruction::COUNT,
+    /* RCL   */ TypeOfDataTransferInstruction::COUNT,
+    /* RCR   */ TypeOfDataTransferInstruction::COUNT,
+    /* ROL   */ TypeOfDataTransferInstruction::COUNT,
+    /* ROR   */ TypeOfDataTransferInstruction::COUNT,
+    /* JMP   */ TypeOfDataTransferInstruction::COUNT,
+    /* Jcc   */ TypeOfDataTransferInstruction::COUNT,
+    /* CALL  */ TypeOfDataTransferInstruction::COUNT,
+    /* RET   */ TypeOfDataTransferInstruction::COUNT
+};
+
+enum class TypeOfControlFlowExecution : uint8_t
+{
+    JMP = 0,
+    Jcc = 1,
+    CALL = 2,
+    RET = 3,
+    COUNT = 4
+};
+
+constexpr std::array<TypeOfControlFlowExecution, static_cast<size_t>(TypeofInstruction::COUNT)> controlFlowTypeMap
+{
+    /* MOV   */ TypeOfControlFlowExecution::COUNT,
+    /* ADD   */ TypeOfControlFlowExecution::COUNT,
+    /* SUB   */ TypeOfControlFlowExecution::COUNT,
+    /* LEA   */ TypeOfControlFlowExecution::COUNT,
+    /* ADC   */ TypeOfControlFlowExecution::COUNT,
+    /* SBB   */ TypeOfControlFlowExecution::COUNT,
+    /* INC   */ TypeOfControlFlowExecution::COUNT,
+    /* DEC   */ TypeOfControlFlowExecution::COUNT,
+    /* NEG   */ TypeOfControlFlowExecution::COUNT,
+    /* CMP   */ TypeOfControlFlowExecution::COUNT,
+    /* MUL   */ TypeOfControlFlowExecution::COUNT,
+    /* IMUL  */ TypeOfControlFlowExecution::COUNT,
+    /* DIV   */ TypeOfControlFlowExecution::COUNT,
+    /* IDIV  */ TypeOfControlFlowExecution::COUNT,
+    /* MOVZX */ TypeOfControlFlowExecution::COUNT,
+    /* MOVSX */ TypeOfControlFlowExecution::COUNT,
+    /* MOVSXD*/ TypeOfControlFlowExecution::COUNT,
+    /* PUSH  */ TypeOfControlFlowExecution::COUNT,
+    /* POP   */ TypeOfControlFlowExecution::COUNT,
+    /* AND   */ TypeOfControlFlowExecution::COUNT,
+    /* OR    */ TypeOfControlFlowExecution::COUNT,
+    /* XOR   */ TypeOfControlFlowExecution::COUNT,
+    /* NOT   */ TypeOfControlFlowExecution::COUNT,
+    /* TEST  */ TypeOfControlFlowExecution::COUNT,
+    /* SAL/SHL*/ TypeOfControlFlowExecution::COUNT,
+    /* SAR   */ TypeOfControlFlowExecution::COUNT,
+    /* SHR   */ TypeOfControlFlowExecution::COUNT,
+    /* RCL   */ TypeOfControlFlowExecution::COUNT,
+    /* RCR   */ TypeOfControlFlowExecution::COUNT,
+    /* ROL   */ TypeOfControlFlowExecution::COUNT,
+    /* ROR   */ TypeOfControlFlowExecution::COUNT,
+    /* JMP   */ TypeOfControlFlowExecution::JMP,
+    /* Jcc   */ TypeOfControlFlowExecution::Jcc,
+    /* CALL  */ TypeOfControlFlowExecution::CALL,
+    /* RET   */ TypeOfControlFlowExecution::RET
+
 };
 
 //enum for the addressing mode of the instruction

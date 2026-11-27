@@ -141,7 +141,7 @@ namespace dataTransferexecution {
     void executePOP(Instruction* instruction);
 
 
-    constexpr std::array<DataTransferFunc, static_cast<size_t>(TypeofDataTransferInstruction::COUNT)> dataTransferExecutionFunc {
+    constexpr std::array<DataTransferFunc, static_cast<size_t>(TypeOfDataTransferInstruction::COUNT)> dataTransferExecutionFunc {
         /*MOV*/    executeMOVandLEA,
         /*MOVSX*/  executeMOVSXandMOVSXD,
         /*MOVZX*/  executeMOVZX,
@@ -154,5 +154,24 @@ namespace dataTransferexecution {
 
 }
 
+
+namespace controlFlowExecution {
+
+    using ControlFlowFunc = void(*)(Instruction*);
+
+    void executeJMP(Instruction* instruction);
+    void executeJcc(Instruction* instruction);
+    void executeCALL(Instruction* instruction);
+    void executeRET(Instruction* instruction);
+
+    constexpr std::array<ControlFlowFunc, static_cast<size_t>(TypeOfControlFlowExecution::COUNT)> controlFlowExecutionFunc {
+        /*JMP*/    executeJMP,
+        /*Jcc*/    executeJcc,
+        /*CALL*/   executeCALL,
+        /*RET*/    executeRET
+    };
+
+
+}
 
 #endif // EXECUTE_ENGINE_HPP

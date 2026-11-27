@@ -190,221 +190,17 @@ void ExecuteEngine::updateTemporaryValuesForInstruction(Instruction* instruction
 
 void ExecuteEngine::executeDataTransferInstruction(Instruction* instrptr)
 {
-    TypeofDataTransferInstruction datatransferType = dataTransferTypeMap[static_cast<size_t>(instrptr->getCore().type)];
+    TypeOfDataTransferInstruction datatransferType = dataTransferTypeMap[static_cast<size_t>(instrptr->getCore().type)];
 
     dataTransferexecution::dataTransferExecutionFunc[static_cast<size_t>(datatransferType)](instrptr);
 }
 
 void executeControlFlowOperation(Instruction* instruction)
 {
-    InstructionCore& core = instruction->getCore();
-    temporaryValues& tempValues = instruction->getTemporaryValuesRef();
-    if(core.type == TypeofInstruction::JMP)
-    {
-        uint64_t displacement{};
-        if(core.opcode == 0xEB)
-        {
-            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(tempValues.srcValue)));
-            tempValues.resultValue = core.nextRip + displacement;
-        }
-        else if(core.opcode == 0xE9)
-        {   
-    
-            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
-            tempValues.resultValue = core.nextRip + displacement;
-        }
-        else if(core.opcode == 0xFF04)
-            tempValues.resultValue = tempValues.srcValue;
-    }
+    TypeOfControlFlowExecution controlFlowType = controlFlowTypeMap[static_cast<size_t>(instruction->getCore().type)];
 
-    if(core.type == TypeofInstruction::Jcc)
-    {
-        uint64_t displacement{};
-        if(core.opcode >> 8 == 0x0F)
-            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
-        else
-            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(tempValues.srcValue)));
-        
-
-        if(core.opcode == 0xE3) //JCXZ/JECXZ/JRCXZ
-        {
-            if(tempValues.auxValue == 0)
-                tempValues.resultValue = core.nextRip + displacement;
-            else
-                tempValues.resultValue = core.nextRip;
-                core.notFlushNeeded = true; 
-                return;
-        }
-        switch(core.opcode & 0x0F)
-        {
-            case 0x0: //JO
-                if(tempValues.ofIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else    {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true; 
-                }
-                break;
-            case 0x1: //JNO
-                if(!tempValues.ofIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0x2: //JB/JC/JNAE
-                if(tempValues.carryIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0x3: //JNB/JNC/JAE
-                if(!tempValues.carryIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0x4: //JE/JZ
-                if(tempValues.zfIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0x5: //JNE/JNZ
-                if(!tempValues.zfIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0x6: //JBE/JNA
-                if(tempValues.carryIn || tempValues.zfIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0x7: //JNBE/JA
-                if(!tempValues.carryIn && !tempValues.zfIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0x8: //JS
-                if(tempValues.sfIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0x9: //JNS
-                if(!tempValues.sfIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0xA: //JP/JPE
-                if(tempValues.pfIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0xB: //JNP/JPO
-                if(!tempValues.pfIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {  
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0xC: //JL/JNGE
-                if(tempValues.sfIn != tempValues.ofIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0xD: //JNL/JGE
-                if(tempValues.sfIn == tempValues.ofIn)
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0xE: //JLE/JNG
-                if(tempValues.zfIn || (tempValues.sfIn != tempValues.ofIn))
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            case 0xF: //JNLE/JG
-                if(!tempValues.zfIn && (tempValues.sfIn == tempValues.ofIn))
-                    tempValues.resultValue = core.nextRip + displacement;
-                else {
-                    tempValues.resultValue = core.nextRip;
-                    core.notFlushNeeded = true;
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    if(core.type == TypeofInstruction::CALL)
-    {
-        DEBUG_LOG(debugLog("ExecuteEngine: Executing CALL instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
-        uint64_t displacement{};
-        if(core.opcode == 0xE8 )
-        {
-            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
-            tempValues.resultValue = core.nextRip + displacement;
-            tempValues.rspValue = tempValues.rspValue - 8; // Decrement RSP by 8 bytes (64 bits) to push the return address onto the stack
-        }
-        else if(core.opcode == 0xFF02 || core.opcode == 0xFF03)
-        {
-            tempValues.resultValue = tempValues.srcValue;
-            tempValues.rspValue = tempValues.rspValue - 8; // Decrement RSP by 8 bytes (64 bits) to push the return address onto the stack
-        }
-    }
-
-    if(core.type == TypeofInstruction::RET)
-    {
-        DEBUG_LOG(debugLog("ExecuteEngine: Executing RET instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
-        if(core.opcode == 0xC3)
-        {
-            tempValues.resultValue = tempValues.srcValue;
-            tempValues.rspValue = tempValues.rspValue + 8; // Increment RSP by 8 bytes (64 bits) to pop the return address from the stack
-
-        }
-        else if(core.opcode == 0xC2)
-        {
-            tempValues.resultValue = tempValues.srcValue;
-            tempValues.rspValue = tempValues.rspValue + 8 + static_cast<uint64_t>(tempValues.auxValue); // Increment RSP by 8 bytes (64 bits) to pop the return address from the stack and add the immediate value to RSP
-        }
-            
-    }
+    controlFlowExecution::controlFlowExecutionFunc[static_cast<size_t>(controlFlowType)](instruction);
 }
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -565,59 +361,7 @@ void ExecuteEngine::executeInstruction(Instruction* instruction)
             alu.executeOperation(instruction->getTemporaryValuesRef(), core.type, core.srcNbit, core.destNbit, core.auxNbit, core.immediateNbit, core.numOperands);
             break;
         case InstructionExecutionMode::DATA_TRANSFER:
-            /*if (core.type == TypeofInstruction::MOV || core.type == TypeofInstruction::LEA)
-            {
-                instruction->getTemporaryValuesRef().resultValue = instruction->getTemporaryValuesRef().srcValue;
-            }
-            else if (core.type == TypeofInstruction::MOVZX)
-            {
-                const uint64_t mask = (core.srcNbit == 64) ? ~0ULL : ((1ULL << core.srcNbit) - 1);
-                instruction->getTemporaryValuesRef().resultValue =
-                    instruction->getTemporaryValuesRef().srcValue & mask;
-            }
-            else if (core.type == TypeofInstruction::MOVSX || core.type == TypeofInstruction::MOVSXD)
-            {
-                
-                const uint64_t mask = (core.srcNbit == 64) ? ~0ULL : ((1ULL << core.srcNbit) - 1);
-                uint64_t srcMasked = instruction->getTemporaryValuesRef().srcValue & mask;
-                if (srcMasked & (1ULL << (core.srcNbit - 1)))   // bit di segno della sorgente
-                    srcMasked |= ~mask;                          // estensione di segno a 64 bit
-                instruction->getTemporaryValuesRef().resultValue = srcMasked;
-            }
-            else if (core.type == TypeofInstruction::PUSH || core.type == TypeofInstruction::POP)
-            {
-                // For PUSH and POP, the result value is the source value for PUSH and the destination value for POP
-                if (core.type == TypeofInstruction::PUSH)
-                {
-                    instruction->getTemporaryValuesRef().resultValue = instruction->getTemporaryValuesRef().srcValue;
-                    // PUSH imm sign-extends its encoded immediate to the stack
-                    // operand width (imm8 for 6A, imm32 for 68 in 64-bit mode).
-                    if (core.addressingMode == AddressingMode::I)
-                    {
-                        if (core.opcode == 0x6A)
-                        {
-                            instruction->getTemporaryValuesRef().resultValue =
-                                static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(core.value)));
-                        }
-                        else if (core.opcode == 0x68 && core.destNbit == 64)
-                        {
-                            instruction->getTemporaryValuesRef().resultValue =
-                                static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(core.value)));
-                        }
-                        else if (core.opcode == 0x68 && core.destNbit == 16)
-                        {
-                            instruction->getTemporaryValuesRef().resultValue =
-                                static_cast<uint16_t>(static_cast<int16_t>(core.value));
-                        }
-                    }
-                    instruction->getTemporaryValuesRef().resultHighValue = instruction->getTemporaryValuesRef().auxValue - 8; // For PUSH, the high value is the destination value (stack pointer)
-                }
-                else // POP
-                {
-                    instruction->getTemporaryValuesRef().resultValue = instruction->getTemporaryValuesRef().srcValue;
-                    instruction->getTemporaryValuesRef().resultHighValue = instruction->getTemporaryValuesRef().auxValue + 8; // For POP, the high value is the destination value (stack pointer)
-                }
-            }*/
+        
             executeDataTransferInstruction(instruction);
 
             break;
@@ -873,6 +617,226 @@ namespace dataTransferexecution {
     }
 
 }
+
+namespace controlFlowExecution {
+
+    void executeJMP(Instruction* instruction) {
+        
+        InstructionCore& core = instruction->getCore();
+        temporaryValues& tempValues = instruction->getTemporaryValuesRef();
+
+        uint64_t displacement{};
+        if(core.opcode == 0xEB)
+        {
+            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(tempValues.srcValue)));
+            tempValues.resultValue = core.nextRip + displacement;
+        }
+        else if(core.opcode == 0xE9)
+        {   
+    
+            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
+            tempValues.resultValue = core.nextRip + displacement;
+        }
+        else if(core.opcode == 0xFF04)
+            tempValues.resultValue = tempValues.srcValue;
+        
+        
+    }
+
+    void executeJcc(Instruction* instruction) {
+        
+        InstructionCore& core = instruction->getCore();
+        temporaryValues& tempValues = instruction->getTemporaryValuesRef();
+        uint64_t displacement{};
+        if(core.opcode >> 8 == 0x0F)
+            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
+        else
+            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int8_t>(tempValues.srcValue)));
+        
+
+        if(core.opcode == 0xE3) //JCXZ/JECXZ/JRCXZ
+        {
+            if(tempValues.auxValue == 0)
+                tempValues.resultValue = core.nextRip + displacement;
+            else
+                tempValues.resultValue = core.nextRip;
+                core.notFlushNeeded = true; 
+                return;
+        }
+        switch(core.opcode & 0x0F)
+        {
+            case 0x0: //JO
+                if(tempValues.ofIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else    {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true; 
+                }
+                break;
+            case 0x1: //JNO
+                if(!tempValues.ofIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x2: //JB/JC/JNAE
+                if(tempValues.carryIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x3: //JNB/JNC/JAE
+                if(!tempValues.carryIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x4: //JE/JZ
+                if(tempValues.zfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x5: //JNE/JNZ
+                if(!tempValues.zfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x6: //JBE/JNA
+                if(tempValues.carryIn || tempValues.zfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x7: //JNBE/JA
+                if(!tempValues.carryIn && !tempValues.zfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x8: //JS
+                if(tempValues.sfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0x9: //JNS
+                if(!tempValues.sfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xA: //JP/JPE
+                if(tempValues.pfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xB: //JNP/JPO
+                if(!tempValues.pfIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {  
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xC: //JL/JNGE
+                if(tempValues.sfIn != tempValues.ofIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xD: //JNL/JGE
+                if(tempValues.sfIn == tempValues.ofIn)
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xE: //JLE/JNG
+                if(tempValues.zfIn || (tempValues.sfIn != tempValues.ofIn))
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            case 0xF: //JNLE/JG
+                if(!tempValues.zfIn && (tempValues.sfIn == tempValues.ofIn))
+                    tempValues.resultValue = core.nextRip + displacement;
+                else {
+                    tempValues.resultValue = core.nextRip;
+                    core.notFlushNeeded = true;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    void executeCALL(Instruction* instruction) {
+
+        InstructionCore& core = instruction->getCore();
+        temporaryValues& tempValues = instruction->getTemporaryValuesRef();
+        DEBUG_LOG(debugLog("ExecuteEngine: Executing CALL instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+        uint64_t displacement{};
+        if(core.opcode == 0xE8 )
+        {
+            displacement = static_cast<uint64_t>(static_cast<int64_t>(static_cast<int32_t>(tempValues.srcValue)));
+            tempValues.resultValue = core.nextRip + displacement;
+            tempValues.rspValue = tempValues.rspValue - 8; // Decrement RSP by 8 bytes (64 bits) to push the return address onto the stack
+        }
+        else if(core.opcode == 0xFF02 || core.opcode == 0xFF03)
+        {
+            tempValues.resultValue = tempValues.srcValue;
+            tempValues.rspValue = tempValues.rspValue - 8; // Decrement RSP by 8 bytes (64 bits) to push the return address onto the stack
+        }
+    }
+
+    void executeRET(Instruction* instruction) {
+        
+        InstructionCore& core = instruction->getCore();
+        temporaryValues& tempValues = instruction->getTemporaryValuesRef();
+        DEBUG_LOG(debugLog("ExecuteEngine: Executing RET instruction with ID " + std::to_string(instruction->getCore().InstructionId)));
+        if(core.opcode == 0xC3)
+        {
+            tempValues.resultValue = tempValues.srcValue;
+            tempValues.rspValue = tempValues.rspValue + 8; // Increment RSP by 8 bytes (64 bits) to pop the return address from the stack
+
+        }
+        else if(core.opcode == 0xC2)
+        {
+            tempValues.resultValue = tempValues.srcValue;
+            tempValues.rspValue = tempValues.rspValue + 8 + static_cast<uint64_t>(tempValues.auxValue); // Increment RSP by 8 bytes (64 bits) to pop the return address from the stack and add the immediate value to RSP
+        }
+    }
+
+}
+
 
 
 
